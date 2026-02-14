@@ -1,0 +1,101 @@
+/* Policy Pages CSS (Refund, Shipping) */
+.policy-container {
+       max-width: 1100px;
+       margin: 40px auto;
+       padding: 40px;
+       /* Increased padding */
+       background-color: #ffffff;
+       color: #1f2937;
+       /* gray-900 */
+       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+       border-radius: 0.5rem;
+}
+
+.policy-hero {
+       background: #f8f9fb;
+       border-radius: 16px;
+       padding: 24px;
+       margin-bottom: 32px;
+}
+
+.policy-hero h1 {
+       margin-bottom: 16px;
+       font-size: 28px;
+       font-weight: 700;
+}
+
+.policy-content h2 {
+       margin-top: 32px;
+       margin-bottom: 16px;
+       font-size: 24px;
+       font-weight: 600;
+}
+
+.policy-content h3 {
+       margin-top: 24px;
+       margin-bottom: 12px;
+       font-size: 20px;
+       font-weight: 600;
+}
+
+.policy-content section p {
+       margin: 12px 0;
+       line-height: 1.6;
+}
+
+.policy-content ul,
+.policy-content ol {
+       margin: 12px 0 0 20px;
+}
+
+.policy-content ul li,
+.policy-content ol li {
+       margin-bottom: 8px;
+       line-height: 1.6;
+}
+
+.table-wrapper {
+       width: 100%;
+       overflow-x: auto;
+       margin-top: 16px;
+}
+
+.policy-table {
+       width: 100%;
+       border-collapse: collapse;
+       background: #fff;
+}
+
+.policy-table th,
+.policy-table td {
+       border: 1px solid #e2e2e2;
+       padding: 12px;
+       text-align: left;
+}
+
+.policy-table th {
+       background: #f0f2f5;
+       font-weight: 600;
+}
+
+.policy-note {
+       margin-top: 40px;
+       padding-top: 20px;
+       border-top: 1px solid #e2e2e2;
+       font-weight: 600;
+       text-align: center;
+}
+
+@media (max-width: 600px) {
+       .policy-container {
+              padding: 0 16px 40px;
+       }
+
+       .policy-hero {
+              padding: 16px;
+       }
+
+       .policy-hero h1 {
+              font-size: 24px;
+       }
+}

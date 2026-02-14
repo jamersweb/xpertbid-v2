@@ -1,0 +1,409 @@
+/* --- Ported from xpertbid-frontend style.css --- */
+
+.listing {
+       padding: 80px 70px;
+       background: #F9F9F9;
+}
+
+.listing-main-heading {
+       margin-bottom: 40px;
+}
+
+.listing-main-heading h2 {
+       color: #23262F;
+       font-family: "Inter", sans-serif;
+       font-size: 38px;
+       font-weight: 700;
+       line-height: 48px;
+       margin-bottom: 0;
+}
+
+.listing-card {
+       border-radius: 12px;
+       background-color: #FAFAFA;
+       box-shadow: 17.561px 17.561px 61.057px 0px rgba(0, 0, 0, 0.12);
+       margin-bottom: 20px;
+       padding: 20px;
+}
+
+.listing-product-title {
+       font-size: 24px;
+       line-height: 32px;
+       font-weight: 700;
+       color: #24282B;
+       font-family: "Inter", sans-serif;
+}
+
+
+.listing-product-bid-time {
+       background-color: #F1F1F1;
+       padding: 20px;
+       border-radius: 10px;
+}
+
+.listing-product-bid-time .listingPrice,
+.listing-product-bid-time .listingTime {
+       margin-bottom: 0;
+}
+
+.listingPrice i {
+       background-color: #23262F;
+       border-radius: 100%;
+       padding: 3px 5px;
+       color: #fff;
+       font-size: 12px;
+       margin-right: 5px;
+}
+
+.listingPrice {
+       font-size: 16px;
+       font-weight: 600;
+       line-height: 20px;
+       color: #23262F;
+       font-family: "Inter", sans-serif;
+       display: flex;
+       align-items: center;
+
+}
+
+.listingPriceNumber {
+       margin-right: 5px;
+}
+
+.listingTime {
+       font-size: 16px;
+       font-weight: 600;
+       line-height: 20px;
+       color: #23262F;
+       font-family: "Inter", sans-serif;
+       text-align: end;
+}
+
+.edit-promote {
+       display: flex;
+       align-items: center;
+       justify-content: end;
+}
+
+.edit-promote .listingPromote {
+       margin-right: 25px;
+       background-color: #52d4862e;
+       color: #32A861;
+       padding: 12px 16px;
+       border-radius: 10px;
+       display: flex;
+       align-items: center;
+       gap: 5px;
+       font-size: 16px;
+       font-weight: 500;
+       line-height: 20px;
+       font-family: "Inter", sans-serif;
+}
+
+.edit-promote .listingPromoted {
+       margin-right: 25px;
+       background-color: #12D18E;
+       color: #fff;
+       padding: 12px 16px;
+       border-radius: 10px;
+       display: flex;
+       align-items: center;
+       gap: 5px;
+       font-size: 16px;
+       font-weight: 500;
+       line-height: 20px;
+       font-family: "Inter", sans-serif;
+}
+
+.listing-bid-label {
+       margin-bottom: 10px;
+       font-size: 12px;
+       font-weight: 500;
+       line-height: 20px;
+}
+
+.listing-bid-end-label {
+       margin-bottom: 10px;
+       font-size: 12px;
+       font-weight: 500;
+       line-height: 20px;
+       text-align: end;
+}
+
+.listing-img img {
+       width: 100%;
+       height: 100%;
+       object-fit: cover;
+       border-radius: 10px;
+}
+
+.listing-img {
+       height: 100%;
+}
+
+.button-style-1 {
+       padding: 12px 16px;
+       border: 1px solid;
+       background-color: #43ACE9;
+       color: #fff;
+       padding: 12px 16px;
+       border-radius: 10px;
+       font-size: 16px;
+       font-weight: 500;
+       line-height: 20px;
+       font-family: "Inter", sans-serif;
+}
+
+.button-style-2 {
+       padding: 12px 16px;
+       border: 1px solid;
+       background-color: #23262F;
+       color: #fff;
+       border: 1px solid #23262F;
+       padding: 12px 16px;
+       border-radius: 10px;
+       font-size: 16px;
+       font-weight: 500;
+       line-height: 20px;
+       font-family: "Inter", sans-serif;
+}
+
+.button-style-3 {
+       padding: 12px 16px;
+       border: 1px solid;
+       background-color: transparent;
+       color: #23262F;
+       border: 1px solid #23262F;
+       padding: 12px 16px;
+       border-radius: 10px;
+       font-size: 16px;
+       font-weight: 500;
+       line-height: 20px;
+       font-family: "Inter", sans-serif;
+       text-decoration: none;
+}
+
+.button-style-4 {
+       padding: 12px 16px;
+       border: 1px solid;
+       background-color: transparent;
+       color: #23262F;
+       border: 1px solid #EDEDED;
+       padding: 12px 16px;
+       border-radius: 10px;
+       font-size: 16px;
+       font-weight: 500;
+       line-height: 20px;
+       font-family: "Inter", sans-serif;
+       text-decoration: none;
+}
+
+.button-style-5 {
+       padding: 12px 16px;
+       border: 1px solid;
+       background-color: transparent;
+       color: #5DC14B;
+       border: 1px solid #5DC14B;
+       padding: 12px 16px;
+       border-radius: 10px;
+       font-size: 16px;
+       font-weight: 500;
+       line-height: 20px;
+       font-family: "Inter", sans-serif;
+       text-decoration: none;
+}
+
+.button-style-6 {
+       padding: 12px 16px;
+       border: 1px solid;
+       background-color: transparent;
+       color: #E94343;
+       border: 1px solid #E94343;
+       padding: 12px 16px;
+       border-radius: 10px;
+       font-size: 16px;
+       font-weight: 500;
+       line-height: 20px;
+       font-family: "Inter", sans-serif;
+       text-decoration: none;
+}
+
+.button-shine {
+       position: relative;
+       overflow: hidden;
+}
+
+.button-shine::after {
+       content: "";
+       position: absolute;
+       top: -60%;
+       left: -120%;
+       width: 80%;
+       height: 220%;
+       background: linear-gradient(120deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0));
+       transform: rotate(25deg);
+       opacity: 0;
+}
+
+.button-shine:hover::after {
+       animation: button-shine-sweep 0.8s ease forwards;
+}
+
+.button-shine:hover {
+       filter: brightness(1.08);
+}
+
+@keyframes button-shine-sweep {
+       0% {
+              left: -120%;
+              opacity: 0;
+       }
+
+       20% {
+              opacity: 0.7;
+       }
+
+       100% {
+              left: 160%;
+              opacity: 0;
+       }
+}
+
+.nav-sellnow {
+       margin-left: 10px;
+}
+
+/* --- Global button shine effect --- */
+.button-style-1,
+.button-style-2,
+.button-style-3,
+.button-style-4,
+.button-style-5,
+.button-style-6,
+.sellnow,
+.explore-more,
+.upload-btn,
+.remove-btn,
+.transparent-button,
+.button-style-2.change-password,
+.registration-btns .sellnow,
+.navbar-collapse .sellnow,
+.nav-sellnow,
+.pro-bid-btn a,
+.btn,
+.btn-dark,
+.btn-primary,
+.btn-outline-primary,
+.btn-outline-dark,
+.btn-outline-secondary,
+.btn-lg,
+.btn-sm {
+       position: relative;
+       overflow: hidden;
+       transition: filter 0.3s ease;
+}
+
+.button-style-1::after,
+.button-style-2::after,
+.button-style-3::after,
+.button-style-4::after,
+.button-style-5::after,
+.button-style-6::after,
+.sellnow::after,
+.explore-more::after,
+.upload-btn::after,
+.remove-btn::after,
+.transparent-button::after,
+.button-style-2.change-password::after,
+.registration-btns .sellnow::after,
+.navbar-collapse .sellnow::after,
+.nav-sellnow::after,
+.pro-bid-btn a::after,
+.btn::after,
+.btn-dark::after,
+.btn-primary::after,
+.btn-outline-primary::after,
+.btn-outline-dark::after,
+.btn-outline-secondary::after,
+.btn-lg::after,
+.btn-sm::after {
+       content: "";
+       position: absolute;
+       top: -70%;
+       left: -140%;
+       width: 80%;
+       height: 240%;
+       background: linear-gradient(115deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.7) 45%, rgba(255, 255, 255, 0) 100%);
+       transform: rotate(20deg);
+       opacity: 0;
+}
+
+.button-style-1:hover::after,
+.button-style-2:hover::after,
+.button-style-3:hover::after,
+.button-style-4:hover::after,
+.button-style-5:hover::after,
+.button-style-6:hover::after,
+.sellnow:hover::after,
+.explore-more:hover::after,
+.upload-btn:hover::after,
+.remove-btn:hover::after,
+.transparent-button:hover::after,
+.button-style-2.change-password:hover::after,
+.registration-btns .sellnow:hover::after,
+.navbar-collapse .sellnow:hover::after,
+.nav-sellnow:hover::after,
+.pro-bid-btn a:hover::after,
+.btn:hover::after,
+.btn-dark:hover::after,
+.btn-primary:hover::after,
+.btn-outline-primary:hover::after,
+.btn-outline-dark:hover::after,
+.btn-outline-secondary:hover::after,
+.btn-lg:hover::after,
+.btn-sm:hover::after {
+       animation: button-shine-sweep 0.9s ease forwards;
+}
+
+.button-style-1:hover,
+.button-style-2:hover,
+.button-style-3:hover,
+.button-style-4:hover,
+.button-style-5:hover,
+.button-style-6:hover,
+.sellnow:hover,
+.explore-more:hover,
+.upload-btn:hover,
+.remove-btn:hover,
+.transparent-button:hover,
+.button-style-2.change-password:hover,
+.registration-btns .sellnow:hover,
+.navbar-collapse .sellnow:hover,
+.nav-sellnow:hover,
+.pro-bid-btn a:hover,
+.btn:hover,
+.btn-dark:hover,
+.btn-primary:hover,
+.btn-outline-primary:hover,
+.btn-outline-dark:hover,
+.btn-outline-secondary:hover,
+.btn-lg:hover,
+.btn-sm:hover {
+       filter: brightness(1.08);
+}
+
+@keyframes button-shine-sweep {
+       0% {
+              left: -140%;
+              opacity: 0;
+       }
+
+       20% {
+              opacity: 0.8;
+       }
+
+       100% {
+              left: 160%;
+              opacity: 0;
+       }
+}
