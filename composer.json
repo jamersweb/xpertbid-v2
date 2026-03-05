@@ -18,6 +18,7 @@
         "onesignal/onesignal-php-api": "*",
         "paypal/paypal-server-sdk": "*",
         "paypal/rest-api-sdk-php": "*",
+        "predis/predis": "^3.4",
         "spatie/laravel-permission": "*",
         "stripe/stripe-php": "*",
         "tightenco/ziggy": "^2.0",

@@ -30,11 +30,19 @@ class BidController extends Controller
 
         $sort = $request->get('sort', 'newest');
         switch ($sort) {
-            case 'oldest': $query->orderBy('created_at', 'asc'); break;
-            case 'highest': $query->orderBy('bid_amount', 'desc'); break;
-            case 'lowest': $query->orderBy('bid_amount', 'asc'); break;
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'highest':
+                $query->orderBy('bid_amount', 'desc');
+                break;
+            case 'lowest':
+                $query->orderBy('bid_amount', 'asc');
+                break;
             case 'newest':
-            default: $query->orderBy('created_at', 'desc'); break;
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
         }
 
         $bids = $query->paginate(20)->withQueryString();
@@ -48,7 +56,7 @@ class BidController extends Controller
     public function show($id)
     {
         $bid = Bid::with(['user', 'auction.user'])->findOrFail($id);
-        
+
         $auctionBids = Bid::with('user')
             ->where('auction_id', $bid->auction_id)
             ->latest()
@@ -56,7 +64,7 @@ class BidController extends Controller
 
         return Inertia::render('Admin/Bids/Show', [
             'bid' => $bid,
-            'auctionBids' => auctionBids
+            'auctionBids' => $auctionBids
         ]);
     }
 }

@@ -3,9 +3,10 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import Pagination from '@/Components/Pagination';
 
-export default function Index({ bids, filters }) {
-       const [search, setSearch] = useState(filters.search || '');
-       const [sort, setSort] = useState(filters.sort || 'newest');
+export default function Index({ bids, filters = {} }) {
+       const safeFilters = Array.isArray(filters) ? {} : (filters || {});
+       const [search, setSearch] = useState(safeFilters.search || '');
+       const [sort, setSort] = useState(safeFilters.sort || 'newest');
 
        const handleFilter = (e) => {
               e?.preventDefault();

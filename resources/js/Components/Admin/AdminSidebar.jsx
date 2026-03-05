@@ -40,7 +40,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }) {
               >
                      <div className="h-16 flex items-center justify-center border-bottom border-gray-100 px-4">
                             <Link href={route('admin.dashboard')} className="flex items-center gap-2">
-                                   <img src="/images/header-logo.png" alt="Logo" className={`${isOpen ? 'h-10' : 'h-8'} transition-all`} />
+                                   <img src="/assets/images/header-logo.png" alt="Logo" className={`${isOpen ? 'h-10' : 'h-8'} transition-all`} />
                                    {isOpen && <span className="font-bold text-lg tracking-tight">ADMIN</span>}
                             </Link>
                      </div>
