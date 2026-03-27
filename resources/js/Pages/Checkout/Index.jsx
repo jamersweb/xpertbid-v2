@@ -626,10 +626,21 @@ export default function Index({ cartItems: inertiaCartItems = [], user }) {
                                                     />
                                                 </div>
                                                 <div className="ms-3 flex-grow-1">
-                                                    <h6 style={{ fontSize: '14px', fontFamily: '"Inter", sans-serif', fontWeight: "600", color: "#23262F", marginBottom: '4px' }}>
+                                                    <h6
+                                                        style={{
+                                                            fontSize: '14px',
+                                                            fontFamily: '"Inter", sans-serif',
+                                                            fontWeight: "700",
+                                                            color: "#23262F",
+                                                            marginBottom: item.variation_name ? '4px' : '10px',
+                                                            lineHeight: '1.4',
+                                                        }}
+                                                    >
                                                         {item.title}
                                                     </h6>
-                                                    <p className="mb-2 x-small text-muted">{item.variation_name || 'Standard'}</p>
+                                                    {item.variation_name && (
+                                                        <p className="mb-2 x-small text-muted">{item.variation_name}</p>
+                                                    )}
                                                     <div className="fw-bold" style={{ fontSize: '14px', color: '#23262F' }}>
                                                         <Price amountAED={item.price} />
                                                     </div>

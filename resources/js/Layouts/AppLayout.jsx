@@ -7,9 +7,20 @@ import { AuthModalProvider } from '@/Contexts/AuthModalContext';
 import { useState, useEffect } from 'react';
 
 export default function AppLayout({ children, title }) {
-       const { flash } = usePage().props;
+       const { flash, auth, ziggy } = usePage().props;
        const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
        const [isHiding, setIsHiding] = useState(false);
+
+       const individualVerificationStatus =
+              auth?.user?.individual_verification?.status || auth?.user?.individualVerification?.status;
+       const corporateVerificationStatus =
+              auth?.user?.corporate_verification?.status || auth?.user?.corporateVerification?.status;
+       const verificationStatus = corporateVerificationStatus || individualVerificationStatus || 'unverified';
+       const currentPath = ziggy?.location ? new URL(ziggy.location).pathname : '';
+       const shouldShowVerifyButton =
+              Boolean(auth?.user) &&
+              verificationStatus !== 'verified' &&
+              currentPath !== route('verification.identity', {}, false);
 
        useEffect(() => {
               if (flash?.success || flash?.error) {
@@ -57,6 +68,17 @@ export default function AppLayout({ children, title }) {
                                    <main>
                                           {children}
                                    </main>
+
+                                   {shouldShowVerifyButton && (
+                                          <button
+                                                 type="button"
+                                                 className="global-verify-account-btn"
+                                                 onClick={() => window.location.href = route('verification.identity')}
+                                          >
+                                                 <i className="fa-solid fa-user-check"></i>
+                                                 <span>Verify Account</span>
+                                          </button>
+                                   )}
 
                                    <Footer />
                                    <MobileBottomNav />
@@ -106,6 +128,40 @@ export default function AppLayout({ children, title }) {
                                    @keyframes slideOutRight {
                                           from { transform: translateX(0); opacity: 1; }
                                           to { transform: translateX(120%); opacity: 0; }
+                                   }
+                                   .global-verify-account-btn {
+                                          position: fixed;
+                                          left: 18px;
+                                          bottom: 24px;
+                                          z-index: 999;
+                                          display: inline-flex;
+                                          align-items: center;
+                                          gap: 10px;
+                                          border: none;
+                                          border-radius: 12px;
+                                          background: #ffffff;
+                                          color: #23262F;
+                                          padding: 12px 18px;
+                                          font-size: 14px;
+                                          font-weight: 700;
+                                          box-shadow: 0 10px 30px rgba(0,0,0,0.14);
+                                          transition: transform 0.2s ease, box-shadow 0.2s ease;
+                                   }
+                                   .global-verify-account-btn i {
+                                          color: #ff5a67;
+                                          font-size: 16px;
+                                   }
+                                   .global-verify-account-btn:hover {
+                                          transform: translateY(-1px);
+                                          box-shadow: 0 14px 32px rgba(0,0,0,0.18);
+                                   }
+                                   @media (max-width: 768px) {
+                                          .global-verify-account-btn {
+                                                 left: 12px;
+                                                 bottom: 86px;
+                                                 padding: 10px 14px;
+                                                 font-size: 13px;
+                                          }
                                    }
                             `}</style>
                      </AuthModalProvider>

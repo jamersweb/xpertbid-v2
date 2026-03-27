@@ -118,24 +118,26 @@ const NotificationDropdown = () => {
                      {isOpen && (
                             <div className="notification-popup" ref={notificationRef} style={{ position: 'absolute', right: 0, top: '100%', zIndex: 1000, background: 'white', border: '1px solid #ddd', minWidth: '300px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', borderRadius: '8px' }}>
                                    <div className="notification-content p-3 border-bottom d-flex justify-content-between align-items-center">
-                                          <h3 className="m-0" style={{ fontSize: '1rem' }}>{notifications.length > 0 ? "Notifications" : "No new notifications"}</h3>
+                                          <h3 className="m-0" style={{ fontSize: '1rem', color: '#23262F', fontWeight: 700 }}>
+                                                 {notifications.length > 0 ? "Notifications" : "No new notifications"}
+                                          </h3>
                                           {notifications.length > 0 && (
-                                                 <button className="markAsRead btn btn-link p-0 text-decoration-none" style={{ fontSize: '0.8rem' }} onClick={markAllAsRead}>
+                                                 <button className="markAsRead btn btn-link p-0 text-decoration-none" style={{ fontSize: '0.8rem', color: '#43ACE9', fontWeight: 600 }} onClick={markAllAsRead}>
                                                         <img src="/assets/images/double-tick.svg" alt="Mark All" className="me-1" /> Mark all read
                                                  </button>
                                           )}
                                    </div>
 
                                    <div className="notification-body" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                                          {loading && <p className="p-3 text-center">Loading notifications...</p>}
-                                          {!loading && notifications.length === 0 && <p className="p-3 text-center">Empty</p>}
+                                          {loading && <p className="p-3 text-center" style={{ color: '#23262F' }}>Loading notifications...</p>}
+                                          {!loading && notifications.length === 0 && <p className="p-3 text-center" style={{ color: '#23262F' }}>Empty</p>}
                                           {!loading &&
                                                  notifications.map((notification) => (
                                                         <div key={notification.id} className={`notification-item p-2 border-bottom ${notification.read_at ? "opacity-50" : ""}`} style={{ fontSize: '0.85rem' }}>
                                                                <div className="d-flex gap-2">
                                                                       <img src={notification.image_url || "/assets/images/message-text.svg"} alt="" width={32} height={32} />
                                                                       <div className="flex-grow-1">
-                                                                             <p className="mb-0 fw-bold">{notification.title}</p>
+                                                                             <p className="mb-0 fw-bold" style={{ color: '#23262F' }}>{notification.title}</p>
                                                                              <p className="mb-0 text-muted" style={{ fontSize: '0.75rem' }}>
                                                                                     {new Date(notification.created_at).toLocaleString()}
                                                                              </p>
@@ -156,7 +158,7 @@ const NotificationDropdown = () => {
                                    </div>
 
                                    <div className="notification-footer p-2 text-center border-top">
-                                          <Link href="/notifications-page" style={{ fontSize: '0.8rem' }}>See All Notifications</Link>
+                                          <Link href="/notifications-page" style={{ fontSize: '0.8rem', color: '#23262F', fontWeight: 600 }}>See All Notifications</Link>
                                    </div>
                             </div>
                      )}

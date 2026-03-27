@@ -22,7 +22,7 @@ class CartController extends Controller
         $cartItems = Cart::where('user_id', $user->id)
             ->with([
                 'listing' => function ($query) {
-                    $query->select('id', 'title', 'slug', 'image', 'minimum_bid', 'buy_now_price', 'is_buynow', 'list_type', 'status', 'description', 'user_id');
+                    $query->select('id', 'title', 'slug', 'image', 'status', 'description', 'user_id', 'listing_type', 'listing_data');
                 },
                 'variation'
             ])
@@ -39,6 +39,7 @@ class CartController extends Controller
                     'title' => $cartItem->listing->title ?? 'Unknown Product',
                     'slug' => $cartItem->listing->slug ?? null,
                     'image' => $cartItem->listing->image_url ?? null,
+                    'description' => $cartItem->listing->description ?? null,
                     'list_type' => $cartItem->listing->list_type ?? 'auction',
                     'variation_name' => $cartItem->variation->name ?? null,
                 ];

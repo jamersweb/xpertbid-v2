@@ -30,10 +30,12 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $authUser = $request->user()?->loadMissing(['individualVerification', 'corporateVerification']);
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $authUser,
             ],
             'cart' => $request->user() ? \App\Models\Cart::where('user_id', $request->user()->id)
                 ->with(['listing' => function ($query) {
@@ -51,7 +53,8 @@ class HandleInertiaRequests extends Middleware
                         'title' => $cartItem->listing->title ?? 'Unknown Product',
                         'slug' => $cartItem->listing->slug ?? null,
                         'image' => $cartItem->listing->image_url ?? null,
-                        'list_type' => $cartItem->listing->listing_type ?? 'auction',
+                        'description' => $cartItem->listing->description ?? null,
+                        'list_type' => $cartItem->listing->list_type ?? 'auction',
                         'variation_name' => $cartItem->variation->name ?? null,
                     ];
                 }) : [],

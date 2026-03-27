@@ -39,11 +39,11 @@ export default function CurrencyPicker() {
               : "PKR";
 
        return (
-              <div className="currency-picker d-flex align-items-center gap-2">
+              <div className="currency-picker">
                      <select
                             value={safeSelected}
                             onChange={handleChange}
-                            className="form-select form-select-sm"
+                            className="form-select form-select-sm currency-picker-select"
                             aria-label="Select display currency"
                      >
                             {options.map((code) => (
@@ -52,6 +52,32 @@ export default function CurrencyPicker() {
                                    </option>
                             ))}
                      </select>
+
+                     <style>{`
+                            .currency-picker {
+                                   display: inline-flex;
+                                   align-items: center;
+                            }
+                            .currency-picker-select {
+                                   min-width: 78px;
+                                   height: 38px;
+                                   border-radius: 10px;
+                                   border: 1px solid #d7deea;
+                                   background-color: #ffffff;
+                                   color: #23262F;
+                                   font-size: 14px;
+                                   font-weight: 500;
+                                   padding-left: 12px;
+                                   padding-right: 30px;
+                                   box-shadow: none;
+                                   background-position: right 12px center;
+                                   background-size: 14px 10px;
+                            }
+                            .currency-picker-select:focus {
+                                   border-color: #c6d3e6;
+                                   box-shadow: 0 0 0 3px rgba(67, 172, 233, 0.08);
+                            }
+                     `}</style>
               </div>
        );
 }

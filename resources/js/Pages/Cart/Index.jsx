@@ -209,7 +209,10 @@ export default function Index({ cart: propCart }) {
 
                                                                                     <div className="d-flex justify-content-between align-items-center mt-3">
                                                                                            <div>
-                                                                                                  <Price amountAED={parseFloat(item.price) || 0} />
+                                                                                                  <Price
+                                                                                                         amountAED={parseFloat(item.price) || 0}
+                                                                                                         className="fw-bold"
+                                                                                                  />
                                                                                            </div>
                                                                                            <div className="d-flex align-items-center bg-light rounded-pill px-2 py-1">
                                                                                                   <button onClick={() => handleQuantityChange(item.id, (item.quantity || 1) - 1)} className="btn btn-sm border-0"><i className="fa-solid fa-minus" style={{ fontSize: '10px' }}></i></button>
@@ -259,7 +262,10 @@ export default function Index({ cart: propCart }) {
                                                                              <span style={{ fontFamily: '"Inter", sans-serif', fontSize: "16px", color: "#606060" }}>
                                                                                     Subtotal:
                                                                              </span>
-                                                                             <Price amountAED={totalPrice} />
+                                                                             <Price
+                                                                                    amountAED={totalPrice}
+                                                                                    className="fw-semibold"
+                                                                             />
                                                                       </div>
                                                                       <div className="d-flex justify-content-between mb-3">
                                                                              <span style={{ fontFamily: '"Inter", sans-serif', fontSize: "16px", color: "#606060" }}>
@@ -270,12 +276,15 @@ export default function Index({ cart: propCart }) {
                                                                              </span>
                                                                       </div>
                                                                       <hr style={{ margin: "20px 0", borderColor: "#eee" }} />
-                                                                      <div className="d-flex justify-content-between mb-4">
-                                                                             <strong style={{ fontFamily: '"Inter", sans-serif', fontSize: "18px", fontWeight: "700", color: "#23262F" }}>
-                                                                                    Total:
-                                                                             </strong>
-                                                                             <strong style={{ fontFamily: '"Inter", sans-serif', fontSize: "18px", fontWeight: "700", color: "#23262F" }}>
-                                                                                    <Price amountAED={totalPrice} />
+                                                                     <div className="d-flex justify-content-between mb-4">
+                                                                            <strong style={{ fontFamily: '"Inter", sans-serif', fontSize: "18px", fontWeight: "700", color: "#23262F" }}>
+                                                                                   Total:
+                                                                            </strong>
+                                                                            <strong style={{ fontFamily: '"Inter", sans-serif', fontSize: "18px", fontWeight: "700", color: "#23262F" }}>
+                                                                                    <Price
+                                                                                           amountAED={totalPrice}
+                                                                                           className="fw-bold"
+                                                                                    />
                                                                              </strong>
                                                                       </div>
                                                                       <Link
@@ -302,33 +311,33 @@ export default function Index({ cart: propCart }) {
                                                                       >
                                                                              Proceed to Checkout
                                                                       </Link>
-                                                                      <Link
-                                                                             href={route('marketplace.index')}
-                                                                             style={{
-                                                                                    display: "block",
-                                                                                    textAlign: "center",
-                                                                                    padding: "14px",
-                                                                                    fontSize: "16px",
-                                                                                    fontWeight: "600",
-                                                                                    fontFamily: '"Inter", sans-serif',
-                                                                                    backgroundColor: "transparent",
-                                                                                    color: "#23262F",
-                                                                                    border: "1px solid #23262F",
-                                                                                    borderRadius: "8px",
-                                                                                    textDecoration: "none",
-                                                                                    transition: "all 0.3s ease",
-                                                                             }}
-                                                                             onMouseEnter={(e) => {
-                                                                                    e.target.style.backgroundColor = "#23262F";
-                                                                                    e.target.style.color = "#fff";
-                                                                             }}
-                                                                             onMouseLeave={(e) => {
-                                                                                    e.target.style.backgroundColor = "transparent";
-                                                                                    e.target.style.color = "#23262F";
-                                                                             }}
-                                                                      >
+                                                                     <Link
+                                                                            href={route('marketplace.index')}
+                                                                            style={{
+                                                                                   display: "block",
+                                                                                   textAlign: "center",
+                                                                                   padding: "14px",
+                                                                                   fontSize: "16px",
+                                                                                   fontWeight: "600",
+                                                                                   fontFamily: '"Inter", sans-serif',
+                                                                                   backgroundColor: "#23262F",
+                                                                                   color: "#fff",
+                                                                                   border: "1px solid #23262F",
+                                                                                   borderRadius: "8px",
+                                                                                   textDecoration: "none",
+                                                                                   transition: "all 0.3s ease",
+                                                                            }}
+                                                                            onMouseEnter={(e) => {
+                                                                                   e.target.style.backgroundColor = "#151922";
+                                                                                   e.target.style.color = "#fff";
+                                                                            }}
+                                                                            onMouseLeave={(e) => {
+                                                                                   e.target.style.backgroundColor = "#23262F";
+                                                                                   e.target.style.color = "#fff";
+                                                                            }}
+                                                                     >
                                                                              Continue Shopping
-                                                                      </Link>
+                                                                     </Link>
                                                                </div>
                                                         </div>
                                                  </div>
@@ -340,6 +349,10 @@ export default function Index({ cart: propCart }) {
                      <style dangerouslySetInnerHTML={{
                             __html: `
                .object-fit-cover { object-fit: cover; }
+               .cart-page-wrapper .fw-bold,
+               .cart-page-wrapper .fw-semibold {
+                   color: #23262F !important;
+               }
                @media (max-width: 991px) {
                    .cart-page-wrapper {
                        padding: 40px 20px !important;

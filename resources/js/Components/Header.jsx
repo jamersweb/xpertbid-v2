@@ -16,6 +16,14 @@ export default function Header() {
        const { url } = usePage();
        const user = auth?.user;
        const { openLogin, openRegister } = useAuthModal();
+       const profileImageSrc = (() => {
+              const src = user?.profile_pic;
+              if (!src) return "/assets/images/user.jpg";
+              if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('/')) {
+                     return src;
+              }
+              return `/${src.replace(/^\/+/, '')}`;
+       })();
 
        const userProfileRefDesktop = useRef(null);
        const userProfileRefMobile = useRef(null);
@@ -172,14 +180,16 @@ export default function Header() {
                                                  </ul>
 
                                                  <div className="d-flex align-items-center mt-3 mt-lg-0">
-                                                        <div className="d-none d-lg-flex align-items-center mt-2">
+                                                        <div className="d-none d-lg-flex align-items-center mt-2 header-desktop-actions">
                                                                {/* Aligned with xpertbid-frontend: Cart then Currency */}
-                                                               <div className="me-3">
+                                                               <div className="header-action-currency">
+                                                                      <CurrencyPicker />
+                                                               </div>
+                                                               <div className="header-action-cart">
                                                                       <CartPopup />
                                                                </div>
-                                                               {/* <CurrencyPicker /> */}
                                                                {user && (
-                                                                      <div className="ms-3">
+                                                                      <div className="header-action-notification">
                                                                              <NotificationDropdown />
                                                                       </div>
                                                                )}
@@ -198,14 +208,14 @@ export default function Header() {
                                                                </div>
                                                         ) : (
                                                                <div className="d-flex align-items-center">
-                                                                      <div className="user-profile-setting-container d-none d-lg-block ms-3" ref={userProfileRefDesktop}>
+                                                                      <div className="user-profile-setting-container d-none d-lg-block" ref={userProfileRefDesktop}>
                                                                              <button
                                                                                     className="user-profile-setting btn btn-link p-0 text-decoration-none d-flex align-items-center gap-2"
                                                                                     id="header-profile-dropdown"
                                                                                     onClick={toggleUserSettingPopupDesktop}
                                                                              >
                                                                                     <img
-                                                                                           src={user.profile_pic || "/assets/images/user.jpg"}
+                                                                                           src={profileImageSrc}
                                                                                            alt="Profile"
                                                                                            className="rounded-circle border"
                                                                                            width="35"
@@ -268,8 +278,8 @@ export default function Header() {
                                                                                     </div>
                                                                              )}
                                                                       </div>
-                                                                      <button
-                                                                             className="sellnow ms-3 px-3 d-none d-lg-inline-flex"
+                                                                     <button
+                                                                             className="sellnow header-sell-btn px-3 d-none d-lg-inline-flex"
                                                                              onClick={handleSellClick}
                                                                       >
                                                                              Sell Now
@@ -311,6 +321,39 @@ export default function Header() {
                         }
                         .user-setting-menu li a:hover {
                             opacity: 0.8;
+                        }
+                        .header-desktop-actions {
+                            gap: 10px;
+                            margin-right: 12px;
+                        }
+                        .header-action-currency,
+                        .header-action-cart,
+                        .header-action-notification {
+                            display: inline-flex;
+                            align-items: center;
+                            justify-content: center;
+                        }
+                        .header-action-cart .cart-icon-btn,
+                        .header-action-notification .notification {
+                            width: 38px;
+                            height: 38px;
+                            display: inline-flex;
+                            align-items: center;
+                            justify-content: center;
+                            border-radius: 10px;
+                            padding: 0 !important;
+                        }
+                        .user-profile-setting {
+                            min-height: 38px;
+                            gap: 8px !important;
+                        }
+                        .user-profile-setting img {
+                            width: 35px;
+                            height: 35px;
+                            object-fit: cover;
+                        }
+                        .header-sell-btn {
+                            margin-left: 12px;
                         }
                         
                         @media (min-width: 992px) {

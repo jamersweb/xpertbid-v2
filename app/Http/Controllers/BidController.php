@@ -97,6 +97,7 @@ class BidController extends Controller
         try {
             $bid = Bid::create([
                 'user_id' => $userId,
+                'auction_id' => null,
                 'listing_id' => $listing->id,
                 'bid_amount' => $newAmount,
             ]);

@@ -74,8 +74,8 @@ export default function CartPopup() {
                      {/* Cart Popup */}
                      {isOpen && (
                             <div className="cart-popup-container">
-                                   <div className="cart-popup-content shadow-lg border-0 rounded-4">
-                                          <div className="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                                   <div className="cart-popup-content shadow-lg border-0">
+                                          <div className="d-flex justify-content-between align-items-center cart-popup-header">
                                                  <h5 className="mb-0 fw-bold" style={{ color: '#23262F', fontFamily: '"Inter", sans-serif' }}>
                                                         Shopping Cart
                                                  </h5>
@@ -94,9 +94,9 @@ export default function CartPopup() {
                                                         <p className="text-muted fw-medium mb-4">Your Cart is empty</p>
                                                         <Link
                                                                href={route('marketplace.index')}
-                                                               className="btn btn-dark rounded-pill px-4 py-2 small fw-bold"
+                                                               className="btn btn-dark px-4 py-2 small fw-bold"
                                                                onClick={() => setIsOpen(false)}
-                                                               style={{ backgroundColor: '#23262F' }}
+                                                               style={{ backgroundColor: '#23262F', borderRadius: '12px' }}
                                                         >
                                                                Browse Products
                                                         </Link>
@@ -105,8 +105,8 @@ export default function CartPopup() {
                                                  <>
                                                         <div className="cart-items-scroll pe-2" style={{ maxHeight: '350px', overflowY: 'auto' }}>
                                                                {displayItems.map((item) => (
-                                                                      <div key={item.id} className="d-flex gap-3 mb-4 last-child-mb-0">
-                                                                             <div className="flex-shrink-0" style={{ width: '70px', height: '70px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #f0f0f0' }}>
+                                                                      <div key={item.id} className="cart-popup-item d-flex gap-3 mb-3 last-child-mb-0">
+                                                                             <div className="flex-shrink-0 cart-popup-item-image">
                                                                                     <img
                                                                                            src={item.image ? (item.image.startsWith('http') ? item.image : `https://admin.xpertbid.com/${item.image}`) : '/assets/images/placeholder.png'}
                                                                                            alt={item.title}
@@ -114,29 +114,32 @@ export default function CartPopup() {
                                                                                            onError={(e) => e.target.src = '/assets/images/WebsiteBanner2.png'}
                                                                                     />
                                                                              </div>
-                                                                             <div className="flex-grow-1 min-width-0">
-                                                                                    <div className="d-flex justify-content-between align-items-start mb-1">
-                                                                                           <h6 className="mb-0 fw-bold text-truncate" style={{ fontSize: '14px', color: '#23262F' }}>{item.title}</h6>
+                                                                             <div className="cart-popup-item-details flex-grow-1 min-width-0">
+                                                                                    <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                                                                           <h6 className="mb-0 fw-bold cart-popup-item-title">{item.title}</h6>
                                                                                            <button 
                                                                                                   onClick={() => handleRemoveItem(item.id)} 
                                                                                                   disabled={updating[item.id]}
-                                                                                                  className="btn btn-link text-danger p-0 border-0 shadow-none"
+                                                                                                  className="btn btn-link text-danger p-0 border-0 shadow-none cart-popup-remove-btn"
                                                                                            >
                                                                                                   {updating[item.id] ? <Oval height={14} width={14} color="#dc3545" /> : <i className="fa-solid fa-trash-can small"></i>}
                                                                                            </button>
                                                                                     </div>
-                                                                                    <p className="small text-muted mb-1">{item.variation_name || 'Standard'}</p>
-                                                                                    <div className="d-flex justify-content-between align-items-center">
-                                                                                           <span className="fw-bold text-dark"><Price amountAED={item.price} /></span>
-                                                                                           <span className="small text-muted">Qty: {item.quantity || 1}</span>
+                                                                                    <div className={`cart-popup-item-meta ${item.variation_name ? '' : 'is-compact'}`}>
+                                                                                           {item.variation_name && (
+                                                                                                  <p className="small text-muted mb-0 cart-popup-item-variation">{item.variation_name}</p>
+                                                                                           )}
+                                                                                             <span className="fw-bold text-dark cart-popup-item-price me-auto"><Price amountAED={item.price} /></span>
+                                                                                           <span className="small text-muted cart-popup-item-qty">Qty: {item.quantity || 1}</span>
                                                                                     </div>
+                                                                                  
                                                                              </div>
                                                                       </div>
                                                                ))}
                                                         </div>
 
-                                                        <div className="mt-4 pt-3 border-top">
-                                                               <div className="d-flex justify-content-between align-items-center mb-4">
+                                                        <div className="cart-popup-footer">
+                                                               <div className="d-flex justify-content-between align-items-center mb-3">
                                                                       <span className="text-muted fw-medium">Subtotal</span>
                                                                       <span className="fw-bold fs-5" style={{ color: '#43ACE9' }}><Price amountAED={totalAmount} /></span>
                                                                </div>
@@ -144,15 +147,14 @@ export default function CartPopup() {
                                                                       <Link
                                                                              href={route('cart.index')}
                                                                              onClick={() => setIsOpen(false)}
-                                                                             className="btn btn-outline-dark rounded-pill py-2 fw-bold small border-2"
+                                                                             className="btn cart-popup-action-btn cart-popup-action-btn--dark fw-bold small"
                                                                       >
                                                                              View Cart
                                                                       </Link>
                                                                       <Link
                                                                              href={route('checkout.index')}
                                                                              onClick={() => setIsOpen(false)}
-                                                                             className="btn btn-primary rounded-pill py-2 fw-bold shadow-sm"
-                                                                             style={{ backgroundColor: '#23262F', border: 'none' }}
+                                                                             className="btn cart-popup-action-btn cart-popup-action-btn--blue fw-bold shadow-sm"
                                                                       >
                                                                              Checkout
                                                                       </Link>
@@ -176,8 +178,101 @@ export default function CartPopup() {
                              }
                              .cart-popup-content {
                                    background-color: #fff;
-                                   padding: 25px;
+                                   padding: 22px;
+                                   border-radius: 20px;
                                    animation: popupFadeIn 0.3s ease-out;
+                             }
+                             .cart-popup-header {
+                                   margin-bottom: 18px;
+                                   padding-bottom: 14px;
+                                   border-bottom: 1px solid #eceff3;
+                             }
+                             .cart-popup-item {
+                                   padding: 12px 0;
+                                   border-bottom: 1px solid #f3f4f6;
+                             }
+                             .cart-popup-item-image {
+                                   width: 74px;
+                                   height: 74px;
+                                   border-radius: 14px;
+                                   overflow: hidden;
+                                   border: 1px solid #f0f0f0;
+                                   background: #f8fafc;
+                             }
+                             .cart-popup-item-details {
+                                   display: grid;
+                                   grid-template-columns: minmax(0, 1fr);
+                                   align-content: start;
+                                   min-width: 0;
+                             }
+                             .cart-popup-item-title {
+                                   font-size: 16px;
+                                   line-height: 1.35;
+                                   color: #23262F;
+                                   white-space: normal;
+                                   word-break: break-word;
+                                   padding-right: 8px;
+                             }
+                             .cart-popup-item-meta {
+                                   display: flex;
+                                   align-items: center;
+                                   justify-content: space-between;
+                                   gap: 12px;
+                                   margin-bottom: 8px;
+                             }
+                             .cart-popup-item-meta.is-compact {
+                                   justify-content: flex-end;
+                                   margin-bottom: 4px;
+                              }
+                             .cart-popup-item-variation {
+                                   flex: 1;
+                                   text-align: left;
+                             }
+                             .cart-popup-item-bottom {
+                                   display: flex;
+                                   align-items: center;
+                                   justify-content: flex-start;
+                             }
+                             .cart-popup-item-price {
+                                   font-size: 15px;
+                             }
+                             .cart-popup-item-qty {
+                                   min-width: fit-content;
+                                   white-space: nowrap;
+                                   text-align: right;
+                             }
+                             .cart-popup-remove-btn {
+                                   min-width: 18px;
+                                   flex-shrink: 0;
+                                   margin-top: 2px;
+                             }
+                             .cart-popup-footer {
+                                   margin-top: 18px;
+                                   padding-top: 18px;
+                                   border-top: 1px solid #eceff3;
+                             }
+                             .cart-popup-action-btn {
+                                   min-height: 48px;
+                                   border-radius: 12px;
+                                   font-size: 15px;
+                                   padding: 10px 16px;
+                                   border: none;
+                             }
+                             .cart-popup-action-btn--dark {
+                                   background: #23262F;
+                                   color: #fff;
+                             }
+                             .cart-popup-action-btn--dark:hover {
+                                   background: #151922;
+                                   color: #fff;
+                             }
+                             .cart-popup-action-btn--blue {
+                                   background: #43ACE9;
+                                   color: #fff;
+                             }
+                             .cart-popup-action-btn--blue:hover {
+                                   background: #2f9cdb;
+                                   color: #fff;
                              }
                              .cart-items-scroll::-webkit-scrollbar { width: 4px; }
                              .cart-items-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -190,10 +285,25 @@ export default function CartPopup() {
                              @media (max-width: 576px) {
                                    .cart-popup-container {
                                           position: fixed;
-                                          top: 80px;
+                                          top: 74px;
                                           left: 50%;
                                           transform: translateX(-50%);
                                           width: 95%;
+                                   }
+                                   .cart-popup-content {
+                                          padding: 18px;
+                                          border-radius: 18px;
+                                   }
+                                   .cart-popup-item-title {
+                                          font-size: 15px;
+                                    }
+                                   .cart-popup-item-meta {
+                                          align-items: flex-start;
+                                   }
+                                   .cart-popup-action-btn {
+                                          min-height: 44px;
+                                          border-radius: 10px;
+                                          font-size: 14px;
                                    }
                              }
                       `}} />
