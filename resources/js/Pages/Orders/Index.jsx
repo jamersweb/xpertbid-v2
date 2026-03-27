@@ -10,23 +10,8 @@ const formatDate = (dateString) => {
 };
 
 // Robust image parser logic
-const getImageUrl = (auction) => {
-       let imgPath = "";
-       try {
-              let albumData = auction?.album || auction?.image;
-              if (typeof albumData === 'string') {
-                     try { albumData = JSON.parse(albumData); } catch (e) { }
-              }
-              if (Array.isArray(albumData)) {
-                     imgPath = albumData[0];
-              } else {
-                     imgPath = albumData;
-              }
-              imgPath = imgPath?.replace(/^\/+/, "");
-       } catch {
-              imgPath = "";
-       }
-       return imgPath ? `/${imgPath}` : null;
+const getImageUrl = (listing) => {
+       return listing?.image_url || null;
 };
 
 export default function Index({ orders }) {
@@ -47,8 +32,8 @@ export default function Index({ orders }) {
                                                  You haven't placed any orders yet.
                                           </p>
                                           <Link
-                                                 href="/search"
-                                                 className="btn btn-primary px-4 py-2 fw-bold"
+                                                 href="/marketplace"
+                                                 className="btn btn-dark px-4 py-2 fw-bold"
                                                  style={{ borderRadius: '8px' }}
                                           >
                                                  Start Shopping
@@ -99,7 +84,7 @@ export default function Index({ orders }) {
                                                         {/* Order Items */}
                                                         <div className="order-items">
                                                                {order.items.map((item, idx) => {
-                                                                      const imgUrl = getImageUrl(item.auction);
+                                                                      const imgUrl = getImageUrl(item.listing);
                                                                       return (
                                                                              <div key={idx} className="d-flex align-items-center mb-3 p-2 rounded-3" style={{ backgroundColor: '#fafafa', border: '1px solid #f0f0f0' }}>
                                                                                     <div className="me-3" style={{ width: '70px', height: '70px', borderRadius: '10px', overflow: 'hidden', backgroundColor: '#fff', border: '1px solid #eee' }}>
@@ -113,7 +98,7 @@ export default function Index({ orders }) {
                                                                                     </div>
                                                                                     <div className="flex-grow-1">
                                                                                            <h6 className="mb-1 fw-bold" style={{ fontSize: '15px', color: '#333' }}>
-                                                                                                  {item.auction?.title || "Product"}
+                                                                                                  {item.listing?.title || "Product"}
                                                                                            </h6>
                                                                                            <div className="text-muted small">
                                                                                                   Qty: <span className="fw-semibold">{item.quantity}</span> &times; <span className="fw-semibold"><Price amountAED={item.price} /></span>

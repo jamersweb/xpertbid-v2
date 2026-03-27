@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
 import InputLabel from '@/Components/InputLabel';
@@ -9,6 +9,9 @@ export default function Auctions({ auctions }) {
        const [isModalOpen, setIsModalOpen] = useState(false);
        const [selectedAuction, setSelectedAuction] = useState(null);
        const [declineReason, setDeclineReason] = useState('');
+
+       const canApprove = (status) => ['inactive', 'declined', 'resubmit'].includes(status);
+       const canDecline = (status) => ['inactive', 'resubmit'].includes(status);
 
        const openDeclineModal = (auction) => {
               setSelectedAuction(auction);
@@ -28,26 +31,32 @@ export default function Auctions({ auctions }) {
        };
 
        const acceptAuction = (id) => {
-              if (confirm('Are you sure you want to approve and publish this auction?')) {
+              if (confirm('Are you sure you want to approve and publish this listing?')) {
                      router.post(route('admin.verifications.auctions.accept', id));
               }
        };
 
+       const statusBadges = {
+              inactive: 'bg-gray-100 text-gray-700',
+              declined: 'bg-rose-100 text-rose-700',
+              resubmit: 'bg-amber-100 text-amber-700',
+       };
+
        return (
-              <AdminLayout title="Auction Approval">
-                     <Head title="Auction Approval" />
+              <AdminLayout title="Listing Approval">
+                     <Head title="Listing Approval" />
 
                      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                             <div className="p-6 border-bottom border-gray-100">
-                                   <h2 className="text-lg font-bold text-gray-800">Pending Approvals</h2>
-                                   <p className="text-xs text-gray-500">Auctions waiting to be published</p>
+                                   <h2 className="text-lg font-bold text-gray-800">Listing Review Queue</h2>
+                                   <p className="text-xs text-gray-500">Showing inactive, declined, and resubmit listings</p>
                             </div>
 
                             <div className="overflow-x-auto">
                                    <table className="w-full text-left border-collapse">
                                           <thead>
                                                  <tr className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider">
-                                                        <th className="px-6 py-4">Auction Details</th>
+                                                        <th className="px-6 py-4">Listing Details</th>
                                                         <th className="px-6 py-4">Seller</th>
                                                         <th className="px-6 py-4">Verification Check</th>
                                                         <th className="px-6 py-4 text-right">Actions</th>
@@ -61,8 +70,20 @@ export default function Auctions({ auctions }) {
                                                                              <img src={auction.image_url || '/images/placeholder.png'} className="w-12 h-12 rounded-lg object-cover" alt="" />
                                                                              <div>
                                                                                     <p className="text-sm font-bold text-gray-800">{auction.title}</p>
-                                                                                    <p className="text-[10px] text-gray-400">{auction.category?.name} | {auction.list_type}</p>
-                                                                             </div>
+                                                                                    <p className="text-[10px] text-gray-400">{auction.category?.name}</p>
+                                                                                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold mt-0.5 mr-1 inline-block ${statusBadges[auction.status] || 'bg-gray-100 text-gray-700'}`}>
+                                                                                            {auction.status}
+                                                                                     </span>
+                                                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold mt-0.5 inline-block ${
+                                                                                           auction.listing_type === 'auction'
+                                                                                                  ? 'bg-violet-100 text-violet-700'
+                                                                                                   : auction.listing_type === 'business'
+                                                                                                   ? 'bg-blue-100 text-blue-700'
+                                                                                                   : 'bg-amber-100 text-amber-700'
+                                                                                     }`}>
+                                                                                            {auction.listing_type === 'auction' ? 'Auction' : auction.listing_type === 'business' ? 'Business' : 'Normal'}
+                                                                                     </span>
+                                                                              </div>
                                                                       </div>
                                                                </td>
                                                                <td className="px-6 py-4">
@@ -79,8 +100,18 @@ export default function Auctions({ auctions }) {
                                                                </td>
                                                                <td className="px-6 py-4 text-right">
                                                                       <div className="flex items-center justify-end gap-2">
-                                                                             <button onClick={() => acceptAuction(auction.id)} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors">Approve</button>
-                                                                             <button onClick={() => openDeclineModal(auction)} className="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 transition-colors">Decline</button>
+                                                                             <Link
+                                                                                    href={route('admin.listings.show', auction.id)}
+                                                                                    className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors"
+                                                                             >
+                                                                                    View
+                                                                             </Link>
+                                                                             {canApprove(auction.status) && (
+                                                                                    <button onClick={() => acceptAuction(auction.id)} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors">Approve</button>
+                                                                             )}
+                                                                             {canDecline(auction.status) && (
+                                                                                    <button onClick={() => openDeclineModal(auction)} className="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 transition-colors">Decline</button>
+                                                                             )}
                                                                       </div>
                                                                </td>
                                                         </tr>
@@ -92,17 +123,17 @@ export default function Auctions({ auctions }) {
                             {auctions.data.length === 0 && (
                                    <div className="p-12 text-center text-gray-400">
                                           <i className="fa-solid fa-check-circle text-4xl mb-4 text-emerald-100"></i>
-                                          <p>No pending auctions for approval</p>
+                                          <p>No inactive, declined, or resubmit listings found</p>
                                    </div>
                             )}
                      </div>
 
                      <Modal show={isModalOpen} onClose={() => setIsModalOpen(false)} maxWidth="md">
                             <div className="p-6">
-                                   <h2 className="text-lg font-bold text-gray-800 mb-4">Decline Auction</h2>
+                                   <h2 className="text-lg font-bold text-gray-800 mb-4">Decline Listing</h2>
                                    <div className="mb-6">
                                           <InputLabel value="Reason for Decline" />
-                                          <textarea className="mt-1 block w-full border-gray-300 focus:border-rose-500 focus:ring-rose-500 rounded-xl shadow-sm" rows="4" value={declineReason} onChange={(e) => setDeclineReason(e.target.value)}></textarea>
+                                          <textarea className="mt-1 block w-full rounded-xl border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-rose-500 focus:ring-rose-500 shadow-sm" rows="4" value={declineReason} onChange={(e) => setDeclineReason(e.target.value)}></textarea>
                                    </div>
                                    <div className="flex justify-end gap-3">
                                           <SecondaryButton onClick={() => setIsModalOpen(false)}>Cancel</SecondaryButton>

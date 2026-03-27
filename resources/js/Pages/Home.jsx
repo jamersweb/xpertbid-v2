@@ -9,7 +9,7 @@ import NormalListSection from '@/Components/NormalListSection'; // Imported
 import WhyChooseXpertBid from '@/Components/WhyChooseXpertBid'; // Imported
 import SeoContentSection from '@/Components/SeoContentSection'; // Imported
 
-export default function Home({ auth, sliders, categories, featuredAuctions, latestAuctions, latestVehicles, latestProperties, latestNormalLists }) {
+export default function Home({ auth, sliders, categories, featuredAuctions, latestAuctions, latestVehicles, latestProperties, latestNormalLists, favoriteListingIds }) {
        return (
               <AppLayout title="Online Auction Marketplace Pakistan | Bid & Sell on XpertBid">
                      <div className="home-page overflow-x-hidden">

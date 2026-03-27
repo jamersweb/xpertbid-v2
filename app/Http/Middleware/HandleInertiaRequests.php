@@ -36,22 +36,22 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'cart' => $request->user() ? \App\Models\Cart::where('user_id', $request->user()->id)
-                ->with(['auction' => function ($query) {
-                    $query->select('id', 'title', 'slug', 'image', 'minimum_bid', 'buy_now_price', 'is_buynow', 'list_type', 'status', 'description', 'user_id');
+                ->with(['listing' => function ($query) {
+                    $query->select('id', 'title', 'slug', 'image', 'status', 'description', 'user_id', 'listing_type', 'listing_data');
                 }, 'variation'])
                 ->get()
                 ->map(function ($cartItem) {
                     return [
                         'id' => $cartItem->id,
-                        'auction_id' => $cartItem->auction_id,
+                        'listing_id' => $cartItem->listing_id,
                         'variation_id' => $cartItem->variation_id,
                         'type' => $cartItem->type,
                         'quantity' => $cartItem->quantity,
                         'price' => $cartItem->price,
-                        'title' => $cartItem->auction->title ?? 'Unknown Product',
-                        'slug' => $cartItem->auction->slug ?? null,
-                        'image' => $cartItem->auction->image ?? null,
-                        'list_type' => $cartItem->auction->list_type ?? 'auction',
+                        'title' => $cartItem->listing->title ?? 'Unknown Product',
+                        'slug' => $cartItem->listing->slug ?? null,
+                        'image' => $cartItem->listing->image_url ?? null,
+                        'list_type' => $cartItem->listing->listing_type ?? 'auction',
                         'variation_name' => $cartItem->variation->name ?? null,
                     ];
                 }) : [],

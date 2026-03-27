@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Favorite extends Model
 {   protected $table = "favorites";
-    protected $fillable = ['user_id', 'auctions_id'];
+    protected $fillable = ['user_id', 'auctions_id', 'listing_id'];
 
 
     public function user()
@@ -18,5 +18,10 @@ class Favorite extends Model
     public function auction()
     {
         return $this->belongsTo(Auction::class, 'auctions_id');
+    }
+
+    public function listing()
+    {
+        return $this->belongsTo(Listing::class, 'listing_id');
     }
 }

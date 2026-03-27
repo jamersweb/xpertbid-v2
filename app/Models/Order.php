@@ -47,6 +47,15 @@ class Order extends Model
         'total' => 'decimal:2',
     ];
 
+    protected $appends = [
+        'receipt_image_url'
+    ];
+
+    public function getReceiptImageUrlAttribute()
+    {
+        return $this->receipt_image ? asset('storage/' . $this->receipt_image) : null;
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

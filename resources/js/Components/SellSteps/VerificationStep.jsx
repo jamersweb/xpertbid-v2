@@ -79,6 +79,7 @@ export default function VerificationStep({ categoryId, formData, setFormData, su
                      </div>
 
                      <form className="verification-form" onSubmit={handleNext} noValidate>
+                            <div className="sell-form-inner">
 
                             <SummaryCard
                                    type="List Type"
@@ -282,6 +283,7 @@ export default function VerificationStep({ categoryId, formData, setFormData, su
                                    <button type="submit" className="btn btn-black px-5">
                                           Continue
                                    </button>
+                            </div>
                             </div>
                      </form>
               </section>

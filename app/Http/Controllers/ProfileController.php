@@ -25,12 +25,14 @@ class ProfileController extends Controller
     public function edit(Request $request): Response
     {
         $user = $request->user();
-        
+
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
-            'address' => $user->address, // Eager load in model or here
+            'address' => $user->shippingAddress,
             'identity' => $user->identity_verification,
+            'individualVerification' => $user->individualVerification,
+            'corporateVerification' => $user->corporateVerification,
             'notificationSettings' => Notification::where("user_id", $user->id)->first(),
         ]);
     }
@@ -53,13 +55,11 @@ class ProfileController extends Controller
 
     /**
      * Update the user's detailed profile (Avatar, VAT, etc.)
-     * Replaces old 'updateProfile' API method
      */
-    public function updateProfile(Request $request) 
+    public function updateProfile(Request $request)
     {
-         $user = Auth::user();
+        $user = Auth::user();
 
-        // Input fields validate karain
         $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
@@ -75,22 +75,18 @@ class ProfileController extends Controller
             $country = null;
         }
 
-        // 2) Build the data array with always-updated fields
         $data = [
             'name' => $request->name,
             'phone' => $request->phone,
-            // 'usertype' => $request->usertype, // Be careful updating user type freely
             'username' => $request->username,
             'vat_number' => $request->vat_number,
             'company_name' => $request->company_name,
         ];
 
-        // Add country_id if country exists
         if ($country) {
             $data['country_id'] = $country->id;
         }
-        
-        // Profile picture update handling
+
         if ($request->hasFile('profile_pic')) {
             $image = $request->file('profile_pic');
             $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
@@ -100,7 +96,6 @@ class ProfileController extends Controller
 
         $user->update($data);
 
-        // Account Change Notification email logic 
         try {
             \Mail::to($user->email)->send(new \App\Mail\AccountChangeNotification($user->name, 'Profile Updated', now()->toDayDateTimeString()));
         } catch (\Exception $e) {
@@ -131,23 +126,22 @@ class ProfileController extends Controller
         return Redirect::to('/');
     }
 
-    // Update user address
+    /**
+     * Update user address
+     */
     public function updateAddress(Request $request)
     {
         $request->validate([
             'addressLine1' => 'required',
             'city' => 'required',
             'state' => 'required',
-        ], [
-            'addressLine1.required' => 'Please enter your street address.',
-            'city.required' => 'Please enter your city.',
-            'state.required' => 'Please enter your state or province.',
+            'country' => 'required',
         ]);
 
         $user = Auth::user();
 
         $data = [
-            'user_id' => $user->id, 
+            'user_id' => $user->id,
             'addressLine1' => $request->addressLine1,
             'addressLine2' => $request->addressLine2 ?? null,
             'city' => $request->city,
@@ -160,25 +154,39 @@ class ProfileController extends Controller
 
         Address::updateOrCreate(['user_id' => $user->id], $data);
 
+        try {
+            \Mail::to($user->email)->send(new \App\Mail\AccountChangeNotification($user->name, 'Address Updated', now()->toDayDateTimeString()));
+        } catch (\Exception $e) {
+            \Log::error('Account change notification email failed: ' . $e->getMessage());
+        }
+
         return Redirect::route('profile.edit')->with('success', 'Address updated successfully.');
     }
 
-    // Update password (Custom implementation or use Breeze's PasswordController)
+    /**
+     * Update password
+     */
     public function updatePassword(Request $request)
     {
         $request->validate([
             'oldPassword' => 'required',
-            'newPassword' => 'required|min:8|confirmed', 
+            'newPassword' => 'required|min:8|confirmed',
         ]);
 
         $user = Auth::user();
-        
+
         if (!Hash::check($request->oldPassword, $user->password)) {
             return back()->withErrors(['oldPassword' => 'Old password is incorrect.']);
         }
 
         $user->password = Hash::make($request->newPassword);
         $user->save();
+
+        try {
+            \Mail::to($user->email)->send(new \App\Mail\AccountChangeNotification($user->name, 'Password Changed', now()->toDayDateTimeString()));
+        } catch (\Exception $e) {
+            \Log::error('Account change notification email failed: ' . $e->getMessage());
+        }
 
         return Redirect::route('profile.edit')->with('success', 'Password updated successfully.');
     }
@@ -212,7 +220,31 @@ class ProfileController extends Controller
 
     public function getIdentityVerification()
     {
-        // Ideally pass this as a prop in edit(), but if verified via AJAX/Separate Page:
-        return response()->json(Auth::user()->identity_verification ?? []);
+        return redirect()->route('profile.edit', ['tab' => 'identity_verification']);
+    }
+
+    public function updateNotifications(Request $request)
+    {
+        $user = Auth::user();
+        Notification::updateOrCreate(
+            ['user_id' => $user->id],
+            $request->only([
+                'inspiration',
+                'newsletter',
+                'outbid',
+                'republished',
+                'oneDayReminder',
+                'oneHourReminder',
+                'fifteenMinutesReminder'
+            ])
+        );
+
+        try {
+            \Mail::to($user->email)->send(new \App\Mail\AccountChangeNotification($user->name, 'Notification Settings Updated', now()->toDayDateTimeString()));
+        } catch (\Exception $e) {
+            \Log::error('Account change notification email failed: ' . $e->getMessage());
+        }
+
+        return Redirect::route('profile.edit')->with('success', 'Notification preferences updated.');
     }
 }

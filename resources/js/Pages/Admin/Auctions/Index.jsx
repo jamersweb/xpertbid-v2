@@ -69,7 +69,7 @@ export default function Index({ auctions, filters }) {
                                                         <tr key={auction.id} className="hover:bg-gray-50/50 transition-colors">
                                                                <td className="px-6 py-4">
                                                                       <div className="flex items-center gap-3">
-                                                                             <img src={auction.image_url || '/images/placeholder.png'} className="w-10 h-10 rounded-lg object-cover" alt="" />
+                                                                             <img src={auction.image_url || '/assets/images/placeholder.png'} className="w-10 h-10 rounded-lg object-cover" alt="" />
                                                                              <div>
                                                                                     <p className="text-sm font-bold text-gray-800 line-clamp-1">{auction.title}</p>
                                                                                     <p className="text-[10px] text-gray-400">ID: {auction.id} | Ends: {new Date(auction.end_date).toLocaleDateString()}</p>
@@ -84,8 +84,8 @@ export default function Index({ auctions, filters }) {
                                                                       <span className="text-[11px] text-gray-600 bg-gray-100 px-2 py-0.5 rounded">{auction.category?.name}</span>
                                                                </td>
                                                                <td className="px-6 py-4">
-                                                                      <p className="text-sm font-bold text-black">{auction.currency} {auction.min_bid}</p>
-                                                                      <p className="text-[10px] text-gray-400 capitalize">{auction.list_type.replace('_', ' ')}</p>
+                                                                      <p className="text-sm font-bold text-black">{auction.minimum_bid}</p>
+                                                                      <p className="text-[10px] text-gray-400 capitalize">{auction.list_type?.replace('_', ' ')}</p>
                                                                </td>
                                                                <td className="px-6 py-4">
                                                                       <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBadges[auction.status] || 'bg-gray-100'}`}>

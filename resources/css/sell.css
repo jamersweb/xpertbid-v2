@@ -75,8 +75,34 @@
 
 .list-type-options {
        display: grid;
-       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+       grid-template-columns: repeat(2, 1fr);
        gap: 1.5rem;
+}
+
+.list-type-option-wrapper--wide {
+       grid-column: span 2;
+       display: flex;
+       justify-content: center;
+}
+
+.list-type-option-wrapper--wide .list-type-option {
+       width: 100%;
+       max-width: 475px;
+}
+
+.list-type-grid {
+       display: grid;
+       grid-template-columns: repeat(2, 1fr);
+       gap: 1.5rem;
+}
+
+.info-toggle-btn {
+       color: #6b7280;
+       transition: color 0.2s ease;
+}
+
+.info-toggle-btn:hover {
+       color: #0d6efd;
 }
 
 .list-type-option {
@@ -110,6 +136,54 @@
        color: #6b7280;
        font-size: 14px;
        line-height: 1.5;
+}
+
+/* Modal Styles */
+.list-type-modal-overlay {
+       position: fixed;
+       inset: 0;
+       background: rgba(0, 0, 0, 0.45);
+       backdrop-filter: blur(4px);
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       z-index: 1000;
+       padding: 1rem;
+       animation: modalFadeIn 0.3s ease;
+}
+
+.list-type-modal-content {
+       background: #ffffff;
+       border-radius: 28px;
+       width: 100%;
+       max-width: 520px;
+       padding: 2.5rem;
+       position: relative;
+       animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-icon-circle {
+       width: 54px;
+       height: 54px;
+       border-radius: 16px;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       font-size: 22px;
+}
+
+.modal-icon-circle.list-type-option--auction { background: #fee2e2; color: #ef4444; }
+.modal-icon-circle.list-type-option--normal { background: #dcfce7; color: #22c55e; }
+.modal-icon-circle.list-type-option--business { background: #dbeafe; color: #3b82f6; }
+
+@keyframes modalFadeIn {
+       from { opacity: 0; }
+       to { opacity: 1; }
+}
+
+@keyframes modalSlideUp {
+       from { transform: translateY(20px) scale(0.95); opacity: 0; }
+       to { transform: translateY(0) scale(1); opacity: 1; }
 }
 
 .category-stage {
@@ -625,12 +699,15 @@
        .details-stage,
        .verification-stage,
        .media-stage {
-              padding: 1.5rem 1.1rem 6rem;
-              max-width: none;
-              margin: 0;
-              border-radius: 0;
+              padding: 3rem 1.5rem 6rem;
+              max-width: 900px;
+              margin: 0 auto;
               min-height: 100vh;
        }
+
+.sell-form-inner {
+       width: 100%;
+}
 
        .details-row {
               flex-direction: column;
@@ -653,9 +730,18 @@
               margin-bottom: 2rem;
        }
 
-       .list-type-options {
+       .list-type-options,
+       .list-type-grid {
               grid-template-columns: 1fr;
               gap: 1.25rem;
+       }
+
+       .list-type-option-wrapper--wide {
+              grid-column: span 1;
+       }
+
+       .list-type-option-wrapper--wide .list-type-option {
+              max-width: none;
        }
 
        .list-type-option {
@@ -706,4 +792,59 @@
 .verification-form .form-label,
 .media-form .form-label {
        color: #14213d;
+       margin-bottom: 0.6rem;
+       font-size: 15px;
+}
+
+/* Premium Verify Input - Improved Contrast */
+.verify_input {
+       background: #ffffff !important;
+       border: 1px solid #d1d5db !important;
+       border-radius: 8px !important;
+       padding: 0.85rem 1.1rem !important;
+       font-size: 15px !important;
+       color: #111827 !important;
+       transition: border-color 0.2s, box-shadow 0.2s !important;
+       height: auto !important;
+       width: 100% !important;
+}
+
+.verify_input:focus {
+       background: #ffffff !important;
+       border-color: #000000 !important;
+       box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08) !important;
+       outline: none !important;
+}
+
+.verify_input::placeholder {
+       color: #9ca3af !important;
+       font-style: normal;
+}
+
+/* React Quill Specific override - Ensuring clickability */
+.r-quill .ql-container {
+       border-radius: 0 0 8px 8px !important;
+       background: #ffffff;
+       border: 1px solid #d1d5db !important;
+       font-family: inherit !important;
+}
+
+.r-quill .ql-editor {
+       min-height: 180px !important;
+       font-size: 15px !important;
+       color: #111827 !important;
+       cursor: text !important;
+}
+
+.r-quill .ql-toolbar {
+       border-radius: 8px 8px 0 0 !important;
+       background: #f9fafb;
+       border: 1px solid #d1d5db !important;
+       border-bottom: none !important;
+}
+
+.r-quill .ql-editor.ql-blank::before {
+       color: #9ca3af !important;
+       font-style: normal !important;
+       left: 15px !important;
 }

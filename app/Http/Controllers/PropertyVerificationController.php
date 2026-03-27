@@ -140,7 +140,7 @@ public function edit($id)
             'title_deed_number'  => 'required|string',
             'property_documents' => 'required|array|min:1|max:3',
         'property_documents.*' => 'file|mimes:jpg,jpeg,png,pdf|max:2048',
-          'auction_id'         => 'required|exists:auctions,id',
+          'listing_id'         => 'required|exists:listings,id',
         ]);
 
          $paths = [];
@@ -162,7 +162,7 @@ public function edit($id)
             'property_address'    => $data['property_address'],
             'title_deed_number'   => $data['title_deed_number'],
             'property_documents'  => $paths,
-            'auction_id'             => $data['auction_id'],
+            'listing_id'             => $data['listing_id'],
         ]);
 
         return response()->json($pv,201);

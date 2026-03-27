@@ -61,6 +61,19 @@ class User extends Authenticatable
      */
     protected $hidden = ['password', 'remember_token', 'api_token'];
 
+    /**
+     * The attributes to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'address_line1',
+        'address_line2',
+        'city',
+        'state',
+        'country',
+        'postal_code',
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -118,7 +131,7 @@ class User extends Authenticatable
         return $this->hasOne(Wallet::class);
     }
 
-    public function address()
+    public function shippingAddress()
     {
         return $this->hasOne(Address::class);
     }
@@ -170,5 +183,41 @@ class User extends Authenticatable
         return $this->hasOne(CustomerOutreach::class);
     }
 
+    public function bids()
+    {
+        return $this->hasMany(Bid::class);
+    }
 
+    /**
+     * Accessors for frontend compatibility (mapping shippingAddress fields)
+     */
+    public function getAddressLine1Attribute()
+    {
+        return $this->shippingAddress->addressLine1 ?? null;
+    }
+
+    public function getAddressLine2Attribute()
+    {
+        return $this->shippingAddress->addressLine2 ?? null;
+    }
+
+    public function getCityAttribute()
+    {
+        return $this->shippingAddress->city ?? null;
+    }
+
+    public function getStateAttribute()
+    {
+        return $this->shippingAddress->state ?? null;
+    }
+
+    public function getCountryAttribute()
+    {
+        return $this->shippingAddress->country ?? null;
+    }
+
+    public function getPostalCodeAttribute()
+    {
+        return $this->shippingAddress->postalCode ?? null;
+    }
 }

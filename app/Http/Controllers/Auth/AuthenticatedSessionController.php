@@ -7,19 +7,24 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
      * Display the login view.
      */
-    public function create(): \Inertia\Response
+    public function create(Request $request): RedirectResponse
     {
-        return \Inertia\Inertia::render('Auth/Login', [
-            'canResetPassword' => \Illuminate\Support\Facades\Route::has('password.request'),
-            'status' => session('status'),
-        ]);
+        $previousUrl = url()->previous();
+        $appUrl = rtrim(config('app.url'), '/');
+
+        if (!$previousUrl || str_starts_with($previousUrl, $appUrl . '/login')) {
+            $previousUrl = url('/');
+        }
+
+        $separator = str_contains($previousUrl, '?') ? '&' : '?';
+
+        return redirect()->to($previousUrl . $separator . 'auth=login');
     }
 
     /**

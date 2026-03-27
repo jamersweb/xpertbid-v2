@@ -50,14 +50,14 @@ export default function Index({ categories }) {
               e.preventDefault();
               if (editingCategory) {
                      // For file uploads in Inertia with PUT, we often use POST with _method spoofing
-                     router.post(route('admin.auction_categories.update', editingCategory.id), {
+                     router.post(route('admin.categories.update', editingCategory.id), {
                             ...data,
                             _method: 'PUT'
                      }, {
                             onSuccess: () => closeModal(),
                      });
               } else {
-                     post(route('admin.auction_categories.store'), {
+                     post(route('admin.categories.store'), {
                             onSuccess: () => closeModal(),
                      });
               }
@@ -71,7 +71,7 @@ export default function Index({ categories }) {
 
        const deleteCategory = (id) => {
               if (confirm('Are you sure you want to delete this category?')) {
-                     router.delete(route('admin.auction_categories.destroy', id));
+                     router.delete(route('admin.categories.destroy', id));
               }
        };
 
@@ -113,7 +113,7 @@ export default function Index({ categories }) {
                                                                              <span className="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full uppercase">Main Category</span>
                                                                       </td>
                                                                       <td className="px-6 py-4 text-xs text-gray-500">
-                                                                             {category.sub_categories?.length || 0} Sub-categories
+                                                                             {category.subCategories?.length || 0} Sub-categories
                                                                       </td>
                                                                       <td className="px-6 py-4 text-right">
                                                                              <div className="flex gap-2 justify-end">
@@ -122,31 +122,56 @@ export default function Index({ categories }) {
                                                                              </div>
                                                                       </td>
                                                                </tr>
-                                                               {category.sub_categories?.map(sub => (
-                                                                      <tr key={sub.id} className="hover:bg-gray-50/50 transition-colors">
-                                                                             <td className="px-6 py-4 pl-10">
-                                                                                    <img src={sub.image || '/images/placeholder.png'} className="w-8 h-8 rounded-lg object-cover border border-gray-200" alt="" />
-                                                                             </td>
-                                                                             <td className="px-6 py-4">
-                                                                                    <span className="text-sm font-semibold text-gray-700">{sub.name}</span>
-                                                                                    <p className="text-[10px] text-gray-400">/{sub.slug}</p>
-                                                                             </td>
-                                                                             <td className="px-6 py-4">
-                                                                                    <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full uppercase">Sub-category</span>
-                                                                             </td>
-                                                                             <td className="px-6 py-4 text-xs text-gray-500">
-                                                                                    {sub.child_categories?.length || 0} Children
-                                                                             </td>
-                                                                             <td className="px-6 py-4 text-right">
-                                                                                    <div className="flex gap-2 justify-end">
-                                                                                           <button onClick={() => openModal(sub)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors"><i className="fa-solid fa-pen-to-square"></i></button>
-                                                                                           <button onClick={() => deleteCategory(sub.id)} className="p-2 hover:bg-rose-50 rounded-lg text-rose-600 transition-colors"><i className="fa-solid fa-trash"></i></button>
-                                                                                    </div>
-                                                                             </td>
-                                                                      </tr>
-                                                               ))}
-                                                        </React.Fragment>
-                                                 ))}
+                                                                {category.subCategories?.map(sub => (
+                                                                       <React.Fragment key={sub.id}>
+                                                                              <tr className="hover:bg-gray-50/50 transition-colors">
+                                                                                     <td className="px-6 py-4 pl-10">
+                                                                                            <img src={sub.image || '/images/placeholder.png'} className="w-8 h-8 rounded-lg object-cover border border-gray-200" alt="" />
+                                                                                     </td>
+                                                                                     <td className="px-6 py-4">
+                                                                                            <span className="text-sm font-semibold text-gray-700">{sub.name}</span>
+                                                                                            <p className="text-[10px] text-gray-400">/{sub.slug}</p>
+                                                                                     </td>
+                                                                                     <td className="px-6 py-4">
+                                                                                            <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full uppercase">Sub-category</span>
+                                                                                     </td>
+                                                                                     <td className="px-6 py-4 text-xs text-gray-500">
+                                                                                            {sub.childCategories?.length || 0} Children
+                                                                                     </td>
+                                                                                     <td className="px-6 py-4 text-right">
+                                                                                            <div className="flex gap-2 justify-end">
+                                                                                                   <button onClick={() => openModal(sub)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors"><i className="fa-solid fa-pen-to-square"></i></button>
+                                                                                                   <button onClick={() => deleteCategory(sub.id)} className="p-2 hover:bg-rose-50 rounded-lg text-rose-600 transition-colors"><i className="fa-solid fa-trash"></i></button>
+                                                                                            </div>
+                                                                                     </td>
+                                                                              </tr>
+                                                                              {sub.childCategories?.map(child => (
+                                                                                     <tr key={child.id} className="hover:bg-gray-50/50 transition-colors bg-gray-50/20">
+                                                                                            <td className="px-6 py-4 pl-16">
+                                                                                                   <div className="w-6 h-6 rounded-lg bg-gray-200 flex items-center justify-center text-[8px] text-gray-500">3rd</div>
+                                                                                            </td>
+                                                                                            <td className="px-6 py-4">
+                                                                                                   <span className="text-xs font-medium text-gray-600">{child.name}</span>
+                                                                                                   <p className="text-[10px] text-gray-400">/{child.slug}</p>
+                                                                                            </td>
+                                                                                            <td className="px-6 py-4">
+                                                                                                   <span className="text-[10px] bg-gray-100 text-gray-500 font-bold px-2 py-0.5 rounded-full uppercase">Child</span>
+                                                                                            </td>
+                                                                                            <td className="px-6 py-4 text-[10px] text-gray-400">
+                                                                                                   -
+                                                                                            </td>
+                                                                                            <td className="px-6 py-4 text-right">
+                                                                                                   <div className="flex gap-2 justify-end">
+                                                                                                          <button onClick={() => openModal(child)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors"><i className="fa-solid fa-pen-to-square"></i></button>
+                                                                                                          <button onClick={() => deleteCategory(child.id)} className="p-2 hover:bg-rose-50 rounded-lg text-rose-600 transition-colors"><i className="fa-solid fa-trash"></i></button>
+                                                                                                   </div>
+                                                                                            </td>
+                                                                                     </tr>
+                                                                              ))}
+                                                                       </React.Fragment>
+                                                                ))}
+                                                         </React.Fragment>
+                                                  ))}
                                           </tbody>
                                    </table>
                             </div>
@@ -199,7 +224,7 @@ export default function Index({ categories }) {
                                                         onChange={e => setData('sub_category_id', e.target.value)}
                                                  >
                                                         <option value="">None (Is a Sub-category)</option>
-                                                        {categories.find(c => c.id == data.parent_id)?.sub_categories?.map(sc => (
+                                                        {categories.find(c => c.id == data.parent_id)?.subCategories?.map(sc => (
                                                                <option key={sc.id} value={sc.id}>{sc.name}</option>
                                                         ))}
                                                  </select>

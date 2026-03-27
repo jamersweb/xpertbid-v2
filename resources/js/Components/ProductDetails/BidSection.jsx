@@ -2,14 +2,19 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { usePage, router } from '@inertiajs/react';
 import Price from '@/Components/Price';
+import { useCart } from '@/Contexts/CartContext';
 
-export default function BidSection({ product, highestBidProp, onBidPlaced, winnerDetails }) {
+export default function BidSection({ product, highestBidProp, onBidPlaced, winnerDetails, isFavoriteProp }) {
        const { auth, flash } = usePage().props;
+       const { addToCart } = useCart();
        const [bidAmount, setBidAmount] = useState('');
        const [isPlacingBid, setIsPlacingBid] = useState(false);
+       const [isAddingToCart, setIsAddingToCart] = useState(false);
        const [highestBid, setHighestBid] = useState(highestBidProp || 0);
        const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
        const [showConfirm, setShowConfirm] = useState(false);
+       const [isFavorite, setIsFavorite] = useState(isFavoriteProp || false);
+       const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
 
        useEffect(() => {
               if (flash?.success) {
@@ -30,6 +35,32 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
        useEffect(() => {
               setHighestBid(highestBidProp);
        }, [highestBidProp]);
+
+       useEffect(() => {
+              setIsFavorite(isFavoriteProp);
+       }, [isFavoriteProp]);
+
+       const handleToggleFavorite = () => {
+              if (!auth.user) {
+                     showNotification('Please login to add to favorites', 'error');
+                     return;
+              }
+
+              setIsTogglingFavorite(true);
+              router.post(route('favorites.toggle'), {
+                     listing_id: product.id
+              }, {
+                     preserveScroll: true,
+                     onSuccess: () => {
+                            setIsFavorite(!isFavorite);
+                            setIsTogglingFavorite(false);
+                     },
+                     onError: () => {
+                            setIsTogglingFavorite(false);
+                            showNotification('Failed to update favorites', 'error');
+                     }
+              });
+       };
 
        const isOwner = auth.user && (
               auth.user.id === product.user_id ||
@@ -61,7 +92,7 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
               setIsPlacingBid(true);
 
               router.post('/bids', {
-                     auction_id: product.id,
+                     listing_id: product.id,
                      bid_amount: bidAmount
               }, {
                      onSuccess: () => {
@@ -82,13 +113,52 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
        };
 
        const handleAddToCart = async () => {
-              // Implementation for add to cart
-              console.log('Add to cart clicked');
+              setIsAddingToCart(true);
+              const result = await addToCart(product.id, 'product', null, product);
+              setIsAddingToCart(false);
+
+              if (result.success) {
+                     showNotification(result.message, 'success');
+              } else {
+                     showNotification(result.message, 'error');
+              }
        };
 
        const handleBuyNow = async () => {
-              // Implementation for buy now
-              console.log('Buy now clicked');
+              setIsAddingToCart(true);
+              const result = await addToCart(product.id, 'product', null, product);
+              if (result.success || result.message === 'Product already in cart') {
+                     router.visit(route('checkout.index'));
+              } else {
+                     setIsAddingToCart(false);
+                     showNotification(result.message, 'error');
+              }
+       };
+
+       const handleChat = async () => {
+              if (!auth.user) {
+                     showNotification('Please login to chat with the seller', 'error');
+                     return;
+              }
+
+              if (isOwner) {
+                     showNotification('You cannot chat with yourself', 'error');
+                     return;
+              }
+
+              try {
+                     const response = await axios.post('/chat/initiate', {
+                            user_id: product.user_id || product.seller_id || product.owner_id,
+                            product_id: product.id
+                     });
+
+                     if (response.data && response.data.id) {
+                            router.visit(`/chat?conversation_id=${response.data.id}`);
+                     }
+              } catch (error) {
+                     console.error("Error initiating chat:", error);
+                     showNotification('Failed to start conversation. Please try again.', 'error');
+              }
        };
 
        const formatDate = (dateString) => {
@@ -125,11 +195,25 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                                    </div>
                             </div>
 
-                            <button className="fav-btn border-0 bg-light p-2 rounded-2">
-                                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                          <path d="M12.62 20.81C12.28 20.93 11.72 20.93 11.38 20.81C8.48 19.82 2 15.69 2 8.68998C2 5.59998 4.49 3.09998 7.56 3.09998C9.38 3.09998 10.99 3.97998 12 5.33998C13.01 3.97998 14.63 3.09998 16.44 3.09998C19.51 3.09998 22 5.59998 22 8.68998C22 15.69 15.52 19.82 12.62 20.81Z" stroke="#23262F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                   </svg>
-                            </button>
+                            <div className="d-flex align-items-center gap-2">
+                                   <button
+                                          onClick={handleChat}
+                                          className="btn btn-outline-primary btn-sm d-flex align-items-center gap-2"
+                                          style={{ borderRadius: '20px', padding: '5px 15px', fontSize: '13px' }}
+                                   >
+                                          <i className="fa-regular fa-comment-dots"></i>
+                                          Chat
+                                   </button>
+                                   <button
+                                          onClick={handleToggleFavorite}
+                                          disabled={isTogglingFavorite}
+                                          className="fav-btn border-0 bg-light p-2 rounded-2"
+                                   >
+                                          <svg width="24" height="24" viewBox="0 0 24 24" fill={isFavorite ? "#ef4444" : "none"} xmlns="http://www.w3.org/2000/svg">
+                                                 <path d="M12.62 20.81C12.28 20.93 11.72 20.93 11.38 20.81C8.48 19.82 2 15.69 2 8.68998C2 5.59998 4.49 3.09998 7.56 3.09998C9.38 3.09998 10.99 3.97998 12 5.33998C13.01 3.97998 14.63 3.09998 16.44 3.09998C19.51 3.09998 22 5.59998 22 8.68998C22 15.69 15.52 19.82 12.62 20.81Z" stroke={isFavorite ? "#ef4444" : "#23262F"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                          </svg>
+                                   </button>
+                            </div>
                      </div>
 
                      {product.list_type === 'auction' ? (
@@ -243,15 +327,15 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                                                         className="btn w-100 fw-bold"
                                                         style={{ height: '50px', fontSize: '16px', borderRadius: '10px', backgroundColor: '#23262F', color: '#fff', border: 'none' }}
                                                         onClick={handleAddToCart}
-                                                        disabled={isOwner}
+                                                        disabled={isOwner || isAddingToCart}
                                                  >
-                                                        Add to Cart
+                                                        {isAddingToCart ? 'Adding...' : 'Add to Cart'}
                                                  </button>
                                                  <button
                                                         className="btn w-100 fw-bold"
                                                         style={{ height: '50px', fontSize: '16px', borderRadius: '10px', backgroundColor: '#43ACE9', color: '#fff', border: 'none' }}
                                                         onClick={handleBuyNow}
-                                                        disabled={isOwner}
+                                                        disabled={isOwner || isAddingToCart}
                                                  >
                                                         Buy Now
                                                  </button>
@@ -408,7 +492,7 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                                           <style>{`
                                           @keyframes slideIn {
                                                  from { transform: translateX(100%); opacity: 0; }
-                                                 to { transform: translateX(0); opacity: 1; }
+                                                  to { transform: translateX(0); opacity: 1; }
                                           }
                                    `}</style>
                                    </div>

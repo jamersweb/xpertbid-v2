@@ -52,7 +52,7 @@ const ListPackeg = ({ isOpen, onClose, onPurchaseSuccess, listing }) => {
               // In Inertia, we navigate. Assuming checkout route exists or handled via specialized page.
               // The reference uses: router.push(`/checkout?direct=featured&auction_id=${listing.id}&duration=${days}`);
               // We will do the same with Inertia.
-              router.visit(`/checkout?direct=featured&auction_id=${listing.id}&duration=${days}`);
+              router.visit(`/checkout?direct=featured&listing_id=${listing.id}&duration=${days}`);
               onClose();
        };
 
@@ -99,14 +99,14 @@ const ListPackeg = ({ isOpen, onClose, onPurchaseSuccess, listing }) => {
                             <div className="modal-content">
                                    {/* Modal Header */}
                                    <div className="modal-header">
-                                          <h5 className="modal-title">Purchase your package</h5>
+                                          <h5 className="modal-title text-dark fw-bold">Purchase your package</h5>
                                           <button type="button" className="btn-close" onClick={onClose}></button>
                                    </div>
                                    {/* Modal Body */}
                                    <div className="modal-body">
                                           {errorMessage && <p className="text-danger text-center">{errorMessage}</p>}
                                           <div className="col-12 mb-4">
-                                                 <h3 className="text-center mb-4">Select a Package</h3>
+                                                 <h3 className="text-center text-dark fw-bold mb-4">Select a Package</h3>
                                                  <div className="row g-3">
                                                         {[
                                                                { days: 7, original: 500, label: "Standard" },
@@ -116,13 +116,13 @@ const ListPackeg = ({ isOpen, onClose, onPurchaseSuccess, listing }) => {
                                                                <div className="col-md-4" key={pkg.days}>
                                                                       <div className="card h-100 shadow-sm border-0 text-center">
                                                                              <div className="card-header bg-transparent border-0 pt-4">
-                                                                                    <h5 className="card-title fw-bold text-uppercase text-muted small mb-0">
+                                                                                    <h5 className="card-title fw-bold text-uppercase text-dark small mb-0">
                                                                                            {pkg.label}
                                                                                     </h5>
                                                                                     <h2 className="display-4 my-2 fw-bold text-dark">
                                                                                            {pkg.days}
                                                                                     </h2>
-                                                                                    <span className="text-muted small">Days</span>
+                                                                                    <span className="text-secondary small">Days</span>
                                                                              </div>
                                                                              <div className="card-body">
                                                                                     <div className="price-tag mb-3 d-flex align-items-center justify-content-center gap-2">

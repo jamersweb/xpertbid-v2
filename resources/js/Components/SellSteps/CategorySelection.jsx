@@ -69,7 +69,7 @@ export default function CategorySelection({ categories: initialCategories, onSel
                      return;
               }
               try {
-                     const response = await axios.get(`/get-childern/${subCategoryId}`);
+                     const response = await axios.get(`/get-children/${subCategoryId}`);
                      setChildCategories(response.data.subcategories || []);
               } catch (error) {
                      console.error("Error loading child categories", error);

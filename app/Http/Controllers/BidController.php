@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Bid;
 use App\Models\User;
-use App\Models\Auction;
+use App\Models\Listing;
 use Illuminate\Http\Request;
 use App\Models\NewNotification;
 use Illuminate\Support\Facades\DB;
@@ -23,19 +23,19 @@ class BidController extends Controller
     //     $this->msgpkService = $msgpkService;
     // }
 
-    public function getHighestBid($auctionId)
+    public function getHighestBid($listingId)
     {
-        $highestBid = Bid::where('auction_id', $auctionId)
+        $highestBid = Bid::where('listing_id', $listingId)
             ->orderBy('bid_amount', 'desc')
             ->first();
         
-        $auction = Auction::find($auctionId);
+        $listing = Listing::find($listingId);
 
         return response()->json([
             'success' => true,
             'highest_bid' => $highestBid ? $highestBid->bid_amount : 0,
             'user' => $highestBid ? ($highestBid->user->name ?? 'Anonymous') : null,
-            'end_date' => $auction ? $auction->end_date : null,
+            'end_date' => $listing ? $listing->end_date : null,
         ]);
     }
 
@@ -68,18 +68,18 @@ class BidController extends Controller
 
         // Validation
         $request->validate([
-            'auction_id' => 'required|exists:auctions,id',
+            'listing_id' => 'required|exists:listings,id',
             'bid_amount' => 'required|numeric|min:1',
         ]);
 
-        $auction = Auction::findOrFail($request->auction_id);
+        $listing = Listing::findOrFail($request->listing_id);
 
-        if ($auction->status !== 'active' || now()->greaterThan($auction->end_date)) {
+        if ($listing->status !== 'active' || now()->greaterThan($listing->end_date)) {
             return redirect()->back()->with('error', 'Auction has ended or is inactive.');
         }
 
         // Min Bid Check
-        $minBid = (float) $auction->minimum_bid;
+        $minBid = (float) $listing->minimum_bid;
         $newAmount = (float) $request->bid_amount;
         
         if ($newAmount < $minBid) {
@@ -87,7 +87,7 @@ class BidController extends Controller
         }
 
         // Highest Bid Check
-        $currentHighest = Bid::where('auction_id', $auction->id)->max('bid_amount');
+        $currentHighest = Bid::where('listing_id', $listing->id)->max('bid_amount');
         if ($currentHighest && $newAmount <= $currentHighest) {
             return redirect()->back()->with('error', "Bid must be higher than {$currentHighest}.");
         }
@@ -97,15 +97,15 @@ class BidController extends Controller
         try {
             $bid = Bid::create([
                 'user_id' => $userId,
-                'auction_id' => $auction->id,
+                'listing_id' => $listing->id,
                 'bid_amount' => $newAmount,
             ]);
 
             // Auto-extend auction logic (simplified)
-            $endDate = \Carbon\Carbon::parse($auction->end_date); // Assuming UTC in new app or handling consistently
+            $endDate = \Carbon\Carbon::parse($listing->end_date); // Assuming UTC in new app or handling consistently
             if (now()->addMinutes(5)->greaterThanOrEqualTo($endDate)) {
-                 $auction->end_date = $endDate->addMinutes(15);
-                 $auction->save();
+                 $listing->end_date = $endDate->addMinutes(15);
+                 $listing->save();
             }
 
             // Notifications logic (simplified calls)
@@ -127,7 +127,7 @@ class BidController extends Controller
         $userId = auth()->id();
         $activeTab = $request->query('status', 'active');
 
-        $query = Auction::whereHas('bids', function ($q) use ($userId) {
+        $query = Listing::whereHas('bids', function ($q) use ($userId) {
             $q->where('user_id', $userId);
         })->with(['bids' => function ($q) {
             $q->orderBy('bid_amount', 'desc');

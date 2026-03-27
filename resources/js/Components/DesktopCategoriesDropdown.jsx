@@ -5,7 +5,6 @@ import { route } from 'ziggy-js';
 
 export default function DesktopCategoriesDropdown() {
        const [categories, setCategories] = useState([]);
-       const [hoveredCat, setHoveredCat] = useState(null);
        const [isOpen, setIsOpen] = useState(false);
        const dropdownRef = useRef(null);
        const btnRef = useRef(null);
@@ -14,29 +13,9 @@ export default function DesktopCategoriesDropdown() {
        useEffect(() => {
               // Relative path to web.php route
               axios.get('/get-category')
-                     .then(res => setCategories(
-                            (res.data.categories || []).map(c => ({ ...c, subcategories: [] }))
-                     ))
+                     .then(res => setCategories(res.data.categories || []))
                      .catch(err => console.error(err));
        }, []);
-
-       // Lazy-load subcategories on hover
-       const loadSubcategories = async slug => {
-              const cat = categories.find(c => c.slug === slug);
-              if (!cat || cat.subcategories.length) return;
-              try {
-                     const res = await axios.get(
-                            `/get-subcategories/${cat.id}`
-                     );
-                     setCategories(prev => prev.map(c =>
-                            c.id === cat.id
-                                   ? { ...c, subcategories: res.data.subcategories || [] }
-                                   : c
-                     ));
-              } catch (e) {
-                     console.error(e);
-              }
-       };
 
        // Bootstrap event listeners for dropdown open/close
        useEffect(() => {
@@ -101,36 +80,13 @@ export default function DesktopCategoriesDropdown() {
 
                      <ul className="dropdown-menu" aria-labelledby="categoriesDropdown">
                             {categories.map(cat => (
-                                   <li
-                                          key={cat.slug}
-                                          className={cat.subcategories.length ? 'dropend' : ''}
-                                          onMouseEnter={() => {
-                                                 setHoveredCat(cat.slug);
-                                                 loadSubcategories(cat.slug);
-                                          }}
-                                          onMouseLeave={() => setHoveredCat(null)}
-                                   >
+                                   <li key={cat.slug}>
                                           <Link
                                                  href={route('marketplace.index', cat.slug)}
                                                  className="dropdown-item"
                                           >
                                                  {cat.name}
                                           </Link>
-                                          {/* Submenu shown on hover */}
-                                          {hoveredCat === cat.slug && cat.subcategories.length > 0 && (
-                                                 <ul className="dropdown-menu sub-menu show">
-                                                        {cat.subcategories.map(sub => (
-                                                               <li key={sub.slug}>
-                                                                      <Link
-                                                                             href={route('marketplace.index', sub.slug)}
-                                                                             className="dropdown-item"
-                                                                      >
-                                                                             {sub.name}
-                                                                      </Link>
-                                                               </li>
-                                                        ))}
-                                                 </ul>
-                                          )}
                                    </li>
                             ))}
                      </ul>

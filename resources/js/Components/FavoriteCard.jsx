@@ -9,93 +9,74 @@ const FavoriteCard = ({ favorite }) => {
               e.preventDefault();
               e.stopPropagation();
               if (confirm('Are you sure you want to remove this from your favorites?')) {
-                     router.post(route('favorites.toggle'), {
-                            auction_id: favorite.id
-                     }, {
+                     router.post(route('favorites.toggle'), { listing_id: favorite.id }, {
                             preserveScroll: true
                      });
               }
        };
 
-       // Robust image parser logic (from AuctionCard)
-       let imgPath = "";
-       try {
-              let albumData = favorite.image; // Controller maps auction.image to favorite.image
-              if (typeof albumData === 'string') {
-                     try { albumData = JSON.parse(albumData); } catch (e) { }
-              }
-              if (Array.isArray(albumData)) {
-                     imgPath = albumData[0];
-              } else {
-                     imgPath = albumData;
-              }
-              imgPath = imgPath?.replace(/^\/+/, "");
-       } catch {
-              imgPath = "";
-       }
+       const imgPath = favorite.image || "/assets/images/placeholder.jpg";
+
+       const title = favorite.title || favorite.name || 'Product';
+       const displayLabel = Number(favorite.current_bid) > 0 ? "Current Bid" : "Minimum Bid";
 
        return (
-              <div className="col-sm-6 col-md-4 col-lg-4 mkt-child mb-4">
-                     <div className="market-card h-100 d-flex flex-column shadow-sm border rounded-3 overflow-hidden">
-                            <Link href={`/product/${favorite.slug}`} className="flex-grow-1 d-flex flex-column text-decoration-none color-inherit">
-                                   <div className="mkt-img position-relative">
-                                          <div className="aspect-ratio-box" style={{ position: 'relative', width: '100%', paddingTop: '75%' }}>
-                                                 <img
-                                                        src={imgPath ? `/${imgPath}` : "/assets/images/WebsiteBanner2.png"}
-                                                        alt={favorite.title}
-                                                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                                                        className="img-fluid"
-                                                        loading="lazy"
-                                                 />
-                                          </div>
+              <div className="col-lg-4 col-md-6 col-sm-12 mkt-child">
+                     <div className="market-card">
+                            <div className="mkt-img">
+                                   <Link href={`/product/${favorite.slug}`} className="product-box">
+                                          <img
+                                                 src={imgPath}
+                                                 alt={title}
+                                                 loading="lazy"
+                                          />
+                                   </Link>
 
-                                          <button
-                                                 onClick={handleRemove}
-                                                 className="btn btn-light rounded-circle shadow-sm position-absolute"
-                                                 style={{ top: '10px', right: '10px', width: '35px', height: '35px', padding: 0, zIndex: 10 }}
-                                                 title="Remove from favorites"
-                                          >
-                                                 <i className="fa-solid fa-heart text-danger"></i>
-                                          </button>
+                                   {favorite.end_date && favorite.list_type !== 'normal_list' && (
+                                          <CountdownTimer startDate={favorite.start_date} endDate={favorite.end_date} />
+                                   )}
 
-                                          {favorite.end_date && (
-                                                 <CountdownTimer startDate={favorite.start_date} endDate={favorite.end_date} />
-                                          )}
+                                   <div className="favourite-icon" onClick={handleRemove} title="Remove from favorites">
+                                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                                 viewBox="0 0 24 24" fill="#FF4D4D">
+                                                 <path d="M16.44 3.1001C14.63 3.1001 13.01 3.9801 12 5.3301C10.99 3.9801 9.37 3.1001 7.56 3.1001C4.49 3.1001 2 5.6001 2 8.6901C2 9.8801 2.19 10.9801 2.52 12.0001C4.1 17.0001 8.97 19.9901 11.38 20.8101C11.72 20.9301 12.28 20.9301 12.62 20.8101C15.03 19.9901 19.9 17.0001 21.48 12.0001C21.81 10.9801 22 9.8801 22 8.6901C22 5.6001 19.51 3.1001 16.44 3.1001Z" />
+                                          </svg>
                                    </div>
-                                   <div className="mkt-body p-3 flex-grow-1 d-flex flex-column">
-                                          <div className="mkt-pro-head mb-2">
-                                                 <h3 className="m-0 h5 text-dark fw-bold text-truncate">{favorite.title}</h3>
-                                          </div>
+                            </div>
 
-                                          <div className="mkt-detail mt-auto pt-2 d-flex justify-content-between align-items-center">
-                                                 <div className="mkt-crt-bid">
-                                                        <span className="crnt-bid d-block text-muted small">
-                                                               {Number(favorite.current_bid) > 0 ? "Current Bid" : "Minimum Bid"}
-                                                        </span>
-                                                        <div className="mkt-bid-price fw-bold text-primary">
-                                                               <Price amountAED={favorite.current_bid || favorite.minimum_bid} />
-                                                        </div>
+                            <div className="mkt-body">
+                                   <div className="mkt-pro-head">
+                                          <h3>
+                                                 <Link href={`/product/${favorite.slug}`}>
+                                                        {title}
+                                                 </Link>
+                                          </h3>
+                                   </div>
+
+                                   <OwnerInfoRow
+                                          owner={favorite.owner}
+                                          fallbackName={favorite.user_name}
+                                          fallbackAvatar={favorite.profile_pic}
+                                   />
+
+                                   <div className="mkt-detail">
+                                          <div className="mkt-crt-bid">
+                                                 <span className="crnt-bid">{displayLabel}</span>
+                                                 <div className="mkt-bid-price">
+                                                        <Price
+                                                               className="price"
+                                                               amountAED={favorite.current_bid || favorite.minimum_bid}
+                                                        />
                                                  </div>
-                                                 <div className="mkt-bid-btn">
-                                                        <span className="btn btn-outline-primary btn-sm rounded-pill px-3">View Details</span>
-                                                 </div>
+                                          </div>
+                                          <div className="mkt-bid-btn">
+                                                 <Link href={`/product/${favorite.slug}`}>
+                                                        {favorite.list_type === 'normal_list' ? "Buy Now" : "Place Bid"}
+                                                 </Link>
                                           </div>
                                    </div>
-                            </Link>
+                            </div>
                      </div>
-                     <style dangerouslySetInnerHTML={{
-                            __html: `
-                .market-card {
-                    transition: transform 0.2s ease, box-shadow 0.2s ease;
-                }
-                .market-card:hover {
-                    transform: translateY(-5px);
-                    box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
-                }
-                .color-inherit {
-                    color: inherit;
-                }
-            `}} />
               </div>
        );
 };

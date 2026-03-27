@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
-use App\Models\Auction;
+use App\Models\Listing;
 use App\Models\ProductVariation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -21,7 +21,7 @@ class CartController extends Controller
 
         $cartItems = Cart::where('user_id', $user->id)
             ->with([
-                'auction' => function ($query) {
+                'listing' => function ($query) {
                     $query->select('id', 'title', 'slug', 'image', 'minimum_bid', 'buy_now_price', 'is_buynow', 'list_type', 'status', 'description', 'user_id');
                 },
                 'variation'
@@ -30,16 +30,16 @@ class CartController extends Controller
             ->map(function ($cartItem) {
                 return [
                     'id' => $cartItem->id,
-                    'auction_id' => $cartItem->auction_id,
+                    'listing_id' => $cartItem->listing_id,
                     'variation_id' => $cartItem->variation_id,
                     'type' => $cartItem->type,
                     'quantity' => $cartItem->quantity,
                     'price' => $cartItem->price,
                     // Flatten structure for easier frontend consumption
-                    'title' => $cartItem->auction->title ?? 'Unknown Product',
-                    'slug' => $cartItem->auction->slug ?? null,
-                    'image' => $cartItem->auction->image ?? null,
-                    'list_type' => $cartItem->auction->list_type ?? 'auction',
+                    'title' => $cartItem->listing->title ?? 'Unknown Product',
+                    'slug' => $cartItem->listing->slug ?? null,
+                    'image' => $cartItem->listing->image_url ?? null,
+                    'list_type' => $cartItem->listing->list_type ?? 'auction',
                     'variation_name' => $cartItem->variation->name ?? null,
                 ];
             });
@@ -55,7 +55,7 @@ class CartController extends Controller
     public function add(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'auction_id' => 'required|integer|exists:auctions,id',
+            'listing_id' => 'required|integer|exists:listings,id',
             'type' => 'nullable|string|in:product,featured',
             'variation_id' => 'nullable|integer|exists:product_variations,id',
         ]);
@@ -65,11 +65,11 @@ class CartController extends Controller
         }
 
         $user = $request->user();
-        $auction = Auction::findOrFail($request->auction_id);
+        $listing = Listing::findOrFail($request->listing_id ?? $request->auction_id);
 
         // Check if product is already in cart
         $existingCartItem = Cart::where('user_id', $user->id)
-            ->where('auction_id', $auction->id)
+            ->where('listing_id', $listing->id)
             ->where('type', $request->type ?? 'product')
             ->where('variation_id', $request->variation_id)
             ->first();
@@ -84,7 +84,7 @@ class CartController extends Controller
         } else {
             if ($request->variation_id) {
                 $variation = ProductVariation::find($request->variation_id);
-                if ($variation && $variation->auction_id == $auction->id) {
+                if ($variation && $variation->listing_id == $listing->id) {
                     $originalPrice = $variation->price;
                     $discountType = $variation->discount_type;
                     $discountValue = $variation->discount_value;
@@ -92,9 +92,9 @@ class CartController extends Controller
                     return redirect()->back()->with('error', 'Invalid variation selected');
                 }
             } else {
-                $originalPrice = $auction->buy_now_price ?? $auction->minimum_bid ?? 0;
-                $discountType = $auction->discount_type;
-                $discountValue = $auction->discount_value;
+                $originalPrice = $listing->buy_now_price ?? $listing->minimum_bid ?? 0;
+                $discountType = $listing->discount_type;
+                $discountValue = $listing->discount_value;
             }
 
             // Calculate Discount
@@ -111,7 +111,7 @@ class CartController extends Controller
 
         Cart::create([
             'user_id' => $user->id,
-            'auction_id' => $auction->id,
+            'listing_id' => $listing->id,
             'variation_id' => $request->variation_id,
             'type' => $request->type ?? 'product',
             'quantity' => 1,

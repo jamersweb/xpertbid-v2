@@ -49,7 +49,7 @@ export default function CategoriesDropdown() {
                             data-bs-toggle="dropdown"
                             aria-expanded={isOpen}
                             ref={btnRef}
-                            style={{ border: "none" }}
+                            style={{ border: "none", display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                      >
                             Categories
                             <svg xmlns="http://www.w3.org/2000/svg"
@@ -57,7 +57,7 @@ export default function CategoriesDropdown() {
                                    height="20"
                                    viewBox="0 0 20 20"
                                    fill="none"
-                                   className="ms-1"
+                                   className="ms-0"
                             >
                                    {isOpen ? (
                                           // UP arrow
@@ -81,39 +81,14 @@ export default function CategoriesDropdown() {
                             </svg>
                      </button>
                      <ul className="dropdown-menu" aria-labelledby="categoriesDropdown">
-                            {categories.map(cat => (
-                                   <li key={cat.id} className={cat.subCategories?.length ? 'dropend' : ''}>
-                                          {cat.subCategories?.length > 0 ? (
-                                                 <>
-                                                        <button
-                                                               className="dropdown-item dropdown-toggle"
-                                                               type="button"
-                                                               data-bs-toggle="dropdown"
-                                                               aria-expanded="false"
-                                                        >
-                                                               {cat.name}
-                                                        </button>
-                                                        <ul className="dropdown-menu">
-                                                               {cat.subCategories.map(sub => (
-                                                                      <li key={sub.id}>
-                                                                             <Link
-                                                                                    href={route('marketplace.index', sub.slug)}
-                                                                                    className="dropdown-item"
-                                                                             >
-                                                                                    {sub.name}
-                                                                             </Link>
-                                                                      </li>
-                                                               ))}
-                                                        </ul>
-                                                 </>
-                                          ) : (
-                                                 <Link
-                                                        href={route('marketplace.index', cat.slug)}
-                                                        className="dropdown-item"
-                                                 >
-                                                        {cat.name}
-                                                 </Link>
-                                          )}
+                            {categories.map((cat) => (
+                                   <li key={cat.id}>
+                                          <Link
+                                                 href={route('marketplace.index', cat.slug)}
+                                                 className="dropdown-item"
+                                          >
+                                                 {cat.name}
+                                          </Link>
                                    </li>
                             ))}
                      </ul>

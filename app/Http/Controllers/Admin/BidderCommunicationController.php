@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Auction;
+use App\Models\Listing;
 use App\Models\User;
 use App\Models\Bid;
 use Illuminate\Support\Facades\Mail;
@@ -29,13 +29,13 @@ class BidderCommunicationController extends Controller
     public function getProducts(Request $request)
     {
         $type = $request->get('type');
-        $query = Auction::query(); 
+        $query = Listing::query(); 
 
         if ($type === '1_rupee') {
-            $query->where('is_1_rupee', 1);
+            $query->where('listing_data->is_1_rupee', 1);
         } else {
             $query->where(function($q) {
-                $q->where('is_1_rupee', 0)->orWhereNull('is_1_rupee');
+                $q->where('listing_data->is_1_rupee', 0)->orWhereNull('listing_data->is_1_rupee');
             });
         }
         
@@ -45,7 +45,7 @@ class BidderCommunicationController extends Controller
     public function getBidders(Request $request)
     {
         $productId = $request->get('product_id');
-        $bidders = Bid::where('auction_id', $productId)
+        $bidders = Bid::where('listing_id', $productId)
                     ->with('user:id,name,email,phone,profile_pic')
                     ->get()
                     ->pluck('user')

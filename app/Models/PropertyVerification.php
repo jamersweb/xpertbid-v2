@@ -12,14 +12,14 @@ class PropertyVerification extends Model
         'title_deed_number',
         'property_documents',
         'status',
-        'auction_id',
-         'decline_reason'
+        'listing_id',
+        'decline_reason'
     ];
 
 
-      public function auction()
+    public function listing()
     {
-        return $this->belongsTo(Auction::class);
+        return $this->belongsTo(Listing::class, 'listing_id');
     }
     protected $casts = [
         'property_documents' => 'array',

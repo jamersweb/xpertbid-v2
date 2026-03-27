@@ -11,15 +11,15 @@ class BuyNowInquiry extends Model
         'email',
         'phone',
         'message',
-        'auction_id',
+        'listing_id',
         'auction_title',
         'user_id',
         'status',
     ];
 
-    public function auction()
+    public function listing()
     {
-        return $this->belongsTo(Auction::class, 'auction_id');
+        return $this->belongsTo(Listing::class, 'listing_id');
     }
 
     public function user()

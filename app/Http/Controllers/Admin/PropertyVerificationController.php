@@ -14,7 +14,7 @@ class PropertyVerificationController extends Controller
 {
     public function index()
     {
-        $verifications = PropertyVerification::with(['user', 'auction'])->orderBy('created_at', 'desc')->paginate(15);
+        $verifications = PropertyVerification::with(['user', 'listing'])->orderBy('created_at', 'desc')->paginate(15);
         return Inertia::render('Admin/Verifications/Property', [
             'verifications' => $verifications
         ]);

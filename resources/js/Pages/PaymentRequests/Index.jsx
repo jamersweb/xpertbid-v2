@@ -4,86 +4,92 @@ import AppLayout from '@/Layouts/AppLayout';
 import Price from '@/Components/Price';
 
 export default function Index({ requests }) {
+       const statusStyles = (status) => {
+              if (status === 'completed' || status === 'approved') {
+                     return { backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#065f46', border: '1px solid rgba(16, 185, 129, 0.3)' };
+              } else if (status === 'pending' || status === 'processing') {
+                     return { backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#92400e', border: '1px solid rgba(245, 158, 11, 0.3)' };
+              }
+              return { backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#991b1b', border: '1px solid rgba(239, 68, 68, 0.3)' };
+       };
+
        return (
               <AppLayout title="Payment Requests">
                      <Head title="Payment Requests" />
 
-                     <div className="py-5 bg-light min-vh-100">
+                     <div style={{ padding: '50px 0', minHeight: '70vh', backgroundColor: '#fff' }}>
                             <div className="container">
-                                   <div className="row justify-content-center">
-                                          <div className="col-lg-10">
-                                                 <div className="d-flex align-items-center justify-content-between mb-4">
-                                                        <h1 className="h2 fw-bold text-dark m-0">My Payment Requests</h1>
-                                                        <Link href="/wallet" className="btn btn-outline-dark rounded-pill px-4 btn-sm">
-                                                               <i className="fa-solid fa-arrow-left me-2"></i> Back to Wallet
-                                                        </Link>
-                                                 </div>
+                                   <h1 style={{ fontSize: '42px', fontWeight: '800', color: '#23262F', margin: '0 0 32px 0' }}>
+                                          My Payment Requests
+                                   </h1>
 
-                                                 <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
-                                                        <div className="card-body p-0">
-                                                               <div className="table-responsive">
-                                                                      <table className="table table-hover mb-0">
-                                                                             <thead className="bg-light">
-                                                                                    <tr>
-                                                                                           <th className="px-4 py-3 border-0 text-secondary small fw-bold text-uppercase">Amount</th>
-                                                                                           <th className="px-4 py-3 border-0 text-secondary small fw-bold text-uppercase">Payment Method</th>
-                                                                                           <th className="px-4 py-3 border-0 text-secondary small fw-bold text-uppercase">Status</th>
-                                                                                           <th className="px-4 py-3 border-0 text-secondary small fw-bold text-uppercase">Date</th>
-                                                                                    </tr>
-                                                                             </thead>
-                                                                             <tbody>
-                                                                                    {requests.data.length === 0 ? (
-                                                                                           <tr>
-                                                                                                  <td colSpan="4" className="text-center py-5">
-                                                                                                         <div className="mb-3 opacity-25">
-                                                                                                                <i className="fa-solid fa-receipt fa-3x"></i>
-                                                                                                         </div>
-                                                                                                         <p className="text-muted m-0">No payment requests found.</p>
-                                                                                                  </td>
-                                                                                           </tr>
-                                                                                    ) : (
-                                                                                           requests.data.map((request) => (
-                                                                                                  <tr key={request.id}>
-                                                                                                         <td className="px-4 py-3 border-0">
-                                                                                                                <span className="fw-bold text-dark">
-                                                                                                                       <Price amountAED={request.amount} />
-                                                                                                                </span>
-                                                                                                         </td>
-                                                                                                         <td className="px-4 py-3 border-0">
-                                                                                                                <span className="text-secondary small">
-                                                                                                                       {request.payment_method?.paymentMethod || "Direct Transfer"}
-                                                                                                                </span>
-                                                                                                         </td>
-                                                                                                         <td className="px-4 py-3 border-0">
-                                                                                                                <span className={`badge rounded-pill px-3 ${request.status === 'completed' || request.status === 'approved' ? 'bg-success-soft text-success' :
-                                                                                                                              request.status === 'pending' || request.status === 'processing' ? 'bg-warning-soft text-warning' :
-                                                                                                                                     'bg-danger-soft text-danger'
-                                                                                                                       }`}>
-                                                                                                                       {request.status}
-                                                                                                                </span>
-                                                                                                         </td>
-                                                                                                         <td className="px-4 py-3 border-0 text-muted small">
-                                                                                                                {new Date(request.created_at).toLocaleDateString()}
-                                                                                                         </td>
-                                                                                                  </tr>
-                                                                                           ))
-                                                                                    )}
-                                                                             </tbody>
-                                                                      </table>
-                                                               </div>
-                                                        </div>
-                                                 </div>
+                                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                          <thead>
+                                                 <tr style={{ borderBottom: '2px solid #E6E8EC' }}>
+                                                        <th style={{ padding: '14px 0', fontWeight: '700', color: '#23262F', fontSize: '15px', textAlign: 'left' }}>Amount</th>
+                                                        <th style={{ padding: '14px 0', fontWeight: '700', color: '#23262F', fontSize: '15px', textAlign: 'left' }}>Payment Method</th>
+                                                        <th style={{ padding: '14px 0', fontWeight: '700', color: '#23262F', fontSize: '15px', textAlign: 'left' }}>Status</th>
+                                                 </tr>
+                                          </thead>
+                                          <tbody>
+                                                 {requests.data.length === 0 ? (
+                                                        <tr>
+                                                               <td colSpan="3" style={{ padding: '20px 0', color: '#353945', fontSize: '15px', fontWeight: '500' }}>
+                                                                      No payment requests found.
+                                                               </td>
+                                                        </tr>
+                                                 ) : (
+                                                        requests.data.map((request) => (
+                                                               <tr key={request.id} style={{ borderBottom: '1px solid #E6E8EC' }}>
+                                                                      <td style={{ padding: '16px 0', fontWeight: '700', color: '#23262F', fontSize: '16px' }}>
+                                                                             <Price amountAED={request.amount} />
+                                                                      </td>
+                                                                      <td style={{ padding: '16px 0', color: '#353945', fontSize: '15px' }}>
+                                                                             {request.payment_method?.paymentMethod || "Direct Transfer"}
+                                                                      </td>
+                                                                      <td style={{ padding: '16px 0' }}>
+                                                                             <span style={{
+                                                                                    padding: '5px 14px',
+                                                                                    borderRadius: '50px',
+                                                                                    fontSize: '13px',
+                                                                                    fontWeight: '600',
+                                                                                    textTransform: 'capitalize',
+                                                                                    ...statusStyles(request.status)
+                                                                             }}>
+                                                                                    {request.status}
+                                                                             </span>
+                                                                      </td>
+                                                               </tr>
+                                                        ))
+                                                 )}
+                                          </tbody>
+                                   </table>
+
+                                   {requests.links && requests.links.length > 3 && (
+                                          <div className="d-flex justify-content-center mt-5">
+                                                 <nav>
+                                                        <ul className="pagination gap-1">
+                                                               {requests.links.map((link, i) => (
+                                                                      <li key={i} className={`page-item ${link.active ? 'active' : ''} ${!link.url ? 'disabled' : ''}`}>
+                                                                             <Link
+                                                                                    href={link.url || '#'}
+                                                                                    className="page-link rounded-3"
+                                                                                    style={{
+                                                                                           background: link.active ? '#23262F' : '#fff',
+                                                                                           color: link.active ? '#fff' : '#23262F',
+                                                                                           border: '1px solid #E6E8EC',
+                                                                                           fontWeight: '600'
+                                                                                    }}
+                                                                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                                                             />
+                                                                      </li>
+                                                               ))}
+                                                        </ul>
+                                                 </nav>
                                           </div>
-                                   </div>
+                                   )}
                             </div>
                      </div>
-
-                     <style dangerouslySetInnerHTML={{
-                            __html: `
-                .bg-success-soft { background-color: rgba(40, 167, 69, 0.1); }
-                .bg-warning-soft { background-color: rgba(255, 193, 7, 0.1); }
-                .bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
-            `}} />
               </AppLayout>
        );
 }

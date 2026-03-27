@@ -8,7 +8,7 @@ export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }) => {
        const { auth, cart: sharedCartLists } = usePage().props;
-       const user = auth.user;
+       const user = auth?.user;
 
        const [cartItems, setCartItems] = useState([]);
        const [cartCount, setCartCount] = useState(0);
@@ -18,7 +18,9 @@ export const CartProvider = ({ children }) => {
        useEffect(() => {
               if (user && sharedCartLists) {
                      setCartItems(sharedCartLists);
-                     setCartCount(sharedCartLists.length);
+                     setCartCount(sharedCartLists?.length || 0);
+              } else if (!user) {
+                     // Handled by guest useEffect but resetting just in case user just logged out
               }
        }, [user, sharedCartLists]);
 
@@ -29,11 +31,13 @@ export const CartProvider = ({ children }) => {
                      if (savedCart) {
                             try {
                                    const parsedCart = JSON.parse(savedCart);
-                                   setCartItems(parsedCart);
-                                   setCartCount(parsedCart.length);
+                                   setCartItems(Array.isArray(parsedCart) ? parsedCart : []);
+                                   setCartCount(Array.isArray(parsedCart) ? parsedCart.length : 0);
                             } catch (e) {
                                    console.error("Failed to parse guest cart", e);
                                    localStorage.removeItem('guestCart');
+                                   setCartItems([]);
+                                   setCartCount(0);
                             }
                      } else {
                             setCartItems([]);
@@ -46,33 +50,34 @@ export const CartProvider = ({ children }) => {
        const saveGuestCart = (items) => {
               localStorage.setItem('guestCart', JSON.stringify(items));
               setCartItems(items);
-              setCartCount(items.length);
+              setCartCount(items?.length || 0);
        };
 
        // Helper: Calculate Total Price
        const getTotalPrice = () => {
+              if (!Array.isArray(cartItems)) return 0;
               return cartItems.reduce((total, item) => {
-                     return total + (parseFloat(item.price) || 0);
+                     return total + (parseFloat(item.price || 0) * (item.quantity || 1));
               }, 0);
        };
 
        // Add Item to Cart
-       const addToCart = async (auctionId, type = 'product', variationId = null, productDetails = null) => {
+       const addToCart = async (listingId, type = 'product', variationId = null, productDetails = null) => {
               if (!user) {
                      // --- GUEST LOGIC ---
                      try {
                             let price = 0;
                             let variationName = null;
                             let variationPrice = null;
-                            let auction = {};
+                            let listing = {};
 
                             // 1. Use provided details if available
                             if (productDetails) {
-                                   auction = productDetails;
-                                   price = auction.buy_now_price || auction.minimum_bid || 0;
+                                   listing = productDetails;
+                                   price = listing.buy_now_price || listing.minimum_bid || 0;
 
-                                   if (variationId && auction.variations) {
-                                          const foundVar = auction.variations.find(v => v.id == variationId);
+                                   if (variationId && listing.variations) {
+                                          const foundVar = listing.variations.find(v => v.id == variationId);
                                           if (foundVar) {
                                                  price = foundVar.price;
                                                  variationName = foundVar.name;
@@ -87,22 +92,22 @@ export const CartProvider = ({ children }) => {
 
                             let itemToAdd = {
                                    id: 'guest_' + Date.now(),
-                                   auction_id: auctionId,
+                                   listing_id: listingId,
                                    variation_id: variationId,
                                    type: type,
                                    quantity: 1,
                                    price: price,
-                                   title: auction.title || 'Product',
-                                   slug: auction.slug || '',
-                                   image: auction.image || (Array.isArray(auction.album) ? auction.album[0] : auction.album) || '',
-                                   list_type: auction.list_type,
+                                   title: listing.title || 'Product',
+                                   slug: listing.slug || '',
+                                   image: listing.image_url || (Array.isArray(listing.album) ? listing.album[0] : listing.album) || '',
+                                   list_type: listing.list_type,
                                    variation_name: variationName
                             };
 
                             // Check duplicate
                             const currentGuestCart = JSON.parse(localStorage.getItem('guestCart') || '[]');
-                            const existingItem = currentGuestCart.find(item =>
-                                   item.auction_id == auctionId &&
+                            const existingItem = Array.isArray(currentGuestCart) && currentGuestCart.find(item =>
+                                   item.listing_id == listingId &&
                                    item.variation_id == variationId &&
                                    item.type == type
                             );
@@ -111,7 +116,7 @@ export const CartProvider = ({ children }) => {
                                    return { success: false, message: 'Product already in cart' };
                             }
 
-                            const newCart = [...currentGuestCart, itemToAdd];
+                            const newCart = [...(Array.isArray(currentGuestCart) ? currentGuestCart : []), itemToAdd];
                             saveGuestCart(newCart);
                             return { success: true, message: 'Product added to cart successfully' };
                      } catch (error) {
@@ -122,7 +127,7 @@ export const CartProvider = ({ children }) => {
                      // --- AUTH LOGIC (Inertia) ---
                      return new Promise((resolve) => {
                             router.post(route('cart.add'), {
-                                   auction_id: auctionId,
+                                   listing_id: listingId,
                                    type: type,
                                    variation_id: variationId
                             }, {
@@ -143,7 +148,7 @@ export const CartProvider = ({ children }) => {
               if (!user) {
                      // Guest
                      const currentGuestCart = JSON.parse(localStorage.getItem('guestCart') || '[]');
-                     const newCart = currentGuestCart.filter(item => item.id !== cartItemId);
+                     const newCart = Array.isArray(currentGuestCart) ? currentGuestCart.filter(item => item.id !== cartItemId) : [];
                      saveGuestCart(newCart);
                      return { success: true, message: 'Item removed from cart' };
               } else {
@@ -161,6 +166,36 @@ export const CartProvider = ({ children }) => {
               }
        };
 
+       // Update cart item quantity
+       const updateCartItem = async (cartItemId, quantity) => {
+              if (!user) {
+                     // Guest Mode
+                     const currentGuestCart = JSON.parse(localStorage.getItem('guestCart') || '[]');
+                     const newCart = Array.isArray(currentGuestCart) ? currentGuestCart.map(item => {
+                            if (item.id === cartItemId) {
+                                   return { ...item, quantity: Math.max(1, quantity) };
+                            }
+                            return item;
+                     }) : [];
+                     saveGuestCart(newCart);
+                     return { success: true, message: 'Cart updated successfully' };
+              } else {
+                     // Auth Mode
+                     return new Promise((resolve) => {
+                            router.put(route('cart.update', cartItemId), {
+                                   quantity: quantity
+                            }, {
+                                   preserveScroll: true,
+                                   onSuccess: () => resolve({ success: true, message: 'Cart updated successfully' }),
+                                   onError: (errors) => {
+                                          const msg = Object.values(errors)[0] || 'Failed to update cart';
+                                          resolve({ success: false, message: msg });
+                                   }
+                            });
+                     });
+              }
+       };
+
        // Clear Cart (Optional, mostly for after checkout)
        const clearCart = async () => {
               if (!user) {
@@ -168,8 +203,9 @@ export const CartProvider = ({ children }) => {
                      setCartItems([]);
                      setCartCount(0);
               } else {
-                     // If we had a route for clearing, we'd use it. 
-                     // For now, maybe loop remove? Or just assume it's done server side on checkout.
+                     // Server side usually handles this on checkout, but we can have an explicit clear
+                     setCartItems([]);
+                     setCartCount(0);
               }
        };
 
@@ -182,6 +218,7 @@ export const CartProvider = ({ children }) => {
               loading,
               addToCart,
               removeFromCart,
+              updateCartItem,
               clearCart,
               getTotalPrice,
               fetchCart

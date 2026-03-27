@@ -12,29 +12,30 @@ class FavoritesController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        
+
         $favorites = Favorite::where('user_id', $user->id)
-            ->with(['auction' => function ($query) {
-                // Eager load necessary fields + relationships
-                $query->with(['bids']); 
-            }])
+            ->with(['listing'])
             ->get()
             ->map(function ($favorite) {
-                $auction = $favorite->auction;
-                if (!$auction) return null;
+                $item = $favorite->listing;
                 
+                if (!$item)
+                    return null;
+
                 return [
-                    'id' => $auction->id,
-                    'title' => $auction->title,
-                    'image' => $auction->image, // Accessor or column
-                    'current_bid' => $auction->bids->max('bid_amount') ?? 0,
-                    'minimum_bid' => $auction->minimum_bid,
-                    'start_date' => $auction->start_date,
-                    'end_date' => $auction->end_date,
-                    'slug' => $auction->slug ?? $auction->id,
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'image' => $item->image_url, 
+                    'current_bid' => $item->bids->max('bid_amount') ?? 0,
+                    'minimum_bid' => $item->minimum_bid,
+                    'start_date' => $item->start_date,
+                    'end_date' => $item->end_date,
+                    'slug' => $item->slug ?? $item->id,
+                    'list_type' => $item->list_type,
+                    'is_listing' => true,
                 ];
             })
-            ->filter(); // Remove nulls
+            ->filter();
 
         return Inertia::render('Favorites/Index', [
             'favorites' => $favorites->values()
@@ -44,25 +45,25 @@ class FavoritesController extends Controller
     public function toggle(Request $request)
     {
         $request->validate([
-            'auction_id' => 'required|integer|exists:auctions,id'
+            'listing_id' => 'required|integer|exists:listings,id',
         ]);
 
         $user = $request->user();
-        $auctionId = $request->auction_id;
+        $listingId = $request->listing_id;
 
         $favorite = Favorite::where('user_id', $user->id)
-            ->where('auctions_id', $auctionId) // Note: column name from original code is 'auctions_id'
+            ->where('listing_id', $listingId)
             ->first();
 
         if ($favorite) {
             $favorite->delete();
-            return redirect()->back()->with('success', 'Removed from favorites.');
+            return redirect()->back(303)->with('success', 'Removed from favorites.');
         } else {
             Favorite::create([
                 'user_id' => $user->id,
-                'auctions_id' => $auctionId
+                'listing_id' => $listingId,
             ]);
-            return redirect()->back()->with('success', 'Added to favorites.');
+            return redirect()->back(303)->with('success', 'Added to favorites.');
         }
     }
 }

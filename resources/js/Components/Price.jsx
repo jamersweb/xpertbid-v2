@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import useCurrencyList from "@/Utils/useCurrencyList";
-import { getSelectedCurrency, convertAEDTo, formatWithMeta } from "@/Utils/formatPrice";
+import { getSelectedCurrency, convertPKRTo, formatWithMeta } from "@/Utils/formatPrice";
 
 export default function Price({
-       amountAED,
+       amountPKR,
+       amountAED, // Alias for amountPKR (PKR is base now)
        amountAEDMinor,
        className = "",
        fallbackCurrency = "PKR",
@@ -22,10 +23,10 @@ export default function Price({
               return () => window.removeEventListener("xb-currency-change", onChange);
        }, []);
 
-       const aedMajor = useMemo(() => {
+       const pkrMajor = useMemo(() => {
               if (amountAEDMinor != null) return Number(amountAEDMinor) / 100;
-              return Number(amountAED || 0);
-       }, [amountAED, amountAEDMinor]);
+              return Number(amountPKR || amountAED || 0);
+       }, [amountPKR, amountAED, amountAEDMinor]);
 
        if (loading) return <span className={className}>…</span>;
 
@@ -39,7 +40,7 @@ export default function Price({
                      manual_rate_to_aed: 1,
               };
 
-       const converted = convertAEDTo(aedMajor, meta);
+       const converted = convertPKRTo(pkrMajor, meta);
 
        const decimalsByCode = {
               USD: 0,

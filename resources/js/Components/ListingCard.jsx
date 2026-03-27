@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Link, usePage } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
 import ListPackeg from "@/Components/ListPackeg";
 import Price from "@/Components/Price";
 import axios from "axios";
 import Swal from "sweetalert2";
 
 const ListingCard = ({ listing, onDeleted }) => {
-       const { auth } = usePage().props;
        const [isListPackegOpen, setIsListPackegOpen] = useState(false);
        const [isPromoteDisabled, setIsPromoteDisabled] = useState(
               listing.featured_name === "home_featured"
@@ -42,14 +41,9 @@ const ListingCard = ({ listing, onDeleted }) => {
        };
 
        const handleDelete = async () => {
-              if (!auth?.user?.token) {
-                     Swal.fire("Error", "Please login first!", "error");
-                     return;
-              }
-
               const result = await Swal.fire({
                      title: "Are you sure?",
-                     text: "You won't be able to revert this!",
+                     text: "This listing will be cancelled and removed from your active list.",
                      icon: "warning",
                      showCancelButton: true,
                      confirmButtonColor: "#3085d6",
@@ -59,16 +53,13 @@ const ListingCard = ({ listing, onDeleted }) => {
 
               if (result.isConfirmed) {
                      try {
-                            await axios.post(
-                                   `https://admin.xpertbid.com/api/listings/${listing.id}/cancel`,
-                                   {},
-                                   { headers: { Authorization: `Bearer ${auth.user.token}` } }
-                            );
+                            const listingKey = listing.slug || listing.id;
+
+                            await axios.post(`/auctions/${listingKey}/cancel`);
 
                             Swal.fire("Cancelled!", "Listing has been cancelled.", "success");
 
                             if (onDeleted) onDeleted(listing.id);
-                            // Optionally reload or let parent handle removal
                      } catch (error) {
                             console.error("Cancel error:", error);
                             Swal.fire("Error", "Failed to cancel listing.", "error");
@@ -86,6 +77,8 @@ const ListingCard = ({ listing, onDeleted }) => {
        };
 
        const isDraft = listing.is_draft === true;
+       const normalizedListType = (listing.list_type || listing.listing_type || "").toLowerCase();
+       const isNormalList = normalizedListType === "normal_list" || normalizedListType === "normal";
 
        // Amounts are stored in AED (or base currency) — render with <Price /> for multi-currency
        const highestBidAED =
@@ -128,107 +121,68 @@ const ListingCard = ({ listing, onDeleted }) => {
                                                                }}>
                                                                       {listing.discount_type === 'percent' ? `${Math.round(listing.discount_value)}%` : 'SALE'}
                                                                </div>
-                                                        )}
+                                                        )}                                                         {(() => {
+                                                                const imageSrc = listing?.image_url;
 
-                                                        {(() => {
-                                                               try {
-                                                                      let firstImage = null;
+                                                                if (imageSrc) {
+                                                                       return (
+                                                                              <img
+                                                                                     src={imageSrc}
+                                                                                     alt={listingTitle}
+                                                                                     style={{
+                                                                                            width: '100%',
+                                                                                            height: '100%',
+                                                                                            objectFit: 'cover'
+                                                                                     }}
+                                                                                     onError={(e) => {
+                                                                                            e.target.style.display = 'none';
+                                                                                            const parent = e.target.parentElement;
+                                                                                            if (parent) {
+                                                                                                   parent.innerHTML = '<div style="width: 100%; height: 100%; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #999; font-size: 14px;">No Image</div>';
+                                                                                            }
+                                                                                     }}
+                                                                              />
+                                                                       );
+                                                                }
 
-                                                                      // Try to get image from album
-                                                                      if (listingAlbum) {
-                                                                             let album = listingAlbum;
-                                                                             if (typeof listingAlbum === 'string') {
-                                                                                    try {
-                                                                                           // First try parsing as-is
-                                                                                           album = JSON.parse(listingAlbum);
-                                                                                    } catch (e1) {
-                                                                                           try {
-                                                                                                  // If that fails, remove backslashes and try again
-                                                                                                  const cleanedAlbum = listingAlbum.replace(/\\/g, '');
-                                                                                                  album = JSON.parse(cleanedAlbum);
-                                                                                           } catch (e2) {
-                                                                                                  console.error('Failed to parse album:', e2, listingAlbum);
-                                                                                                  album = [];
-                                                                                           }
-                                                                                    }
-                                                                             }
-
-                                                                             if (Array.isArray(album) && album.length > 0) {
-                                                                                    firstImage = album[0];
-                                                                             }
-                                                                      }
-
-                                                                      // Fallback to listing.image if album doesn't have image
-                                                                      if (!firstImage && listing?.image) {
-                                                                             firstImage = listing.image;
-                                                                      }
-
-                                                                      if (firstImage && typeof firstImage === 'string') {
-                                                                             // Clean the path - remove any extra backslashes
-                                                                             let cleanPath = firstImage.replace(/\\/g, '');
-                                                                             let imageSrc = cleanPath;
-
-                                                                             // If already a full URL, use it as is
-                                                                             if (cleanPath.startsWith('http://') || cleanPath.startsWith('https://')) {
-                                                                                    imageSrc = cleanPath;
-                                                                             }
-                                                                             // If starts with /, add domain
-                                                                             else if (cleanPath.startsWith('/')) {
-                                                                                    imageSrc = `https://admin.xpertbid.com${cleanPath}`;
-                                                                             }
-                                                                             // Otherwise, add domain and slash
-                                                                             else {
-                                                                                    imageSrc = `https://admin.xpertbid.com/${cleanPath}`;
-                                                                             }
-
-                                                                             return (
-                                                                                    <img
-                                                                                           src={imageSrc}
-                                                                                           alt={listingTitle}
-                                                                                           style={{
-                                                                                                  width: '100%',
-                                                                                                  height: '100%',
-                                                                                                  objectFit: 'cover'
-                                                                                           }}
-                                                                                           onError={(e) => {
-                                                                                                  // Fallback if image fails to load
-                                                                                                  e.target.style.display = 'none';
-                                                                                                  const parent = e.target.parentElement;
-                                                                                                  if (parent) {
-                                                                                                         parent.innerHTML = '<div style="width: 100%; height: 100%; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #999; font-size: 14px;">No Image</div>';
-                                                                                                  }
-                                                                                           }}
-                                                                                    />
-                                                                             );
-                                                                      }
-                                                               } catch (e) {
-                                                                      console.error('Error parsing album:', e, 'Album data:', listingAlbum);
-                                                               }
-
-                                                               return (
-                                                                      <div style={{
-                                                                             width: '100%',
-                                                                             height: '100%',
-                                                                             backgroundColor: '#f0f0f0',
-                                                                             display: 'flex',
-                                                                             alignItems: 'center',
-                                                                             justifyContent: 'center',
-                                                                             color: '#999',
-                                                                             fontSize: '14px'
-                                                                      }}>
-                                                                             No Image
-                                                                      </div>
-                                                               );
-                                                        })()}
+                                                                return (
+                                                                       <div style={{
+                                                                              width: '100%',
+                                                                              height: '100%',
+                                                                              backgroundColor: '#f0f0f0',
+                                                                              display: 'flex',
+                                                                              alignItems: 'center',
+                                                                              justifyContent: 'center',
+                                                                              color: '#999',
+                                                                              fontSize: '14px'
+                                                                       }}>
+                                                                              No Image
+                                                                       </div>
+                                                                );
+                                                         })()}
                                                  </div>
                                           </div>
                                           <div className="col-md-9">
-                                                 <h3 className="listing-product-title ">
+                                                 <h3 className="listing-product-title d-flex align-items-center gap-2">
                                                         {listingTitle}
                                                         <span
-                                                               className={
-                                                                      BADGE_MAP[listing?.status] || "ms-3 badge  text-bg-secondary"
-                                                               }
+                                                               className="badge rounded-pill"
+                                                               style={{
+                                                                      fontSize: '12px',
+                                                                      padding: '4px 12px',
+                                                                      textTransform: 'capitalize',
+                                                                      fontWeight: '600',
+                                                                      ...(listing?.status?.toLowerCase() === 'active' 
+                                                                             ? { backgroundColor: '#E3F9E5', color: '#1B7C25', border: '1px solid #1B7C25' }
+                                                                             : listing?.status?.toLowerCase() === 'inactive'
+                                                                             ? { backgroundColor: '#F0F2F5', color: '#64748b', border: '1px solid #64748b' }
+                                                                             : listing?.status?.toLowerCase() === 'pending'
+                                                                             ? { backgroundColor: '#FFF4E5', color: '#B76E00', border: '1px solid #B76E00' }
+                                                                             : listing?.status?.toLowerCase() === 'decline'
+                                                                             ? { backgroundColor: '#FFEBEB', color: '#D32F2F', border: '1px solid #D32F2F' }
+                                                                             : { backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #475569' }
+                                                                      )
+                                                               }}
                                                         >
                                                                {listing?.status || "Draft"}
                                                         </span>
@@ -237,13 +191,13 @@ const ListingCard = ({ listing, onDeleted }) => {
                                                  <div className="listing-product-bid-time">
                                                         <div className="row">
                                                                <div className="col-sm-5 bid-and-price">
-                                                                      <p className="listing-bid-label">
-                                                                             {listing.list_type === "normal_list" ? "Price" : "Highest Bid"}
-                                                                      </p>
+                                                                       <p className="listing-bid-label">
+                                                                      {isNormalList ? "Price" : (highestBidAED > 0 ? "Highest Bid" : "Starting Bid")}
+                                                                       </p>
                                                                       <div className="listingPrice">
                                                                              <span className="ms-1 listingPriceNumber">
                                                                                     {/* 🔁 Multi-currency display */}
-                                                                                    {listing.list_type === "normal_list" ? (
+                                                                                    {isNormalList ? (
                                                                                            (() => {
                                                                                                   let finalPrice = Number(listing.reserve_price || listing.minimum_bid || 0);
                                                                                                   const originalPrice = finalPrice;
@@ -269,17 +223,17 @@ const ListingCard = ({ listing, onDeleted }) => {
                                                                                                   return <Price amountAED={finalPrice} />;
                                                                                            })()
                                                                                     ) : (
-                                                                                           highestBidAED > 0 ? (
-                                                                                                  <Price amountAED={highestBidAED} />
-                                                                                           ) : (
-                                                                                                  <span>No bids yet</span>
-                                                                                           )
+                                                                                            highestBidAED > 0 ? (
+                                                                                                   <Price amountAED={highestBidAED} />
+                                                                                            ) : (
+                                                                                                   <Price amountAED={listing.minimum_bid || 0} />
+                                                                                            )
                                                                                     )}
                                                                              </span>
                                                                       </div>
                                                                </div>
                                                                <div className="col-sm-7 bid-and-time">
-                                                                      {listing.list_type !== "normal_list" && (
+                                                                      {!isNormalList && (
                                                                              <>
                                                                                     <p className="listing-bid-end-label">{isDraft ? "Created" : "End in"}</p>
                                                                                     <p className="listingTime">
@@ -287,8 +241,12 @@ const ListingCard = ({ listing, onDeleted }) => {
                                                                                                   <span className="listingDate">{listingStartDate || "Not set"}</span>
                                                                                            ) : (
                                                                                                   <>
-                                                                                                         <span className="listingDate">{listingStartDate}</span>{" "}
-                                                                                                         at <span className="lisitngTime">{listingEndDate}</span>
+                                                                                                         <span className="listingDate">
+                                                                                                                 {listingEndDate && !isNaN(new Date(listingEndDate)) ? new Date(listingEndDate).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : "Not set"}
+                                                                                                          </span>{" "}
+                                                                                                          at <span className="lisitngTime">
+                                                                                                                 {listingEndDate && !isNaN(new Date(listingEndDate)) ? new Date(listingEndDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Not set"}
+                                                                                                          </span>
                                                                                                   </>
                                                                                            )}
                                                                                     </p>
@@ -354,7 +312,7 @@ const ListingCard = ({ listing, onDeleted }) => {
                                    )}
 
                                    {/* Edit Button - For drafts and published, both go to edit page */}
-                                   <Link href={`/auctions/${listing.id}/edit`} className="ms-2">
+                                   <Link href={`/auctions/${listing.slug}/edit`} className="ms-2">
                                           <button className="button-style-1 editListing">
                                                  Edit
                                           </button>

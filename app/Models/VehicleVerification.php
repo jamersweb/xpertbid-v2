@@ -12,7 +12,7 @@ class VehicleVerification extends Model
     ];
     protected $fillable = [
         'user_id','vehicle_make_model','year_of_manufacture',
-        'chassis_vin','vehicle_documents','status','auction_id', 'decline_reason'
+        'chassis_vin','vehicle_documents','status','listing_id', 'decline_reason'
     ];
     // Relation to User
     public function user()
@@ -20,8 +20,8 @@ class VehicleVerification extends Model
         return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
-    public function auction()
-{
-    return $this->belongsTo(\App\Models\Auction::class);
-}
+    public function listing()
+    {
+        return $this->belongsTo(\App\Models\Listing::class, 'listing_id');
+    }
 }

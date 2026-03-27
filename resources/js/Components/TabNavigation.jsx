@@ -5,7 +5,7 @@ const TabNavigation = ({ tabs, activeTab, onTabChange }) => {
               <ul className="nav nav-tabs bid-tabs-child" role="tablist">
                      {tabs.map((tab) => (
                             <li
-                                   className="nav-item col-sm-4 col-12 bid-tabs-anchor"
+                                   className="nav-item flex-grow-1 bid-tabs-anchor"
                                    role="presentation"
                                    key={tab.id}
                             >

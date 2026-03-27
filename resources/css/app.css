@@ -812,6 +812,7 @@ button.signUpContinueIcon {
   font-size: 12px;
   font-weight: 500;
   line-height: 20px;
+  color: #666;
 }
 
 .listing-bid-end-label {
@@ -820,6 +821,7 @@ button.signUpContinueIcon {
   font-weight: 500;
   line-height: 20px;
   text-align: end;
+  color: #666;
 }
 
 .listing-img img {

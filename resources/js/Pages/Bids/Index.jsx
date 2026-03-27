@@ -44,20 +44,20 @@ export default function Index({ auctions, activeTab }) {
                                                                </div>
                                                         ))
                                                  ) : (
-                                                        <div className="col-12 text-center py-5">
+                                                        <div className="col-12 py-5 d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '300px' }}>
                                                                {currentTab.imageSrc && (
                                                                       <img
                                                                              src={currentTab.imageSrc}
                                                                              alt={currentTab.id}
-                                                                             className="mb-4"
-                                                                             style={{ maxWidth: '200px', opacity: 0.6 }}
+                                                                             className="mb-3"
+                                                                             style={{ maxWidth: '180px' }}
                                                                       />
                                                                )}
-                                                               <h4 className="text-muted">
+                                                               <p style={{ color: '#777E91', fontSize: '16px', fontWeight: '500', textAlign: 'center' }}>
                                                                       {activeTab === "active" && "You have no active bids yet."}
                                                                       {activeTab === "won" && "You haven't won any auctions yet."}
                                                                       {activeTab === "lost" && "You haven't lost any auctions yet."}
-                                                               </h4>
+                                                               </p>
                                                         </div>
                                                  )}
                                           </div>
@@ -94,34 +94,37 @@ export default function Index({ auctions, activeTab }) {
                      <style dangerouslySetInnerHTML={{
                             __html: `
                             .bid-tabs-child {
-                                   border-bottom: 2px solid #f0f0f0;
+                                   background-color: #F4F5F6;
+                                   border-radius: 12px;
+                                   padding: 8px;
+                                   border: none !important;
+                                   border-bottom: none !important;
                                    display: flex;
-                                   gap: 10px;
+                                   gap: 0;
                             }
                             .bid-tabs-anchor .nav-link {
                                    border: none !important;
-                                   background: none !important;
-                                   color: #666;
+                                   background: transparent !important;
+                                   color: #777E91;
                                    font-weight: 600;
-                                   padding: 15px 20px;
-                                   position: relative;
-                                   transition: color 0.3s ease;
+                                   font-size: 16px;
+                                   padding: 12px 20px;
+                                   border-radius: 8px;
+                                   transition: all 0.3s ease;
+                            }
+                            .bid-tabs-anchor .nav-link:hover {
+                                   color: #23262F;
                             }
                             .bid-tabs-anchor .nav-link.active {
-                                   color: #000;
-                            }
-                            .bid-tabs-anchor .nav-link.active::after {
-                                   content: '';
-                                   position: absolute;
-                                   bottom: -2px;
-                                   left: 0;
-                                   right: 0;
-                                   height: 2px;
-                                   background: #000;
+                                   background: #FFFFFF !important;
+                                   color: #23262F !important;
+                                   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
                             }
                             @media (max-width: 576px) {
                                    .bid-tabs-child {
                                           flex-direction: column;
+                                          padding: 16px;
+                                          gap: 8px;
                                    }
                             }
                      `}} />

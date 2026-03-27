@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import Pagination from '@/Components/Pagination';
+import Price from '@/Components/Price';
 
 export default function Index({ bids, filters = {} }) {
        const safeFilters = Array.isArray(filters) ? {} : (filters || {});
@@ -49,7 +50,7 @@ export default function Index({ bids, filters = {} }) {
                                           <thead>
                                                  <tr className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider">
                                                         <th className="px-6 py-4">Bid ID</th>
-                                                        <th className="px-6 py-4">Auction</th>
+                                                        <th className="px-6 py-4">Listing</th>
                                                         <th className="px-6 py-4">Bidder</th>
                                                         <th className="px-6 py-4">Amount</th>
                                                         <th className="px-6 py-4">Placed At</th>
@@ -64,8 +65,8 @@ export default function Index({ bids, filters = {} }) {
                                                                </td>
                                                                <td className="px-6 py-4">
                                                                       <div className="flex flex-col">
-                                                                             <span className="text-sm font-bold text-gray-800 line-clamp-1">{bid.auction?.title}</span>
-                                                                             <span className="text-[10px] text-gray-400">ID: {bid.auction_id}</span>
+                                                                             <span className="text-sm font-bold text-gray-800 line-clamp-1">{bid.listing?.title}</span>
+                                                                             <span className="text-[10px] text-gray-400">ID: {bid.listing_id}</span>
                                                                       </div>
                                                                </td>
                                                                <td className="px-6 py-4">
@@ -75,7 +76,7 @@ export default function Index({ bids, filters = {} }) {
                                                                       </div>
                                                                </td>
                                                                <td className="px-6 py-4">
-                                                                      <span className="text-sm font-bold text-emerald-600">{bid.auction?.currency} {bid.bid_amount}</span>
+                                                                      <span className="text-sm font-bold text-emerald-600"><Price amountAED={bid.bid_amount} /></span>
                                                                </td>
                                                                <td className="px-6 py-4 text-xs text-gray-500">
                                                                       {new Date(bid.created_at).toLocaleString()}

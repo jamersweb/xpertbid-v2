@@ -4,11 +4,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class AuctionCategory extends Model
 {
     use HasFactory, SoftDeletes;
+
+    protected $appends = [
+        'image_url',
+    ];
 
     protected $fillable = [
         'name',
@@ -60,12 +65,34 @@ class AuctionCategory extends Model
     // Get full image URL
     public function getImageUrlAttribute()
     {
-        return $this->image ? asset('storage/' . $this->image) : asset('assets/default-category.png');
+        if (!$this->image) {
+            return asset('assets/default-category.png');
+        }
+
+        if (Str::startsWith($this->image, ['http://', 'https://'])) {
+            return $this->image;
+        }
+
+        $imagePath = ltrim($this->image, '/');
+
+        if (File::exists(public_path($imagePath))) {
+            return asset($imagePath);
+        }
+
+        if (File::exists(public_path('assets/images/' . $imagePath))) {
+            return asset('assets/images/' . $imagePath);
+        }
+
+        return asset('storage/' . $imagePath);
     }
     public function auctions()
     {
         return $this->hasMany(\App\Models\Auction::class, 'category_id');
     }
 
-}
+    public function listings()
+    {
+        return $this->hasMany(\App\Models\Listing::class, 'category_id');
+    }
 
+}

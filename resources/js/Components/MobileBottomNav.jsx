@@ -1,6 +1,7 @@
 import { Link, usePage, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import { useState, useEffect, useRef } from 'react';
+import { useAuthModal } from '@/Contexts/AuthModalContext';
 
 const UserProfile = () => {
        const { auth } = usePage().props;
@@ -21,6 +22,7 @@ export default function MobileBottomNav() {
        const { props, url } = usePage();
        const { auth } = props;
        const user = auth?.user;
+       const { openLogin } = useAuthModal();
        const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
        const menuRef = useRef(null);
        const isAuthenticated = Boolean(user);
@@ -54,7 +56,7 @@ export default function MobileBottomNav() {
        const handleSellClick = (e) => {
               e.preventDefault();
               if (!isAuthenticated) {
-                     router.visit(route('login'));
+                     openLogin();
               } else {
                      router.visit(route('auctions.create'));
               }
@@ -72,14 +74,26 @@ export default function MobileBottomNav() {
                                    <span className="mobile-bottom-nav__label">Home</span>
                             </Link>
 
-                            <Link
-                                   href="/marketplace"
-                                   className={`mobile-bottom-nav__item ${isActive('/marketplace') ? 'mobile-bottom-nav__item--active' : ''}`}
-                                   aria-label="Marketplace"
-                            >
-                                   <i className="fa-solid fa-compass mobile-bottom-nav__icon" />
-                                   <span className="mobile-bottom-nav__label">Explore</span>
-                            </Link>
+                            {isAuthenticated ? (
+                                   <Link
+                                          href={route('dashboard')}
+                                          className={`mobile-bottom-nav__item ${isActive('/dashboard') ? 'mobile-bottom-nav__item--active' : ''}`}
+                                          aria-label="Dashboard"
+                                   >
+                                          <i className="fa-solid fa-table-columns mobile-bottom-nav__icon" />
+                                          <span className="mobile-bottom-nav__label">Dashboard</span>
+                                   </Link>
+                            ) : (
+                                   <button
+                                          type="button"
+                                          onClick={openLogin}
+                                          className="mobile-bottom-nav__item"
+                                          aria-label="Dashboard"
+                                   >
+                                          <i className="fa-solid fa-table-columns mobile-bottom-nav__icon" />
+                                          <span className="mobile-bottom-nav__label">Dashboard</span>
+                                   </button>
+                            )}
 
                             <button
                                    onClick={handleSellClick}
@@ -92,7 +106,7 @@ export default function MobileBottomNav() {
                             </button>
 
                             <Link
-                                   href="/"
+                                   href={route('auctions.one_rupee')}
                                    className={`mobile-bottom-nav__item mobile-bottom-nav__item--highlight`}
                                    aria-label="1 Rupee Auction"
                             >
@@ -115,27 +129,74 @@ export default function MobileBottomNav() {
                                           {isUserMenuOpen && (
                                                  <div className="mobile-bottom-nav__dropdown shadow">
                                                         <ul className="user-setting-menu list-unstyled m-0 p-0">
-                                                               <li><Link href={route('dashboard')} onClick={() => setIsUserMenuOpen(false)}>Dashboard</Link></li>
-                                                               <li><Link href={route('profile.edit')} onClick={() => setIsUserMenuOpen(false)}>Settings</Link></li>
-                                                               <li><Link href={route('favorites.index')} onClick={() => setIsUserMenuOpen(false)}>Favorites</Link></li>
-                                                               <li><Link href={route('auctions.mylistings')} onClick={() => setIsUserMenuOpen(false)}>My Listings</Link></li>
-                                                               <li><Link href={route('bids.index')} onClick={() => setIsUserMenuOpen(false)}>My Bids</Link></li>
-                                                               <li><Link href={route('cart.index')} onClick={() => setIsUserMenuOpen(false)}>My Cart</Link></li>
-                                                               <li><Link href={route('orders.index')} onClick={() => setIsUserMenuOpen(false)}>My Orders</Link></li>
-                                                               <li><button className="btn btn-link dropdown-item text-danger" onClick={handleLogout}>Log Out</button></li>
+                                                               <li>
+                                                                      <Link href={route('profile.edit')} onClick={() => setIsUserMenuOpen(false)}>
+                                                                             <img src="/assets/images/profile-setting.svg" alt="Settings" width={20} height={20} />
+                                                                             Account Settings
+                                                                      </Link>
+                                                               </li>
+                                                               <li>
+                                                                      <Link href={route('chat.index')} onClick={() => setIsUserMenuOpen(false)}>
+                                                                             <i className="fa-solid fa-comment-dots text-center" style={{ width: '20px', fontSize: '18px' }}></i>
+                                                                             Messages
+                                                                      </Link>
+                                                               </li>
+                                                               <li>
+                                                                      <Link href={route('favorites.index')} onClick={() => setIsUserMenuOpen(false)}>
+                                                                             <img src="/assets/images/setting-heart.svg" alt="Favorites" width={20} height={20} />
+                                                                             My Favorites
+                                                                      </Link>
+                                                               </li>
+                                                               <li>
+                                                                      <Link href={route('auctions.mylistings')} onClick={() => setIsUserMenuOpen(false)}>
+                                                                             <img src="/assets/images/mainListing.svg" alt="Listings" width={20} height={20} />
+                                                                             My Listings
+                                                                      </Link>
+                                                               </li>
+                                                               <li>
+                                                                      <Link href={route('bids.index')} onClick={() => setIsUserMenuOpen(false)}>
+                                                                             <img src="/assets/images/myBids.svg" alt="Bids" width={20} height={20} />
+                                                                             My Bids
+                                                                      </Link>
+                                                               </li>
+                                                               <li>
+                                                                      <Link href={route('orders.index')} onClick={() => setIsUserMenuOpen(false)}>
+                                                                             <i className="fa-solid fa-box-open text-center" style={{ width: '20px', fontSize: '18px' }}></i>
+                                                                             My Orders
+                                                                      </Link>
+                                                               </li>
+                                                               <li>
+                                                                      <Link href={route('payment_requests.index')} onClick={() => setIsUserMenuOpen(false)}>
+                                                                             <i className="fa-solid fa-money-check text-center" style={{ width: '20px', fontSize: '18px' }}></i>
+                                                                             Payment Request
+                                                                      </Link>
+                                                               </li>
+                                                               <li>
+                                                                      <Link href={route('verification.identity')} onClick={() => setIsUserMenuOpen(false)}>
+                                                                             <i className="fa-solid fa-id-card text-center" style={{ width: '20px', fontSize: '18px' }}></i>
+                                                                             Verification
+                                                                      </Link>
+                                                               </li>
+                                                               <li>
+                                                                      <button className="mobile-bottom-nav__logout-btn" onClick={handleLogout}>
+                                                                             <img src="/assets/images/logout.svg" alt="Logout" width={20} height={20} />
+                                                                             Log Out
+                                                                      </button>
+                                                               </li>
                                                         </ul>
                                                  </div>
                                           )}
                                    </div>
                             ) : (
-                                   <Link
-                                          href={route('login')}
+                                   <button
+                                          type="button"
+                                          onClick={openLogin}
                                           className="mobile-bottom-nav__item"
                                           aria-label="Login"
                                    >
                                           <i className="fa-regular fa-user mobile-bottom-nav__icon" />
                                           <span className="mobile-bottom-nav__label">Profile</span>
-                                   </Link>
+                                   </button>
                             )}
                      </div>
                      <style dangerouslySetInnerHTML={{
@@ -209,27 +270,39 @@ export default function MobileBottomNav() {
                 }
 
                 .mobile-bottom-nav__dropdown {
-                    position: absolute;
-                    bottom: 100%;
-                    right: 0;
+                    position: fixed;
+                    left: 12px;
+                    right: 12px;
+                    bottom: 74px;
                     background: white;
-                    border-radius: 12px 12px 0 0;
-                    min-width: 180px;
+                    border-radius: 18px;
+                    overflow-y: auto;
                     padding: 10px 0;
-                    margin-bottom: 8px;
                     border: 1px solid #eee;
+                    z-index: 1060;
+                    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
                 }
 
                 .user-setting-menu li a, .user-setting-menu li button {
-                    display: block;
-                    padding: 10px 20px;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 14px 18px;
                     color: #333;
                     text-decoration: none;
-                    font-size: 13px;
+                    font-size: 15px;
                     text-align: left;
                     width: 100%;
                     border: none;
                     background: none;
+                }
+
+                .user-setting-menu li:not(:last-child) {
+                    border-bottom: 1px solid #ededed;
+                }
+
+                .mobile-bottom-nav__logout-btn {
+                    color: #e94343 !important;
                 }
 
                 .mobile-bottom-nav__item--highlight {

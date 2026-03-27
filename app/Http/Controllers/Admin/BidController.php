@@ -11,14 +11,14 @@ class BidController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Bid::with(['user', 'auction']);
+        $query = Bid::with(['user', 'listing']);
 
         if ($request->search) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('id', 'LIKE', "%$search%")
                     ->orWhere('bid_amount', 'LIKE', "%$search%")
-                    ->orWhereHas('auction', function ($aq) use ($search) {
+                    ->orWhereHas('listing', function ($aq) use ($search) {
                         $aq->where('title', 'LIKE', "%$search%");
                     })
                     ->orWhereHas('user', function ($uq) use ($search) {
@@ -55,10 +55,10 @@ class BidController extends Controller
 
     public function show($id)
     {
-        $bid = Bid::with(['user', 'auction.user'])->findOrFail($id);
+        $bid = Bid::with(['user', 'listing.user'])->findOrFail($id);
 
         $auctionBids = Bid::with('user')
-            ->where('auction_id', $bid->auction_id)
+            ->where('listing_id', $bid->listing_id)
             ->latest()
             ->get();
 

@@ -20,15 +20,15 @@ class CorporateVerificationController extends Controller
         // Search functionality
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('legal_entity_name', 'LIKE', "%$search%")
-                  ->orWhere('id', 'LIKE', "%$search%")
-                  ->orWhere('registered_address', 'LIKE', "%$search%")
-                  ->orWhere('entity_type', 'LIKE', "%$search%")
-                  ->orWhereHas('user', function($uq) use ($search) {
-                      $uq->where('name', 'LIKE', "%$search%")
-                        ->orWhere('email', 'LIKE', "%$search%");
-                  });
+                    ->orWhere('id', 'LIKE', "%$search%")
+                    ->orWhere('registered_address', 'LIKE', "%$search%")
+                    ->orWhere('entity_type', 'LIKE', "%$search%")
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'LIKE', "%$search%")
+                            ->orWhere('email', 'LIKE', "%$search%");
+                    });
             });
         }
 
@@ -37,7 +37,7 @@ class CorporateVerificationController extends Controller
             $dates = explode(' to ', $request->date_range);
             if (count($dates) == 2) {
                 $query->whereDate('created_at', '>=', $dates[0])
-                      ->whereDate('created_at', '<=', $dates[1]);
+                    ->whereDate('created_at', '<=', $dates[1]);
             } else {
                 $query->whereDate('created_at', $dates[0]);
             }
@@ -84,23 +84,23 @@ class CorporateVerificationController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
-        if (! $user) {
+        if (!$user) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
         $data = $request->validate([
-            'legal_entity_name'      => 'required|string',
-            'registered_address'     => 'required|string',
-            'date_of_incorporation'  => 'required|date',
-            'entity_type'            => 'required|string',
-            'business_documents'     => 'required|array|min:1|max:3',
-            'business_documents.*'   => 'file|mimes:jpg,jpeg,png,pdf|max:10240',
-            'country'                => 'required|string',
+            'legal_entity_name' => 'required|string',
+            'registered_address' => 'required|string',
+            'date_of_incorporation' => 'required|date',
+            'entity_type' => 'required|string',
+            'business_documents' => 'required|array|min:1|max:3',
+            'business_documents.*' => 'file|mimes:jpg,jpeg,png,pdf|max:10240',
+            'country' => 'required|string',
         ]);
 
         // Ensure public folder exists
         $destination = public_path('assets/images/corporate_verifications');
-        if (! file_exists($destination)) {
+        if (!file_exists($destination)) {
             mkdir($destination, 0755, true);
         }
 
@@ -112,18 +112,26 @@ class CorporateVerificationController extends Controller
             $relativePaths[] = 'assets/images/corporate_verifications/' . $filename;
         }
 
-        $cv = CorporateVerification::create([
-            'user_id'               => $user->id,
-            'legal_entity_name'     => $data['legal_entity_name'],
-            'registered_address'    => $data['registered_address'],
+        $updateData = [
+            'legal_entity_name' => $data['legal_entity_name'],
+            'registered_address' => $data['registered_address'],
             'date_of_incorporation' => $data['date_of_incorporation'],
-            'entity_type'           => $data['entity_type'],
-            'business_documents'    => $relativePaths,
-            'country'               => $data['country'],
-            'status'                => 'not_verified',
-        ]);
+            'entity_type' => $data['entity_type'],
+            'country' => $data['country'],
+            'status' => 'not_verified',
+            'decline_reason' => null,
+        ];
 
-        return response()->json($cv, 201);
+        if (!empty($relativePaths)) {
+            $updateData['business_documents'] = $relativePaths;
+        }
+
+        $cv = CorporateVerification::updateOrCreate(
+            ['user_id' => $user->id],
+            $updateData
+        );
+
+        return redirect()->back()->with('success', 'Corporate verification submitted successfully.');
     }
 
     public function show($id)
@@ -136,13 +144,13 @@ class CorporateVerificationController extends Controller
         $cv = CorporateVerification::findOrFail($id);
 
         $data = $request->validate([
-            'legal_entity_name'      => 'required|string',
-            'registered_address'     => 'required|string',
-            'date_of_incorporation'  => 'required|date',
-            'entity_type'            => 'required|string',
-            'business_documents'     => 'sometimes|array|min:1|max:3',
-            'business_documents.*'   => 'file|mimes:jpg,jpeg,png,pdf|max:10240',
-            'country'                => 'required|string',
+            'legal_entity_name' => 'required|string',
+            'registered_address' => 'required|string',
+            'date_of_incorporation' => 'required|date',
+            'entity_type' => 'required|string',
+            'business_documents' => 'sometimes|array|min:1|max:3',
+            'business_documents.*' => 'file|mimes:jpg,jpeg,png,pdf|max:10240',
+            'country' => 'required|string',
         ]);
 
         $oldStatus = (string) ($cv->status ?? '');
@@ -150,7 +158,7 @@ class CorporateVerificationController extends Controller
         // Handle new uploads
         if ($request->hasFile('business_documents')) {
             $destination = public_path('assets/images/corporate_verifications');
-            if (! file_exists($destination)) {
+            if (!file_exists($destination)) {
                 mkdir($destination, 0755, true);
             }
 
@@ -165,20 +173,20 @@ class CorporateVerificationController extends Controller
 
         // Update attributes
         $cv->update([
-            'legal_entity_name'     => $data['legal_entity_name'],
-            'registered_address'    => $data['registered_address'],
+            'legal_entity_name' => $data['legal_entity_name'],
+            'registered_address' => $data['registered_address'],
             'date_of_incorporation' => $data['date_of_incorporation'],
-            'entity_type'           => $data['entity_type'],
-            'country'               => $data['country'],
+            'entity_type' => $data['entity_type'],
+            'country' => $data['country'],
         ]);
 
         // Mark for resubmit & clear decline reason
-        $cv->status         = 'resubmit';
+        $cv->status = 'resubmit';
         $cv->decline_reason = null;
         $cv->save();
 
         // Email if status actually changed
-        $emailed   = false;
+        $emailed = false;
         $mailError = null;
         $newStatus = (string) $cv->status;
 
@@ -189,7 +197,7 @@ class CorporateVerificationController extends Controller
                     Mail::to($recipient)
                         ->bcc(config('app.admin_email'))
                         ->send(new CorporateVerificationStatusUpdated($cv, $oldStatus, $newStatus));
-                        // ->queue(new CorporateVerificationStatusUpdated($cv, $oldStatus, $newStatus));
+                    // ->queue(new CorporateVerificationStatusUpdated($cv, $oldStatus, $newStatus));
                     $emailed = true;
                 }
             } catch (\Throwable $e) {
@@ -201,8 +209,8 @@ class CorporateVerificationController extends Controller
             'verification' => $cv,
             'email' => [
                 'attempted' => ($oldStatus !== $newStatus),
-                'sent'      => $emailed,
-                'error'     => $mailError,
+                'sent' => $emailed,
+                'error' => $mailError,
             ],
         ]);
     }
@@ -225,14 +233,15 @@ class CorporateVerificationController extends Controller
         $cv->save();
 
         // 1) send approval email (safe-fail + admin BCC)
-        $emailed = false; $mailError = null;
+        $emailed = false;
+        $mailError = null;
         try {
             $recipient = optional($cv->user)->email;
             if ($recipient) {
                 Mail::to($recipient)
                     ->bcc(config('app.admin_email'))
                     ->send(new CorporateVerificationAcceptedMail($cv));
-                    // ->queue(new CorporateVerificationAcceptedMail($cv));
+                // ->queue(new CorporateVerificationAcceptedMail($cv));
                 $emailed = true;
             }
         } catch (\Throwable $e) {
@@ -241,12 +250,12 @@ class CorporateVerificationController extends Controller
 
         // 2) in-app notification
         NewNotification::create([
-            'user_id'   => $cv->user_id,
-            'title'     => 'Corporate Verification Accepted',
-            'message'   => 'Congratulations! Your corporate verification has been approved.',
-            'type'      => 'wallet',
+            'user_id' => $cv->user_id,
+            'title' => 'Corporate Verification Accepted',
+            'message' => 'Congratulations! Your corporate verification has been approved.',
+            'type' => 'wallet',
             'image_url' => NewNotification::getImageForType('wallet'),
-            'read_at'   => null,
+            'read_at' => null,
         ]);
 
         return redirect()
@@ -260,21 +269,22 @@ class CorporateVerificationController extends Controller
 
         $cv = CorporateVerification::findOrFail($id);
         $oldStatus = (string) ($cv->status ?? '');
-        $cv->status         = 'declined';
+        $cv->status = 'declined';
         $cv->decline_reason = $request->decline_reason;
         $cv->save();
 
         $resubmitUrl = 'http://xpertbid.com/corporate-verify/' . $cv->id;
 
         // 1) decline email (safe-fail + admin BCC)
-        $emailed = false; $mailError = null;
+        $emailed = false;
+        $mailError = null;
         try {
             $recipient = optional($cv->user)->email;
             if ($recipient) {
                 Mail::to($recipient)
                     ->bcc(config('app.admin_email'))
                     ->send(new CorporateVerificationDeclinedMail($cv, $request->decline_reason, $resubmitUrl));
-                    // ->queue(new CorporateVerificationDeclinedMail(...));
+                // ->queue(new CorporateVerificationDeclinedMail(...));
                 $emailed = true;
             }
         } catch (\Throwable $e) {
@@ -283,12 +293,12 @@ class CorporateVerificationController extends Controller
 
         // 2) in-app notification
         NewNotification::create([
-            'user_id'   => $cv->user_id,
-            'title'     => 'Corporate Verification Declined',
-            'message'   => "Your corporate verification was declined: {$request->decline_reason}",
-            'type'      => 'bid',
+            'user_id' => $cv->user_id,
+            'title' => 'Corporate Verification Declined',
+            'message' => "Your corporate verification was declined: {$request->decline_reason}",
+            'type' => 'bid',
             'image_url' => NewNotification::getImageForType('bid'),
-            'read_at'   => null,
+            'read_at' => null,
         ]);
 
         return redirect()

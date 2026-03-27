@@ -74,6 +74,7 @@ export default function MediaUpload({ files, setFiles, existingFiles = [], setEx
                      </div>
 
                      <form className="media-form" onSubmit={handleNext}>
+                            <div className="sell-form-inner">
 
                             <SummaryCard
                                    type="List Type"
@@ -198,6 +199,7 @@ export default function MediaUpload({ files, setFiles, existingFiles = [], setEx
                                    >
                                           Continue
                                    </button>
+                            </div>
                             </div>
                      </form>
               </section>

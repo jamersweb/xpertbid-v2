@@ -20,9 +20,9 @@ class VehicleVerificationController extends Controller
         return view('vehicle_verifications.index', compact('verifications'));
     }
 
-   public function edit(VehicleVerification $vehicleVerification)
+    public function edit(VehicleVerification $vehicleVerification)
 {
-    $vehicleVerification->load('auction' , 'user');  // user ke saath auction bhi load
+    $vehicleVerification->load('listing' , 'user');  // user ke saath listing bhi load
     return view('vehicle_verifications.edit', [
       'verification' => $vehicleVerification
     ]);
@@ -38,7 +38,7 @@ public function store(Request $request)
         'chassis_vin'           => 'required|string',
         'vehicle_documents'     => 'required|array|min:1|max:3',
         'vehicle_documents.*' => 'file|mimes:jpg,jpeg,png,pdf|max:2048',
-         'auction_id' => 'required|exists:auctions,id',
+         'listing_id' => 'required|exists:listings,id',
        
     ]);
 
@@ -61,7 +61,7 @@ public function store(Request $request)
 
     $record = VehicleVerification::create([
         'user_id'               => $user->id,
-         'auction_id'         => $data['auction_id'],     
+         'listing_id'         => $data['listing_id'],     
         'vehicle_make_model'    => $data['vehicle_make_model'],
         'year_of_manufacture'   => $data['year_of_manufacture'],
         'chassis_vin'           => $data['chassis_vin'],
@@ -79,7 +79,7 @@ public function store(Request $request)
 public function show($id)
 {
     // Return JSON, not a Blade view, when called via API
-    $verification = VehicleVerification::with(['user','auction'])
+    $verification = VehicleVerification::with(['user','listing'])
                          ->findOrFail($id);
 
     return response()->json($verification);

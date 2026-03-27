@@ -19,7 +19,7 @@ class BuyNowInquiryController extends Controller
             'email' => 'required|email|max:255',
             'phone' => 'required|string|max:20',
             'message' => 'nullable|string|max:1000',
-            'auction_id' => 'required|integer',
+            'listing_id' => 'required|integer',
             'auction_title' => 'required|string|max:255',
             'user_id' => 'nullable|integer',
         ]);
@@ -38,7 +38,7 @@ class BuyNowInquiryController extends Controller
                 'email' => $request->email,
                 'phone' => $request->phone,
                 'message' => $request->message,
-                'auction_id' => $request->auction_id,
+                'listing_id' => $request->listing_id,
                 'auction_title' => $request->auction_title,
                 'user_id' => $request->user_id,
                 'status' => 'pending',

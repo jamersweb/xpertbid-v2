@@ -38,7 +38,7 @@ use App\Http\Controllers\InvoiceController;
 // --- Public Pages (Inertia) ---
 
 Route::get('/', [AuctionController::class, 'home'])->name('home'); // Replaces Welcome
-Route::get('/product/{slug}', [AuctionController::class, 'show'])->name('product.show'); 
+Route::get('/product/{slug}', [AuctionController::class, 'show'])->name('product.show');
 Route::get('/1-rupee-auctions', [AuctionController::class, 'one_rupee_page'])->name('auctions.one_rupee');
 Route::get('/search-auctions', [AuctionController::class, 'search'])->name('auctions.search-api');
 Route::get('/search', [AuctionController::class, 'filterAuctions'])->name('auctions.index');
@@ -78,7 +78,8 @@ Route::get('/get-all-categories', [AuctionCategoryController::class, 'all_catego
 Route::get('/get-category-sell', [AuctionCategoryController::class, 'get_category_sell']);
 Route::get('/get-category', [AuctionCategoryController::class, 'get_category']);
 Route::get('/get-subcategories/{id}', [AuctionCategoryController::class, 'getSubcategories']);
-Route::get('/get-childern/{id}', [AuctionCategoryController::class, 'getChildern']);
+Route::get('/get-children/{id}', [AuctionCategoryController::class, 'getChildren']);
+Route::get('/get-dynamic-fields/{categoryId}/{listingType}', [\App\Http\Controllers\ListingController::class, 'getDynamicFields']);
 
 // Locations (Public)
 Route::get('/get-countries', [AuctionController::class, 'get_countries']);
@@ -100,9 +101,10 @@ Route::post('/buy-now-inquiry', [BuyNowInquiryController::class, 'store'])->name
 
 // --- Authenticated Routes (Inertia + Web Sessions) ---
 Route::middleware(['auth', 'verified'])->group(function () {
-    
+
     // Dashboard
-    Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
+    // Dashboard
+    Route::get('/dashboard', [UserController::class, 'dashboard'])->name('dashboard');
     Route::get('/account-settings', [ProfileController::class, 'edit'])->name('profile.edit'); // Unified profile edit
 
     // Profile & Settings
@@ -111,19 +113,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/user/update', [ProfileController::class, 'updateProfile'])->name('user.update');
     Route::post('/user/address', [ProfileController::class, 'updateAddress'])->name('user.address.update');
     Route::post('/user/change-password', [ProfileController::class, 'updatePassword'])->name('user.password.update');
-    
+    Route::post('/user/notifications', [ProfileController::class, 'updateNotifications'])->name('user.notifications.update');
+
     // Verification
     Route::get('/identity-verification', [ProfileController::class, 'getIdentityVerification'])->name('verification.identity');
     Route::post('/identity-verification', [ProfileController::class, 'saveIdentityVerification'])->name('verification.identity.store');
+    Route::post('/individual-verification', [\App\Http\Controllers\IndividualVerificationController::class, 'store'])->name('individual-verifications.store');
+    Route::post('/corporate-verification', [\App\Http\Controllers\CorporateVerificationController::class, 'store'])->name('corporate-verifications.store');
 
-    // Auctions (Selling)
-    Route::get('/sell', [AuctionController::class, 'create'])->name('auctions.create'); // "Sell Now" Page
-    Route::post('/auctions', [AuctionController::class, 'store'])->name('auctions.store'); // Was api_store
-    Route::get('/my-listings', [AuctionController::class, 'listings'])->name('auctions.mylistings');
-    Route::get('/auctions/{id}/edit', [AuctionController::class, 'edit'])->name('auctions.edit');
-    Route::post('/auctions/{id}', [AuctionController::class, 'update'])->name('auctions.update'); // using POST for FormData with file support
-    Route::post('/auctions/{id}/cancel', [AuctionController::class, 'cancel'])->name('auctions.cancel');
-    
+    // Unified Listings (Refactored from Auctions)
+    Route::get('/sell', [\App\Http\Controllers\ListingController::class, 'create'])->name('auctions.create');
+    Route::post('/auctions', [\App\Http\Controllers\ListingController::class, 'store'])->name('auctions.store');
+    Route::get('/my-listings', [\App\Http\Controllers\ListingController::class, 'index'])->name('auctions.mylistings');
+    Route::get('/auctions/{listing}/edit', [\App\Http\Controllers\ListingController::class, 'edit'])->name('auctions.edit');
+    Route::match(['POST', 'PUT'], '/auctions/{listing}', [\App\Http\Controllers\ListingController::class, 'update'])->name('auctions.update');
+    Route::post('/auctions/{listing}/cancel', [\App\Http\Controllers\ListingController::class, 'cancel'])->name('auctions.cancel');
+
     // Bidding & Favorites
     Route::post('/bids', [BidController::class, 'placeBid'])->name('bids.store');
     Route::get('/my-bids', [BidController::class, 'index'])->name('bids.index');
@@ -143,8 +148,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
     Route::post('/wallet/add', [WalletController::class, 'addMoney'])->name('wallet.add');
     Route::post('/payment-methods', [PaymentController::class, 'savePaymentMethod'])->name('payment_methods.store');
+    Route::get('/payment-requests', [\App\Http\Controllers\PaymentRequestController::class, 'index'])->name('payment_requests.index');
     // Notifications
     Route::get('/notifications-page', [App\Http\Controllers\UserNotificationController::class, 'index'])->name('notifications.index');
+    
+    // Chat Routes
+    Route::group(['prefix' => 'chat', 'as' => 'chat.'], function () {
+        Route::get('/', [\App\Http\Controllers\ChatController::class, 'index'])->name('index');
+        Route::get('/conversations', [\App\Http\Controllers\Api\ChatController::class, 'index'])->name('conversations.index');
+        Route::get('/conversations/{id}', [\App\Http\Controllers\Api\ChatController::class, 'show'])->name('conversations.show');
+        Route::post('/initiate', [\App\Http\Controllers\Api\ChatController::class, 'initiate'])->name('initiate');
+        Route::post('/messages', [\App\Http\Controllers\Api\ChatController::class, 'store'])->name('messages.store');
+        Route::delete('/conversations/{id}', [\App\Http\Controllers\Api\ChatController::class, 'deleteConversation'])->name('conversations.destroy');
+        Route::post('/conversations/{id}/important', [\App\Http\Controllers\Api\ChatController::class, 'toggleImportant'])->name('conversations.important');
+    });
+
     Route::get('/api/notifications', [App\Http\Controllers\UserNotificationController::class, 'getNotifications'])->name('notifications.api');
     Route::get('/api/notifications/count', [App\Http\Controllers\UserNotificationController::class, 'getUnreadCount'])->name('notifications.count');
     Route::post('/api/notifications/read/{id}', [App\Http\Controllers\UserNotificationController::class, 'markAsRead'])->name('notifications.read');
@@ -162,11 +180,11 @@ Route::get('/api/currencies', [App\Http\Controllers\CurrencyController::class, '
 // Admin Routes
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('dashboard');
-    
+
     // SEO Management
     Route::get('/seo', [App\Http\Controllers\Admin\SeoController::class, 'index'])->name('seo.index');
     Route::post('/seo', [App\Http\Controllers\Admin\SeoController::class, 'store'])->name('seo.store');
-    
+
     // User Management
     Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
     Route::post('/users', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
@@ -191,7 +209,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         Route::get('/property', [App\Http\Controllers\Admin\PropertyVerificationController::class, 'index'])->name('property.index');
         Route::post('/property/{id}/accept', [App\Http\Controllers\Admin\PropertyVerificationController::class, 'accept'])->name('property.accept');
         Route::post('/property/{id}/decline', [App\Http\Controllers\Admin\PropertyVerificationController::class, 'decline'])->name('property.decline');
-        
+
         // Auction Verification (Publish Approval)
         Route::get('/auctions', [App\Http\Controllers\Admin\AuctionStatusController::class, 'index'])->name('auctions.index');
         Route::post('/auctions/{id}/accept', [App\Http\Controllers\Admin\AuctionStatusController::class, 'accept'])->name('auctions.accept');
@@ -212,10 +230,14 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/payment-requests', [App\Http\Controllers\Admin\PaymentRequestController::class, 'index'])->name('payment-requests.index');
     Route::patch('/payment-requests/{id}/status', [App\Http\Controllers\Admin\PaymentRequestController::class, 'updateStatus'])->name('payment-requests.update-status');
 
-    // Auction Categories
-    Route::resource('auction_categories', App\Http\Controllers\Admin\AuctionCategoryController::class)->names('auction_categories');
-    Route::get('/get-subcategories/{id}', [App\Http\Controllers\Admin\AuctionCategoryController::class, 'getSubcategories']);
-    Route::get('/get-children/{id}', [App\Http\Controllers\Admin\AuctionCategoryController::class, 'getChildren']);
+    // Unified List Management (Refactored)
+    Route::get('/listings', [App\Http\Controllers\Admin\ListingController::class, 'index'])->name('listings.index');
+    Route::resource('listings', App\Http\Controllers\Admin\ListingController::class)->except(['index'])->names('listings');
+    Route::patch('/listings/{id}/status', [App\Http\Controllers\Admin\ListingController::class, 'updateStatus'])->name('listings.update-status');
+
+    // Unified Category Management (Refactored to legacy system)
+    Route::resource('categories', App\Http\Controllers\Admin\AuctionCategoryController::class)->names('categories');
+    Route::resource('dynamic-fields', App\Http\Controllers\Admin\DynamicFieldController::class)->names('dynamic-fields');
 
     // Content Management
     Route::resource('sliders', App\Http\Controllers\Admin\SliderController::class)->names('sliders');
@@ -240,4 +262,4 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::resource('roles', App\Http\Controllers\Admin\RoleController::class)->names('roles');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

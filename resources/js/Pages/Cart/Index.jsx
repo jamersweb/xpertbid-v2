@@ -7,29 +7,42 @@ import { Oval } from 'react-loader-spinner';
 import Swal from 'sweetalert2';
 
 export default function Index({ cart: propCart }) {
-       const { cartItems, removeFromCart, getTotalPrice } = useCart();
+       const { cartItems, removeFromCart, updateCartItem, getTotalPrice } = useCart();
        const [isRemoving, setIsRemoving] = useState({});
+       const [isUpdating, setIsUpdating] = useState({});
 
-       // Use items from prop (server-side) or context (client-side/guest)
-       // For this page, since it's an Inertia page, propCart will have auth items.
-       // If not auth, context's cartItems will have guest items.
-       const displayItems = propCart || cartItems;
+       const displayItems = Array.isArray(propCart) ? propCart : (Array.isArray(cartItems) ? cartItems : []);
 
        const handleRemove = async (itemId) => {
-              setIsRemoving(prev => ({ ...prev, [itemId]: true }));
-              const result = await removeFromCart(itemId);
-              setIsRemoving(prev => ({ ...prev, [itemId]: false }));
+              Swal.fire({
+                     title: 'Are you sure?',
+                     text: "You want to remove this item from cart?",
+                     icon: 'warning',
+                     showCancelButton: true,
+                     confirmButtonColor: '#23262F',
+                     cancelButtonColor: '#d33',
+                     confirmButtonText: 'Yes, remove it!'
+              }).then(async (result) => {
+                     if (result.isConfirmed) {
+                            setIsRemoving(prev => ({ ...prev, [itemId]: true }));
+                            const res = await removeFromCart(itemId);
+                            setIsRemoving(prev => ({ ...prev, [itemId]: false }));
 
-              if (!result.success) {
-                     Swal.fire({
-                            icon: 'error',
-                            title: 'Oops...',
-                            text: result.message || 'Failed to remove item',
-                     });
-              }
+                            if (!res.success) {
+                                   Swal.fire('Error', res.message || 'Failed to remove item', 'error');
+                            }
+                     }
+              });
        };
 
-       const totalPrice = displayItems.reduce((total, item) => total + (parseFloat(item.price) || 0), 0);
+       const handleQuantityChange = async (itemId, newQty) => {
+              if (newQty < 1) return;
+              setIsUpdating(prev => ({ ...prev, [itemId]: true }));
+              await updateCartItem(itemId, newQty);
+              setIsUpdating(prev => ({ ...prev, [itemId]: false }));
+       };
+
+       const totalPrice = displayItems.reduce((total, item) => total + (parseFloat(item.price || 0) * (item.quantity || 1)), 0);
 
        const stripHtmlTags = (html) => {
               if (!html) return "";
@@ -37,142 +50,285 @@ export default function Index({ cart: propCart }) {
        };
 
        return (
-              <AppLayout title="Shopping Cart">
+              <>
                      <Head>
                             <title>Shopping Cart | XpertBid</title>
                      </Head>
 
-                     <div className="py-5 bg-light min-vh-100">
-                            <div className="container">
-                                   <div className="mb-5">
-                                          <h1 className="fw-bolder display-5 text-dark">Shopping Cart</h1>
-                                          <p className="text-muted">Review your items before proceeding to checkout.</p>
+                     <div className="cart-page-wrapper" style={{ backgroundColor: "#F1F1F1", padding: "60px 70px", minHeight: "100vh" }}>
+                            <div className="container" style={{ maxWidth: "1200px" }}>
+                                   <div className="row">
+                                          <div className="col-12">
+                                                 <h2
+                                                        className="mb-4"
+                                                        style={{
+                                                               fontFamily: '"Inter", sans-serif',
+                                                               fontSize: "46px",
+                                                               fontWeight: "800",
+                                                               lineHeight: "64px",
+                                                               color: "#23262F",
+                                                               marginBottom: "40px",
+                                                        }}
+                                                 >
+                                                        Shopping Cart
+                                                 </h2>
+                                          </div>
                                    </div>
 
                                    {displayItems.length === 0 ? (
-                                          <div className="text-center py-5 bg-white rounded-4 shadow-sm border">
-                                                 <div className="mb-4 opacity-25">
-                                                        <i className="fa-solid fa-cart-shopping fa-5x"></i>
+                                          <div className="text-center py-5">
+                                                 <div className="mb-4">
+                                                        <i className="fa-solid fa-cart-shopping" style={{ fontSize: "80px", color: "#606060" }}></i>
                                                  </div>
-                                                 <h3 className="fw-bold h4">Your cart is empty</h3>
-                                                 <p className="text-muted mb-4">Looks like you haven't added anything to your cart yet.</p>
-                                                 <Link href={route('marketplace.index')} className="btn btn-primary rounded-pill px-5 py-2 fw-bold">
-                                                        Browse Marketplace
+                                                 <h3 style={{ fontFamily: '"Inter", sans-serif', color: "#23262F", fontWeight: "700" }}>Your cart is empty</h3>
+                                                 <p style={{ fontFamily: '"Inter", sans-serif', color: "#606060", fontSize: "16px", marginBottom: "30px" }}>
+                                                        Add some products to get started!
+                                                 </p>
+                                                 <Link
+                                                        href={route('marketplace.index')}
+                                                        className="btn"
+                                                        style={{
+                                                               backgroundColor: "#43ACE9",
+                                                               color: "#fff",
+                                                               padding: "12px 24px",
+                                                               borderRadius: "8px",
+                                                               fontSize: "16px",
+                                                               fontWeight: "600",
+                                                               fontFamily: '"Inter", sans-serif',
+                                                               textDecoration: "none",
+                                                               display: "inline-block",
+                                                        }}
+                                                 >
+                                                        Continue Shopping
                                                  </Link>
                                           </div>
                                    ) : (
-                                          <div className="row g-4">
-                                                 {/* Items List */}
+                                          <div className="row">
                                                  <div className="col-lg-8">
-                                                        <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
-                                                               <div className="card-body p-0">
-                                                                      {displayItems.map((item, index) => (
-                                                                             <div key={item.id} className={`p-4 d-flex align-items-center ${index < displayItems.length - 1 ? 'border-bottom' : ''}`}>
-                                                                                    <div className="flex-shrink-0" style={{ width: '120px', height: '120px' }}>
-                                                                                           <Link href={item.slug ? route('product.show', item.slug) : '#'}>
+                                                        <div
+                                                               className="cart-items-card"
+                                                               style={{
+                                                                      backgroundColor: "#fff",
+                                                                      borderRadius: "15px",
+                                                                      padding: "25px 30px",
+                                                                      boxShadow: "0 45px 90px 0 #00000026",
+                                                               }}
+                                                        >
+                                                               {displayItems.map((item, index) => (
+                                                                      <div
+                                                                             key={item.id}
+                                                                             className="d-flex align-items-start"
+                                                                             style={{
+                                                                                    minHeight: "150px",
+                                                                                    paddingBottom: index < displayItems.length - 1 ? "30px" : "0",
+                                                                                    marginBottom: index < displayItems.length - 1 ? "30px" : "0",
+                                                                                    borderBottom: index < displayItems.length - 1 ? "1px solid #eee" : "none",
+                                                                             }}
+                                                                      >
+                                                                             {/* Product Image */}
+                                                                             <div className="me-3" style={{ width: "150px", flexShrink: 0 }}>
+                                                                                    <Link href={item.slug ? route('product.show', item.slug) : '#'}>
+                                                                                           <div
+                                                                                                  style={{
+                                                                                                         width: "100%",
+                                                                                                         height: "150px",
+                                                                                                         position: "relative",
+                                                                                                         overflow: "hidden",
+                                                                                                         borderRadius: "12px",
+                                                                                                         backgroundColor: "#f8f9fa",
+                                                                                                  }}
+                                                                                           >
                                                                                                   <img
                                                                                                          src={item.image ? (item.image.startsWith('http') ? item.image : `https://admin.xpertbid.com/${item.image}`) : '/assets/images/placeholder.png'}
-                                                                                                         className="w-100 h-100 object-fit-cover rounded-3 border"
                                                                                                          alt={item.title}
+                                                                                                         style={{ objectFit: "cover", width: "100%", height: "100%", borderRadius: "6px" }}
                                                                                                          onError={(e) => e.target.src = '/assets/images/WebsiteBanner2.png'}
                                                                                                   />
-                                                                                           </Link>
+                                                                                           </div>
+                                                                                    </Link>
+                                                                             </div>
+
+                                                                             {/* Product Details */}
+                                                                             <div className="flex-grow-1">
+                                                                                    <div className="d-flex justify-content-between align-items-start mb-2">
+                                                                                           <div style={{ flex: 1, marginRight: "15px" }}>
+                                                                                                  <h5
+                                                                                                         className="mb-1"
+                                                                                                         style={{
+                                                                                                                fontFamily: '"Inter", sans-serif',
+                                                                                                                fontSize: "18px",
+                                                                                                                fontWeight: "700",
+                                                                                                                color: "#23262F",
+                                                                                                                marginBottom: "8px",
+                                                                                                         }}
+                                                                                                  >
+                                                                                                         <Link
+                                                                                                                href={item.slug ? route('product.show', item.slug) : '#'}
+                                                                                                                style={{ textDecoration: "none", color: "inherit" }}
+                                                                                                         >
+                                                                                                                {item.title}
+                                                                                                         </Link>
+                                                                                                  </h5>
+                                                                                                  <p
+                                                                                                         style={{
+                                                                                                                fontFamily: '"Inter", sans-serif',
+                                                                                                                fontSize: "14px",
+                                                                                                                color: "#606060",
+                                                                                                                lineHeight: "20px",
+                                                                                                                marginBottom: "12px",
+                                                                                                         }}
+                                                                                                  >
+                                                                                                         {item.description ? stripHtmlTags(item.description).substring(0, 120) + '...' : ''}
+                                                                                                  </p>
+                                                                                                  {item.variation_name && (
+                                                                                                         <span className="badge bg-light text-dark border mb-2">
+                                                                                                                {item.variation_name}
+                                                                                                         </span>
+                                                                                                  )}
+                                                                                           </div>
+                                                                                           <button
+                                                                                                  onClick={() => handleRemove(item.id)}
+                                                                                                  disabled={isRemoving[item.id]}
+                                                                                                  style={{
+                                                                                                         background: "none",
+                                                                                                         border: "none",
+                                                                                                         color: "#E94343",
+                                                                                                         cursor: isRemoving[item.id] ? "not-allowed" : "pointer",
+                                                                                                         padding: "8px",
+                                                                                                         fontSize: "18px",
+                                                                                                         opacity: isRemoving[item.id] ? 0.6 : 1,
+                                                                                                  }}
+                                                                                           >
+                                                                                                  {isRemoving[item.id] ? (
+                                                                                                         <Oval height={16} width={16} color="#E94343" />
+                                                                                                  ) : (
+                                                                                                         <i className="fa-solid fa-trash"></i>
+                                                                                                  )}
+                                                                                           </button>
                                                                                     </div>
 
-                                                                                    <div className="ms-4 flex-grow-1">
-                                                                                           <div className="d-flex justify-content-between align-items-start">
-                                                                                                  <div>
-                                                                                                         <Link href={item.slug ? route('product.show', item.slug) : '#'} className="text-decoration-none text-dark">
-                                                                                                                <h5 className="fw-bold mb-1">{item.title}</h5>
-                                                                                                         </Link>
-                                                                                                         {item.variation_name && (
-                                                                                                                <span className="badge bg-light text-dark border mb-2">
-                                                                                                                       {item.variation_name}
-                                                                                                                </span>
-                                                                                                         )}
-                                                                                                         <div className="text-muted small mb-0 d-none d-md-block" style={{ maxWidth: '400px' }}>
-                                                                                                                {item.description ? stripHtmlTags(item.description).substring(0, 100) + '...' : ''}
-                                                                                                         </div>
-                                                                                                  </div>
-                                                                                                  <button
-                                                                                                         onClick={() => handleRemove(item.id)}
-                                                                                                         disabled={isRemoving[item.id]}
-                                                                                                         className="btn btn-outline-danger btn-sm rounded-circle border-0 p-2"
-                                                                                                         style={{ width: '36px', height: '36px' }}
-                                                                                                  >
-                                                                                                         {isRemoving[item.id] ? (
-                                                                                                                <Oval height={18} width={18} color="#dc3545" />
-                                                                                                         ) : (
-                                                                                                                <i className="fa-solid fa-trash-can"></i>
-                                                                                                         )}
-                                                                                                  </button>
+                                                                                    <div className="d-flex justify-content-between align-items-center mt-3">
+                                                                                           <div>
+                                                                                                  <Price amountAED={parseFloat(item.price) || 0} />
                                                                                            </div>
-
-                                                                                           <div className="d-flex justify-content-between align-items-center mt-3">
-                                                                                                  <div className="fw-bold text-primary fs-5">
-                                                                                                         <Price amountAED={item.price} />
-                                                                                                  </div>
-                                                                                                  <div className="text-muted small">
-                                                                                                         Qty: {item.quantity || 1}
-                                                                                                  </div>
+                                                                                           <div className="d-flex align-items-center bg-light rounded-pill px-2 py-1">
+                                                                                                  <button onClick={() => handleQuantityChange(item.id, (item.quantity || 1) - 1)} className="btn btn-sm border-0"><i className="fa-solid fa-minus" style={{ fontSize: '10px' }}></i></button>
+                                                                                                  <span className="mx-2 fw-bold small">{item.quantity || 1}</span>
+                                                                                                  <button onClick={() => handleQuantityChange(item.id, (item.quantity || 1) + 1)} className="btn btn-sm border-0"><i className="fa-solid fa-plus" style={{ fontSize: '10px' }}></i></button>
                                                                                            </div>
                                                                                     </div>
                                                                              </div>
-                                                                      ))}
-                                                               </div>
+                                                                      </div>
+                                                               ))}
                                                         </div>
                                                  </div>
 
                                                  {/* Order Summary */}
                                                  <div className="col-lg-4">
-                                                        <div className="card border-0 shadow-sm rounded-4 sticky-top" style={{ top: '2rem' }}>
-                                                               <div className="card-body p-4">
-                                                                      <h4 className="fw-bold mb-4">Order Summary</h4>
-
-                                                                      <div className="d-flex justify-content-between mb-3 text-muted">
-                                                                             <span>Subtotal</span>
+                                                        <div
+                                                               className="order-summary-card"
+                                                               style={{
+                                                                      backgroundColor: "#fff",
+                                                                      borderRadius: "15px",
+                                                                      padding: "0",
+                                                                      boxShadow: "0 45px 90px 0 #00000026",
+                                                                      position: "sticky",
+                                                                      top: "20px",
+                                                               }}
+                                                        >
+                                                               <div
+                                                                      style={{
+                                                                             padding: "25px 30px",
+                                                                             borderBottom: "1px solid #eee",
+                                                                      }}
+                                                               >
+                                                                      <h5
+                                                                             className="mb-0"
+                                                                             style={{
+                                                                                    fontFamily: '"Inter", sans-serif',
+                                                                                    fontSize: "22px",
+                                                                                    fontWeight: "700",
+                                                                                    color: "#23262F",
+                                                                             }}
+                                                                      >
+                                                                             Order Summary
+                                                                      </h5>
+                                                               </div>
+                                                               <div style={{ padding: "25px 30px" }}>
+                                                                      <div className="d-flex justify-content-between mb-3">
+                                                                             <span style={{ fontFamily: '"Inter", sans-serif', fontSize: "16px", color: "#606060" }}>
+                                                                                    Subtotal:
+                                                                             </span>
                                                                              <Price amountAED={totalPrice} />
                                                                       </div>
-                                                                      <div className="d-flex justify-content-between mb-3 text-muted">
-                                                                             <span>Shipping</span>
-                                                                             <span className="text-success small fw-bold">Calculated at checkout</span>
-                                                                      </div>
-                                                                      <div className="d-flex justify-content-between mb-3 text-muted">
-                                                                             <span>Tax</span>
-                                                                             <span className="text-success small fw-bold">Calculated at checkout</span>
-                                                                      </div>
-
-                                                                      <hr className="my-4" />
-
-                                                                      <div className="d-flex justify-content-between mb-4 align-items-center">
-                                                                             <span className="fw-bold fs-5">Total Payment</span>
-                                                                             <span className="fw-bold fs-4 text-dark">
-                                                                                    <Price amountAED={totalPrice} />
+                                                                      <div className="d-flex justify-content-between mb-3">
+                                                                             <span style={{ fontFamily: '"Inter", sans-serif', fontSize: "16px", color: "#606060" }}>
+                                                                                    Shipping:
+                                                                             </span>
+                                                                             <span style={{ fontFamily: '"Inter", sans-serif', fontSize: "16px", color: "#606060" }}>
+                                                                                    FREE
                                                                              </span>
                                                                       </div>
-
+                                                                      <hr style={{ margin: "20px 0", borderColor: "#eee" }} />
+                                                                      <div className="d-flex justify-content-between mb-4">
+                                                                             <strong style={{ fontFamily: '"Inter", sans-serif', fontSize: "18px", fontWeight: "700", color: "#23262F" }}>
+                                                                                    Total:
+                                                                             </strong>
+                                                                             <strong style={{ fontFamily: '"Inter", sans-serif', fontSize: "18px", fontWeight: "700", color: "#23262F" }}>
+                                                                                    <Price amountAED={totalPrice} />
+                                                                             </strong>
+                                                                      </div>
                                                                       <Link
                                                                              href={route('checkout.index')}
-                                                                             className="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm mb-3"
+                                                                             style={{
+                                                                                    display: "block",
+                                                                                    textAlign: "center",
+                                                                                    width: "100%",
+                                                                                    padding: "14px",
+                                                                                    fontSize: "16px",
+                                                                                    fontWeight: "600",
+                                                                                    fontFamily: '"Inter", sans-serif',
+                                                                                    backgroundColor: "#43ACE9",
+                                                                                    color: "#fff",
+                                                                                    border: "none",
+                                                                                    borderRadius: "8px",
+                                                                                    marginBottom: "15px",
+                                                                                    cursor: "pointer",
+                                                                                    textDecoration: "none",
+                                                                                    transition: "background-color 0.3s ease",
+                                                                             }}
+                                                                             onMouseEnter={(e) => (e.target.style.backgroundColor = "#35a0d8")}
+                                                                             onMouseLeave={(e) => (e.target.style.backgroundColor = "#43ACE9")}
                                                                       >
-                                                                             Checkout Now <i className="fa-solid fa-credit-card ms-2"></i>
+                                                                             Proceed to Checkout
                                                                       </Link>
-
                                                                       <Link
                                                                              href={route('marketplace.index')}
-                                                                             className="btn btn-outline-dark w-100 rounded-pill py-2 fw-bold border-0 small"
+                                                                             style={{
+                                                                                    display: "block",
+                                                                                    textAlign: "center",
+                                                                                    padding: "14px",
+                                                                                    fontSize: "16px",
+                                                                                    fontWeight: "600",
+                                                                                    fontFamily: '"Inter", sans-serif',
+                                                                                    backgroundColor: "transparent",
+                                                                                    color: "#23262F",
+                                                                                    border: "1px solid #23262F",
+                                                                                    borderRadius: "8px",
+                                                                                    textDecoration: "none",
+                                                                                    transition: "all 0.3s ease",
+                                                                             }}
+                                                                             onMouseEnter={(e) => {
+                                                                                    e.target.style.backgroundColor = "#23262F";
+                                                                                    e.target.style.color = "#fff";
+                                                                             }}
+                                                                             onMouseLeave={(e) => {
+                                                                                    e.target.style.backgroundColor = "transparent";
+                                                                                    e.target.style.color = "#23262F";
+                                                                             }}
                                                                       >
                                                                              Continue Shopping
                                                                       </Link>
-                                                               </div>
-                                                               <div className="card-footer bg-light border-0 p-4 text-center">
-                                                                      <p className="small text-muted mb-3 italic">Secure Payment Methods</p>
-                                                                      <div className="d-flex justify-content-center gap-3 opacity-50">
-                                                                             <i className="fa-brands fa-cc-visa fa-2x"></i>
-                                                                             <i className="fa-brands fa-cc-mastercard fa-2x"></i>
-                                                                             <i className="fa-brands fa-cc-stripe fa-2x"></i>
-                                                                             <i className="fa-solid fa-building-columns fa-2x"></i>
-                                                                      </div>
                                                                </div>
                                                         </div>
                                                  </div>
@@ -183,13 +339,15 @@ export default function Index({ cart: propCart }) {
 
                      <style dangerouslySetInnerHTML={{
                             __html: `
-                .object-fit-cover {
-                    object-fit: cover;
-                }
-                .transition-all {
-                    transition: all 0.3s ease;
-                }
-            `}} />
-              </AppLayout>
+               .object-fit-cover { object-fit: cover; }
+               @media (max-width: 991px) {
+                   .cart-page-wrapper {
+                       padding: 40px 20px !important;
+                   }
+               }
+           `}} />
+              </>
        );
 }
+
+Index.layout = page => <AppLayout title="Shopping Cart" children={page} />;

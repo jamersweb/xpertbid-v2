@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Cart;
-use App\Models\Auction;
+use App\Models\Listing;
 use App\Models\NewNotification;
 use App\Mail\OrderPlacedMail;
 use App\Mail\AdminOrderNotification;
@@ -19,6 +19,9 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
+use App\Models\Country;
+use App\Models\State;
+use App\Models\City;
 
 class CheckoutController extends Controller
 {
@@ -31,37 +34,37 @@ class CheckoutController extends Controller
         
         // Handle direct promotion checkout
         if ($request->query('direct') === 'featured') {
-            $auctionId = $request->query('auction_id');
+            $listingId = $request->query('listing_id') ?? $request->query('auction_id');
             $duration = $request->query('duration', 7);
             
-            $auction = Auction::findOrFail($auctionId);
+            $listing = Listing::findOrFail($listingId);
             
             // Hardcoded promotion prices (matching reference or as per requirements)
             // If they are "FREE" as per the frontend UI, price is 0.
             $price = 0; 
             
             $promotionItem = (object)[
-                'id' => 'promo-' . $auctionId,
-                'auction_id' => $auctionId,
-                'auction' => $auction,
+                'id' => 'promo-' . $listingId,
+                'listing_id' => $listingId,
+                'listing' => $listing,
                 'title' => "Featured Promotion - {$duration} Days",
                 'price' => $price,
                 'quantity' => 1,
                 'type' => 'promotion',
                 'duration' => $duration,
-                'image' => $auction->image
+                'image' => $listing->image_url
             ];
             
             return Inertia::render('Checkout/Index', [
                 'cartItems' => [$promotionItem],
-                'user' => $user->load('address'),
+                'user' => $user->load('shippingAddress'),
                 'stripeKey' => env('STRIPE_KEY'),
             ]);
         }
 
         // Fetch cart items similarly to CartController to display summary
         $cartItems = Cart::where('user_id', $user->id)
-            ->with(['auction', 'variation'])
+            ->with(['listing', 'variation'])
             ->get();
             
         if ($cartItems->isEmpty()) {
@@ -73,7 +76,7 @@ class CheckoutController extends Controller
         
         return Inertia::render('Checkout/Index', [
             'cartItems' => $cartItems,
-            'user' => $user->load('address'), // Pre-fill address if available
+            'user' => $user->load('shippingAddress'), // Pre-fill address if available
             'stripeKey' => env('STRIPE_KEY'), // Publishable key for frontend
         ]);
     }
@@ -93,9 +96,9 @@ class CheckoutController extends Controller
         $validator = Validator::make($data, [
             'items' => 'required|array|min:1',
             'payment_method' => 'required|in:stripe,cod,bank_transfer',
-            'billing_name' => 'required|string',
+            'billing_name' => 'required|string|max:255',
             'billing_email' => 'required|email',
-            'billing_phone' => 'required|string',
+            'billing_phone' => 'required|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:7',
             'billing_address_line1' => 'required|string',
             'billing_city' => 'required|string',
             'billing_state' => 'required|string',
@@ -139,10 +142,10 @@ class CheckoutController extends Controller
                 'billing_phone' => $data['billing_phone'],
                 'billing_address_line1' => $data['billing_address_line1'],
                 'billing_address_line2' => $data['billing_address_line2'] ?? null,
-                'billing_city' => $data['billing_city'],
-                'billing_state' => $data['billing_state'],
+                'billing_city' => is_numeric($data['billing_city']) ? (City::find($data['billing_city'])->name ?? $data['billing_city']) : $data['billing_city'],
+                'billing_state' => is_numeric($data['billing_state']) ? (State::find($data['billing_state'])->name ?? $data['billing_state']) : $data['billing_state'],
                 'billing_postal_code' => $data['billing_postal_code'] ?? null,
-                'billing_country' => $data['billing_country'],
+                'billing_country' => is_numeric($data['billing_country']) ? (Country::find($data['billing_country'])->name ?? $data['billing_country']) : $data['billing_country'],
 
                 // Shipping Info
                 'shipping_name' => $data['shipping_name'] ?? $data['billing_name'],
@@ -150,17 +153,17 @@ class CheckoutController extends Controller
                 'shipping_phone' => $data['shipping_phone'] ?? $data['billing_phone'],
                 'shipping_address_line1' => $data['shipping_address_line1'] ?? $data['billing_address_line1'],
                 'shipping_address_line2' => $data['shipping_address_line2'] ?? null,
-                'shipping_city' => $data['shipping_city'] ?? $data['billing_city'],
-                'shipping_state' => $data['shipping_state'] ?? $data['billing_state'],
-                'shipping_postal_code' => $data['shipping_postal_code'] ?? null,
-                'shipping_country' => $data['shipping_country'] ?? $data['billing_country'],
+                'shipping_city' => is_numeric($data['shipping_city'] ?? null) ? (City::find($data['shipping_city'])->name ?? $data['shipping_city']) : ($data['shipping_city'] ?? $data['billing_city']),
+                'shipping_state' => is_numeric($data['shipping_state'] ?? null) ? (State::find($data['shipping_state'])->name ?? $data['shipping_state']) : ($data['shipping_state'] ?? $data['billing_state']),
+                'shipping_postal_code' => $data['shipping_postal_code'] ?? $data['billing_postal_code'] ?? null,
+                'shipping_country' => is_numeric($data['shipping_country'] ?? null) ? (Country::find($data['shipping_country'])->name ?? $data['shipping_country']) : ($data['shipping_country'] ?? $data['billing_country']),
             ]);
 
             // 3. Create Items
             foreach ($data['items'] as $item) {
                 $orderItem = OrderItem::create([
                     'order_id' => $order->id,
-                    'auction_id' => $item['auction_id'],
+                    'listing_id' => $item['listing_id'] ?? $item['auction_id'],
                     'variation_id' => $item['variation_id'] ?? null,
                     'quantity' => $item['quantity'] ?? 1,
                     'price' => $item['price'],
@@ -168,17 +171,17 @@ class CheckoutController extends Controller
                     'type' => $item['type'] ?? 'product',
                 ]);
 
-                // 3b. Fulfill Promotion (Mark Auction as Featured)
+                // 3b. Fulfill Promotion (Mark Listing as Featured)
                 if (isset($item['type']) && $item['type'] === 'promotion') {
-                    $auction = Auction::find($item['auction_id']);
-                    if ($auction) {
-                        $auction->update([
+                    $listing = Listing::find($item['listing_id'] ?? $item['auction_id']);
+                    if ($listing) {
+                        $listing->update([
                             'featured_name' => 'home_featured'
                         ]);
                         
                         // Send Notification (Optional but recommended)
                         try {
-                            Mail::to($order->billing_email)->send(new \App\Mail\FeaturedListingNotification($user, $auction));
+                            Mail::to($order->billing_email)->send(new \App\Mail\FeaturedListingNotification($user, $listing));
                         } catch (\Exception $e) {
                             Log::error('Featured Notification Failed: ' . $e->getMessage());
                         }
@@ -223,7 +226,7 @@ class CheckoutController extends Controller
     public function myOrders(Request $request)
     {
         $orders = Order::where('user_id', $request->user()->id)
-            ->with(['items.auction'])
+            ->with(['items.listing'])
             ->latest()
             ->paginate(10);
 
@@ -239,7 +242,7 @@ class CheckoutController extends Controller
     {
         $order = Order::where('order_number', $orderNumber)
             ->where('user_id', $request->user()->id)
-            ->with(['items.auction'])
+            ->with(['items.listing'])
             ->firstOrFail();
 
         return Inertia::render('Orders/Show', [

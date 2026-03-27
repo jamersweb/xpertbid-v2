@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-// ✅ PKR-based fallback rates.
-const DEFAULT_RATES = { PKR: 1, AED: 75, USD: 275.5 };
+// ✅ AED-based fallback rates (1 AED = 1 Base). 
+const DEFAULT_RATES = { AED: 1, PKR: 0.0133, USD: 0.272 };
 
 function sanitizeRates(input = {}) {
        const out = { PKR: 1 };
@@ -18,6 +18,12 @@ function sanitizeRates(input = {}) {
               const code = String(k).toUpperCase();
               if (!out[code] || !(out[code] > 0)) out[code] = Number(v) || 1;
        }
+
+       // Force transition from legacy PKR-base (AED: 75) to new AED-base (AED: 1)
+       if (out.AED === 75 || out.AED === "75") {
+              Object.assign(out, DEFAULT_RATES);
+       }
+
        return out;
 }
 

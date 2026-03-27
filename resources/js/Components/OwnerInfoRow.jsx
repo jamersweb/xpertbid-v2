@@ -25,6 +25,11 @@ const OwnerInfoRow = ({
 }) => {
        const displayName = formatName(owner?.name || fallbackName);
        const avatarSrc = buildAvatarUrl(owner?.profile || owner?.profile_pic || fallbackAvatar);
+       const individualStatus = owner?.individual_verification?.status || owner?.individualVerification?.status;
+       const corporateStatus = owner?.corporate_verification?.status || owner?.corporateVerification?.status;
+       const isVerified = [individualStatus, corporateStatus].some(
+              (status) => String(status || "").toLowerCase() === "verified" || String(status || "").toLowerCase() === "approved"
+       );
 
        return (
               <div className="owner-info-row">
@@ -35,7 +40,17 @@ const OwnerInfoRow = ({
                                    e.currentTarget.src = "/assets/images/user.jpg";
                             }}
                      />
-                     <span>{displayName}</span>
+                     <div className="owner-info-row__content">
+                            <span className="owner-info-row__name-text">{displayName}</span>
+                            {isVerified && (
+                                   <span className="owner-info-row__verified" title="Verified seller" aria-label="Verified seller">
+                                          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                                 <circle cx="10" cy="10" r="8" fill="#2F80ED" />
+                                                 <path d="M6.8 10.2L8.9 12.3L13.3 7.9" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                          </svg>
+                                   </span>
+                            )}
+                     </div>
               </div>
        );
 };

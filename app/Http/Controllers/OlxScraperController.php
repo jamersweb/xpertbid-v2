@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Auction;
+use App\Models\Listing;
 use App\Models\AuctionCategory;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -368,86 +368,35 @@ class OlxScraperController extends Controller
                         $title = substr($title, 0, 252) . '...';
                     }
                     
-                    // Create auction
-                    // Set default values for required fields
-                    $listType = 'auction'; // Default to auction
-                    $productYear = date('Y'); // Default to current year
-                    
-                    $auctionData = [
+                    // Create listing
+                    $listingData = [
+                        'reserve_price' => $json['reserve_price'] ?? 0,
+                        'minimum_bid' => $json['minimum_bid'] ?? 0,
+                        'start_date' => now()->toDateTimeString(),
+                        'end_date' => now()->addDays(7)->toDateTimeString(),
+                        'list_type' => 'auction',
+                        'product_year' => date('Y'),
+                    ];
+
+                    $listingPayload = [
                         'title' => $title,
                         'user_id' => $request->input('user_id'),
                         'category_id' => $request->input('category_id'),
                         'sub_category_id' => $request->input('sub_category_id') ?: null,
                         'child_category_id' => $request->input('child_category_id') ?: null,
-                        'reserve_price' => $json['reserve_price'] ?? 0,
-                        'minimum_bid' => $json['minimum_bid'] ?? 0,
                         'description' => $json['description'] ?? '',
                         'image' => $firstImage,
-                        'album' => $albumJson,
-                        'amenities' => (!empty($json['amenities']) && is_array($json['amenities']) && count($json['amenities']) > 0) 
-                            ? json_encode($json['amenities']) 
-                            : null,
+                        'album' => $savedImages,
                         'status' => 'active',
-                        'start_date' => now(),
-                        'end_date' => now()->addDays(7),
-                        'is_autobidder_on' => 1, // Auto bidder on for OLX products
-                        'list_type' => $listType,
-                        'product_year' => $productYear,
+                        'listing_type' => 'auction',
+                        'listing_data' => $listingData,
                     ];
                     
-                    // Validate required fields before creating
-                    if (empty($auctionData['user_id'])) {
-                        Log::error('OLX: user_id is missing');
-                        return redirect()->route('olx-scraper.index')
-                            ->with('error', 'User ID is required. Please select a user.')
-                            ->withInput();
-                    }
-                    
-                    if (empty($auctionData['category_id'])) {
-                        Log::error('OLX: category_id is missing');
-                        return redirect()->route('olx-scraper.index')
-                            ->with('error', 'Category ID is required. Please select a category.')
-                            ->withInput();
-                    }
-                    
-                    Log::info('OLX Auction data before create', [
-                        'data' => $auctionData,
-                        'user_id' => $auctionData['user_id'],
-                        'category_id' => $auctionData['category_id'],
-                        'title' => $auctionData['title'],
-                        'reserve_price' => $auctionData['reserve_price'],
-                        'minimum_bid' => $auctionData['minimum_bid'],
-                        'is_autobidder_on' => $auctionData['is_autobidder_on'] ?? null,
-                        'list_type' => $auctionData['list_type'] ?? null,
-                        'product_year' => $auctionData['product_year'] ?? null,
-                    ]);
-                    
-                    // Validate all required fields are present
-                    $requiredFields = ['user_id', 'category_id', 'title', 'list_type', 'product_year'];
-                    foreach ($requiredFields as $field) {
-                        if (empty($auctionData[$field])) {
-                            $errorMsg = "Required field '{$field}' is missing or empty";
-                            Log::error('OLX: ' . $errorMsg, ['auction_data' => $auctionData]);
-                            return redirect()->route('olx-scraper.index')
-                                ->with('error', $errorMsg)
-                                ->withInput();
-                        }
-                    }
-                    
-                    // Try to create auction
+                    // Try to create listing
                     try {
-                        $auction = Auction::create($auctionData);
-                        Log::info('OLX Auction created successfully', ['auction_id' => $auction->id]);
-                    } catch (\Illuminate\Database\QueryException $dbEx) {
-                        // Re-throw to be caught by outer catch block
-                        Log::error('OLX: Database exception during create', [
-                            'message' => $dbEx->getMessage(),
-                            'code' => $dbEx->getCode(),
-                            'sql' => $dbEx->getSql() ?? 'N/A'
-                        ]);
-                        throw $dbEx;
+                        $listing = Listing::create($listingPayload);
+                        Log::info('OLX Listing created successfully', ['listing_id' => $listing->id]);
                     } catch (\Exception $ex) {
-                        // Re-throw to be caught by outer catch block
                         Log::error('OLX: General exception during create', [
                             'message' => $ex->getMessage(),
                             'trace' => $ex->getTraceAsString()
@@ -455,24 +404,17 @@ class OlxScraperController extends Controller
                         throw $ex;
                     }
                     
-                    Log::info('OLX Auction created successfully', [
-                        'auction_id' => $auction->id,
-                        'title' => $auction->title,
-                        'is_autobidder_on' => $auction->is_autobidder_on
+                    Log::info('OLX Listing created successfully', [
+                        'listing_id' => $listing->id,
+                        'title' => $listing->title
                     ]);
                     
                     // Flash success message
-                    $successMessage = 'Auction saved successfully! Auction ID: ' . $auction->id;
+                    $successMessage = 'Product saved successfully! Listing ID: ' . $listing->id;
                     
-                    Log::info('OLX Redirecting with success message', [
-                        'message' => $successMessage,
-                        'auction_id' => $auction->id
-                    ]);
-                    
-                    // Use both session flash and query parameter for reliability
-                    return redirect()->route('olx-scraper.index', ['saved' => '1', 'auction_id' => $auction->id])
+                    return redirect()->route('olx-scraper.index', ['saved' => '1', 'listing_id' => $listing->id])
                         ->with('status', $successMessage)
-                        ->with('success_auction_id', $auction->id);
+                        ->with('success_listing_id', $listing->id);
                 } catch (\Illuminate\Database\QueryException $e) {
                     $errorMsg = $e->getMessage();
                     Log::error('OLX Save failed - Database error', [

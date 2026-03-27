@@ -4,76 +4,91 @@ import ReactQuill from 'react-quill';
 import SummaryCard from './SummaryCard';
 import 'react-quill/dist/quill.snow.css';
 
-export default function DetailsForm({ listType, formData, setFormData, summaryData, onContinue, onBack, onEditListType, onEditCategory, onSaveDraft, isSavingDraft }) {
-       const { categories } = usePage().props;
-
+export default function DetailsForm({ listType, formData, setFormData, summaryData, dynamicFields = [], onContinue, onBack, onEditListType, onEditCategory, onSaveDraft, isSavingDraft }) {
        const [errors, setErrors] = useState({});
-
-       // Helper to interpret errors
-       const getServerError = (field) => errors[field];
 
        const handleChange = (e) => {
               const { name, value } = e.target;
               setFormData(prev => ({ ...prev, [name]: value }));
+              if (errors[name]) {
+                     setErrors(prev => {
+                            const newErrors = { ...prev };
+                            delete newErrors[name];
+                            return newErrors;
+                     });
+              }
+       };
+
+       const handleQuillChange = (content) => {
+              setFormData(prev => ({ ...prev, description: content }));
        };
 
        const handleAddVariation = () => {
-              setFormData(prev => ({ ...prev, variations: [...(prev.variations || []), { name: '', price: '', discount_type: '', discount_value: '' }] }));
+              const newVariations = [...(formData.variations || []), { name: '', price: '', discount_type: '', discount_value: '' }];
+              setFormData(prev => ({ ...prev, variations: newVariations }));
        };
 
        const handleRemoveVariation = (index) => {
-              setFormData(prev => ({
-                     ...prev,
-                     variations: prev.variations.filter((_, i) => i !== index)
-              }));
+              const newVariations = [...formData.variations];
+              newVariations.splice(index, 1);
+              setFormData(prev => ({ ...prev, variations: newVariations }));
        };
 
        const handleVariationChange = (index, field, value) => {
-              setFormData(prev => {
-                     const newVars = [...(prev.variations || [])];
-                     newVars[index] = { ...newVars[index], [field]: value };
-                     return { ...prev, variations: newVars };
-              });
+              const newVariations = [...formData.variations];
+              newVariations[index][field] = value;
+              setFormData(prev => ({ ...prev, variations: newVariations }));
        };
 
        const validate = () => {
               const newErrors = {};
-              if (!formData.title?.trim()) newErrors.title = "Title is required";
-              if (!formData.description?.trim()) newErrors.description = "Description is required";
+              if (!formData.title) newErrors.title = "Title is required";
+              if (!formData.description || formData.description === '<p><br></p>') newErrors.description = "Description is required";
+              if (!formData.product_condition) newErrors.product_condition = "Product condition is required";
               if (!formData.product_year) newErrors.product_year = "Year is required";
-
-              if (!formData.product_condition) newErrors.product_condition = "Condition is required";
+              if (!formData.product_location) newErrors.product_location = "Location is required";
 
               if (listType === 'auction') {
-                     if (!formData.start_date) newErrors.start_date = "Start date required";
-                     if (!formData.end_date) newErrors.end_date = "End date required";
-                     if (!formData.minimum_bid) newErrors.minimum_bid = "Starting bid required";
-                     if (!formData.reserve_price) newErrors.reserve_price = "Market price required";
-              } else {
-                     if (formData.variations?.length > 0) {
-                            formData.variations.forEach((v, i) => {
-                                   if (!v.name) newErrors[`variation_${i}_name`] = "Required";
-                                   if (!v.price) newErrors[`variation_${i}_price`] = "Required";
-                            });
-                     } else {
+                     if (!formData.minimum_bid) newErrors.minimum_bid = "Starting bid is required";
+                     if (!formData.reserve_price) newErrors.reserve_price = "Market price is required";
+                     if (!formData.start_date) newErrors.start_date = "Start date is required";
+                     if (!formData.end_date) newErrors.end_date = "End date is required";
+              }
+
+              if (listType === 'normal_list' || listType === 'business_list') {
+                     if (!formData.variations || formData.variations.length === 0) {
                             if (!formData.minimum_bid) newErrors.minimum_bid = "Price is required";
                      }
               }
+
+              if (listType === 'business_list') {
+                     if (!formData.stock) newErrors.stock = "Stock is required";
+                     if (!formData.quantity) newErrors.quantity = "Quantity is required";
+              }
+
+              // Dynamic fields validation
+              dynamicFields.forEach(field => {
+                     if (field.is_required && !formData.category_features?.[field.field_name]) {
+                            newErrors[`field_${field.id}`] = `${field.label} is required`;
+                     }
+              });
 
               setErrors(newErrors);
               return Object.keys(newErrors).length === 0;
        };
 
-       const handleSubmit = (e) => {
+       const handleNext = (e) => {
               e.preventDefault();
               if (validate()) {
                      onContinue();
+              } else {
+                     window.scrollTo({ top: 0, behavior: 'smooth' });
               }
        };
 
        return (
               <section className="details-stage py-5">
-                     <div className="details-stage-header text-center position-relative">
+                     <div className="details-stage-header text-center position-relative mb-5">
                             {onSaveDraft && (
                                    <button
                                           type="button"
@@ -91,103 +106,104 @@ export default function DetailsForm({ listType, formData, setFormData, summaryDa
                                           )}
                                    </button>
                             )}
-                            <h1 className="up-listing mb-2">Listing Details</h1>
-                            <p className="details-stage-subtitle">Share essential info about your product.</p>
+                            <h1 className="up-listing mb-2 text-dark">Listing Details</h1>
+                            <p className="details-stage-subtitle">
+                                   Fill in the information below to describe your product.
+                            </p>
                      </div>
 
-                     <form onSubmit={handleSubmit} className="details-form">
+                     <form className="details-form" onSubmit={handleNext} noValidate>
+                            <div className="sell-form-inner">
+                                   <SummaryCard
+                                          type="List Type"
+                                          title={summaryData.listType}
+                                          subtitle={summaryData.listTypeDescription}
+                                          onEdit={onEditListType}
+                                   />
 
-                            <SummaryCard
-                                   type="List Type"
-                                   title={summaryData.listType === 'Auction' ? 'Auction Product' : 'Normal Product'}
-                                   subtitle={summaryData.listTypeDescription}
-                                   onEdit={onEditListType}
-                            />
+                                   <SummaryCard
+                                          type="Category"
+                                          title={summaryData.category?.name || 'Category'}
+                                          subtitle={
+                                                 `${summaryData.subCategory?.name || ''}${summaryData.childCategory ? ' > ' + summaryData.childCategory.name : ''}`
+                                          }
+                                          icon={summaryData.categoryIcon}
+                                          onEdit={onEditCategory}
+                                   />
 
-                            <SummaryCard
-                                   type="Category"
-                                   title={summaryData.category?.name || 'Category'}
-                                   subtitle={
-                                          `${summaryData.subCategory?.name || ''}${summaryData.childCategory ? ' > ' + summaryData.childCategory.name : ''}`
-                                   }
-                                   icon={summaryData.categoryIcon}
-                                   onEdit={onEditCategory}
-                            />
-
-
-                            <div className="details-form-content">
                                    <div className="form-group mb-4">
                                           <label className="form-label fw-bold">Product Title <span className="text-danger">*</span></label>
                                           <input
                                                  type="text"
                                                  name="title"
                                                  className="form-control verify_input"
+                                                 placeholder="e.g. 2024 Rolex Submariner"
                                                  value={formData.title || ''}
                                                  onChange={handleChange}
-                                                 placeholder="Enter your title here"
                                           />
                                           {errors.title && <p className="text-danger small mt-1">{errors.title}</p>}
                                    </div>
 
-
-                                   <div className="form-group mb-4">
+                                   <div className="form-group mb-4 r-quill">
                                           <label className="form-label fw-bold">Product Description <span className="text-danger">*</span></label>
-                                          <div className="quill-editor verify_input" style={{ minHeight: '200px' }}>
                                                  <ReactQuill
                                                         theme="snow"
                                                         value={formData.description || ''}
-                                                        onChange={(value) => setFormData(prev => ({ ...prev, description: value }))}
-                                                        placeholder="Please write something about your item here..."
-                                                        style={{ height: '150px' }}
+                                                        onChange={handleQuillChange}
+                                                        placeholder="Provide a detailed description of your product..."
                                                  />
-                                          </div>
-                                          {errors.description && <p className="text-danger small mt-5">{errors.description}</p>}
+                                          {errors.description && <p className="text-danger small mt-1">{errors.description}</p>}
                                    </div>
 
                                    <div className="details-row mb-4">
                                           <div className="form-group flex-fill mb-0">
-                                                 <label className="form-label fw-bold">Product Year <span className="text-danger">*</span></label>
+                                                 <label className="form-label fw-bold">Condition <span className="text-danger">*</span></label>
+                                                 <select
+                                                        name="product_condition"
+                                                        className="form-control verify_input"
+                                                        value={formData.product_condition || ''}
+                                                        onChange={handleChange}
+                                                 >
+                                                        <option value="">Select Condition</option>
+                                                        <option value="New">New</option>
+                                                        <option value="Like New">Like New</option>
+                                                        <option value="Used">Used</option>
+                                                        <option value="Refurbished">Refurbished</option>
+                                                 </select>
+                                                 {errors.product_condition && <p className="text-danger small mt-1">{errors.product_condition}</p>}
+                                          </div>
+                                          <div className="form-group flex-fill mb-0">
+                                                 <label className="form-label fw-bold">Year <span className="text-danger">*</span></label>
                                                  <input
                                                         type="number"
                                                         name="product_year"
                                                         className="form-control verify_input"
+                                                        placeholder="e.g. 2024"
                                                         value={formData.product_year || ''}
                                                         onChange={handleChange}
                                                  />
                                                  {errors.product_year && <p className="text-danger small mt-1">{errors.product_year}</p>}
                                           </div>
-                                          <div className="form-group flex-fill mb-0">
-                                                 <label className="form-label fw-bold">Location</label>
-                                                 <input
-                                                        type="text"
-                                                        name="product_location"
-                                                        className="form-control verify_input"
-                                                        value={formData.product_location || ''}
-                                                        onChange={handleChange}
-                                                 />
-                                          </div>
                                    </div>
 
                                    <div className="form-group mb-4">
-                                          <label className="form-label fw-bold">Condition <span className="text-danger">*</span></label>
-                                          <select
-                                                 name="product_condition"
+                                          <label className="form-label fw-bold">Product Location <span className="text-danger">*</span></label>
+                                          <input
+                                                 type="text"
+                                                 name="product_location"
                                                  className="form-control verify_input"
-                                                 value={formData.product_condition || ''}
+                                                 placeholder="e.g. Dubai, UAE"
+                                                 value={formData.product_location || ''}
                                                  onChange={handleChange}
-                                          >
-                                                 <option value="">Select Condition</option>
-                                                 <option value="New">New</option>
-                                                 <option value="Used">Used</option>
-                                          </select>
-                                          {errors.product_condition && <p className="text-danger small mt-1">{errors.product_condition}</p>}
+                                          />
+                                          {errors.product_location && <p className="text-danger small mt-1">{errors.product_location}</p>}
                                    </div>
 
                                    {listType === 'auction' && (
                                           <>
                                                  <div className="details-row mb-4">
                                                         <div className="form-group flex-fill mb-0">
-                                                               <label className="form-label fw-bold">Starting Bid Price <span className="text-danger">*</span></label>
+                                                               <label className="form-label fw-bold">Starting Bid <span className="text-danger">*</span></label>
                                                                <input
                                                                       type="number"
                                                                       name="minimum_bid"
@@ -238,7 +254,7 @@ export default function DetailsForm({ listType, formData, setFormData, summaryDa
                                           </>
                                    )}
 
-                                   {listType === 'normal_list' && (
+                                   {(listType === 'normal_list' || listType === 'business_list') && (
                                           <>
                                                  <div className="form-group mb-4">
                                                         {(!formData.variations || formData.variations.length === 0) && (
@@ -359,23 +375,132 @@ export default function DetailsForm({ listType, formData, setFormData, summaryDa
                                                                </>
                                                         )}
                                                  </div>
+
+                                                 {listType === 'business_list' && (
+                                                        <div className="details-row mb-4">
+                                                               <div className="form-group flex-fill mb-0">
+                                                                      <label className="form-label fw-bold">Stock SKU <span className="text-danger">*</span></label>
+                                                                      <input
+                                                                             type="text"
+                                                                             name="stock"
+                                                                             className="form-control verify_input"
+                                                                             placeholder="e.g. SKU-12345"
+                                                                             value={formData.stock || ''}
+                                                                             onChange={handleChange}
+                                                                      />
+                                                                      {errors.stock && <p className="text-danger small mt-1">{errors.stock}</p>}
+                                                               </div>
+                                                               <div className="form-group flex-fill mb-0">
+                                                                      <label className="form-label fw-bold">Available Quantity <span className="text-danger">*</span></label>
+                                                                      <input
+                                                                             type="number"
+                                                                             name="quantity"
+                                                                             className="form-control verify_input"
+                                                                             placeholder="e.g. 100"
+                                                                             value={formData.quantity || ''}
+                                                                             onChange={handleChange}
+                                                                      />
+                                                                      {errors.quantity && <p className="text-danger small mt-1">{errors.quantity}</p>}
+                                                               </div>
+                                                        </div>
+                                                 )}
                                           </>
                                    )}
-                            </div>
 
-                            <div className="details-stage-actions d-flex justify-content-between align-items-center">
-                                   <button
-                                          type="button"
-                                          className="btn btn-black px-4"
-                                          onClick={onBack}
-                                   >
-                                          Back
-                                   </button>
-                                   <button type="submit" className="btn btn-black px-5">
-                                          Continue
-                                   </button>
-                            </div>
+                                   {/* Dynamic Fields Section */}
+                                   {dynamicFields && dynamicFields.length > 0 && (
+                                          <div className="dynamic-fields-section mb-4">
+                                                 <div className="row">
+                                                        {dynamicFields.map((field) => (
+                                                               <div className="col-md-6 mb-4" key={field.id}>
+                                                                      <label className="form-label fw-bold">
+                                                                             {field.label} {field.is_required ? <span className="text-danger">*</span> : ''}
+                                                                      </label>
+                                                                      {field.input_type === 'select' ? (
+                                                                             <select
+                                                                                    className="form-control verify_input"
+                                                                                    value={formData.category_features?.[field.field_name] || ''}
+                                                                                    onChange={(e) => setFormData(prev => ({
+                                                                                           ...prev,
+                                                                                           category_features: {
+                                                                                                  ...prev.category_features,
+                                                                                                  [field.field_name]: e.target.value
+                                                                                           }
+                                                                                    }))}
+                                                                                    required={field.is_required}
+                                                                             >
+                                                                                    <option value="">Select {field.label}</option>
+                                                                                    {(field.options || []).map((opt, i) => (
+                                                                                           <option key={i} value={opt}>{opt}</option>
+                                                                                    ))}
+                                                                             </select>
+                                                                      ) : field.input_type === 'textarea' ? (
+                                                                             <textarea
+                                                                                    className="form-control verify_input"
+                                                                                    value={formData.category_features?.[field.field_name] || ''}
+                                                                                    onChange={(e) => setFormData(prev => ({
+                                                                                           ...prev,
+                                                                                           category_features: {
+                                                                                                  ...prev.category_features,
+                                                                                                  [field.field_name]: e.target.value
+                                                                                           }
+                                                                                    }))}
+                                                                                    required={field.is_required}
+                                                                             />
+                                                                      ) : field.input_type === 'checkbox' ? (
+                                                                             <div className="form-check pt-2">
+                                                                                    <input
+                                                                                           className="form-check-input"
+                                                                                           type="checkbox"
+                                                                                           checked={!!formData.category_features?.[field.field_name]}
+                                                                                           onChange={(e) => setFormData(prev => ({
+                                                                                                  ...prev,
+                                                                                                  category_features: {
+                                                                                                         ...prev.category_features,
+                                                                                                         [field.field_name]: e.target.checked
+                                                                                                  }
+                                                                                           }))}
+                                                                                           id={`field_${field.id}`}
+                                                                                    />
+                                                                                    <label className="form-check-label small ms-2" htmlFor={`field_${field.id}`}>
+                                                                                           Enable {field.label}
+                                                                                    </label>
+                                                                             </div>
+                                                                      ) : (
+                                                                             <input
+                                                                                    type={field.input_type || "text"}
+                                                                                    className="form-control verify_input"
+                                                                                    value={formData.category_features?.[field.field_name] || ''}
+                                                                                    onChange={(e) => setFormData(prev => ({
+                                                                                           ...prev,
+                                                                                           category_features: {
+                                                                                                  ...prev.category_features,
+                                                                                                  [field.field_name]: e.target.value
+                                                                                           }
+                                                                                    }))}
+                                                                                    required={field.is_required}
+                                                                             />
+                                                                      )}
+                                                                      {errors[`field_${field.id}`] && <p className="text-danger small mt-1">{errors[`field_${field.id}`]}</p>}
+                                                               </div>
+                                                        ))}
+                                                 </div>
+                                          </div>
+                                   )}
 
+                                   <div className="details-stage-actions d-flex justify-content-between align-items-center mt-5">
+                                          <button
+                                                 type="button"
+                                                 className="btn btn-black px-4"
+                                                 onClick={onBack}
+                                          >
+                                                 Back
+                                          </button>
+                                          <button type="submit" className="btn btn-black px-5">
+                                                 Continue
+                                          </button>
+                                   </div>
+                            </div>
                      </form>
               </section>
        );

@@ -55,7 +55,7 @@ export default function Show({ order }) {
                                                                       <tr key={item.id}>
                                                                              <td className="py-4">
                                                                                     <div className="flex items-center gap-3">
-                                                                                           <img src={item.auction?.image_url || '/images/placeholder.png'} className="w-10 h-10 rounded-lg object-cover" alt="" />
+                                                                                           <img src={item.auction?.image ? (item.auction.image.startsWith('http') ? item.auction.image : `https://admin.xpertbid.com/${item.auction.image}`) : '/assets/images/placeholder.png'} className="w-10 h-10 rounded-lg object-cover" alt="" onError={e => e.target.src = '/assets/images/WebsiteBanner2.png'} />
                                                                                            <div>
                                                                                                   <p className="text-sm font-bold text-gray-800 line-clamp-1">{item.auction?.title}</p>
                                                                                                   {item.variation && <p className="text-[10px] text-gray-400">Var: {item.variation.name}</p>}
@@ -79,15 +79,16 @@ export default function Show({ order }) {
                                    </div>
 
                                    {/* Receipt Image */}
-                                   {order.receipt_image && (
+                                   {order.receipt_image_url && (
                                           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                                                  <div className="p-6 border-bottom border-gray-100 font-bold text-gray-800">Payment Receipt</div>
-                                                 <div className="p-6 flex justify-center">
+                                                 <div className="p-6 flex justify-center bg-gray-50">
                                                         <img
-                                                               src={order.receipt_image}
-                                                               className="max-w-full rounded-xl border border-gray-100 shadow-sm"
+                                                               src={order.receipt_image_url}
+                                                               className="max-w-full rounded-xl border border-gray-100 shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
                                                                alt="Payment Receipt"
-                                                               onClick={() => window.open(order.receipt_image)}
+                                                               style={{ maxHeight: '600px' }}
+                                                               onClick={() => window.open(order.receipt_image_url)}
                                                         />
                                                  </div>
                                           </div>

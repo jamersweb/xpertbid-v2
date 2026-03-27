@@ -14,7 +14,7 @@ class VehicleVerificationController extends Controller
 {
     public function index()
     {
-        $verifications = VehicleVerification::with(['user', 'auction'])->orderBy('created_at', 'desc')->paginate(15);
+        $verifications = VehicleVerification::with(['user', 'listing'])->orderBy('created_at', 'desc')->paginate(15);
         return Inertia::render('Admin/Verifications/Vehicle', [
             'verifications' => $verifications
         ]);

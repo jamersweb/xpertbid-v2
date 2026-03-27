@@ -41,7 +41,7 @@ function formatHuman(d) {
        return `${dd}/${mm}/${mon}`;
 }
 
-export default function Show({ auction, bids, related, highestBid, winnerDetails }) {
+export default function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite }) {
        // Bids update automatically via Inertia props after a successful POST
 
        return (
@@ -62,10 +62,10 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
                                           <div className="row">
                                                  <div className="col-md-6">
                                                         <ProductImages
-                                                               albumImages={auction.album}
+                                                               albumImages={auction.album_urls}
                                                                videos={auction.video}
                                                                status={auction.status}
-                                                               mainImage={auction.image}
+                                                               mainImage={auction.image_url}
                                                         />
                                                  </div>
 
@@ -78,11 +78,13 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
                                                                       </button>
                                                                </div>
                                                         )}
+
                                                         <BidSection
                                                                product={auction}
                                                                highestBidProp={highestBid}
                                                                onBidPlaced={() => { }}
                                                                winnerDetails={winnerDetails}
+                                                               isFavoriteProp={isFavorite}
                                                         />
                                                  </div>
                                           </div>

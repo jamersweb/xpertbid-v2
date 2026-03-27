@@ -3,11 +3,11 @@ import { Link, usePage } from '@inertiajs/react';
 
 const menuItems = [
        { name: 'Dashboard', icon: 'fa-gauge-high', route: 'admin.dashboard' },
-       { name: 'Auctions', icon: 'fa-gavel', route: 'admin.auctions.index' },
+       { name: 'Listings', icon: 'fa-gavel', route: 'admin.listings.index' },
        { name: 'Bids', icon: 'fa-hand-holding-dollar', route: 'admin.bids.index' },
        { name: 'Orders', icon: 'fa-cart-shopping', route: 'admin.orders.index' },
        { type: 'divider', label: 'Verifications' },
-       { name: 'Auctions Approval', icon: 'fa-clipboard-check', route: 'admin.verifications.auctions.index' },
+       { name: 'Listings Approval', icon: 'fa-clipboard-check', route: 'admin.verifications.auctions.index' },
        { name: 'Individual', icon: 'fa-user-check', route: 'admin.verifications.individual.index' },
        { name: 'Corporate', icon: 'fa-building-circle-check', route: 'admin.verifications.corporate.index' },
        { name: 'Vehicles', icon: 'fa-car-side', route: 'admin.verifications.vehicle.index' },
@@ -15,7 +15,8 @@ const menuItems = [
        { type: 'divider', label: 'Management' },
        { name: 'Users', icon: 'fa-users', route: 'admin.users.index' },
        { name: 'Payments', icon: 'fa-money-bill-transfer', route: 'admin.payment-requests.index' },
-       { name: 'Categories', icon: 'fa-layer-group', route: 'admin.auction_categories.index' },
+       { name: 'Categories', icon: 'fa-layer-group', route: 'admin.categories.index' },
+       { name: 'Dynamic Fields', icon: 'fa-wand-magic-sparkles', route: 'admin.dynamic-fields.index' },
        { name: 'Blogs', icon: 'fa-newspaper', route: 'admin.blogs.index' },
        { type: 'divider', label: 'Site Content' },
        { name: 'Sliders', icon: 'fa-images', route: 'admin.sliders.index' },

@@ -2,6 +2,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Listing;
+use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -374,6 +376,31 @@ class UserController extends Controller
 
         // Return the user data as JSON.
         return response()->json($user, 200);
+    }
+
+    public function dashboard()
+    {
+        $user = Auth::user();
+
+        $listingsCount = Listing::where('user_id', $user->id)->count();
+        $bidsCount = $user->bids()->count();
+
+        $latestListings = Listing::where('user_id', $user->id)
+            ->with(['user', 'category'])
+            ->withMax('bids', 'bid_amount')
+            ->latest()
+            ->take(8)
+            ->get()
+            ->map(function ($l) {
+                $l->currentBid = $l->bids_max_bid_amount;
+                return $l;
+            });
+
+        return Inertia::render('Dashboard', [
+            'listingsCount' => $listingsCount,
+            'biddingsCount' => $bidsCount,
+            'listings' => $latestListings,
+        ]);
     }
 }
 
