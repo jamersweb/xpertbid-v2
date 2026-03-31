@@ -225,6 +225,9 @@ export default function Create({ categories, listing = null }) {
               category_features = cleanData(category_features);
 
               const data = new FormData();
+              const selectedCurrency = typeof window !== 'undefined'
+                     ? (localStorage.getItem('xb_currency') || 'PKR')
+                     : 'PKR';
               data.append('listing_type', listing_type);
               data.append('category_id', formData.category_id);
               data.append('sub_category_id', formData.sub_category_id);
@@ -232,6 +235,7 @@ export default function Create({ categories, listing = null }) {
               data.append('title', formData.title);
               data.append('description', formData.description);
               data.append('status', status);
+              data.append('selected_currency', selectedCurrency);
               data.append('listing_data', JSON.stringify(listing_data));
               data.append('category_features', JSON.stringify(category_features));
 

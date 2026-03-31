@@ -17,6 +17,7 @@ class MarketplaceController extends Controller
             : [];
 
         $type = $request->input('type', 'auction');
+        $featured = $request->input('featured');
 
         $applyTypeFilter = function ($query) use ($type) {
             if ($type === 'auction') {
@@ -68,7 +69,7 @@ class MarketplaceController extends Controller
 
         $activeSlug = $slug ?? $request->input('category');
 
-        if (!$activeSlug && $categories->isNotEmpty()) {
+        if (!$activeSlug && !$featured && $categories->isNotEmpty()) {
             return redirect()->route('marketplace.index', [
                 'slug' => $categories->first()->slug,
             ] + $request->except('category'));
@@ -137,6 +138,10 @@ class MarketplaceController extends Controller
                         ->values();
                 }
             }
+        }
+
+        if ($featured) {
+            $query->where('featured_name', $featured);
         }
 
         // Status filtering (e.g., ending_soon if logic existed before)

@@ -23,6 +23,7 @@ const menuItems = [
        { name: 'FAQs', icon: 'fa-circle-question', route: 'admin.faqs.index' },
        { type: 'divider', label: 'System' },
        { name: 'General Settings', icon: 'fa-gears', route: 'admin.master-settings.index' },
+       { name: 'Currencies', icon: 'fa-money-bill-wave', route: 'admin.master-settings.index' },
        { name: 'Locations', icon: 'fa-location-dot', route: 'admin.locations.index' },
        { type: 'divider', label: 'Tools' },
        { name: 'SEO', icon: 'fa-magnifying-glass-chart', route: 'admin.seo.index' },

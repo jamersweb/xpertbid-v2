@@ -16,6 +16,22 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
        const [isFavorite, setIsFavorite] = useState(isFavoriteProp || false);
        const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
 
+       const normalizedListType = String(product?.list_type || product?.listing_type || '').toLowerCase();
+       const isDirectSale = normalizedListType === 'normal' || normalizedListType === 'normal_list' || normalizedListType === 'business' || normalizedListType === 'business_list';
+       const baseSalePrice = Number(product.buy_now_price || product.minimum_bid || 0);
+       const discountValue = Number(product.discount_value || 0);
+       const hasDiscount = isDirectSale && discountValue > 0;
+       const finalSalePrice = (() => {
+              if (!hasDiscount) return baseSalePrice;
+              if (product.discount_type === 'percent') {
+                     return Math.max(0, baseSalePrice - (baseSalePrice * (discountValue / 100)));
+              }
+              if (product.discount_type === 'flat') {
+                     return Math.max(0, baseSalePrice - discountValue);
+              }
+              return baseSalePrice;
+       })();
+
        useEffect(() => {
               if (flash?.success) {
                      showNotification(flash.success, 'success');
@@ -305,17 +321,17 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                                                  <div className="bid-price-and-rank d-flex flex-column">
                                                         <span className="rank text-muted small fw-semibold">Price</span>
                                                         <div className="price fw-bold d-flex align-items-center gap-2">
-                                                               {product.discount_value > 0 && (
+                                                               {hasDiscount && (
                                                                       <span className="text-decoration-line-through text-muted" style={{ fontSize: '16px' }}>
-                                                                             <Price amountAED={product.minimum_bid} />
+                                                                             <Price amountAED={baseSalePrice} />
                                                                       </span>
                                                                )}
                                                                <span className="text-dark" style={{ fontSize: '28px' }}>
-                                                                      <Price amountAED={product.buy_now_price || product.minimum_bid} />
+                                                                      <Price amountAED={finalSalePrice} />
                                                                </span>
-                                                               {product.discount_value > 0 && (
+                                                               {hasDiscount && (
                                                                       <span className="badge bg-danger">
-                                                                             {product.discount_type === 'percent' ? `${product.discount_value}% OFF` : 'SALE'}
+                                                                             {product.discount_type === 'percent' ? `${discountValue}% OFF` : 'SALE'}
                                                                       </span>
                                                                )}
                                                         </div>

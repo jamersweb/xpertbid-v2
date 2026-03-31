@@ -28,7 +28,7 @@ export default function CurrencyPicker() {
                      setCookie("xb_currency", code);
                      setCookie("xb_currency_userSet", "1");
                      document.dispatchEvent(new Event("xb-currency-change"));
-                     window.location.reload();
+                     window.dispatchEvent(new Event("xb-currency-change"));
               } catch (err) {
                      console.error("Failed to switch currency:", err);
               }

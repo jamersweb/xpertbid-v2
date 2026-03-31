@@ -11,8 +11,19 @@ use Laravel\Socialite\Facades\Socialite;
 
 class SocialAuthController extends Controller
 {
+    protected function resolveSignupSource($request, string $default = 'web'): string
+    {
+        return $request->input('signup_source')
+            ?? $request->query('signup_source')
+            ?? $request->header('X-Client-Source')
+            ?? session('signup_source')
+            ?? $default;
+    }
+
     public function redirectToGoogle()
     {
+        session(['signup_source' => $this->resolveSignupSource(request())]);
+
         return Socialite::driver('google')
             ->redirectUrl(route('auth.google.callback')) // Explicitly set redirect URI
             ->redirect();
@@ -41,6 +52,7 @@ class SocialAuthController extends Controller
                     'password' => Hash::make(Str::random(16)),
                     'role' => 'User',
                     'referral_code' => $referralCode,
+                    'signup_source' => $this->resolveSignupSource(request()),
                     'email_verified_at' => now(), // Auto-verify email
                 ]);
             } else {
@@ -53,6 +65,7 @@ class SocialAuthController extends Controller
             }
 
             Auth::login($user);
+            session()->forget('signup_source');
 
             return redirect()->route('dashboard');
 
@@ -64,6 +77,7 @@ class SocialAuthController extends Controller
     // Apple Login Logic (Placeholder - requires specific Apple setup)
     public function redirectToApple()
     {
+        session(['signup_source' => $this->resolveSignupSource(request())]);
         return Socialite::driver('apple')->redirect();
     }
 
@@ -82,11 +96,13 @@ class SocialAuthController extends Controller
                     'provider_id' => $appleUser->getId(),
                     'password' => Hash::make(Str::random(16)),
                     'role' => 'User',
+                    'signup_source' => $this->resolveSignupSource(request()),
                     'email_verified_at' => now(),
                 ]);
             }
 
             Auth::login($user);
+            session()->forget('signup_source');
 
             return redirect()->route('dashboard');
 

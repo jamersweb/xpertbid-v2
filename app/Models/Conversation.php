@@ -25,6 +25,6 @@ class Conversation extends Model
 
     public function product()
     {
-        return $this->belongsTo(Auction::class, 'product_id');
+        return $this->belongsTo(Listing::class, 'product_id');
     }
 }

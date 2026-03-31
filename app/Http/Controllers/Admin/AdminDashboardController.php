@@ -8,6 +8,7 @@ use App\Models\Auction;
 use App\Models\Wallet;
 use App\Models\Bid;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use Inertia\Inertia;
 
@@ -23,7 +24,8 @@ class AdminDashboardController extends Controller
                 'wallet_balance' => Wallet::sum('balance'),
                 'active_auctions' => Auction::where('status', 'active')->count(),
                 'pending_verifications' => DB::table('individual_verifications')->where('status', 'pending')->count() 
-                    + DB::table('corporate_verifications')->where('status', 'pending')->count()
+                    + DB::table('corporate_verifications')->where('status', 'pending')->count(),
+                'currency_last_synced_at' => Cache::get('currency_rates_last_synced_at'),
             ]
         ]);
     }

@@ -101,6 +101,7 @@ export default function Index({ users, filters }) {
                                                  <tr className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider">
                                                         <th className="px-6 py-4">User Details</th>
                                                         <th className="px-6 py-4">Contact</th>
+                                                        <th className="px-6 py-4">Signup Source</th>
                                                         <th className="px-6 py-4">Status</th>
                                                         <th className="px-6 py-4 text-right">Actions</th>
                                                  </tr>
@@ -122,6 +123,11 @@ export default function Index({ users, filters }) {
                                                                <td className="px-6 py-4">
                                                                       <p className="text-sm text-gray-800">{user.email}</p>
                                                                       <p className="text-xs text-gray-500">{user.phone || 'No phone'}</p>
+                                                               </td>
+                                                               <td className="px-6 py-4">
+                                                                      <span className="inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-100 text-sky-700">
+                                                                             {user.signup_source || 'web'}
+                                                                      </span>
                                                                </td>
                                                                <td className="px-6 py-4">
                                                                       <button

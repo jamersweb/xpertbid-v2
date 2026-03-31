@@ -105,6 +105,15 @@ export default function HeroSection() {
         }
 
         @media (max-width: 767px) {
+          .final-banner-section {
+            margin-top: 24px !important;
+            margin-bottom: 24px !important;
+          }
+          .final-banner-section .container {
+            max-width: 100% !important;
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+          }
           .hero-banner-shell,
           .hero-slider,
           .hero-slider .swiper-wrapper,
@@ -112,9 +121,21 @@ export default function HeroSection() {
           .hero-banner-link {
             border-radius: 24px;
           }
+          .hero-banner-shell {
+            box-shadow: none;
+            background: transparent;
+          }
+          .hero-slider .swiper-slide {
+            background: transparent;
+          }
+          .hero-banner-link picture {
+            display: block;
+            line-height: 0;
+          }
 
           .hero-banner-image {
-            height: 360px;
+            height: 210px;
+            width: 100%;
           }
         }
       `}</style>

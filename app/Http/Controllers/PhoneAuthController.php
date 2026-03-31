@@ -13,6 +13,13 @@ class PhoneAuthController extends Controller
 {
     protected $msgpkService;
 
+    protected function resolveSignupSource(Request $request, string $default = 'web'): string
+    {
+        return $request->input('signup_source')
+            ?? $request->header('X-Client-Source')
+            ?? $default;
+    }
+
     public function __construct(MsgpkService $msgpkService)
     {
         $this->msgpkService = $msgpkService;
@@ -101,6 +108,7 @@ class PhoneAuthController extends Controller
                         'role' => 'User',
                         'referral_code' => $referralCode,
                         'provider' => 'phone',
+                        'signup_source' => $this->resolveSignupSource($request),
                         'is_phone_verified' => true,
                         'phone_verified_at' => now(),
                     ]);

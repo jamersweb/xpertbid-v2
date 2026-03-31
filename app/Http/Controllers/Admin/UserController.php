@@ -44,6 +44,7 @@ class UserController extends Controller
         ]);
 
         $data['password'] = Hash::make($data['password']);
+        $data['signup_source'] = 'admin';
 
         $user = User::create($data);
         $user->assignRole($data['role']);

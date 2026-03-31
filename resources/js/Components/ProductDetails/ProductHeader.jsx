@@ -15,7 +15,7 @@ export default function ProductHeader({ views, productId, slug, link }) {
        };
 
        return (
-              <section className="prodcut-detail-links" style={{ paddingTop: '100px' }}>
+              <section className="prodcut-detail-links product-detail-header-section" style={{ paddingTop: '100px' }}>
                      <div className="container-fluid">
                             <div className="row">
                                    <div className="col-md-6">
@@ -54,6 +54,13 @@ export default function ProductHeader({ views, productId, slug, link }) {
                                    </div>
                             </div>
                      </div>
+                     <style>{`
+                            @media (max-width: 767px) {
+                                   .product-detail-header-section {
+                                          padding-top: 36px !important;
+                                   }
+                            }
+                     `}</style>
               </section>
        );
 }

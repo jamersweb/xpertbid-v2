@@ -50,6 +50,7 @@ class User extends Authenticatable
         'utm_campaign',
         'provider',
         'provider_id',
+        'signup_source',
         'is_phone_verified',
         'phone_verified_at',
     ];

@@ -7,6 +7,7 @@ const NotificationDropdown = () => {
        const [isOpen, setIsOpen] = useState(false);
        const [notifications, setNotifications] = useState([]);
        const [loading, setLoading] = useState(true);
+       const [notificationToDelete, setNotificationToDelete] = useState(null);
        const notificationRef = useRef(null);
 
        useEffect(() => {
@@ -66,14 +67,15 @@ const NotificationDropdown = () => {
               }
        };
 
-       const deleteNotification = async (id) => {
-              if (window.confirm("Are you sure you want to delete this notification?")) {
-                     try {
-                            await axios.delete(`/api/notifications/${id}`);
-                            setNotifications((prev) => prev.filter((n) => n.id !== id));
-                     } catch (error) {
-                            console.error("Error deleting notification:", error);
-                     }
+       const confirmDeleteNotification = async () => {
+              if (!notificationToDelete) return;
+
+              try {
+                     await axios.delete(`/api/notifications/${notificationToDelete.id}`);
+                     setNotifications((prev) => prev.filter((n) => n.id !== notificationToDelete.id));
+                     setNotificationToDelete(null);
+              } catch (error) {
+                     console.error("Error deleting notification:", error);
               }
        };
 
@@ -87,7 +89,8 @@ const NotificationDropdown = () => {
                                    border: "none",
                                    backgroundColor: "transparent",
                                    position: 'relative',
-                                   padding: '8px'
+                                   padding: '8px',
+                                   paddingLeft: '0px',
                             }}
                             onClick={() => setIsOpen(!isOpen)}
                      >
@@ -96,9 +99,9 @@ const NotificationDropdown = () => {
                                    <span
                                           style={{
                                                  position: 'absolute',
-                                                 top: '0px',
+                                                 top: '2px',
                                                  right: '0px',
-                                                 backgroundColor: '#dc3545',
+                                                 backgroundColor: '#43ACE9',
                                                  color: 'white',
                                                  borderRadius: '50%',
                                                  width: '18px',
@@ -116,7 +119,7 @@ const NotificationDropdown = () => {
                      </button>
 
                      {isOpen && (
-                            <div className="notification-popup" ref={notificationRef} style={{ position: 'absolute', right: 0, top: '100%', zIndex: 1000, background: 'white', border: '1px solid #ddd', minWidth: '300px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', borderRadius: '8px' }}>
+                            <div className="notification-popup" ref={notificationRef}>
                                    <div className="notification-content p-3 border-bottom d-flex justify-content-between align-items-center">
                                           <h3 className="m-0" style={{ fontSize: '1rem', color: '#23262F', fontWeight: 700 }}>
                                                  {notifications.length > 0 ? "Notifications" : "No new notifications"}
@@ -148,7 +151,7 @@ const NotificationDropdown = () => {
                                                                                            <i className="fa-solid fa-check text-success"></i>
                                                                                     </button>
                                                                              )}
-                                                                             <button className="btn btn-sm btn-link p-0" onClick={() => deleteNotification(notification.id)}>
+                                                                             <button className="btn btn-sm btn-link p-0" onClick={() => setNotificationToDelete(notification)}>
                                                                                     <i className="fa-solid fa-xmark text-danger"></i>
                                                                              </button>
                                                                       </div>
@@ -159,6 +162,74 @@ const NotificationDropdown = () => {
 
                                    <div className="notification-footer p-2 text-center border-top">
                                           <Link href="/notifications-page" style={{ fontSize: '0.8rem', color: '#23262F', fontWeight: 600 }}>See All Notifications</Link>
+                                   </div>
+                            </div>
+                     )}
+
+                     {notificationToDelete && (
+                            <div
+                                   style={{
+                                          position: "fixed",
+                                          inset: 0,
+                                          background: "rgba(15, 23, 42, 0.35)",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          zIndex: 1200,
+                                          padding: "16px",
+                                   }}
+                                   onClick={() => setNotificationToDelete(null)}
+                            >
+                                   <div
+                                          onClick={(event) => event.stopPropagation()}
+                                          style={{
+                                                 width: "100%",
+                                                 maxWidth: "360px",
+                                                 background: "#fff",
+                                                 borderRadius: "16px",
+                                                 boxShadow: "0 20px 45px rgba(15, 23, 42, 0.18)",
+                                                 padding: "22px",
+                                          }}
+                                   >
+                                          <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, color: "#23262F" }}>
+                                                 Delete Notification
+                                          </h4>
+                                          <p style={{ margin: "10px 0 0", fontSize: "0.92rem", color: "#5B6475", lineHeight: 1.6 }}>
+                                                 Are you sure you want to delete this notification?
+                                          </p>
+
+                                          <div style={{ display: "flex", gap: "10px", marginTop: "18px" }}>
+                                                 <button
+                                                        type="button"
+                                                        onClick={() => setNotificationToDelete(null)}
+                                                        style={{
+                                                               flex: 1,
+                                                               border: "1px solid #D7DEEA",
+                                                               background: "#fff",
+                                                               color: "#23262F",
+                                                               borderRadius: "10px",
+                                                               padding: "11px 14px",
+                                                               fontWeight: 600,
+                                                        }}
+                                                 >
+                                                        Cancel
+                                                 </button>
+                                                 <button
+                                                        type="button"
+                                                        onClick={confirmDeleteNotification}
+                                                        style={{
+                                                               flex: 1,
+                                                               border: "none",
+                                                               background: "#23262F",
+                                                               color: "#fff",
+                                                               borderRadius: "10px",
+                                                               padding: "11px 14px",
+                                                               fontWeight: 600,
+                                                        }}
+                                                 >
+                                                        Delete
+                                                 </button>
+                                          </div>
                                    </div>
                             </div>
                      )}

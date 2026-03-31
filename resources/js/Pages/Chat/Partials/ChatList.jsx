@@ -10,8 +10,13 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser })
 
     useEffect(() => {
         fetchConversations();
-        const interval = setInterval(fetchConversations, 10000);
-        return () => clearInterval(interval);
+        const interval = setInterval(fetchConversations, 5000);
+        const handleFocus = () => fetchConversations();
+        window.addEventListener('focus', handleFocus);
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('focus', handleFocus);
+        };
     }, []);
 
     useEffect(() => {
@@ -63,7 +68,29 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser })
         return true;
     });
 
-    const getAssetUrl = (path) => path ? `/storage/${path}` : '/assets/images/user.jpg';
+    const getAssetUrl = (path, fallback = '/assets/images/user.jpg') => {
+        if (!path) return fallback;
+        if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/')) return path;
+        if (path.startsWith('assets/')) return `/${path}`;
+        if (path.startsWith('storage/')) return `/${path}`;
+        return `/storage/${path}`;
+    };
+
+    const renderMessageStatus = (message) => {
+        if (!message || message.sender_id !== currentUser.id) return null;
+
+        return message.is_read ? (
+            <span className="flex items-center gap-1">
+                <i className="fa-solid fa-check-double text-[10px]"></i>
+                <span>Seen</span>
+            </span>
+        ) : (
+            <span className="flex items-center gap-1">
+                <i className="fa-solid fa-check text-[10px]"></i>
+                <span>{message.body}</span>
+            </span>
+        );
+    };
 
     // Last seen logic
     const getLastSeen = (dateString, userId) => {
@@ -123,15 +150,15 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser })
                             )}
 
                             <div className="flex gap-3">
-                                <div className="relative flex-shrink-0">
+                                <div className="relative flex-shrink-0 w-12 h-12">
                                     <img
                                         src={getAssetUrl(conv.other_user?.profile_pic)}
                                         alt="User"
                                         className="w-12 h-12 rounded-full object-cover border border-gray-100"
-                                        onError={(e) => { e.target.onerror = null; e.target.src = `https://ui-avatars.com/api/?name=${conv.other_user?.name || 'User'}`; }}
+                                        onError={(e) => { e.target.onerror = null; e.target.src = '/assets/images/user.jpg'; }}
                                     />
                                     {conv.other_user && getLastSeen(conv.other_user.last_active_at) === 'Online' && (
-                                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                                        <span className="absolute right-0.5 bottom-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></span>
                                     )}
                                 </div>
 
@@ -168,10 +195,11 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser })
                                                 conv.last_message.type === 'image' ? (
                                                     <span className="flex items-center gap-1"><i className="fa-regular fa-image"></i> Photo</span>
                                                 ) : (
-                                                    <span className="flex items-center gap-1">
-                                                        {conv.last_message.sender_id === currentUser.id && <i className="fa-solid fa-check text-[10px]"></i>}
-                                                        {conv.last_message.body}
-                                                    </span>
+                                                    renderMessageStatus(conv.last_message) || (
+                                                        <span className="flex items-center gap-1">
+                                                            {conv.last_message.body}
+                                                        </span>
+                                                    )
                                                 )
                                             ) : (
                                                 <span className="italic">Start the conversation</span>

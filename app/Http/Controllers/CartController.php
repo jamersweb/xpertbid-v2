@@ -19,6 +19,12 @@ class CartController extends Controller
     {
         $user = $request->user();
 
+        if (!$user) {
+            return Inertia::render('Cart/Index', [
+                'cart' => []
+            ]);
+        }
+
         $cartItems = Cart::where('user_id', $user->id)
             ->with([
                 'listing' => function ($query) {

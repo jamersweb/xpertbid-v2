@@ -76,22 +76,22 @@ export default function MobileBottomNav() {
 
                             {isAuthenticated ? (
                                    <Link
-                                          href={route('dashboard')}
-                                          className={`mobile-bottom-nav__item ${isActive('/dashboard') ? 'mobile-bottom-nav__item--active' : ''}`}
-                                          aria-label="Dashboard"
+                                          href={route('chat.index')}
+                                          className={`mobile-bottom-nav__item ${isActive('/chat') ? 'mobile-bottom-nav__item--active' : ''}`}
+                                          aria-label="Chat"
                                    >
-                                          <i className="fa-solid fa-table-columns mobile-bottom-nav__icon" />
-                                          <span className="mobile-bottom-nav__label">Dashboard</span>
+                                          <i className="fa-solid fa-comment-dots mobile-bottom-nav__icon" />
+                                          <span className="mobile-bottom-nav__label">Chat</span>
                                    </Link>
                             ) : (
                                    <button
                                           type="button"
                                           onClick={openLogin}
                                           className="mobile-bottom-nav__item"
-                                          aria-label="Dashboard"
+                                          aria-label="Chat"
                                    >
-                                          <i className="fa-solid fa-table-columns mobile-bottom-nav__icon" />
-                                          <span className="mobile-bottom-nav__label">Dashboard</span>
+                                          <i className="fa-solid fa-comment-dots mobile-bottom-nav__icon" />
+                                          <span className="mobile-bottom-nav__label">Chat</span>
                                    </button>
                             )}
 
@@ -128,7 +128,13 @@ export default function MobileBottomNav() {
 
                                           {isUserMenuOpen && (
                                                  <div className="mobile-bottom-nav__dropdown shadow">
-                                                        <ul className="user-setting-menu list-unstyled m-0 p-0">
+                                                       <ul className="user-setting-menu list-unstyled m-0 p-0">
+                                                               <li>
+                                                                      <Link href={route('dashboard')} onClick={() => setIsUserMenuOpen(false)}>
+                                                                             <i className="fa-solid fa-table-columns text-center" style={{ width: '20px', fontSize: '18px' }}></i>
+                                                                             Dashboard
+                                                                      </Link>
+                                                               </li>
                                                                <li>
                                                                       <Link href={route('profile.edit')} onClick={() => setIsUserMenuOpen(false)}>
                                                                              <img src="/assets/images/profile-setting.svg" alt="Settings" width={20} height={20} />
@@ -287,7 +293,7 @@ export default function MobileBottomNav() {
                     display: flex;
                     align-items: center;
                     gap: 12px;
-                    padding: 14px 18px;
+                    padding: 14px 18px 14px 5px;
                     color: #333;
                     text-decoration: none;
                     font-size: 15px;

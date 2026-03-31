@@ -9,9 +9,12 @@ import SuccessPopup from '@/Components/SuccessPopup';
 import ErrorPopup from '@/Components/ErrorPopup';
 
 export default function Index({ cartItems: inertiaCartItems = [], user }) {
-    // Ensure inertiaCartItems is always an array
-    const displayItems = Array.isArray(inertiaCartItems) ? inertiaCartItems : [];
-    const { clearCart } = useCart();
+    const { auth } = usePage().props;
+    const authUser = auth?.user || user || null;
+    const { clearCart, cartItems: contextCartItems } = useCart();
+    const displayItems = Array.isArray(inertiaCartItems) && inertiaCartItems.length > 0
+        ? inertiaCartItems
+        : (Array.isArray(contextCartItems) ? contextCartItems : []);
     const [loading, setLoading] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('cod');
@@ -31,15 +34,15 @@ export default function Index({ cartItems: inertiaCartItems = [], user }) {
 
     // Form Data
     const [billingData, setBillingData] = useState({
-        name: user?.name || '',
-        email: user?.email || '',
-        phone: user?.phone || '',
-        address_line1: user?.address_line1 || '',
-        address_line2: user?.address_line2 || '',
-        city: user?.city || '',
-        state: user?.state || '',
-        country: user?.country || '',
-        postal_code: user?.postal_code || '',
+        name: authUser?.name || '',
+        email: authUser?.email || '',
+        phone: authUser?.phone || '',
+        address_line1: authUser?.address_line1 || '',
+        address_line2: authUser?.address_line2 || '',
+        city: authUser?.city || '',
+        state: authUser?.state || '',
+        country: authUser?.country || '',
+        postal_code: authUser?.postal_code || '',
     });
 
     const [shippingData, setShippingData] = useState({
@@ -198,7 +201,11 @@ export default function Index({ cartItems: inertiaCartItems = [], user }) {
                 setShowSuccess(true);
                 clearCart();
                 setTimeout(() => {
-                    router.visit(route('orders.show', response.data.order_number));
+                    if (authUser) {
+                        router.visit(route('orders.show', response.data.order_number));
+                    } else {
+                        router.visit(route('home'));
+                    }
                 }, 3000);
             } else {
                 setErrorMessage(response.data.message || 'Failed to place order');

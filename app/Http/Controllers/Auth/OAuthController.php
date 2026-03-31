@@ -9,6 +9,13 @@ use Illuminate\Support\Str;
 
 class OAuthController extends Controller
 {
+    protected function resolveSignupSource(Request $request, string $default = 'web'): string
+    {
+        return $request->input('signup_source')
+            ?? $request->header('X-Client-Source')
+            ?? $default;
+    }
+
     /**
      * OAuth Sign-In: Login only if user already exists.
      */
@@ -79,6 +86,7 @@ class OAuthController extends Controller
             'provider_id' => $data['provider_id'],
             'profile_pic' => $data['avatar'],
             'password' => bcrypt(Str::random(16)), // dummy password
+            'signup_source' => $this->resolveSignupSource($request),
         ]);
 
         // Optionally, you may not return token yet to prevent auto-login

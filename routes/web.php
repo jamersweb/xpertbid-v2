@@ -98,6 +98,11 @@ Route::get('/get-slider-service', [SliderController::class, 'get_slider_service'
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::post('/buy-now-inquiry', [BuyNowInquiryController::class, 'store'])->name('buy_now.store');
 
+// Guest-friendly Cart & Checkout
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
+
 
 // --- Authenticated Routes (Inertia + Web Sessions) ---
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -135,12 +140,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/favorites', [FavoritesController::class, 'index'])->name('favorites.index');
     Route::post('/favorites/toggle', [FavoritesController::class, 'toggle'])->name('favorites.toggle'); // Unified add/remove
 
-    // Cart & Checkout
-    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    // Cart
     Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
     Route::delete('/cart/{id}', [CartController::class, 'remove'])->name('cart.remove');
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index'); // View Checkout Page
-    Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
     Route::get('/my-orders', [CheckoutController::class, 'myOrders'])->name('orders.index');
     Route::get('/order/{orderNumber}', [CheckoutController::class, 'show'])->name('orders.show');
 

@@ -19,6 +19,13 @@ use Google_Client;
 
 class AuthController extends Controller
 {
+    protected function resolveSignupSource(Request $request, string $default = 'web'): string
+    {
+        return $request->input('signup_source')
+            ?? $request->header('X-Client-Source')
+            ?? $default;
+    }
+
     public function register(Request $request)
     {
         $request->validate([
@@ -55,6 +62,7 @@ class AuthController extends Controller
             'utm_source' => $request->utm_source,
             'utm_medium' => $request->utm_medium,
             'utm_campaign' => $request->utm_campaign,
+            'signup_source' => $this->resolveSignupSource($request),
         ]);
 
         // Generate token
@@ -155,6 +163,7 @@ class AuthController extends Controller
                     'utm_source' => $request->utm_source,
                     'utm_medium' => $request->utm_medium,
                     'utm_campaign' => $request->utm_campaign,
+                    'signup_source' => $this->resolveSignupSource($request),
                 ]);
 
                 if ($email) {
@@ -288,6 +297,7 @@ class AuthController extends Controller
                 'utm_source' => $request->utm_source,
                 'utm_medium' => $request->utm_medium,
                 'utm_campaign' => $request->utm_campaign,
+                'signup_source' => $this->resolveSignupSource($request),
             ]);
             Auth::login($user);
             $token = $user->createToken('GoogleRegister')->plainTextToken;
@@ -366,6 +376,7 @@ class AuthController extends Controller
                 'utm_source' => $request->utm_source,
                 'utm_medium' => $request->utm_medium,
                 'utm_campaign' => $request->utm_campaign,
+                'signup_source' => $this->resolveSignupSource($request),
             ]);
 
             Auth::login($user);

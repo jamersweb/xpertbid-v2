@@ -12,6 +12,10 @@ export default function Dashboard({ stats }) {
               { label: 'Pending Verifications', value: stats.pending_verifications, icon: 'fa-user-shield', color: 'bg-purple-500' },
        ];
 
+       const lastCurrencySync = stats.currency_last_synced_at
+              ? new Date(stats.currency_last_synced_at).toLocaleString()
+              : 'Not synced yet';
+
        return (
               <AdminLayout title="Dashboard">
                      <Head title="Admin Dashboard" />
@@ -29,6 +33,12 @@ export default function Dashboard({ stats }) {
                      </div>
 
                      <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                   <h3 className="text-lg font-bold text-gray-800 mb-3">Currency Sync</h3>
+                                   <p className="text-sm text-gray-500 mb-2">Last successful currency rates sync</p>
+                                   <p className="text-xl font-black text-gray-800">{lastCurrencySync}</p>
+                            </div>
+
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-h-[400px]">
                                    <h3 className="text-lg font-bold text-gray-800 mb-6">Recent Activity</h3>
                                    <div className="flex flex-col gap-4">

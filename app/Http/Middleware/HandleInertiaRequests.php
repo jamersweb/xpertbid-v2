@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Favorite;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
@@ -66,6 +67,9 @@ class HandleInertiaRequests extends Middleware
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
             ],
+            'favoriteListingIds' => $request->user()
+                ? Favorite::where('user_id', $request->user()->id)->pluck('listing_id')->all()
+                : [],
         ];
     }
 }

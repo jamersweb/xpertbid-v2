@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Link } from '@inertiajs/react';
+import Price from '../../../Components/Price';
 
 const ChatWindow = ({ conversationId, currentUser, onBack }) => {
     const [messages, setMessages] = useState([]);
@@ -37,6 +38,10 @@ const ChatWindow = ({ conversationId, currentUser, onBack }) => {
                 setTimeout(scrollToBottom, 100);
             });
 
+            const pollInterval = setInterval(() => {
+                fetchData();
+            }, 5000);
+
             // Echo Listener
             if (window.Echo) {
                 window.Echo.private(`chat.${conversationId}`)
@@ -49,9 +54,14 @@ const ChatWindow = ({ conversationId, currentUser, onBack }) => {
                     });
 
                 return () => {
+                    clearInterval(pollInterval);
                     window.Echo.leave(`chat.${conversationId}`);
                 };
             }
+
+            return () => {
+                clearInterval(pollInterval);
+            };
         }
     }, [conversationId]);
 
@@ -106,7 +116,33 @@ const ChatWindow = ({ conversationId, currentUser, onBack }) => {
         }
     };
 
-    const getAssetUrl = (path) => path ? `/storage/${path}` : '/assets/images/user.jpg';
+    const getAssetUrl = (path, fallback = '/assets/images/user.jpg') => {
+        if (!path) return fallback;
+        if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/')) return path;
+        if (path.startsWith('assets/')) return `/${path}`;
+        if (path.startsWith('storage/')) return `/${path}`;
+        return `/storage/${path}`;
+    };
+
+    const normalizedProductListType = String(product?.list_type || product?.listing_type || '').toLowerCase();
+    const isDirectSaleProduct =
+        normalizedProductListType === 'normal' ||
+        normalizedProductListType === 'normal_list' ||
+        normalizedProductListType === 'business' ||
+        normalizedProductListType === 'business_list';
+    const baseProductPrice = Number(product?.buy_now_price || product?.minimum_bid || 0);
+    const productDiscountValue = Number(product?.discount_value || 0);
+    const hasProductDiscount = isDirectSaleProduct && productDiscountValue > 0;
+    const finalProductPrice = (() => {
+        if (!hasProductDiscount) return baseProductPrice;
+        if (product?.discount_type === 'percent') {
+            return Math.max(0, baseProductPrice - (baseProductPrice * (productDiscountValue / 100)));
+        }
+        if (product?.discount_type === 'flat') {
+            return Math.max(0, baseProductPrice - productDiscountValue);
+        }
+        return baseProductPrice;
+    })();
 
     // Last seen logic
     const getLastSeen = (dateString, userId) => {
@@ -135,15 +171,15 @@ const ChatWindow = ({ conversationId, currentUser, onBack }) => {
                             <i className="fa-solid fa-arrow-left"></i>
                         </button>
 
-                        <div className="relative">
+                        <div className="relative w-10 h-10 flex-shrink-0">
                             <img
                                 src={getAssetUrl(otherUser?.profile_pic)}
                                 alt={otherUser?.name}
                                 className="w-10 h-10 rounded-full object-cover border border-gray-100"
-                                onError={(e) => { e.target.onerror = null; e.target.src = `https://ui-avatars.com/api/?name=${otherUser?.name || 'User'}`; }}
+                                onError={(e) => { e.target.onerror = null; e.target.src = '/assets/images/user.jpg'; }}
                             />
                             {otherUser?.last_active_at && getLastSeen(otherUser.last_active_at) === 'Online' && (
-                                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                                <span className="absolute right-0.5 bottom-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></span>
                             )}
                         </div>
 
@@ -194,22 +230,23 @@ const ChatWindow = ({ conversationId, currentUser, onBack }) => {
                     <div className="bg-gray-50 px-4 py-2 border-t border-gray-100 flex items-center justify-between">
                         <div className="flex items-center gap-3 overflow-hidden">
                             <img
-                                src={getAssetUrl(product.image)}
+                                src={getAssetUrl(product.image_url || product.image, '/assets/images/image.png')}
                                 alt={product.title}
                                 className="w-10 h-10 rounded object-cover border border-gray-200"
+                                onError={(e) => { e.target.onerror = null; e.target.src = '/assets/images/image.png'; }}
                             />
                             <div className="min-w-0">
                                 <h4 className="text-xs font-semibold text-gray-900 truncate max-w-[200px]">{product.title}</h4>
                                 <p className="text-sm font-bold text-gray-800">
-                                    PKR {Number(product.buy_now_price || product.minimum_bid || 0).toLocaleString()}
+                                    <Price amountAED={finalProductPrice} />
                                 </p>
                             </div>
                         </div>
                         <Link
                             href={route('product.show', product.slug || product.id)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+                            className="bg-gray-900 hover:bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
                         >
-                            View Ad
+                            View
                         </Link>
                     </div>
                 )}
@@ -233,6 +270,7 @@ const ChatWindow = ({ conversationId, currentUser, onBack }) => {
                 ) : (
                     messages.map((msg, index) => {
                         const isMe = msg.sender_id === currentUser.id;
+                        const isLatestOwnMessage = isMe && index === messages.length - 1;
                         return (
                             <div
                                 key={msg.id || index}
@@ -247,16 +285,41 @@ const ChatWindow = ({ conversationId, currentUser, onBack }) => {
                                     {msg.type === 'image' && (
                                         <div className="mb-2">
                                             <img
-                                                src={`/storage/${msg.attachment_path}`}
+                                                src={getAssetUrl(msg.attachment_path, '/assets/images/image.png')}
                                                 alt="Attachment"
                                                 className="rounded-lg max-h-60 object-cover w-full"
+                                                onError={(e) => { e.target.onerror = null; e.target.src = '/assets/images/image.png'; }}
                                             />
                                         </div>
                                     )}
+                                    {msg.type === 'file' && msg.attachment_path && (
+                                        <div className="mb-2">
+                                            <a
+                                                href={getAssetUrl(msg.attachment_path, '/assets/images/image.png')}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium ${
+                                                    isMe ? 'bg-blue-500/20 text-white' : 'bg-gray-100 text-gray-700'
+                                                }`}
+                                            >
+                                                <i className="fa-regular fa-file-lines"></i>
+                                                <span>Open document</span>
+                                            </a>
+                                        </div>
+                                    )}
                                     <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.body}</p>
-                                    <div className={`text-[10px] mt-1 flex items-center ${isMe ? 'justify-end text-blue-100' : 'text-gray-400'}`}>
+                                    <div className={`text-[10px] mt-1 flex items-center gap-1 ${isMe ? 'justify-end text-blue-100' : 'text-gray-400'}`}>
                                         {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        {isMe && <i className="fa-solid fa-check-double ml-1 text-[10px]"></i>}
+                                        {isMe && (
+                                            msg.is_read ? (
+                                                <>
+                                                    <i className="fa-solid fa-check-double text-[10px]"></i>
+                                                    {isLatestOwnMessage && <span className="text-[10px]">Seen</span>}
+                                                </>
+                                            ) : (
+                                                <i className="fa-solid fa-check text-[10px]"></i>
+                                            )
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -309,7 +372,7 @@ const ChatWindow = ({ conversationId, currentUser, onBack }) => {
                             <input
                                 type="file"
                                 className="hidden"
-                                accept="image/*"
+                                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
                                 onChange={(e) => setAttachment(e.target.files[0])}
                             />
                         </label>

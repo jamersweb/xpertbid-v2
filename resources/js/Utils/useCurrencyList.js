@@ -31,6 +31,9 @@ function saveRatesSafe(ratesObj = {}) {
        const finalMap = sanitizeRates(ratesObj);
        localStorage.setItem("xb_rates", JSON.stringify(finalMap));
        document.dispatchEvent(new Event("xb-currency-change"));
+       if (typeof window !== "undefined") {
+              window.dispatchEvent(new Event("xb-currency-change"));
+       }
 }
 
 function readRatesSafe() {
@@ -151,6 +154,9 @@ export default function useCurrencyList(apiBase = "") {
                      saveRatesSafe(current);
               } else {
                      document.dispatchEvent(new Event("xb-currency-change"));
+                     if (typeof window !== "undefined") {
+                            window.dispatchEvent(new Event("xb-currency-change"));
+                     }
               }
        };
 

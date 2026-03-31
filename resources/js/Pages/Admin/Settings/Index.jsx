@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
 
-export default function Index({ settings }) {
+export default function Index({ settings, currencyLastSyncedAt }) {
        const [editing, setEditing] = useState(null);
        const { data, setData, post, reset, processing, errors } = useForm({
               title: '',
@@ -10,6 +10,11 @@ export default function Index({ settings }) {
               description: '',
               image: null,
        });
+
+       const formattedCurrencySyncTime = useMemo(() => {
+              if (!currencyLastSyncedAt) return 'Not synced yet';
+              return new Date(currencyLastSyncedAt).toLocaleString();
+       }, [currencyLastSyncedAt]);
 
        const editSetting = (setting) => {
               setEditing(setting.id);
@@ -82,6 +87,15 @@ export default function Index({ settings }) {
                             </div>
 
                             <div className="space-y-6">
+                                   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                          <h3 className="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wider">Currencies</h3>
+                                          <p className="text-sm text-gray-500 mb-2">Automatic exchange rate sync runs every 6 hours.</p>
+                                          <div className="rounded-xl bg-sky-50 border border-sky-100 px-4 py-3">
+                                                 <p className="text-[11px] font-bold uppercase tracking-wider text-sky-600 mb-1">Last Sync</p>
+                                                 <p className="text-sm font-semibold text-gray-800">{formattedCurrencySyncTime}</p>
+                                          </div>
+                                   </div>
+
                                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                                           <h3 className="text-sm font-bold text-gray-800 mb-6 uppercase tracking-wider">{editing ? 'Edit Setting' : 'Create New Setting'}</h3>
                                           <form onSubmit={submit} className="space-y-4">

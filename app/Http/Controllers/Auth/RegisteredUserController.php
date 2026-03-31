@@ -16,6 +16,13 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
+    protected function resolveSignupSource(Request $request, string $default = 'web'): string
+    {
+        return $request->input('signup_source')
+            ?? $request->header('X-Client-Source')
+            ?? $default;
+    }
+
     /**
      * Display the registration view.
      */
@@ -42,6 +49,7 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => 'User',
+            'signup_source' => $this->resolveSignupSource($request),
         ]);
 
         event(new Registered($user));

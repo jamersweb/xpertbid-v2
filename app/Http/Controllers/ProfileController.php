@@ -16,9 +16,29 @@ use App\Models\Country;
 use App\Models\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\File;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver as GdDriver;
+use Intervention\Image\Encoders\WebpEncoder;
 
 class ProfileController extends Controller
 {
+    protected function storeOptimizedProfileImage($file): string
+    {
+        $directory = public_path('assets/images/profile');
+        File::ensureDirectoryExists($directory);
+
+        $manager = new ImageManager(new GdDriver());
+        $image = $manager->read($file->getRealPath());
+        $image->scaleDown(width: 800, height: 800);
+
+        $filename = time() . '_' . Str::random(12) . '.webp';
+        $encoded = $image->encode(new WebpEncoder(82));
+        $encoded->save($directory . DIRECTORY_SEPARATOR . $filename);
+
+        return '/assets/images/profile/' . $filename;
+    }
+
     /**
      * Display the user's profile form.
      */
@@ -88,10 +108,7 @@ class ProfileController extends Controller
         }
 
         if ($request->hasFile('profile_pic')) {
-            $image = $request->file('profile_pic');
-            $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-            $image->move(public_path('/assets/images/profile/'), $imageName);
-            $data['profile_pic'] = '/assets/images/profile/' . $imageName;
+            $data['profile_pic'] = $this->storeOptimizedProfileImage($request->file('profile_pic'));
         }
 
         $user->update($data);

@@ -57,7 +57,15 @@ class CheckoutController extends Controller
             
             return Inertia::render('Checkout/Index', [
                 'cartItems' => [$promotionItem],
-                'user' => $user->load('shippingAddress'),
+                'user' => $user ? $user->load('shippingAddress') : null,
+                'stripeKey' => env('STRIPE_KEY'),
+            ]);
+        }
+
+        if (!$user) {
+            return Inertia::render('Checkout/Index', [
+                'cartItems' => [],
+                'user' => null,
                 'stripeKey' => env('STRIPE_KEY'),
             ]);
         }
@@ -97,7 +105,7 @@ class CheckoutController extends Controller
         
         return Inertia::render('Checkout/Index', [
             'cartItems' => $cartItems,
-            'user' => $user->load('shippingAddress'), // Pre-fill address if available
+            'user' => $user ? $user->load('shippingAddress') : null, // Pre-fill address if available
             'stripeKey' => env('STRIPE_KEY'), // Publishable key for frontend
         ]);
     }

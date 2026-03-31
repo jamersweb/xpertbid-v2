@@ -130,6 +130,24 @@ export default function Header() {
                                                  </button>
                                                  <CartPopup />
                                                  {user && <NotificationDropdown />}
+                                                 {!user && (
+                                                        <div className="mobile-auth-buttons d-flex align-items-center gap-2">
+                                                               <button
+                                                                      type="button"
+                                                                      className="mobile-auth-btn mobile-auth-login"
+                                                                      onClick={openLogin}
+                                                               >
+                                                                      Login
+                                                               </button>
+                                                               <button
+                                                                      type="button"
+                                                                      className="mobile-auth-btn mobile-auth-signup"
+                                                                      onClick={openRegister}
+                                                               >
+                                                                      Sign Up
+                                                               </button>
+                                                        </div>
+                                                 )}
                                           </div>
 
                                           <button
@@ -220,13 +238,18 @@ export default function Header() {
                                                                                            className="rounded-circle border"
                                                                                            width="35"
                                                                                            height="35"
+                                                                                           referrerPolicy="no-referrer"
+                                                                                           onError={(e) => {
+                                                                                                  e.currentTarget.onerror = null;
+                                                                                                  e.currentTarget.src = "/assets/images/user.jpg";
+                                                                                           }}
                                                                                     />
                                                                                     <i className="fa-solid fa-chevron-down small text-muted"></i>
                                                                              </button>
 
                                                                              {isUserSettingsOpenDesktop && (
                                                                                     <div id="userProfileSettingPopup" className="user-profile-setting-popup show" style={{ position: 'absolute', right: 0, top: '100%' }}>
-                                                                                           <div className="user-profile-setting-content" style={{ padding: '20px' }}>
+                                                                                           <div className="user-profile-setting-content" style={{ padding: '18px 18px 18px 12px' }}>
                                                                                                   <ul className="user-setting-menu" style={{ paddingLeft: 0, listStyle: 'none', marginBottom: 0, width: '100%' }}>
                                                                                                          <li style={{ borderBottom: '1px solid #EDEDED', padding: '0px 0', fontSize: '16px', fontWeight: '400', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
                                                                                                                 <Link className="d-flex align-items-center gap-2 text-decoration-none" style={{ color: '#24282B', fontFamily: '"Inter", sans-serif' }} href={route('profile.edit')}>
@@ -364,8 +387,40 @@ export default function Header() {
                         }
 
                         @media (max-width: 991px) {
+                            .navbar-brand {
+                                padding-left: 10px;
+                                margin-right: 0 !important;
+                            }
+                            .logo-image {
+                                width: 120px !important;
+                                max-width: 120px !important;
+                                height: auto !important;
+                            }
                             .mobile-header-actions {
                                 flex-shrink: 0;
+                            }
+                            .mobile-auth-buttons {
+                                margin-right: 4px;
+                            }
+                            .mobile-auth-btn {
+                                border: none;
+                                border-radius: 10px;
+                                height: 34px;
+                                padding: 0 12px;
+                                font-size: 12px;
+                                font-weight: 700;
+                                line-height: 1;
+                                display: inline-flex;
+                                align-items: center;
+                                justify-content: center;
+                            }
+                            .mobile-auth-login {
+                                background: #23262F;
+                                color: #fff;
+                            }
+                            .mobile-auth-signup {
+                                background: #43ACE9;
+                                color: #fff;
                             }
                             .mobile-user-dropdown {
                                 display: inline-flex;

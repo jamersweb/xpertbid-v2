@@ -26,7 +26,8 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               password: "",
               countryCode: "+92",
               terms: true,
-              otp: ""
+              otp: "",
+              signup_source: "web"
        });
 
        const handleStepChange = (step) => {
@@ -57,7 +58,8 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                      const formattedPhone = `${formData.countryCode}${formData.phone.replace(/^0+/, "")}`;
                      await axios.post('/api/auth/send-otp', {
                             phone: formattedPhone,
-                            type: 'register'
+                            type: 'register',
+                            signup_source: 'web'
                      });
                      setOtpSent(true);
                      setActiveStep("otpVerification");
@@ -78,7 +80,8 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                             phone: formattedPhone,
                             otp: formData.otp,
                             name: formData.name,
-                            password: formData.password
+                            password: formData.password,
+                            signup_source: 'web'
                      });
                      onClose();
                      router.visit(route('dashboard'));

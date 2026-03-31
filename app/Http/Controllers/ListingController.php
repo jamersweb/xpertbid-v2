@@ -3,11 +3,79 @@
 namespace App\Http\Controllers;
 
 use App\Models\Listing;
+use App\Models\Currency;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver as GdDriver;
+use Intervention\Image\Encoders\WebpEncoder;
 
 class ListingController extends Controller
 {
+    protected function normalizeAmountToPkr($amount, ?string $currencyCode): ?float
+    {
+        if ($amount === null || $amount === '') {
+            return null;
+        }
+
+        $numericAmount = (float) $amount;
+        $code = strtoupper((string) ($currencyCode ?: 'PKR'));
+
+        if ($code === 'PKR') {
+            return $numericAmount;
+        }
+
+        $currency = Currency::query()
+            ->where('enabled', true)
+            ->where('code', $code)
+            ->first();
+
+        $rateToPkr = (float) ($currency?->manual_rate_to_aed ?: 0);
+
+        if ($rateToPkr <= 0) {
+            return $numericAmount;
+        }
+
+        return round($numericAmount * $rateToPkr, 2);
+    }
+
+    protected function normalizeListingDataToPkr(array $listingData, ?string $currencyCode): array
+    {
+        foreach (['price', 'reserve_price', 'start_price'] as $priceField) {
+            if (array_key_exists($priceField, $listingData)) {
+                $listingData[$priceField] = $this->normalizeAmountToPkr($listingData[$priceField], $currencyCode);
+            }
+        }
+
+        if (
+            isset($listingData['discount_type']) &&
+            $listingData['discount_type'] === 'flat' &&
+            array_key_exists('discount_value', $listingData)
+        ) {
+            $listingData['discount_value'] = $this->normalizeAmountToPkr($listingData['discount_value'], $currencyCode);
+        }
+
+        return $listingData;
+    }
+
+    protected function storeOptimizedListingImage($file): string
+    {
+        $directory = public_path('assets/images/listing_images');
+        File::ensureDirectoryExists($directory);
+
+        $manager = new ImageManager(new GdDriver());
+        $image = $manager->read($file->getRealPath());
+        $image->scaleDown(width: 1800, height: 1800);
+
+        $filename = time() . '_' . Str::random(12) . '.webp';
+        $encoded = $image->encode(new WebpEncoder(82));
+        $encoded->save($directory . DIRECTORY_SEPARATOR . $filename);
+
+        return 'assets/images/listing_images/' . $filename;
+    }
+
     /**
      * Display a listing of the user's listings.
      */
@@ -107,15 +175,14 @@ class ListingController extends Controller
  
         // Data is already merged and validated as array
         $listingData = $request->listing_data ?? [];
+        $listingData = $this->normalizeListingDataToPkr($listingData, $request->input('selected_currency'));
         $categoryFeatures = $request->category_features ?? [];
  
         // Handle Image Uploads (Album)
         $albumPaths = [];
         if ($request->hasFile('album')) {
             foreach ($request->file('album') as $file) {
-                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('assets/images/listing_images'), $filename);
-                $albumPaths[] = 'assets/images/listing_images/' . $filename;
+                $albumPaths[] = $this->storeOptimizedListingImage($file);
             }
         }
  
@@ -188,6 +255,7 @@ class ListingController extends Controller
         }
 
         $listingData = is_array($request->listing_data) ? $request->listing_data : ($listing->listing_data ?? []);
+        $listingData = $this->normalizeListingDataToPkr($listingData, $request->input('selected_currency'));
         $categoryFeatures = is_array($request->category_features) ? $request->category_features : ($listing->category_features ?? []);
         $nextStatus = $request->status === 'draft' ? 'draft' : 'resubmit';
 
@@ -213,9 +281,7 @@ class ListingController extends Controller
         if ($request->hasFile('album')) {
             $albumPaths = [];
             foreach ($request->file('album') as $file) {
-                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('assets/images/listing_images'), $filename);
-                $albumPaths[] = 'assets/images/listing_images/' . $filename;
+                $albumPaths[] = $this->storeOptimizedListingImage($file);
             }
             $listingData['album'] = array_merge($listingData['album'] ?? [], $albumPaths);
         }
