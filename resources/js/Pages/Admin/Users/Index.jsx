@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm, router, Link } from '@inertiajs/react';
 import Pagination from '@/Components/Pagination';
 import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -8,6 +8,7 @@ import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import SecondaryButton from '@/Components/SecondaryButton';
+import Swal from 'sweetalert2';
 
 export default function Index({ users, filters }) {
        const [isModalOpen, setIsModalOpen] = useState(false);
@@ -68,10 +69,21 @@ export default function Index({ users, filters }) {
               router.patch(route('admin.users.update-status', user.id), { status: newStatus });
        };
 
-       const deleteUser = (user) => {
-              if (confirm(`Are you sure you want to delete ${user.name}?`)) {
+       const deleteUser = async (user) => {
+              const result = await Swal.fire({
+                     title: 'Are you sure?',
+                     text: `${user.name} will be deleted permanently.`,
+                     icon: 'warning',
+                     showCancelButton: true,
+                     confirmButtonColor: '#000000',
+                     cancelButtonColor: '#d1d5db',
+                     confirmButtonText: 'Yes, delete it',
+                     cancelButtonText: 'Cancel',
+              });
+
+              if (result.isConfirmed) {
                      router.delete(route('admin.users.destroy', user.id));
-              }
+              };
        };
 
        return (
@@ -80,15 +92,21 @@ export default function Index({ users, filters }) {
 
                      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                             <div className="p-6 border-bottom border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                   <form onSubmit={handleSearch} className="flex-1 max-w-md relative">
-                                          <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                          <input
-                                                 type="text"
-                                                 className="w-full pl-11 pr-4 py-2 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm transition-all"
-                                                 placeholder="Search by name, email or phone..."
-                                                 value={search}
-                                                 onChange={(e) => setSearch(e.target.value)}
-                                          />
+                                   <form onSubmit={handleSearch} className="flex-1 max-w-md flex gap-2">
+                                          <div className="relative flex-1">
+                                                 <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                                 <input
+                                                        type="text"
+                                                        className="w-full pl-11 pr-4 py-2 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm transition-all text-gray-900"
+                                                        placeholder="Search by name, email or phone..."
+                                                        value={search}
+                                                        onChange={(e) => setSearch(e.target.value)}
+                                                 />
+                                          </div>
+                                          <button type="submit" className="px-4 py-2 bg-black text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-all shadow-lg shadow-black/10 flex items-center gap-2">
+                                                 <i className="fa-solid fa-magnifying-glass"></i>
+                                                 Search
+                                          </button>
                                    </form>
                                    <PrimaryButton onClick={() => openModal()}>
                                           <i className="fa-solid fa-plus me-2"></i> Add New User
@@ -111,8 +129,12 @@ export default function Index({ users, filters }) {
                                                         <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
                                                                <td className="px-6 py-4">
                                                                       <div className="flex items-center gap-3">
-                                                                             <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold">
-                                                                                    {user.name.charAt(0)}
+                                                                             <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold overflow-hidden">
+                                                                                    {user.profile_pic ? (
+                                                                                           <img src={user.profile_pic} alt={user.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                                                                                    ) : (
+                                                                                           user.name.charAt(0)
+                                                                                    )}
                                                                              </div>
                                                                              <div>
                                                                                     <p className="text-sm font-bold text-gray-800">{user.name}</p>
@@ -142,15 +164,24 @@ export default function Index({ users, filters }) {
                                                                </td>
                                                                <td className="px-6 py-4 text-right">
                                                                       <div className="flex items-center justify-end gap-2">
+                                                                             <Link
+                                                                                    href={route('admin.users.show', user.id)}
+                                                                                    className="p-2 hover:bg-sky-50 rounded-lg text-sky-600 transition-colors"
+                                                                                    title="View Details"
+                                                                             >
+                                                                                    <i className="fa-solid fa-eye"></i>
+                                                                             </Link>
                                                                              <button
                                                                                     onClick={() => openModal(user)}
                                                                                     className="p-2 hover:bg-amber-50 rounded-lg text-amber-600 transition-colors"
+                                                                                    title="Edit User"
                                                                              >
                                                                                     <i className="fa-solid fa-pen-to-square"></i>
                                                                              </button>
                                                                              <button
                                                                                     onClick={() => deleteUser(user)}
                                                                                     className="p-2 hover:bg-rose-50 rounded-lg text-rose-600 transition-colors"
+                                                                                    title="Delete User"
                                                                              >
                                                                                     <i className="fa-solid fa-trash"></i>
                                                                              </button>
@@ -178,7 +209,7 @@ export default function Index({ users, filters }) {
                                                  <InputLabel htmlFor="name" value="Full Name" />
                                                  <TextInput
                                                         id="name"
-                                                        className="mt-1 block w-full"
+                                                        className="mt-1 block w-full text-gray-900"
                                                         value={data.name}
                                                         onChange={(e) => setData('name', e.target.value)}
                                                         required
@@ -191,7 +222,7 @@ export default function Index({ users, filters }) {
                                                  <TextInput
                                                         id="email"
                                                         type="email"
-                                                        className="mt-1 block w-full"
+                                                        className="mt-1 block w-full text-gray-900"
                                                         value={data.email}
                                                         onChange={(e) => setData('email', e.target.value)}
                                                         required
@@ -203,7 +234,7 @@ export default function Index({ users, filters }) {
                                                  <InputLabel htmlFor="phone" value="Phone Number" />
                                                  <TextInput
                                                         id="phone"
-                                                        className="mt-1 block w-full"
+                                                        className="mt-1 block w-full text-gray-900"
                                                         value={data.phone}
                                                         onChange={(e) => setData('phone', e.target.value)}
                                                  />
@@ -215,7 +246,7 @@ export default function Index({ users, filters }) {
                                                  <TextInput
                                                         id="password"
                                                         type="password"
-                                                        className="mt-1 block w-full"
+                                                        className="mt-1 block w-full text-gray-900"
                                                         value={data.password}
                                                         onChange={(e) => setData('password', e.target.value)}
                                                         required={!editingUser}
@@ -226,7 +257,7 @@ export default function Index({ users, filters }) {
                                           <div>
                                                  <InputLabel htmlFor="role" value="User Role" />
                                                  <select
-                                                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-gray-900"
                                                         value={data.role}
                                                         onChange={(e) => setData('role', e.target.value)}
                                                  >

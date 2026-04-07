@@ -109,7 +109,8 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
 
               router.post('/bids', {
                      listing_id: product.id,
-                     bid_amount: bidAmount
+                     bid_amount: bidAmount,
+                     bid_source: 'web'
               }, {
                      onSuccess: () => {
                             setBidAmount('');

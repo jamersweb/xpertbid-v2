@@ -61,15 +61,21 @@ export default function Individual({ verifications, filters }) {
 
                      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                             <div className="p-6 border-bottom border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                   <form onSubmit={handleSearch} className="flex-1 max-w-md relative">
-                                          <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                          <input
-                                                 type="text"
-                                                 className="w-full pl-11 pr-4 py-2 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm transition-all"
-                                                 placeholder="Search by name, ID, phone or email..."
-                                                 value={search}
-                                                 onChange={(e) => setSearch(e.target.value)}
-                                          />
+                                   <form onSubmit={handleSearch} className="flex-1 max-w-md flex gap-2">
+                                          <div className="relative flex-1">
+                                                 <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                                 <input
+                                                        type="text"
+                                                        className="w-full pl-11 pr-4 py-2 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm transition-all text-gray-900"
+                                                        placeholder="Search by name, ID, phone or email..."
+                                                        value={search}
+                                                        onChange={(e) => setSearch(e.target.value)}
+                                                 />
+                                          </div>
+                                          <button type="submit" className="px-4 py-2 bg-black text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-all shadow-lg shadow-black/10 flex items-center gap-2">
+                                                 <i className="fa-solid fa-magnifying-glass"></i>
+                                                 Search
+                                          </button>
                                    </form>
 
                                    <div className="flex gap-2">
@@ -109,10 +115,10 @@ export default function Individual({ verifications, filters }) {
                                                                <td className="px-6 py-4">
                                                                       <div className="flex gap-2">
                                                                              {verification.id_front_path && (
-                                                                                    <a href={asset(verification.id_front_path)} target="_blank" className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition-colors">Front</a>
+                                                                                    <a href={asset(verification.id_front_path)} target="_blank" className="text-xs bg-gray-100 text-gray-900 hover:bg-gray-200 px-2 py-1 rounded transition-colors">Front</a>
                                                                              )}
                                                                              {verification.id_back_path && (
-                                                                                    <a href={asset(verification.id_back_path)} target="_blank" className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition-colors">Back</a>
+                                                                                    <a href={asset(verification.id_back_path)} target="_blank" className="text-xs bg-gray-100 text-gray-900 hover:bg-gray-200 px-2 py-1 rounded transition-colors">Back</a>
                                                                              )}
                                                                       </div>
                                                                </td>
@@ -163,7 +169,7 @@ export default function Individual({ verifications, filters }) {
                                    <div className="mb-6">
                                           <InputLabel value="Reason for Decline" />
                                           <textarea
-                                                 className="mt-1 block w-full border-gray-300 focus:border-rose-500 focus:ring-rose-500 rounded-md shadow-sm"
+                                                 className="mt-1 block w-full border-gray-300 focus:border-rose-500 focus:ring-rose-500 rounded-md shadow-sm text-gray-900"
                                                  rows="4"
                                                  value={declineReason}
                                                  onChange={(e) => setDeclineReason(e.target.value)}

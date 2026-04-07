@@ -9,7 +9,7 @@ use App\Models\User;
 class Bid extends Model
 {
     //
-    protected $fillable = ['user_id', 'auction_id', 'listing_id', 'bid_amount'];
+    protected $fillable = ['user_id', 'auction_id', 'listing_id', 'bid_amount', 'bid_source'];
 
     public function user()
     {

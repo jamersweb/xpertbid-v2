@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
 import AdminSidebar from '@/Components/Admin/AdminSidebar';
+import CurrencyPicker from '@/Components/CurrencyPicker';
 
 export default function AdminLayout({ children, title }) {
        const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -25,14 +26,10 @@ export default function AdminLayout({ children, title }) {
                                           >
                                                  <i className={`fa-solid ${isSidebarOpen ? 'fa-indent' : 'fa-outdent'} fs-5`}></i>
                                           </button>
-                                          <div className="flex items-center gap-2">
-                                                 <img src="/assets/images/header-logo.png" alt="XpertBid" className="h-8" />
-                                                 <span className="text-gray-300 mx-1">|</span>
-                                                 <h2 className="text-lg font-bold text-gray-800">{title}</h2>
-                                          </div>
                                    </div>
 
-                                   <div className="flex items-center gap-4">
+                                   <div className="flex items-center gap-6">
+                                          <CurrencyPicker />
                                           <div className="relative group">
                                                  <button className="flex items-center gap-2 p-1.5 hover:bg-gray-50 rounded-xl transition-colors border border-gray-100">
                                                         {user?.profile_pic ? (

@@ -14,6 +14,14 @@ use Intervention\Image\Encoders\WebpEncoder;
 
 class ListingController extends Controller
 {
+    protected function resolveSource(Request $request, string $fieldName): ?string
+    {
+        return $request->input($fieldName)
+            ?? $request->input('source_platform')
+            ?? $request->header('X-Client-Source')
+            ?? null;
+    }
+
     protected function normalizeAmountToPkr($amount, ?string $currencyCode): ?float
     {
         if ($amount === null || $amount === '') {
@@ -205,6 +213,7 @@ class ListingController extends Controller
             'sub_category_id' => $request->sub_category_id,
             'child_category_id' => $request->child_category_id,
             'listing_type' => $request->listing_type,
+            'listing_source' => $this->resolveSource($request, 'listing_source'),
             'title' => $request->title,
             'description' => $request->description,
             'status' => 'inactive', // Requires admin approval before going live
@@ -291,6 +300,7 @@ class ListingController extends Controller
             'sub_category_id' => $request->sub_category_id ?? $listing->sub_category_id,
             'child_category_id' => $request->child_category_id ?? $listing->child_category_id,
             'listing_type' => $request->listing_type ?? $listing->listing_type,
+            'listing_source' => $listing->listing_source ?: $this->resolveSource($request, 'listing_source'),
             'title' => $request->title ?? $listing->title,
             'description' => $request->description ?? $listing->description,
             'listing_data' => $listingData,

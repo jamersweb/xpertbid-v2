@@ -33,6 +33,15 @@ class UserController extends Controller
         ]);
     }
 
+    public function show(User $user)
+    {
+        $user->load(['wallet', 'individualVerification', 'corporateVerification', 'auctions', 'bids']);
+
+        return Inertia::render('Admin/Users/Show', [
+            'user' => $user
+        ]);
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([

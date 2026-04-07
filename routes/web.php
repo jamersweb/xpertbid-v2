@@ -189,6 +189,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     // User Management
     Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
+    Route::get('/users/{user}', [App\Http\Controllers\Admin\UserController::class, 'show'])->name('users.show');
     Route::post('/users', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
     Route::put('/users/{user}', [App\Http\Controllers\Admin\UserController::class, 'update'])->name('users.update');
     Route::patch('/users/{user}/status', [App\Http\Controllers\Admin\UserController::class, 'updateStatus'])->name('users.update-status');
@@ -222,6 +223,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::resource('auctions', App\Http\Controllers\Admin\AuctionController::class)->names('auctions');
     Route::get('/bids', [App\Http\Controllers\Admin\BidController::class, 'index'])->name('bids.index');
     Route::get('/bids/{id}', [App\Http\Controllers\Admin\BidController::class, 'show'])->name('bids.show');
+    Route::patch('/bids/{id}', [App\Http\Controllers\Admin\BidController::class, 'update'])->name('bids.update');
+    Route::delete('/bids/{id}', [App\Http\Controllers\Admin\BidController::class, 'destroy'])->name('bids.destroy');
 
     // Order Management
     Route::get('/orders', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');

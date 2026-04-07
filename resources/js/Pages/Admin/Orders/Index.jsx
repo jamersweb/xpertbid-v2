@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
+import Price from '@/Components/Price';
 import Pagination from '@/Components/Pagination';
 
 export default function Index({ orders, filters }) {
@@ -30,14 +31,14 @@ export default function Index({ orders, filters }) {
                                                  <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
                                                  <input
                                                         type="text"
-                                                        className="w-full pl-11 pr-4 py-2 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm transition-all"
+                                                        className="w-full pl-11 pr-4 py-2 bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-black rounded-xl text-sm text-gray-900 transition-all"
                                                         placeholder="Search by number, name, email..."
                                                         value={search}
                                                         onChange={(e) => setSearch(e.target.value)}
                                                  />
                                           </div>
                                           <select
-                                                 className="bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm transition-all"
+                                                 className="bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-black rounded-xl text-sm text-gray-900 transition-all"
                                                  value={status}
                                                  onChange={(e) => { setStatus(e.target.value); handleFilter(); }}
                                           >
@@ -75,8 +76,8 @@ export default function Index({ orders, filters }) {
                                                                       <p className="text-[10px] text-gray-500">{order.billing_email}</p>
                                                                </td>
                                                                <td className="px-6 py-4">
-                                                                      <p className="text-sm font-bold">AED {order.total}</p>
-                                                                      <p className="text-[10px] text-gray-400 capitalize">{order.payment_method?.replace('_', ' ')}</p>
+                                                                      <Price amountPKR={order.total} className="text-sm font-bold text-gray-800" />
+                                                                      <p className="text-[10px] text-gray-500 capitalize">{order.payment_method?.replace('_', ' ')}</p>
                                                                </td>
                                                                <td className="px-6 py-4">
                                                                       <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColors[order.status] || 'bg-gray-100'}`}>

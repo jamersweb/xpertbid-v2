@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
+import Price from '@/Components/Price';
 
 export default function Show({ order }) {
        const [status, setStatus] = useState(order.status);
@@ -23,7 +24,7 @@ export default function Show({ order }) {
                             </Link>
                             <div className="flex gap-3">
                                    <select
-                                          className="bg-white border-gray-200 focus:ring-black rounded-xl text-sm font-bold"
+                                          className="bg-white border border-gray-200 focus:ring-black rounded-xl text-sm font-bold text-gray-900 shadow-sm"
                                           value={status}
                                           onChange={(e) => handleStatusUpdate(e.target.value)}
                                    >
@@ -62,19 +63,19 @@ export default function Show({ order }) {
                                                                                            </div>
                                                                                     </div>
                                                                              </td>
-                                                                             <td className="py-4 text-sm">AED {item.price}</td>
-                                                                             <td className="py-4 text-sm">{item.quantity}</td>
-                                                                             <td className="py-4 text-sm text-right font-bold">AED {item.subtotal}</td>
+                                                                             <td className="py-4 text-sm text-gray-900 font-medium"><Price amountPKR={item.price} /></td>
+                                                                             <td className="py-4 text-sm text-gray-600">{item.quantity}</td>
+                                                                             <td className="py-4 text-sm text-right font-bold text-gray-900"><Price amountPKR={item.subtotal} /></td>
                                                                       </tr>
                                                                ))}
                                                         </tbody>
                                                  </table>
                                           </div>
                                           <div className="p-6 bg-gray-50/50 border-top border-gray-100 space-y-2">
-                                                 <div className="flex justify-between text-sm text-gray-500"><span>Subtotal</span> <span className="font-medium text-gray-800">AED {order.subtotal}</span></div>
-                                                 <div className="flex justify-between text-sm text-gray-500"><span>Tax</span> <span className="font-medium text-gray-800">AED {order.tax}</span></div>
-                                                 <div className="flex justify-between text-sm text-gray-500"><span>Shipping</span> <span className="font-medium text-gray-800">AED {order.shipping_cost}</span></div>
-                                                 <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2"><span>Total</span> <span className="text-black">AED {order.total}</span></div>
+                                                 <div className="flex justify-between text-sm text-gray-500"><span>Subtotal</span> <span className="font-medium text-gray-800"><Price amountPKR={order.subtotal} /></span></div>
+                                                 <div className="flex justify-between text-sm text-gray-500"><span>Tax</span> <span className="font-medium text-gray-800"><Price amountPKR={order.tax} /></span></div>
+                                                 <div className="flex justify-between text-sm text-gray-500"><span>Shipping</span> <span className="font-medium text-gray-800"><Price amountPKR={order.shipping_cost} /></span></div>
+                                                 <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2"><span>Total</span> <span className="text-black"><Price amountPKR={order.total} /></span></div>
                                           </div>
                                    </div>
 

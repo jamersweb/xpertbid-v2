@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('currency:sync-rates')->everySixHours();
+Schedule::command('auction:check-status')->everyMinute();

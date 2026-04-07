@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
+import Swal from 'sweetalert2';
 
 export default function Index({ roles, permissions }) {
        const [editing, setEditing] = useState(null);
@@ -37,6 +38,23 @@ export default function Index({ roles, permissions }) {
               }
        };
 
+       const deleteRole = async (roleId) => {
+              const result = await Swal.fire({
+                     title: 'Are you sure?',
+                     text: 'This role will be deleted permanently.',
+                     icon: 'warning',
+                     showCancelButton: true,
+                     confirmButtonColor: '#000000',
+                     cancelButtonColor: '#d1d5db',
+                     confirmButtonText: 'Yes, delete it',
+                     cancelButtonText: 'Cancel',
+              });
+
+              if (result.isConfirmed) {
+                     destroy(route('admin.roles.destroy', roleId));
+              }
+       };
+
        return (
               <AdminLayout title="Roles & Permissions">
                      <Head title="Roles" />
@@ -53,7 +71,7 @@ export default function Index({ roles, permissions }) {
                                                                              <i className="fa-solid fa-pen-to-square text-xs"></i>
                                                                       </button>
                                                                       {role.name !== 'Admin' && (
-                                                                             <button onClick={() => confirm('Delete role?') && destroy(route('admin.roles.destroy', role.id))} className="p-2 hover:bg-rose-50 rounded-lg text-gray-400 hover:text-rose-500">
+                                                                             <button onClick={() => deleteRole(role.id)} className="p-2 hover:bg-rose-50 rounded-lg text-gray-400 hover:text-rose-500">
                                                                                     <i className="fa-solid fa-trash-can text-xs"></i>
                                                                              </button>
                                                                       )}

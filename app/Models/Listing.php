@@ -24,6 +24,7 @@ class Listing extends Model
         'status',
         'featured_name',
         'is_1_rupee',
+        'listing_source',
         'views',
         'listing_data',
         'category_features',

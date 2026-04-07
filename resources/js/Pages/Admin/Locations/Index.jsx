@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
+import Swal from 'sweetalert2';
 
 export default function Index({ countries }) {
        const [selectedCountry, setSelectedCountry] = useState(null);
@@ -27,8 +28,19 @@ export default function Index({ countries }) {
               });
        };
 
-       const handleDelete = (id, type) => {
-              if (confirm(`Are you sure you want to delete this ${type}?`)) {
+       const handleDelete = async (id, type) => {
+              const result = await Swal.fire({
+                     title: 'Are you sure?',
+                     text: `This ${type} will be deleted permanently.`,
+                     icon: 'warning',
+                     showCancelButton: true,
+                     confirmButtonColor: '#000000',
+                     cancelButtonColor: '#d1d5db',
+                     confirmButtonText: 'Yes, delete it',
+                     cancelButtonText: 'Cancel',
+              });
+
+              if (result.isConfirmed) {
                      destroy(route('admin.locations.destroy', id), {
                             data: { type }
                      });

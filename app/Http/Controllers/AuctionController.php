@@ -32,6 +32,14 @@ use Inertia\Inertia;
 
 class AuctionController extends Controller
 {
+    protected function resolveSource(Request $request, string $fieldName): ?string
+    {
+        return $request->input($fieldName)
+            ?? $request->input('source_platform')
+            ?? $request->header('X-Client-Source')
+            ?? null;
+    }
+
     protected function listingUserRelations(): array
     {
         return [
@@ -214,6 +222,7 @@ class AuctionController extends Controller
                 'title' => $request->input('title', 'Untitled Draft'),
                 'status' => 'draft',
                 'listing_type' => $request->input('list_type', 'auction'),
+                'listing_source' => $this->resolveSource($request, 'listing_source'),
                 'listing_data' => $data,
             ]);
 
@@ -248,6 +257,7 @@ class AuctionController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'listing_type' => $listType,
+            'listing_source' => $this->resolveSource($request, 'listing_source'),
             'status' => $request->status ?? 'inactive',
             'image' => $albumsArray[0] ?? null,
             'album' => $albumsArray,
@@ -1010,6 +1020,7 @@ class AuctionController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'listing_type' => $listType,
+            'listing_source' => $this->resolveSource($request, 'listing_source'),
             'status' => 'inactive',
             'image' => $albumsArray[0] ?? $request->input('image'),
             'album' => $albumsArray,
@@ -1056,6 +1067,7 @@ class AuctionController extends Controller
             'sub_category_id' => $request->sub_category_id,
             'child_category_id' => $request->child_category_id,
             'listing_type' => $listType,
+            'listing_source' => $listing->listing_source ?: $this->resolveSource($request, 'listing_source'),
             'status' => 'resubmit',
             'listing_data' => $listingData,
         ]);

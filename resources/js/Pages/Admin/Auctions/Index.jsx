@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import Pagination from '@/Components/Pagination';
+import Swal from 'sweetalert2';
 
 export default function Index({ auctions, filters }) {
        const [search, setSearch] = useState(filters.search || '');
@@ -10,6 +11,23 @@ export default function Index({ auctions, filters }) {
        const handleSearch = (e) => {
               e.preventDefault();
               router.get(route('admin.auctions.index'), { search, status }, { preserveState: true });
+       };
+
+       const handleDelete = async (auctionId) => {
+              const result = await Swal.fire({
+                     title: 'Are you sure?',
+                     text: 'This auction will be deleted permanently.',
+                     icon: 'warning',
+                     showCancelButton: true,
+                     confirmButtonColor: '#000000',
+                     cancelButtonColor: '#d1d5db',
+                     confirmButtonText: 'Yes, delete it',
+                     cancelButtonText: 'Cancel',
+              });
+
+              if (result.isConfirmed) {
+                     router.delete(route('admin.auctions.destroy', auctionId));
+              }
        };
 
        const statusBadges = {
@@ -95,7 +113,7 @@ export default function Index({ auctions, filters }) {
                                                                <td className="px-6 py-4 text-right">
                                                                       <div className="flex items-center justify-end gap-2">
                                                                              <button onClick={() => router.get(route('admin.auctions.edit', auction.id))} className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors" title="Edit"><i className="fa-solid fa-pen"></i></button>
-                                                                             <button onClick={() => { if (confirm('Delete this auction?')) router.delete(route('admin.auctions.destroy', auction.id)) }} className="p-2 hover:bg-rose-50 rounded-lg text-rose-600 transition-colors" title="Delete"><i className="fa-solid fa-trash"></i></button>
+                                                                             <button onClick={() => handleDelete(auction.id)} className="p-2 hover:bg-rose-50 rounded-lg text-rose-600 transition-colors" title="Delete"><i className="fa-solid fa-trash"></i></button>
                                                                       </div>
                                                                </td>
                                                         </tr>

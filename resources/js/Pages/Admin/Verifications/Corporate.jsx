@@ -54,15 +54,21 @@ export default function Corporate({ verifications, filters }) {
 
                      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                             <div className="p-6 border-bottom border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                   <form onSubmit={handleSearch} className="flex-1 max-w-md relative">
-                                          <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                          <input
-                                                 type="text"
-                                                 className="w-full pl-11 pr-4 py-2 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm transition-all"
-                                                 placeholder="Search by entity name..."
-                                                 value={search}
-                                                 onChange={(e) => setSearch(e.target.value)}
-                                          />
+                                   <form onSubmit={handleSearch} className="flex-1 max-w-md flex gap-2">
+                                          <div className="relative flex-1">
+                                                 <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                                 <input
+                                                        type="text"
+                                                        className="w-full pl-11 pr-4 py-2 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm transition-all text-gray-900"
+                                                        placeholder="Search by entity name..."
+                                                        value={search}
+                                                        onChange={(e) => setSearch(e.target.value)}
+                                                 />
+                                          </div>
+                                          <button type="submit" className="px-4 py-2 bg-black text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-all shadow-lg shadow-black/10 flex items-center gap-2">
+                                                 <i className="fa-solid fa-magnifying-glass"></i>
+                                                 Search
+                                          </button>
                                    </form>
                             </div>
 
@@ -91,7 +97,7 @@ export default function Corporate({ verifications, filters }) {
                                                                <td className="px-6 py-4">
                                                                       <div className="flex gap-1 flex-wrap max-w-[150px]">
                                                                              {(verification.business_documents || []).map((doc, idx) => (
-                                                                                    <a key={idx} href={'/' + doc} target="_blank" className="text-[10px] bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">Doc {idx + 1}</a>
+                                                                                    <a key={idx} href={'/' + doc} target="_blank" className="text-[10px] bg-gray-100 text-gray-900 hover:bg-gray-200 px-2 py-1 rounded">Doc {idx + 1}</a>
                                                                              ))}
                                                                       </div>
                                                                </td>
@@ -124,7 +130,7 @@ export default function Corporate({ verifications, filters }) {
                                    <h2 className="text-lg font-bold text-gray-800 mb-4">Decline Corporate Verification</h2>
                                    <div className="mb-6">
                                           <InputLabel value="Reason for Decline" />
-                                          <textarea className="mt-1 block w-full border-gray-300 focus:border-rose-500 focus:ring-rose-500 rounded-md shadow-sm" rows="4" value={declineReason} onChange={(e) => setDeclineReason(e.target.value)}></textarea>
+                                          <textarea className="mt-1 block w-full border-gray-300 focus:border-rose-500 focus:ring-rose-500 rounded-md shadow-sm text-gray-900" rows="4" value={declineReason} onChange={(e) => setDeclineReason(e.target.value)}></textarea>
                                    </div>
                                    <div className="flex justify-end gap-3">
                                           <SecondaryButton onClick={() => setIsModalOpen(false)}>Cancel</SecondaryButton>

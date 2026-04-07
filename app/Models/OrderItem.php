@@ -31,6 +31,11 @@ class OrderItem extends Model
         return $this->belongsTo(Listing::class);
     }
 
+    public function auction()
+    {
+        return $this->belongsTo(Listing::class, 'listing_id');
+    }
+
     public function variation()
     {
         return $this->belongsTo(ProductVariation::class, 'variation_id');

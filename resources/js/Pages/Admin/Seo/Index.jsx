@@ -8,6 +8,7 @@ import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import SecondaryButton from '@/Components/SecondaryButton';
 import PrimaryButton from '@/Components/PrimaryButton';
+import Swal from 'sweetalert2';
 
 export default function Index({ rows }) {
        const [isModalOpen, setIsModalOpen] = useState(false);
@@ -55,10 +56,21 @@ export default function Index({ rows }) {
               });
        };
 
-       const deleteRow = (id) => {
-              if (confirm('Are you sure you want to delete this SEO record?')) {
+       const deleteRow = async (id) => {
+              const result = await Swal.fire({
+                     title: 'Are you sure?',
+                     text: 'This SEO record will be deleted permanently.',
+                     icon: 'warning',
+                     showCancelButton: true,
+                     confirmButtonColor: '#000000',
+                     cancelButtonColor: '#d1d5db',
+                     confirmButtonText: 'Yes, delete it',
+                     cancelButtonText: 'Cancel',
+              });
+
+              if (result.isConfirmed) {
                      router.delete(route('admin.seo.destroy', id));
-              }
+              };
        };
 
        return (

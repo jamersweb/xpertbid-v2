@@ -3,6 +3,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import Pagination from '@/Components/Pagination';
 import Price from '@/Components/Price';
+import Swal from 'sweetalert2';
 
 export default function Index({ bids, filters = {} }) {
        const safeFilters = Array.isArray(filters) ? {} : (filters || {});
@@ -12,6 +13,64 @@ export default function Index({ bids, filters = {} }) {
        const handleFilter = (e) => {
               e?.preventDefault();
               router.get(route('admin.bids.index'), { search, sort }, { preserveState: true });
+       };
+
+       const handleSortChange = (value) => {
+              setSort(value);
+              router.get(route('admin.bids.index'), { search, sort: value }, { preserveState: true });
+       };
+
+       const handleEditBid = async (bid) => {
+              const result = await Swal.fire({
+                     title: 'Edit bid amount',
+                     input: 'number',
+                     inputValue: bid.bid_amount,
+                     inputLabel: 'Bid amount',
+                     inputAttributes: {
+                            min: 0,
+                            step: '0.01',
+                     },
+                     showCancelButton: true,
+                     confirmButtonText: 'Update',
+                     cancelButtonText: 'Cancel',
+                     confirmButtonColor: '#000000',
+                     cancelButtonColor: '#d1d5db',
+                     preConfirm: (value) => {
+                            if (value === '' || Number(value) < 0) {
+                                   Swal.showValidationMessage('Please enter a valid bid amount');
+                                   return false;
+                            }
+
+                            return value;
+                     },
+              });
+
+              if (result.isConfirmed) {
+                     router.patch(route('admin.bids.update', bid.id), {
+                            bid_amount: result.value,
+                     }, {
+                            preserveScroll: true,
+                     });
+              }
+       };
+
+       const handleDeleteBid = async (bidId) => {
+              const result = await Swal.fire({
+                     title: 'Are you sure?',
+                     text: 'This bid will be deleted permanently.',
+                     icon: 'warning',
+                     showCancelButton: true,
+                     confirmButtonColor: '#000000',
+                     cancelButtonColor: '#d1d5db',
+                     confirmButtonText: 'Yes, delete it',
+                     cancelButtonText: 'Cancel',
+              });
+
+              if (result.isConfirmed) {
+                     router.delete(route('admin.bids.destroy', bidId), {
+                            preserveScroll: true,
+                     });
+              }
        };
 
        return (
@@ -25,16 +84,16 @@ export default function Index({ bids, filters = {} }) {
                                                  <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
                                                  <input
                                                         type="text"
-                                                        className="w-full pl-11 pr-4 py-2 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm transition-all"
+                                                        className="w-full pl-11 pr-4 py-2 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm text-gray-900 placeholder:text-gray-500 transition-all"
                                                         placeholder="Search by auction, user, or amount..."
                                                         value={search}
                                                         onChange={(e) => setSearch(e.target.value)}
                                                  />
                                           </div>
                                           <select
-                                                 className="bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm transition-all"
+                                                 className="bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm text-gray-900 px-4 py-2 min-w-[170px] transition-all"
                                                  value={sort}
-                                                 onChange={(e) => { setSort(e.target.value); handleFilter(); }}
+                                                 onChange={(e) => handleSortChange(e.target.value)}
                                           >
                                                  <option value="newest">Newest First</option>
                                                  <option value="oldest">Oldest First</option>
@@ -82,9 +141,14 @@ export default function Index({ bids, filters = {} }) {
                                                                       {new Date(bid.created_at).toLocaleString()}
                                                                </td>
                                                                <td className="px-6 py-4 text-right">
-                                                                      <button onClick={() => router.get(route('admin.bids.show', bid.id))} className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors">
-                                                                             <i className="fa-solid fa-eye"></i>
-                                                                      </button>
+                                                                      <div className="flex items-center justify-end gap-2">
+                                                                             <button onClick={() => handleEditBid(bid)} className="p-2 hover:bg-blue-50 rounded-lg text-blue-600 transition-colors" title="Edit Amount">
+                                                                                    <i className="fa-solid fa-pen"></i>
+                                                                             </button>
+                                                                             <button onClick={() => handleDeleteBid(bid.id)} className="p-2 hover:bg-rose-50 rounded-lg text-rose-600 transition-colors" title="Delete">
+                                                                                    <i className="fa-solid fa-trash"></i>
+                                                                             </button>
+                                                                      </div>
                                                                </td>
                                                         </tr>
                                                  ))}

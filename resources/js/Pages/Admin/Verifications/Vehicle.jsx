@@ -72,7 +72,7 @@ export default function Vehicle({ verifications }) {
                                                                <td className="px-6 py-4">
                                                                       <div className="flex gap-1 flex-wrap max-w-[150px]">
                                                                              {(verification.vehicle_documents || []).map((doc, idx) => (
-                                                                                    <a key={idx} href={'/' + doc} target="_blank" className="text-[10px] bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">Doc {idx + 1}</a>
+                                                                                    <a key={idx} href={'/' + doc} target="_blank" className="text-[10px] bg-gray-100 text-gray-900 hover:bg-gray-200 px-2 py-1 rounded">Doc {idx + 1}</a>
                                                                              ))}
                                                                       </div>
                                                                </td>
@@ -105,7 +105,7 @@ export default function Vehicle({ verifications }) {
                                    <h2 className="text-lg font-bold text-gray-800 mb-4">Decline Vehicle Verification</h2>
                                    <div className="mb-6">
                                           <InputLabel value="Reason for Decline" />
-                                          <textarea className="mt-1 block w-full border-gray-300 focus:border-rose-500 focus:ring-rose-500 rounded-md shadow-sm" rows="4" value={declineReason} onChange={(e) => setDeclineReason(e.target.value)}></textarea>
+                                          <textarea className="mt-1 block w-full border-gray-300 focus:border-rose-500 focus:ring-rose-500 rounded-md shadow-sm text-gray-900" rows="4" value={declineReason} onChange={(e) => setDeclineReason(e.target.value)}></textarea>
                                    </div>
                                    <div className="flex justify-end gap-3">
                                           <SecondaryButton onClick={() => setIsModalOpen(false)}>Cancel</SecondaryButton>

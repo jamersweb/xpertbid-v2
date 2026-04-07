@@ -1,12 +1,24 @@
 import React from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
+import Swal from 'sweetalert2';
 
 export default function Index({ sliders }) {
-       const deleteSlider = (id) => {
-              if (confirm('Are you sure you want to delete this slider?')) {
+       const deleteSlider = async (id) => {
+              const result = await Swal.fire({
+                     title: 'Are you sure?',
+                     text: 'This slider will be deleted permanently.',
+                     icon: 'warning',
+                     showCancelButton: true,
+                     confirmButtonColor: '#000000',
+                     cancelButtonColor: '#d1d5db',
+                     confirmButtonText: 'Yes, delete it',
+                     cancelButtonText: 'Cancel',
+              });
+
+              if (result.isConfirmed) {
                      router.delete(route('admin.sliders.destroy', id));
-              }
+              };
        };
 
        return (

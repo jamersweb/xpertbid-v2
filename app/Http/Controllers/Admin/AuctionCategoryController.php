@@ -11,15 +11,25 @@ use Inertia\Inertia;
 
 class AuctionCategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = AuctionCategory::with('subCategories.childCategories')
-            ->whereNull('parent_id')
-            ->whereNull('sub_category_id')
-            ->get();
+        $query = AuctionCategory::query();
+
+        if ($request->search) {
+            $search = $request->search;
+            $query->where('name', 'LIKE', "%$search%")
+                  ->orWhere('slug', 'LIKE', "%$search%");
+            $categories = $query->limit(50)->get();
+        } else {
+            $categories = AuctionCategory::with('subCategories.childCategories')
+                ->whereNull('parent_id')
+                ->whereNull('sub_category_id')
+                ->get();
+        }
 
         return Inertia::render('Admin/Categories/Index', [
-            'categories' => $categories
+            'categories' => $categories,
+            'filters' => $request->only(['search'])
         ]);
     }
 

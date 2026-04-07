@@ -20,7 +20,8 @@ export default function Pagination({ links }) {
                                                  preserveState
                                                  style={{
                                                         color: link.active ? '#fff' : '#24282B',
-                                                        backgroundColor: link.active ? '#D71920' : '#fff',
+                                                        backgroundColor: link.active ? '#000000' : '#fff',
+                                                        borderColor: link.active ? '#000000' : 'transparent',
                                                         opacity: !link.url ? 0.5 : 1
                                                  }}
                                           />

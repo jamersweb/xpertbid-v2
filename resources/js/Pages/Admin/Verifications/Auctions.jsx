@@ -7,6 +7,7 @@ import InputLabel from '@/Components/InputLabel';
 
 export default function Auctions({ auctions }) {
        const [isModalOpen, setIsModalOpen] = useState(false);
+       const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
        const [selectedAuction, setSelectedAuction] = useState(null);
        const [declineReason, setDeclineReason] = useState('');
 
@@ -27,6 +28,17 @@ export default function Auctions({ auctions }) {
                             setIsModalOpen(false);
                             setDeclineReason('');
                      }
+              });
+       };
+
+       const openApproveModal = (auction) => {
+              setSelectedAuction(auction);
+              setIsApproveModalOpen(true);
+       };
+
+       const confirmApprove = () => {
+              router.post(route('admin.verifications.auctions.accept', selectedAuction.id), {}, {
+                     onSuccess: () => setIsApproveModalOpen(false)
               });
        };
 
@@ -58,7 +70,6 @@ export default function Auctions({ auctions }) {
                                                  <tr className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider">
                                                         <th className="px-6 py-4">Listing Details</th>
                                                         <th className="px-6 py-4">Seller</th>
-                                                        <th className="px-6 py-4">Verification Check</th>
                                                         <th className="px-6 py-4 text-right">Actions</th>
                                                  </tr>
                                           </thead>
@@ -87,30 +98,40 @@ export default function Auctions({ auctions }) {
                                                                       </div>
                                                                </td>
                                                                <td className="px-6 py-4">
-                                                                      <p className="text-sm text-gray-800">{auction.user?.name}</p>
-                                                                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${auction.user?.individual_verification?.status === 'verified' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                                                                             {auction.user?.individual_verification?.status || 'unverified'} Seller
-                                                                      </span>
-                                                               </td>
-                                                               <td className="px-6 py-4">
-                                                                      <div className="flex flex-col gap-1">
-                                                                             {auction.vehicle_verification && <span className="text-[10px] text-blue-600 font-bold"><i className="fa-solid fa-car mr-1"></i> Vehicle Docs Provided</span>}
-                                                                             {auction.property_verification && <span className="text-[10px] text-purple-600 font-bold"><i className="fa-solid fa-house mr-1"></i> Property Docs Provided</span>}
-                                                                      </div>
+                                                                      <p className="text-sm font-bold text-gray-800">{auction.user?.name}</p>
+                                                                      <p className="text-[11px] text-gray-500 mt-0.5">{auction.user?.email || auction.user?.phone}</p>
+                                                                      {(auction.user?.individual_verification?.status === 'verified' || auction.user?.corporate_verification?.status === 'verified') && (
+                                                                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 mt-1 inline-block">
+                                                                                    verified Seller
+                                                                             </span>
+                                                                      )}
                                                                </td>
                                                                <td className="px-6 py-4 text-right">
                                                                       <div className="flex items-center justify-end gap-2">
                                                                              <Link
                                                                                     href={route('admin.listings.show', auction.id)}
-                                                                                    className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors"
+                                                                                    className="w-8 h-8 flex items-center justify-center bg-slate-100 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors"
+                                                                                    title="View"
                                                                              >
-                                                                                    View
+                                                                                    <i className="fa-solid fa-eye text-sm"></i>
                                                                              </Link>
                                                                              {canApprove(auction.status) && (
-                                                                                    <button onClick={() => acceptAuction(auction.id)} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors">Approve</button>
+                                                                                    <button 
+                                                                                           onClick={() => openApproveModal(auction)} 
+                                                                                           className="w-8 h-8 flex items-center justify-center bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors"
+                                                                                           title="Approve"
+                                                                                    >
+                                                                                           <i className="fa-solid fa-check text-sm"></i>
+                                                                                    </button>
                                                                              )}
                                                                              {canDecline(auction.status) && (
-                                                                                    <button onClick={() => openDeclineModal(auction)} className="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 transition-colors">Decline</button>
+                                                                                    <button 
+                                                                                           onClick={() => openDeclineModal(auction)} 
+                                                                                           className="w-8 h-8 flex items-center justify-center bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 transition-colors"
+                                                                                           title="Decline"
+                                                                                    >
+                                                                                           <i className="fa-solid fa-xmark text-sm"></i>
+                                                                                    </button>
                                                                              )}
                                                                       </div>
                                                                </td>
@@ -127,6 +148,27 @@ export default function Auctions({ auctions }) {
                                    </div>
                             )}
                      </div>
+
+                     <Modal show={isApproveModalOpen} onClose={() => setIsApproveModalOpen(false)} maxWidth="md">
+                            <div className="p-6">
+                                   <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-4">
+                                          <i className="fa-solid fa-check text-xl"></i>
+                                   </div>
+                                   <h2 className="text-lg font-bold text-gray-800 mb-2">Approve Listing</h2>
+                                   <p className="text-sm text-gray-600 mb-6">
+                                          Are you sure you want to approve **{selectedAuction?.title}**? Once approved, it will be published and visible to all users.
+                                   </p>
+                                   <div className="flex justify-end gap-3">
+                                          <SecondaryButton onClick={() => setIsApproveModalOpen(false)}>Cancel</SecondaryButton>
+                                          <button 
+                                                 onClick={confirmApprove} 
+                                                 className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-colors"
+                                          >
+                                                 Approve & Publish
+                                          </button>
+                                   </div>
+                            </div>
+                     </Modal>
 
                      <Modal show={isModalOpen} onClose={() => setIsModalOpen(false)} maxWidth="md">
                             <div className="p-6">

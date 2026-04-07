@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
+import Price from '@/Components/Price';
 import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
 import InputLabel from '@/Components/InputLabel';
@@ -140,6 +141,8 @@ export default function Show({ listing }) {
                                                                <pre className="mt-2 whitespace-pre-wrap break-words text-xs text-gray-800">
                                                                       {JSON.stringify(value, null, 2)}
                                                                </pre>
+                                                        ) : key.toLowerCase().includes('price') && !isEmptyValue(value) ? (
+                                                               <Price amountPKR={value} className="mt-1 text-sm text-gray-800 break-words font-medium" />
                                                         ) : (
                                                                <p className="mt-1 text-sm text-gray-800 break-words">{formatValue(value)}</p>
                                                         )}
@@ -222,7 +225,11 @@ export default function Show({ listing }) {
                                                         {infoItems.map((item) => (
                                                                <div key={item.label}>
                                                                       <p className="text-xs text-gray-400 uppercase font-bold">{item.label}</p>
-                                                                      <p className="text-sm text-gray-800 break-words">{formatValue(item.value)}</p>
+                                                                      {['Price', 'Minimum Bid', 'Reserve Price', 'Buy Now Price'].includes(item.label) && !isEmptyValue(item.value) ? (
+                                                                             <Price amountPKR={item.value} className="mt-1 text-sm text-gray-800 break-words font-medium" />
+                                                                      ) : (
+                                                                             <p className="mt-1 text-sm text-gray-800 break-words">{formatValue(item.value)}</p>
+                                                                      )}
                                                                </div>
                                                         ))}
                                                         {!isEmptyValue(listing.description) && (

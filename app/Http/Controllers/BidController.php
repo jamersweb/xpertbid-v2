@@ -16,6 +16,14 @@ use Inertia\Inertia;
 
 class BidController extends Controller
 {
+    protected function resolveSource(Request $request, string $fieldName): ?string
+    {
+        return $request->input($fieldName)
+            ?? $request->input('source_platform')
+            ?? $request->header('X-Client-Source')
+            ?? null;
+    }
+
     // protected $msgpkService;
 
     // public function __construct(MsgpkService $msgpkService)
@@ -100,6 +108,7 @@ class BidController extends Controller
                 'auction_id' => null,
                 'listing_id' => $listing->id,
                 'bid_amount' => $newAmount,
+                'bid_source' => $this->resolveSource($request, 'bid_source'),
             ]);
 
             // Auto-extend auction logic (simplified)

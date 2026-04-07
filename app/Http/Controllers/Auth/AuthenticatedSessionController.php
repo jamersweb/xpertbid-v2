@@ -39,6 +39,11 @@ class AuthenticatedSessionController extends Controller
         // Get the authenticated user
         $user = Auth::user();
 
+        // Check for admin role first
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
         // Define permission-to-route mapping in order of priority
         $permissionRoutes = [
             'dashboard-list' => 'dashboard',

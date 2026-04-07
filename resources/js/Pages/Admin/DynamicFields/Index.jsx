@@ -7,6 +7,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
+import Swal from 'sweetalert2';
 
 export default function Index({ fields, categories }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -59,8 +60,19 @@ export default function Index({ fields, categories }) {
         reset();
     };
 
-    const deleteField = (id) => {
-        if (confirm('Are you sure you want to delete this field?')) {
+    const deleteField = async (id) => {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: 'This field will be deleted permanently.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#000000',
+            cancelButtonColor: '#d1d5db',
+            confirmButtonText: 'Yes, delete it',
+            cancelButtonText: 'Cancel',
+        });
+
+        if (result.isConfirmed) {
             router.delete(route('admin.dynamic-fields.destroy', id));
         }
     };

@@ -228,6 +228,9 @@ export default function Create({ categories, listing = null }) {
               const selectedCurrency = typeof window !== 'undefined'
                      ? (localStorage.getItem('xb_currency') || 'PKR')
                      : 'PKR';
+              const sourcePlatform = typeof window !== 'undefined'
+                     ? 'web'
+                     : null;
               data.append('listing_type', listing_type);
               data.append('category_id', formData.category_id);
               data.append('sub_category_id', formData.sub_category_id);
@@ -236,6 +239,9 @@ export default function Create({ categories, listing = null }) {
               data.append('description', formData.description);
               data.append('status', status);
               data.append('selected_currency', selectedCurrency);
+              if (sourcePlatform) {
+                     data.append('listing_source', sourcePlatform);
+              }
               data.append('listing_data', JSON.stringify(listing_data));
               data.append('category_features', JSON.stringify(category_features));
 

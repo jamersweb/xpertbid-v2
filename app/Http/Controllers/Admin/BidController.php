@@ -67,4 +67,26 @@ class BidController extends Controller
             'auctionBids' => $auctionBids
         ]);
     }
+
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'bid_amount' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $bid = Bid::findOrFail($id);
+        $bid->update([
+            'bid_amount' => $validated['bid_amount'],
+        ]);
+
+        return redirect()->back()->with('success', 'Bid amount updated successfully.');
+    }
+
+    public function destroy($id)
+    {
+        $bid = Bid::findOrFail($id);
+        $bid->delete();
+
+        return redirect()->back()->with('success', 'Bid deleted successfully.');
+    }
 }
