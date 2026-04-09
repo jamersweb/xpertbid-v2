@@ -66,6 +66,9 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
                                                                videos={auction.video}
                                                                status={auction.status}
                                                                mainImage={auction.image_url}
+                                                               listType={auction.list_type}
+                                                               startDate={auction.start_date}
+                                                               endDate={auction.end_date}
                                                         />
                                                  </div>
 

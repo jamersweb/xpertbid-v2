@@ -5,8 +5,9 @@ import 'swiper/css/free-mode';
 import 'swiper/css/navigation';
 import 'swiper/css/thumbs';
 import { FreeMode, Navigation, Thumbs } from 'swiper/modules';
+import CountdownTimer from "@/Components/CountdownTimer";
 
-export default function ProductImages({ albumImages, videos = null, status, mainImage }) {
+export default function ProductImages({ albumImages, videos = null, status, mainImage, listType, startDate, endDate }) {
        let parsedAlbum = [];
        if (Array.isArray(albumImages)) {
               parsedAlbum = albumImages;
@@ -86,6 +87,19 @@ export default function ProductImages({ albumImages, videos = null, status, main
                                           animation: 'pulseGlow 2s infinite'
                                    }}>
                                           AWARDED
+                                   </div>
+                            )}
+
+                            {String(listType || '').toLowerCase() === 'auction' && endDate && (
+                                   <div style={{
+                                          position: 'absolute',
+                                          left: '0',
+                                          right: '0',
+                                          bottom: '18px',
+                                          zIndex: 15,
+                                          pointerEvents: 'none',
+                                   }}>
+                                          <CountdownTimer startDate={startDate} endDate={endDate} className="detail-image-timer" />
                                    </div>
                             )}
 
@@ -184,6 +198,77 @@ export default function ProductImages({ albumImages, videos = null, status, main
                                           0% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(67, 172, 233, 0.7); }
                                           50% { transform: translateX(-50%) scale(1.05); box-shadow: 0 0 0 10px rgba(67, 172, 233, 0); }
                                           100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(67, 172, 233, 0); }
+                                   }
+                                   @keyframes timerFloat {
+                                          0%, 100% { transform: translateY(0); }
+                                          50% { transform: translateY(-2px); }
+                                   }
+                                   @keyframes timerGlow {
+                                          0%, 100% { box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28); }
+                                          50% { box-shadow: 0 14px 28px rgba(67, 172, 233, 0.28); }
+                                   }
+                                   @keyframes digitPulse {
+                                          0%, 100% { transform: scale(1); opacity: 1; }
+                                          50% { transform: scale(1.06); opacity: 0.96; }
+                                   }
+                                   .detail-image-timer.counter {
+                                          position: relative;
+                                          margin: 0 auto;
+                                          width: calc(100% - 32px);
+                                          max-width: 360px;
+                                          background: rgba(28, 29, 32, 0.88);
+                                          padding: 10px 14px;
+                                          border-radius: 12px;
+                                          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+                                          backdrop-filter: blur(4px);
+                                          border: 1px solid rgba(255, 255, 255, 0.08);
+                                          animation: timerFloat 2.8s ease-in-out infinite, timerGlow 2.8s ease-in-out infinite;
+                                   }
+                                   .detail-image-timer .counter-grid {
+                                          display: grid;
+                                          grid-template-columns: repeat(4, 1fr);
+                                          gap: 8px;
+                                          align-items: stretch;
+                                   }
+                                   .detail-image-timer .counter-box {
+                                          display: flex;
+                                          flex-direction: column;
+                                          align-items: center;
+                                          justify-content: center;
+                                          min-width: 0;
+                                   }
+                                   .detail-image-timer .counter-value {
+                                          color: #fff;
+                                          font-size: 18px;
+                                          font-weight: 800;
+                                          line-height: 1.1;
+                                          text-align: center;
+                                          white-space: nowrap;
+                                          animation: digitPulse 1.2s ease-in-out infinite;
+                                    }
+                                    .detail-image-timer .counter-label {
+                                          color: rgba(255, 255, 255, 0.88);
+                                          font-size: 9px;
+                                          font-weight: 600;
+                                          text-transform: uppercase;
+                                          letter-spacing: 0.5px;
+                                          text-align: center;
+                                          white-space: nowrap;
+                                   }
+                                    @media (max-width: 575px) {
+                                          .detail-image-timer.counter {
+                                                 width: calc(100% - 20px);
+                                                 padding: 8px 10px;
+                                          }
+                                          .detail-image-timer .counter-grid {
+                                                 gap: 6px;
+                                          }
+                                          .detail-image-timer .counter-value {
+                                                 font-size: 16px;
+                                          }
+                                          .detail-image-timer .counter-label {
+                                                 font-size: 8px;
+                                          }
                                    }
                             `}</style>
                      </div>

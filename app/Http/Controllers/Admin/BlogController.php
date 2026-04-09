@@ -26,14 +26,18 @@ class BlogController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'title'   => 'required|string|max:255',
-            'content' => 'required',
-            'image'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'title'             => 'required|string|max:255',
+            'content'           => 'required',
+            'image'             => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'meta_title'        => 'nullable|string|max:255',
+            'meta_description'  => 'nullable|string',
+            'schema_markup'     => 'nullable|string',
         ]);
 
         if ($request->hasFile('image')) {
             $file     = $request->file('image');
-            $filename = time().'_'.$file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+            $filename = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '_' . time() . '.' . $extension;
             $file->move(public_path('assets/images/blogs'), $filename);
             $data['image'] = 'assets/images/blogs/'.$filename;
         }
@@ -56,9 +60,12 @@ class BlogController extends Controller
     public function update(Request $request, Blog $blog)
     {
         $data = $request->validate([
-            'title'   => 'required|string|max:255',
-            'content' => 'required',
-            'image'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'title'             => 'required|string|max:255',
+            'content'           => 'required',
+            'image'             => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'meta_title'        => 'nullable|string|max:255',
+            'meta_description'  => 'nullable|string',
+            'schema_markup'     => 'nullable|string',
         ]);
 
         if ($request->hasFile('image')) {
@@ -68,7 +75,8 @@ class BlogController extends Controller
             }
 
             $file     = $request->file('image');
-            $filename = time().'_'.$file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+            $filename = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '_' . time() . '.' . $extension;
             $file->move(public_path('assets/images/blogs'), $filename);
             $data['image'] = 'assets/images/blogs/'.$filename;
         }

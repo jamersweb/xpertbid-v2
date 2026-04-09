@@ -31,7 +31,7 @@ export default function Create() {
                                                  <label className="block text-sm font-bold text-gray-700 mb-2">Question</label>
                                                  <input
                                                         type="text"
-                                                        className="w-full px-4 py-3 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl transition-all"
+                                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-black focus:border-black rounded-xl transition-all"
                                                         placeholder="e.g. How do I place a bid?"
                                                         value={data.question_text}
                                                         onChange={e => setData('question_text', e.target.value)}
@@ -42,7 +42,7 @@ export default function Create() {
                                           <div>
                                                  <label className="block text-sm font-bold text-gray-700 mb-2">Answer</label>
                                                  <textarea
-                                                        className="w-full px-4 py-3 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl transition-all min-h-[150px]"
+                                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-black focus:border-black rounded-xl transition-all min-h-[150px]"
                                                         placeholder="Provide the detailed answer here..."
                                                         value={data.answer_text}
                                                         onChange={e => setData('answer_text', e.target.value)}
@@ -53,7 +53,7 @@ export default function Create() {
                                           <div>
                                                  <label className="block text-sm font-bold text-gray-700 mb-2">Status</label>
                                                  <select
-                                                        className="w-full px-4 py-3 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl transition-all font-medium"
+                                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 focus:ring-2 focus:ring-black focus:border-black rounded-xl transition-all font-medium"
                                                         value={data.status}
                                                         onChange={e => setData('status', e.target.value)}
                                                  >

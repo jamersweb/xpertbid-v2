@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const CountdownTimer = ({ endDate }) => {
+const CountdownTimer = ({ endDate, variant = 'default', className = '' }) => {
        const [timeLeft, setTimeLeft] = useState({
               days: 0,
               hours: 0,
@@ -48,7 +48,7 @@ const CountdownTimer = ({ endDate }) => {
        }, [endDate]);
 
        return (
-              <div className="counter">
+              <div className={`counter ${variant === 'inline' ? 'counter-inline' : ''} ${className}`.trim()}>
                      {isActive ? (
                             <div className="counter-grid">
                                    <div className="counter-box">

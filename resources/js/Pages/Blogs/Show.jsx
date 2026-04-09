@@ -3,76 +3,185 @@ import { Head, Link } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 
 export default function Show({ blog }) {
+       const blogTitle = typeof blog?.title === 'string' ? blog.title : 'Blog';
+       const blogImage = typeof blog?.image === 'string' ? blog.image.trim() : '';
+       const blogContent =
+              typeof blog?.content === 'string'
+                     ? blog.content
+                     : typeof blog?.description === 'string'
+                            ? blog.description
+                            : typeof blog?.body === 'string'
+                                   ? blog.body
+                                   : '';
+       const blogDescription =
+              typeof blog?.excerpt === 'string' && blog.excerpt.trim()
+                     ? blog.excerpt
+                     : typeof blog?.meta_description === 'string' && blog.meta_description.trim()
+                            ? blog.meta_description
+                            : 'Read more on our blog.';
+       const blogImageSrc = blogImage
+              ? (blogImage.startsWith('http') ? blogImage : `/${encodeURI(blogImage)}`)
+              : '';
+       const publishedAt = blog?.created_at
+              ? new Date(blog.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })
+              : '';
+       const shareUrl =
+              typeof window !== 'undefined'
+                     ? window.location.href
+                     : (typeof blog?.slug === 'string' && blog.slug ? route('blogs.show', blog.slug, false) : '');
+       const shareText = blogTitle;
+
+       const openShareTab = (url) => {
+              if (typeof window === 'undefined') return;
+              const newTab = window.open(url, '_blank');
+              if (newTab) {
+                     newTab.opener = null;
+              }
+       };
+
+       const handleFacebookShare = () => {
+              openShareTab(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`);
+       };
+
+       const handleTwitterShare = () => {
+              openShareTab(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`);
+       };
+
+       const handleWhatsAppShare = () => {
+              openShareTab(`https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`);
+       };
+
+       const copyShareLink = async () => {
+              if (typeof window === 'undefined') return false;
+
+              try {
+                     if (navigator?.clipboard?.writeText) {
+                            await navigator.clipboard.writeText(shareUrl);
+                     } else {
+                            const input = document.createElement('input');
+                            input.value = shareUrl;
+                            document.body.appendChild(input);
+                            input.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(input);
+                     }
+
+                     return true;
+              } catch (error) {
+                     return false;
+              }
+       };
+
+       const handleInstagramShare = async () => {
+              const copied = await copyShareLink();
+              openShareTab('https://www.instagram.com/');
+              window.alert(copied ? 'Blog link copied. Paste it on Instagram.' : 'Instagram opened. Please copy the blog link manually.');
+       };
+
+       const handleCopyLink = async () => {
+              const copied = await copyShareLink();
+              window.alert(copied ? 'Blog link copied.' : 'Unable to copy link.');
+       };
+
+       if (!blog) {
+              return (
+                     <AppLayout title="Blog Not Found">
+                            <div className="container py-5 text-center">
+                                   <h2>Blog not found or loading...</h2>
+                                   <Link href={route('blogs.index')} className="btn btn-primary mt-3">Back to Blogs</Link>
+                            </div>
+                     </AppLayout>
+              );
+       }
+
        return (
-              <AppLayout title={blog.title}>
+                     <AppLayout title={blogTitle}>
                      <Head>
-                            <title>{blog.title} | XpertBid Blog</title>
-                            <meta name="description" content={blog.excerpt || blog.meta_description || "Read more on nuestra blog."} />
+                            <title>{`${blogTitle} | XpertBid Blog`}</title>
+                            <meta name="description" content={blogDescription} />
                             {blog.meta_keywords && <meta name="keywords" content={blog.meta_keywords} />}
                      </Head>
 
                      <div className="bg-white min-vh-100 pb-5">
                             {/* Hero Header with Image */}
-                            {blog.image && (
-                                   <div className="position-relative w-100 overflow-hidden" style={{ minHeight: '400px', maxHeight: '600px' }}>
+                            {blogImageSrc && (
+                                   <div className="w-100 overflow-hidden" style={{ minHeight: '400px', maxHeight: '600px' }}>
                                           <img
-                                                 src={blog.image.startsWith('http') ? blog.image : `https://admin.xpertbid.com/${blog.image}`}
-                                                 alt={blog.title}
-                                                 className="w-100 h-100 position-absolute"
-                                                 style={{ objectFit: 'cover', top: 0, left: 0 }}
+                                                 src={blogImageSrc}
+                                                 alt={blogTitle}
+                                                 className="w-100 h-100"
+                                                 style={{ objectFit: 'cover', minHeight: '400px', maxHeight: '600px' }}
                                           />
-                                          <div className="position-absolute w-100 h-100 top-0 start-0" style={{ background: 'linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.5))' }}></div>
-                                          <div className="position-absolute bottom-0 start-0 w-100 p-5 text-white">
-                                                 <div className="container">
-                                                        <Link href={route('blogs.index')} className="btn btn-primary btn-sm rounded-pill px-3 mb-3">
-                                                               <i className="fa-solid fa-arrow-left me-2"></i> Back to Blogs
-                                                        </Link>
-                                                        <h1 className="fw-bolder display-5 mb-2">{blog.title}</h1>
-                                                        <p className="opacity-75 fs-5">
-                                                               <i className="fa-regular fa-calendar-days me-2"></i>
-                                                               {new Date(blog.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
-                                                        </p>
-                                                 </div>
-                                          </div>
                                    </div>
                             )}
 
                             <div className="container py-5 mt-4">
                                    <div className="row justify-content-center">
                                           <div className="col-lg-8">
-                                                 {!blog.image && (
-                                                        <div className="mb-5">
-                                                               <Link href={route('blogs.index')} className="text-primary text-decoration-none fw-bold small mb-3 d-inline-block">
-                                                                      <i className="fa-solid fa-arrow-left me-2"></i> Back to Blogs
-                                                               </Link>
-                                                               <h1 className="fw-bolder display-4 text-dark mb-3">{blog.title}</h1>
-                                                               <p className="text-muted border-bottom pb-3">
-                                                                      Published on {new Date(blog.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
-                                                               </p>
-                                                        </div>
-                                                 )}
+                                                 <div className="mb-5">
+                                                        <Link href={route('blogs.index')} className="text-primary text-decoration-none fw-bold small mb-3 d-inline-block">
+                                                               <i className="fa-solid fa-arrow-left me-2"></i> Back to Blogs
+                                                        </Link>
+                                                        <h1 className="fw-bolder display-4 text-dark mb-3">{blogTitle}</h1>
+                                                        <p className="text-muted border-bottom pb-3">
+                                                               Published on {publishedAt}
+                                                        </p>
+                                                 </div>
 
                                                  <div
                                                         className="blog-content fs-5 text-dark"
                                                         style={{ lineHeight: '1.8' }}
-                                                        dangerouslySetInnerHTML={{ __html: blog.content }}
+                                                        dangerouslySetInnerHTML={{ __html: blogContent }}
                                                  />
 
                                                  <hr className="my-5" />
 
                                                  <div className="bg-light p-4 rounded-4 border shadow-sm">
-                                                        <h4 className="fw-bold mb-3">Share this article</h4>
-                                                        <div className="d-flex gap-3">
-                                                               <button className="btn btn-outline-dark rounded-circle d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
+                                                        <h4 className="fw-bold mb-3 text-dark">Share this article</h4>
+                                                        <div className="d-flex gap-3 blog-share-actions">
+                                                               <button
+                                                                      type="button"
+                                                                      onClick={handleFacebookShare}
+                                                                      className="btn blog-share-btn rounded-circle d-flex align-items-center justify-content-center"
+                                                                      style={{ width: '40px', height: '40px' }}
+                                                                      aria-label="Share on Facebook"
+                                                               >
                                                                       <i className="fa-brands fa-facebook-f"></i>
                                                                </button>
-                                                               <button className="btn btn-outline-dark rounded-circle d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
-                                                                      <i className="fa-brands fa-twitter"></i>
+                                                               <button
+                                                                      type="button"
+                                                                      onClick={handleTwitterShare}
+                                                                      className="btn blog-share-btn rounded-circle d-flex align-items-center justify-content-center"
+                                                                      style={{ width: '40px', height: '40px' }}
+                                                                      aria-label="Share on X"
+                                                               >
+                                                                      <span className="fw-bold" style={{ fontSize: '15px', lineHeight: 1 }}>X</span>
                                                                </button>
-                                                               <button className="btn btn-outline-dark rounded-circle d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
+                                                               <button
+                                                                      type="button"
+                                                                      onClick={handleWhatsAppShare}
+                                                                      className="btn blog-share-btn rounded-circle d-flex align-items-center justify-content-center"
+                                                                      style={{ width: '40px', height: '40px' }}
+                                                                      aria-label="Share on WhatsApp"
+                                                               >
                                                                       <i className="fa-brands fa-whatsapp"></i>
                                                                </button>
-                                                               <button className="btn btn-outline-dark rounded-circle d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
+                                                               <button
+                                                                      type="button"
+                                                                      onClick={handleInstagramShare}
+                                                                      className="btn blog-share-btn rounded-circle d-flex align-items-center justify-content-center"
+                                                                      style={{ width: '40px', height: '40px' }}
+                                                                      aria-label="Share on Instagram"
+                                                               >
+                                                                      <i className="fa-brands fa-instagram"></i>
+                                                               </button>
+                                                               <button
+                                                                      type="button"
+                                                                      onClick={handleCopyLink}
+                                                                      className="btn blog-share-btn rounded-circle d-flex align-items-center justify-content-center"
+                                                                      style={{ width: '40px', height: '40px' }}
+                                                                      aria-label="Copy link"
+                                                               >
                                                                       <i className="fa-solid fa-link"></i>
                                                                </button>
                                                         </div>
@@ -101,6 +210,24 @@ export default function Show({ blog }) {
                 .blog-content ul, .blog-content ol {
                     margin-bottom: 1.5rem;
                     padding-left: 1.5rem;
+                }
+                .blog-share-btn {
+                    background: #23262F;
+                    color: #fff;
+                    border: 1px solid #23262F;
+                    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+                }
+                .blog-share-btn:hover,
+                .blog-share-btn:focus,
+                .blog-share-btn:active {
+                    background: #43ACE9 !important;
+                    border-color: #43ACE9 !important;
+                    color: #fff !important;
+                    transform: translateY(-1px);
+                }
+                .blog-share-btn i,
+                .blog-share-btn span {
+                    color: inherit;
                 }
             `}} />
               </AppLayout>

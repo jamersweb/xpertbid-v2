@@ -51,7 +51,7 @@ export default function Index({ blogs }) {
                                                                       <Link href={route('blogs.show', blog.slug)} className="text-decoration-none">
                                                                              <div className="position-relative overflow-hidden" style={{ height: '220px' }}>
                                                                                     <img
-                                                                                           src={blog.image ? (blog.image.startsWith('http') ? blog.image : `https://admin.xpertbid.com/${blog.image}`) : '/assets/images/WebsiteBanner2.png'}
+                                                                                           src={blog.image ? (blog.image.startsWith('http') ? blog.image : `/${encodeURI(blog.image)}`) : '/assets/images/WebsiteBanner2.png'}
                                                                                            className="card-img-top w-100 h-100 object-fit-cover transition-all"
                                                                                            alt={blog.title}
                                                                                     />
@@ -74,7 +74,7 @@ export default function Index({ blogs }) {
 
                                                                              <Link
                                                                                     href={route('blogs.show', blog.slug)}
-                                                                                    className="btn btn-outline-primary rounded-pill px-4 fw-bold align-self-start transition-all"
+                                                                                    className="btn rounded-pill px-4 fw-bold align-self-start transition-all blog-read-more-btn"
                                                                              >
                                                                                     Read More <i className="fa-solid fa-arrow-right ms-2 small"></i>
                                                                              </Link>
@@ -117,6 +117,17 @@ export default function Index({ blogs }) {
                 }
                 .blog-card:hover .card-img-top {
                     transform: scale(1.1);
+                }
+                .blog-read-more-btn {
+                    background: #23262F;
+                    border: 1px solid #23262F;
+                    color: #fff;
+                }
+                .blog-read-more-btn:hover,
+                .blog-read-more-btn:focus {
+                    background: #43ACE9;
+                    border-color: #43ACE9;
+                    color: #fff;
                 }
                 .object-fit-cover {
                     object-fit: cover;

@@ -16,11 +16,13 @@ export default function AppLayout({ children, title }) {
        const corporateVerificationStatus =
               auth?.user?.corporate_verification?.status || auth?.user?.corporateVerification?.status;
        const verificationStatus = corporateVerificationStatus || individualVerificationStatus || 'unverified';
-       const currentPath = ziggy?.location ? new URL(ziggy.location).pathname : '';
+       const currentPath = ziggy?.location && ziggy.location.startsWith('http') 
+              ? new URL(ziggy.location).pathname 
+              : (ziggy?.location || '');
        const shouldShowVerifyButton =
               Boolean(auth?.user) &&
               verificationStatus !== 'verified' &&
-              currentPath !== route('verification.identity', {}, false);
+              (auth?.user ? currentPath !== route('verification.identity', {}, false) : false);
 
        useEffect(() => {
               if (flash?.success || flash?.error) {

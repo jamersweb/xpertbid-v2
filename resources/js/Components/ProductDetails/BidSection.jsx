@@ -235,16 +235,12 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
 
                      {product.list_type === 'auction' ? (
                             <>
-                                   <div className="bid-rank-and-time bg-light p-3 rounded-3 mb-3 d-flex justify-content-between align-items-center">
-                                          <div className="bid-price-and-rank d-flex flex-column">
-                                                 <span className="rank text-muted small fw-semibold">Highest Bid</span>
-                                                 <div className="price fw-bold text-dark" style={{ fontSize: '24px' }}>
+                                   <div className="bid-rank-and-time detail-auction-strip mb-3">
+                                          <div className="detail-auction-meta">
+                                                 <span className="rank">Highest Bid</span>
+                                                 <div className="price" title={String(highestBid)}>
                                                         <Price amountAED={highestBid} />
                                                  </div>
-                                          </div>
-                                          <div className="bid-time-and-date text-end d-flex flex-column">
-                                                 <span className="endin text-muted small fw-semibold">End in</span>
-                                                 <p className="date mb-0 text-dark fw-semibold" style={{ fontSize: '14px' }}>{formatDate(product.end_date)}</p>
                                           </div>
                                    </div>
 
@@ -384,6 +380,50 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                             .trophy-icon-ref {
                                    color: #eab308;
                                    font-size: 1.2rem;
+                            }
+                            .detail-auction-strip {
+                                   background: #f8fafc;
+                                   border: 1px solid #e5e7eb;
+                                   border-radius: 18px;
+                                   padding: 18px 20px;
+                                   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+                            }
+                            .detail-auction-meta {
+                                   display: flex;
+                                   flex-direction: column;
+                                   gap: 8px;
+                                   min-width: 0;
+                            }
+                            .detail-auction-meta .rank {
+                                   color: #6b7280;
+                                   font-size: 13px;
+                                   font-weight: 600;
+                                   text-transform: uppercase;
+                                   letter-spacing: 0.06em;
+                            }
+                            .detail-auction-meta .price {
+                                   color: #111827;
+                                   font-size: clamp(24px, 3vw, 36px);
+                                   font-weight: 800;
+                                   line-height: 1.05;
+                                   letter-spacing: -0.03em;
+                                   white-space: nowrap;
+                                   overflow: hidden;
+                                   text-overflow: ellipsis;
+                            }
+                            .detail-auction-meta .price span {
+                                   color: inherit !important;
+                            }
+                            @media (max-width: 575px) {
+                                   .detail-auction-strip {
+                                          padding: 16px 14px;
+                                    }
+                                   .detail-auction-meta {
+                                          min-width: 0;
+                                   }
+                                   .detail-auction-meta .price {
+                                          font-size: 28px;
+                                   }
                             }
                      `}</style>
 

@@ -16,11 +16,15 @@ class SeoController extends Controller
         ]);
     }
 
+    public function create()
+    {
+        return Inertia::render('Admin/Seo/Create');
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
-            'id'               => 'nullable|exists:seos,id',
-            'slug'             => 'required|unique:seos,slug' . ($request->id ? ',' . $request->id : ''),
+            'slug'             => 'required|unique:seos,slug',
             'meta_title'       => 'nullable|string',
             'meta_description' => 'nullable|string',
             'meta_keywords'    => 'nullable|string',
@@ -28,21 +32,36 @@ class SeoController extends Controller
             'canonical_url'    => 'nullable|url',
         ]);
 
-        if ($request->id) {
-            $seo = Seo::findOrFail($request->id);
-            $seo->update($data);
-            $message = 'SEO record updated.';
-        } else {
-            Seo::create($data);
-            $message = 'SEO record created.';
-        }
+        Seo::create($data);
 
-        return redirect()->route('admin.seo.index')->with('success', $message);
+        return redirect()->route('admin.seo.index')->with('success', 'SEO record created.');
     }
 
-    public function destroy($id)
+    public function edit(Seo $seo)
     {
-        $seo = Seo::findOrFail($id);
+        return Inertia::render('Admin/Seo/Edit', [
+            'seo' => $seo,
+        ]);
+    }
+
+    public function update(Request $request, Seo $seo)
+    {
+        $data = $request->validate([
+            'slug'             => 'required|unique:seos,slug,' . $seo->id,
+            'meta_title'       => 'nullable|string',
+            'meta_description' => 'nullable|string',
+            'meta_keywords'    => 'nullable|string',
+            'schema_markup'    => 'nullable|string',
+            'canonical_url'    => 'nullable|url',
+        ]);
+
+        $seo->update($data);
+
+        return redirect()->route('admin.seo.index')->with('success', 'SEO record updated.');
+    }
+
+    public function destroy(Seo $seo)
+    {
         $seo->delete();
 
         return redirect()->route('admin.seo.index')->with('success', 'SEO record deleted.');

@@ -84,6 +84,34 @@ class ListingController extends Controller
         return 'assets/images/listing_images/' . $filename;
     }
 
+    protected function normalizeExistingAlbum(array $paths): array
+    {
+        return collect($paths)
+            ->map(function ($path) {
+                if (!$path) {
+                    return null;
+                }
+
+                if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                    $host = parse_url($path, PHP_URL_HOST) ?: '';
+                    $appHost = parse_url(config('app.url'), PHP_URL_HOST) ?: '';
+                    $requestHost = request()->getHost();
+
+                    if ($host && !in_array($host, array_filter([$appHost, $requestHost]), true)) {
+                        return $path;
+                    }
+
+                    $parsedPath = parse_url($path, PHP_URL_PATH) ?: '';
+                    $path = ltrim($parsedPath, '/');
+                }
+
+                return str_replace('\\', '/', $path);
+            })
+            ->filter()
+            ->values()
+            ->all();
+    }
+
     /**
      * Display a listing of the user's listings.
      */
@@ -194,7 +222,9 @@ class ListingController extends Controller
             }
         }
  
+        $imagePath = $albumPaths[0] ?? null;
         $listingData['album'] = $albumPaths;
+        $listingData['image'] = $imagePath;
  
         // Handle 'other_category' lookup or creation for AuctionCategory
         $categoryId = $request->category_id;
@@ -217,6 +247,8 @@ class ListingController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'status' => 'inactive', // Requires admin approval before going live
+            'image' => $imagePath,
+            'album' => $albumPaths,
             'listing_data' => $listingData,
             'category_features' => $categoryFeatures,
         ]);
@@ -268,22 +300,7 @@ class ListingController extends Controller
         $categoryFeatures = is_array($request->category_features) ? $request->category_features : ($listing->category_features ?? []);
         $nextStatus = $request->status === 'draft' ? 'draft' : 'resubmit';
 
-        $existingAlbum = collect($request->input('existing_album', []))
-            ->map(function ($path) {
-                if (!$path) {
-                    return null;
-                }
-
-                if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
-                    $parsedPath = parse_url($path, PHP_URL_PATH) ?: '';
-                    $path = ltrim($parsedPath, '/');
-                }
-
-                return str_replace('\\', '/', $path);
-            })
-            ->filter()
-            ->values()
-            ->all();
+        $existingAlbum = $this->normalizeExistingAlbum($request->input('existing_album', []));
 
         $listingData['album'] = $existingAlbum;
         
@@ -294,6 +311,16 @@ class ListingController extends Controller
             }
             $listingData['album'] = array_merge($listingData['album'] ?? [], $albumPaths);
         }
+
+        $imagePath = $listing->getRawOriginal('image')
+            ?: ($listing->listing_data['image'] ?? null)
+            ?: (($listingData['album'][0] ?? null));
+
+        if (!$imagePath && !empty($listingData['album'])) {
+            $imagePath = $listingData['album'][0];
+        }
+
+        $listingData['image'] = $imagePath;
  
         $listing->update([
             'category_id' => $request->category_id ?? $listing->category_id,
@@ -303,6 +330,8 @@ class ListingController extends Controller
             'listing_source' => $listing->listing_source ?: $this->resolveSource($request, 'listing_source'),
             'title' => $request->title ?? $listing->title,
             'description' => $request->description ?? $listing->description,
+            'image' => $imagePath,
+            'album' => $listingData['album'] ?? [],
             'listing_data' => $listingData,
             'category_features' => $categoryFeatures,
             'status' => $nextStatus,

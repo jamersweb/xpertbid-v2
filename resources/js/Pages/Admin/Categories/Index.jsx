@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import Modal from '@/Components/Modal';
@@ -12,12 +12,19 @@ import Swal from 'sweetalert2';
 export default function Index({ categories, filters }) {
        const [isModalOpen, setIsModalOpen] = useState(false);
        const [editingCategory, setEditingCategory] = useState(null);
-       const [currentPath, setCurrentPath] = useState([]); // List of category objects tracking path
        const [search, setSearch] = useState(filters.search || '');
+       const [expanded, setExpanded] = useState({}); // Tracking expanded states by cat.id
 
        const handleSearch = (e) => {
               e.preventDefault();
               router.get(route('admin.categories.index'), { search }, { preserveState: true });
+       };
+
+       const toggleExpand = (id) => {
+              setExpanded(prev => ({
+                     ...prev,
+                     [id]: !prev[id]
+              }));
        };
 
        const { data, setData, post, put, processing, errors, reset } = useForm({
@@ -93,147 +100,149 @@ export default function Index({ categories, filters }) {
               };
        };
 
-       // NAVIGATION LOGIC //
-       const drillDown = (category) => {
-              setCurrentPath([...currentPath, category]);
-       };
+       // Nested Rendering Helper with Accordion //
+       const renderCategoryRows = (cat, depth = 0) => {
+              const styles = {
+                     0: { bg: 'bg-white', badge: 'bg-sky-100 text-sky-700', label: 'Main' },
+                     1: { bg: 'bg-emerald-50/5', badge: 'bg-emerald-100 text-emerald-700', label: 'Sub' },
+                     2: { bg: 'bg-gray-50/20', badge: 'bg-indigo-100 text-indigo-700', label: 'Child' }
+              };
 
-       const goToLevel = (index) => {
-              if (index === -1) {
-                     setCurrentPath([]);
-              } else {
-                     setCurrentPath(currentPath.slice(0, index + 1));
+              const currentStyle = styles[depth] || styles[2];
+              const isExpanded = expanded[cat.id];
+              const children = cat.sub_categories || cat.subCategories || cat.child_categories || cat.childCategories || [];
+              const hasChildren = children.length > 0;
+
+              // Proper image formatting
+              const imageUrl = cat.image 
+                     ? (cat.image.startsWith('http') 
+                            ? cat.image 
+                            : `${window.location.origin}/${cat.image.replace(/^\/+/, '')}`) 
+                     : null;
+
+              const rows = [
+                     <tr key={cat.id} className={`${currentStyle.bg} hover:bg-gray-50/80 transition-all border-b border-gray-100/50`}>
+                            <td className="px-6 py-4">
+                                   <div 
+                                          className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center shadow-sm"
+                                          style={{ marginLeft: `${depth * 2}rem` }}
+                                   >
+                                          {imageUrl ? (
+                                                 <img src={imageUrl} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
+                                          ) : (
+                                                 <i className="fa-solid fa-folder text-gray-300"></i>
+                                          )}
+                                   </div>
+                            </td>
+                            <td className="px-6 py-4">
+                                   <div className="flex items-center gap-3" style={{ marginLeft: `${depth * 1.5}rem` }}>
+                                          {hasChildren ? (
+                                                 <button 
+                                                        onClick={() => toggleExpand(cat.id)}
+                                                        className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all ${isExpanded ? 'bg-black text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}
+                                                 >
+                                                        <i className={`fa-solid fa-chevron-right text-[10px] transform ${isExpanded ? 'rotate-90' : 'rotate-0'}`}></i>
+                                                 </button>
+                                          ) : (
+                                                 <div className="w-6 h-6 flex items-center justify-center">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-gray-200"></div>
+                                                 </div>
+                                          )}
+                                          <div>
+                                                 <span className={`text-sm font-black text-gray-900 ${depth === 0 ? 'text-base' : ''}`}>{cat.name}</span>
+                                                 <p className="text-[10px] text-gray-400 font-medium tracking-wide">/{cat.slug}</p>
+                                          </div>
+                                   </div>
+                            </td>
+                            <td className="px-6 py-4">
+                                   <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md tracking-widest ${currentStyle.badge}`}>
+                                          {currentStyle.label}
+                                   </span>
+                            </td>
+                            <td className="px-6 py-4">
+                                   <div className="flex flex-col">
+                                          <span className={`text-[10px] font-black uppercase tracking-widest ${hasChildren ? 'text-emerald-600' : 'text-gray-300'}`}>
+                                                 {children.length} Children
+                                          </span>
+                                   </div>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                                   <div className="flex gap-2 justify-end">
+                                          <button onClick={() => openModal(cat)} className="p-2 hover:bg-amber-50 rounded-xl text-amber-600 transition-colors" title="Edit"><i className="fa-solid fa-pen-to-square"></i></button>
+                                          <button onClick={() => deleteCategory(cat.id)} className="p-2 hover:bg-rose-50 rounded-xl text-rose-600 transition-colors" title="Delete"><i className="fa-solid fa-trash"></i></button>
+                                   </div>
+                            </td>
+                     </tr>
+              ];
+
+              if (isExpanded || search) {
+                     children.forEach(child => {
+                            rows.push(...renderCategoryRows(child, depth + 1));
+                     });
               }
-       };
 
-       const displayedCategories = useMemo(() => {
-              if (search) return categories; // Flat view on search
-
-              if (currentPath.length === 0) return categories; // Top level
-
-              const currentParent = currentPath[currentPath.length - 1];
-              return currentParent.sub_categories || currentParent.subCategories || currentParent.child_categories || currentParent.childCategories || [];
-       }, [categories, currentPath, search]);
-
-       const formatHierarchy = (category) => {
-              if (category.sub_category_id) return { label: 'Child Category', color: 'bg-indigo-100 text-indigo-700' };
-              if (category.parent_id) return { label: 'Sub Category', color: 'bg-emerald-100 text-emerald-700' };
-              return { label: 'Main Category', color: 'bg-sky-100 text-sky-700' };
+              return rows;
        };
 
        return (
-              <AdminLayout title="Auction Categories">
-                     <Head title="Auction Categories" />
+              <AdminLayout title="Product Categories">
+                     <Head title="Product Categories" />
 
-                     {/* Header Header */}
-                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                     {/* Header */}
+                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                             <div>
-                                   <h1 className="text-2xl font-bold text-gray-900 leading-none">Category Management</h1>
-                                   <div className="flex items-center gap-1 mt-2">
-                                          <button 
-                                                 onClick={() => goToLevel(-1)} 
-                                                 className={`text-[10px] uppercase tracking-wider font-bold transition-colors ${currentPath.length === 0 ? 'text-black' : 'text-gray-400 hover:text-black'}`}
-                                          >
-                                                 Categories
-                                          </button>
-                                          {currentPath.map((item, idx) => (
-                                                 <React.Fragment key={idx}>
-                                                        <i className="fa-solid fa-chevron-right text-[8px] text-gray-300"></i>
-                                                        <button 
-                                                               onClick={() => goToLevel(idx)} 
-                                                               className={`text-[10px] uppercase tracking-wider font-bold transition-colors ${idx === currentPath.length - 1 ? 'text-black' : 'text-gray-400 hover:text-black'}`}
-                                                        >
-                                                               {item.name}
-                                                        </button>
-                                                 </React.Fragment>
-                                          ))}
-                                   </div>
+                                   <h1 className="text-3xl font-black text-gray-900 tracking-tight">Category Management</h1>
+                                   <p className="text-sm text-gray-500 font-medium">Click on the arrows to expand sub-categories.</p>
                             </div>
                             <PrimaryButton onClick={() => openModal()}>
-                                   <i className="fa-solid fa-plus mr-2"></i> Add Top-Level
+                                   <i className="fa-solid fa-plus mr-2"></i> Add Main Category
                             </PrimaryButton>
                      </div>
 
-                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                            {/* Search Header */}
-                            <div className="p-6 border-bottom border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                   <form onSubmit={handleSearch} className="flex-1 max-w-md flex gap-2">
-                                          <div className="relative flex-1">
-                                                 <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                     <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden">
+                            {/* Search */}
+                            <div className="p-8 border-b border-gray-100 bg-gray-50/10">
+                                   <form onSubmit={handleSearch} className="max-w-xl flex gap-3">
+                                          <div className="relative flex-1 group">
+                                                 <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors"></i>
                                                  <input
                                                         type="text"
-                                                        className="w-full pl-11 pr-4 py-2 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm transition-all text-gray-900"
-                                                        placeholder="Search categories..."
+                                                        className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 focus:ring-4 focus:ring-black/5 focus:border-black rounded-2xl text-sm transition-all text-gray-900 placeholder:text-gray-400 font-medium"
+                                                        placeholder="Search results will be auto-expanded..."
                                                         value={search}
                                                         onChange={(e) => setSearch(e.target.value)}
                                                  />
                                           </div>
-                                          <button type="submit" className="px-4 py-2 bg-black text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-all shadow-lg shadow-black/10 flex items-center gap-2">
+                                          <button type="submit" className="px-8 py-3 bg-black text-white rounded-2xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg shadow-black/10 flex items-center gap-2 active:scale-95">
                                                  <i className="fa-solid fa-magnifying-glass"></i>
-                                                 Search
+                                                 Filter
                                           </button>
                                    </form>
                             </div>
 
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto min-h-[400px]">
                                    <table className="w-full text-left border-collapse">
                                           <thead>
-                                                 <tr className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider">
-                                                        <th className="px-6 py-4 w-16">Image</th>
-                                                        <th className="px-6 py-4">Name</th>
-                                                        <th className="px-6 py-4">Hierarchy</th>
-                                                        <th className="px-6 py-4">Children</th>
-                                                        <th className="px-6 py-4 text-right">Actions</th>
+                                                 <tr className="bg-gray-50/50 text-gray-400 text-[10px] font-black uppercase tracking-[0.2em]">
+                                                        <th className="px-6 py-5 w-16">Image</th>
+                                                        <th className="px-6 py-5">Name & Path</th>
+                                                        <th className="px-6 py-5">Level</th>
+                                                        <th className="px-6 py-5">Stats</th>
+                                                        <th className="px-6 py-5 text-right">Actions</th>
                                                  </tr>
                                           </thead>
                                           <tbody className="divide-y divide-gray-100">
-                                                 {displayedCategories.length > 0 ? displayedCategories.map((category) => (
-                                                        <tr key={category.id} className="hover:bg-gray-50/50 transition-colors">
-                                                               <td className="px-6 py-4">
-                                                                      <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center">
-                                                                             {category.image ? (
-                                                                                    <img src={category.image} className="w-full h-full object-cover" alt="" />
-                                                                             ) : (
-                                                                                    <i className="fa-solid fa-folder-open text-gray-300"></i>
-                                                                             )}
-                                                                      </div>
-                                                               </td>
-                                                               <td className="px-6 py-4">
-                                                                      <span className="text-sm font-bold text-gray-800">{category.name}</span>
-                                                                      <p className="text-[10px] text-gray-400">/{category.slug}</p>
-                                                               </td>
-                                                               <td className="px-6 py-4">
-                                                                      <span className={`text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-md tracking-wider ${formatHierarchy(category).color}`}>
-                                                                             {formatHierarchy(category).label}
-                                                                      </span>
-                                                               </td>
-                                                               <td className="px-6 py-4">
-                                                                      {(category.subCategories?.length > 0 || category.sub_categories?.length > 0 || category.childCategories?.length > 0) ? (
-                                                                             <button 
-                                                                                    onClick={() => drillDown(category)}
-                                                                                    className="text-xs font-bold text-emerald-600 hover:text-emerald-800 transition-colors flex items-center gap-1"
-                                                                             >
-                                                                                    <i className="fa-solid fa-list-tree"></i>
-                                                                                    {category.subCategories?.length || category.sub_categories?.length || category.childCategories?.length} Children...
-                                                                             </button>
-                                                                      ) : (
-                                                                             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">No Children</span>
-                                                                      )}
-                                                               </td>
-                                                               <td className="px-6 py-4 text-right">
-                                                                      <div className="flex gap-2 justify-end">
-                                                                             <button onClick={() => openModal(category)} className="p-2 hover:bg-amber-50 rounded-lg text-amber-600 transition-colors" title="Edit"><i className="fa-solid fa-pen-to-square"></i></button>
-                                                                             <button onClick={() => deleteCategory(category.id)} className="p-2 hover:bg-rose-50 rounded-lg text-rose-600 transition-colors" title="Delete"><i className="fa-solid fa-trash"></i></button>
-                                                                      </div>
-                                                               </td>
-                                                        </tr>
-                                                 )) : (
+                                                 {categories.length > 0 ? categories.map(cat => renderCategoryRows(cat)) : (
                                                         <tr>
-                                                               <td colSpan="5" className="px-6 py-20 text-center">
-                                                                      <div className="flex flex-col items-center gap-3">
-                                                                             <i className="fa-solid fa-folder-open text-gray-200 text-6xl"></i>
-                                                                             <p className="text-gray-400 font-medium">No categories found at this level</p>
-                                                                             <button onClick={() => goToLevel(-1)} className="text-xs font-bold text-black border-b border-black pb-0.5">Return to top</button>
+                                                               <td colSpan="5" className="px-6 py-28 text-center bg-gray-50/20">
+                                                                      <div className="flex flex-col items-center gap-4">
+                                                                             <div className="w-20 h-20 bg-white shadow-xl rounded-3xl flex items-center justify-center text-gray-200">
+                                                                                    <i className="fa-solid fa-folder-open text-4xl"></i>
+                                                                             </div>
+                                                                             <div>
+                                                                                    <p className="text-gray-900 font-bold">No categories found</p>
+                                                                                    <p className="text-gray-400 text-sm">Create your first main category to get started.</p>
+                                                                             </div>
                                                                       </div>
                                                                </td>
                                                         </tr>
@@ -243,75 +252,101 @@ export default function Index({ categories, filters }) {
                             </div>
                      </div>
 
+                     {/* Modal for Add/Edit */}
                      <Modal show={isModalOpen} onClose={closeModal} maxWidth="2xl">
-                            <form onSubmit={submit} className="p-6">
-                                   <h2 className="text-lg font-bold text-gray-800 mb-6 uppercase tracking-wider">{editingCategory ? 'Edit Category' : 'Add New Category'}</h2>
+                            <form onSubmit={submit} className="p-8">
+                                   <div className="flex items-center justify-between mb-8">
+                                          <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">
+                                                 {editingCategory ? 'Modify Category' : 'New Category'}
+                                          </h2>
+                                          <button type="button" onClick={closeModal} className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
+                                                 <i className="fa-solid fa-xmark text-gray-400"></i>
+                                          </button>
+                                   </div>
 
-                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                          <div>
-                                                 <InputLabel value="Category Name" required />
-                                                 <TextInput
-                                                        className="mt-1 block w-full text-gray-900"
-                                                        value={data.name}
-                                                        onChange={e => setData('name', e.target.value)}
-                                                        required
-                                                 />
-                                                 <InputError message={errors.name} className="mt-2" />
-                                          </div>
+                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                          <div className="space-y-6">
+                                                 <div>
+                                                        <InputLabel value="Category Name" required className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
+                                                        <TextInput
+                                                               className="w-full text-gray-900 font-bold"
+                                                               value={data.name}
+                                                               onChange={e => setData('name', e.target.value)}
+                                                               required
+                                                               placeholder="e.g. Vehicles"
+                                                        />
+                                                        <InputError message={errors.name} className="mt-2" />
+                                                 </div>
 
-                                          <div>
-                                                 <InputLabel value="Slug (Optional)" />
-                                                 <TextInput
-                                                        className="mt-1 block w-full text-gray-900"
-                                                        value={data.slug}
-                                                        onChange={e => setData('slug', e.target.value)}
-                                                        placeholder="auto-generated from name"
-                                                 />
-                                                 <InputError message={errors.slug} className="mt-2" />
-                                          </div>
-
-                                          <div className="md:col-span-2 border-t pt-6 bg-gray-50/50 -mx-6 px-6 -mb-6 pb-6">
-                                                 <h3 className="text-xs font-bold text-gray-500 mb-4 uppercase tracking-wider">SEO & Metadata</h3>
-                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <div>
-                                                               <InputLabel value="Meta Title" />
-                                                               <TextInput
-                                                                      className="mt-1 block w-full text-gray-900"
-                                                                      value={data.meta_title}
-                                                                      onChange={e => setData('meta_title', e.target.value)}
-                                                               />
-                                                        </div>
-                                                        <div>
-                                                               <InputLabel value="Meta Description" />
-                                                               <textarea
-                                                                      className="mt-1 block w-full border-gray-300 focus:border-black focus:ring-black rounded-xl shadow-sm text-gray-900"
-                                                                      rows="2"
-                                                                      value={data.meta_description}
-                                                                      onChange={e => setData('meta_description', e.target.value)}
-                                                               ></textarea>
-                                                        </div>
+                                                 <div>
+                                                        <InputLabel value="SEO Slug (URL)" className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
+                                                        <TextInput
+                                                               className="w-full text-gray-900"
+                                                               value={data.slug}
+                                                               onChange={e => setData('slug', e.target.value)}
+                                                               placeholder="auto-generated-slug"
+                                                        />
+                                                        <InputError message={errors.slug} className="mt-2" />
                                                  </div>
                                           </div>
 
-                                          <div className="md:col-span-2 mt-4">
-                                                 <InputLabel value="Category Image" />
-                                                 <input
-                                                        type="file"
-                                                        className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 transition-all cursor-pointer"
-                                                        onChange={e => setData('image', e.target.files[0])}
-                                                 />
+                                          <div className="space-y-6">
+                                                 <div>
+                                                        <InputLabel value="Parent Level" className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
+                                                        <select
+                                                               className="w-full border-gray-200 focus:border-black focus:ring-4 focus:ring-black/5 rounded-2xl shadow-sm text-gray-900 font-medium py-3"
+                                                               value={data.parent_id}
+                                                               onChange={e => setData('parent_id', e.target.value)}
+                                                        >
+                                                               <option value="">Top-Level Category</option>
+                                                               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                        </select>
+                                                 </div>
+
+                                                 <div>
+                                                        <InputLabel value="Sub-Category Level" className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
+                                                        <select
+                                                               className="w-full border-gray-200 focus:border-black focus:ring-4 focus:ring-black/5 rounded-2xl shadow-sm text-gray-900 font-medium py-3 disabled:opacity-30 disabled:bg-gray-50"
+                                                               value={data.sub_category_id}
+                                                               onChange={e => setData('sub_category_id', e.target.value)}
+                                                               disabled={!data.parent_id}
+                                                        >
+                                                               <option value="">Root of Sub-Category</option>
+                                                               {categories.find(c => c.id == data.parent_id)?.subCategories?.map(sc => (
+                                                                      <option key={sc.id} value={sc.id}>{sc.name}</option>
+                                                               ))}
+                                                        </select>
+                                                 </div>
+                                          </div>
+
+                                          <div className="md:col-span-2">
+                                                 <InputLabel value="Upload Category Image" className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
+                                                 <div className="mt-2 flex items-center gap-4 p-8 border-2 border-dashed border-gray-100 rounded-3xl bg-gray-50/30 hover:bg-gray-50 transition-colors group cursor-pointer relative">
+                                                        <input
+                                                               type="file"
+                                                               className="absolute inset-0 opacity-0 cursor-pointer"
+                                                               onChange={e => setData('image', e.target.files[0])}
+                                                        />
+                                                        <div className="w-12 h-12 bg-white shadow-sm rounded-xl flex items-center justify-center text-gray-400 group-hover:text-black transition-colors">
+                                                               <i className="fa-solid fa-cloud-arrow-up text-xl"></i>
+                                                        </div>
+                                                        <div>
+                                                               <p className="text-sm font-bold text-gray-900">Click to upload image</p>
+                                                               <p className="text-xs text-gray-400">PNG, JPG or GIF up to 2MB</p>
+                                                        </div>
+                                                 </div>
                                                  <InputError message={errors.image} className="mt-2" />
                                           </div>
                                    </div>
 
-                                   <div className="mt-12 flex justify-end gap-3">
-                                          <SecondaryButton onClick={closeModal}>Cancel</SecondaryButton>
+                                   <div className="mt-12 flex justify-end gap-4">
+                                          <SecondaryButton onClick={closeModal} className="px-8 py-3 rounded-2xl">Dismiss</SecondaryButton>
                                           <button 
                                                  type="submit" 
                                                  disabled={processing}
-                                                 className="px-6 py-2.5 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-all disabled:opacity-50"
+                                                 className="px-10 py-3 bg-black text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-xl shadow-black/20 hover:translate-y-[-2px] active:translate-y-0 disabled:opacity-50"
                                           >
-                                                 {editingCategory ? 'Update Category' : 'Create Category'}
+                                                 {editingCategory ? 'Commit Changes' : 'Create Category'}
                                           </button>
                                    </div>
                             </form>

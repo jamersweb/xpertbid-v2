@@ -4,8 +4,8 @@ import { Head, useForm } from '@inertiajs/react';
 import Swal from 'sweetalert2';
 
 export default function Index({ countries }) {
-       const [selectedCountry, setSelectedCountry] = useState(null);
-       const [selectedState, setSelectedState] = useState(null);
+       const [selectedCountryId, setSelectedCountryId] = useState(null);
+       const [selectedStateId, setSelectedStateId] = useState(null);
        const [showModal, setShowModal] = useState(false);
        const [modalConfig, setModalConfig] = useState({ type: 'country', parentId: null, action: 'create' });
 
@@ -14,6 +14,9 @@ export default function Index({ countries }) {
               type: 'country',
               parent_id: null
        });
+
+       const selectedCountry = countries.find((country) => country.id === selectedCountryId) || null;
+       const selectedState = selectedCountry?.states?.find((state) => state.id === selectedStateId) || null;
 
        const handleAdd = (type, parentId = null) => {
               setModalConfig({ type, parentId, action: 'create' });
@@ -24,7 +27,17 @@ export default function Index({ countries }) {
        const submit = (e) => {
               e.preventDefault();
               post(route('admin.locations.store'), {
-                     onSuccess: () => { setShowModal(false); reset(); }
+                     preserveScroll: true,
+                     onSuccess: () => {
+                            setShowModal(false);
+                            reset();
+                            if (modalConfig.type === 'state' && modalConfig.parentId) {
+                                   setSelectedCountryId(modalConfig.parentId);
+                            }
+                            if (modalConfig.type === 'city' && modalConfig.parentId) {
+                                   setSelectedStateId(modalConfig.parentId);
+                            }
+                     }
               });
        };
 
@@ -64,13 +77,13 @@ export default function Index({ countries }) {
                                           {countries.map(country => (
                                                  <div
                                                         key={country.id}
-                                                        onClick={() => { setSelectedCountry(country); setSelectedState(null); }}
-                                                        className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${selectedCountry?.id === country.id ? 'bg-black text-white shadow-lg' : 'hover:bg-gray-50'}`}
+                                                        onClick={() => { setSelectedCountryId(country.id); setSelectedStateId(null); }}
+                                                        className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${selectedCountryId === country.id ? 'bg-black text-white shadow-lg' : 'text-gray-900 hover:bg-gray-50'}`}
                                                  >
                                                         <span className="text-sm font-semibold">{country.name}</span>
                                                         <div className="flex items-center gap-2">
                                                                <span className="text-[10px] opacity-60 font-mono">{country.states?.length || 0}</span>
-                                                               <button onClick={(e) => { e.stopPropagation(); handleDelete(country.id, 'country'); }} className={`p-1.5 rounded-lg hover:bg-white/20 ${selectedCountry?.id === country.id ? 'text-white' : 'text-gray-400'}`}>
+                                                               <button onClick={(e) => { e.stopPropagation(); handleDelete(country.id, 'country'); }} className={`p-1.5 rounded-lg hover:bg-white/20 ${selectedCountryId === country.id ? 'text-white' : 'text-gray-400'}`}>
                                                                       <i className="fa-solid fa-trash-can text-[10px]"></i>
                                                                </button>
                                                         </div>
@@ -91,21 +104,21 @@ export default function Index({ countries }) {
                                    </div>
                                    <div className="flex-1 overflow-y-auto p-2 space-y-1">
                                           {!selectedCountry ? (
-                                                 <div className="h-full flex flex-col items-center justify-center text-gray-300 p-8 text-center">
+                                                 <div className="h-full flex flex-col items-center justify-center text-gray-400 p-8 text-center">
                                                         <i className="fa-solid fa-globe text-3xl mb-3"></i>
-                                                        <p className="text-xs font-medium">Select a country to view its states</p>
+                                                        <p className="text-xs font-medium text-gray-500">Select a country to view its states</p>
                                                  </div>
                                           ) : (
                                                  selectedCountry.states?.map(state => (
                                                         <div
                                                                key={state.id}
-                                                               onClick={() => setSelectedState(state)}
-                                                               className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${selectedState?.id === state.id ? 'bg-black text-white shadow-lg' : 'hover:bg-gray-50'}`}
+                                                               onClick={() => setSelectedStateId(state.id)}
+                                                               className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${selectedStateId === state.id ? 'bg-black text-white shadow-lg' : 'text-gray-900 hover:bg-gray-50'}`}
                                                         >
                                                                <span className="text-sm font-semibold">{state.name}</span>
                                                                <div className="flex items-center gap-2">
                                                                       <span className="text-[10px] opacity-60 font-mono">{state.cities?.length || 0}</span>
-                                                                      <button onClick={(e) => { e.stopPropagation(); handleDelete(state.id, 'state'); }} className={`p-1.5 rounded-lg hover:bg-white/20 ${selectedState?.id === state.id ? 'text-white' : 'text-gray-400'}`}>
+                                                                      <button onClick={(e) => { e.stopPropagation(); handleDelete(state.id, 'state'); }} className={`p-1.5 rounded-lg hover:bg-white/20 ${selectedStateId === state.id ? 'text-white' : 'text-gray-400'}`}>
                                                                              <i className="fa-solid fa-trash-can text-[10px]"></i>
                                                                       </button>
                                                                </div>
@@ -127,9 +140,9 @@ export default function Index({ countries }) {
                                    </div>
                                    <div className="flex-1 overflow-y-auto p-2 space-y-1">
                                           {!selectedState ? (
-                                                 <div className="h-full flex flex-col items-center justify-center text-gray-300 p-8 text-center">
+                                                 <div className="h-full flex flex-col items-center justify-center text-gray-400 p-8 text-center">
                                                         <i className="fa-solid fa-city text-3xl mb-3"></i>
-                                                        <p className="text-xs font-medium">Select a state to view its cities</p>
+                                                        <p className="text-xs font-medium text-gray-500">Select a state to view its cities</p>
                                                  </div>
                                           ) : (
                                                  selectedState.cities?.map(city => (
@@ -162,7 +175,7 @@ export default function Index({ countries }) {
                                                         <input
                                                                type="text"
                                                                autoFocus
-                                                               className="w-full px-4 py-3 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm"
+                                                               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-black focus:border-black rounded-xl text-sm"
                                                                placeholder={`Enter ${modalConfig.type} name...`}
                                                                value={data.name}
                                                                onChange={e => setData('name', e.target.value)}

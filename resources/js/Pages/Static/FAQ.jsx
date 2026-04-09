@@ -2,12 +2,16 @@ import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 
-export default function FAQ() {
+export default function FAQ({ faqs = [] }) {
        const [activeTab, setActiveTab] = useState('general');
        const [openAccordion, setOpenAccordion] = useState(null);
+       const dynamicGeneralFaqs = faqs.map((faq) => ({
+              question: faq.question_text,
+              answer: faq.answer_text,
+       }));
 
        const faqData = {
-              general: [
+              general: dynamicGeneralFaqs.length ? dynamicGeneralFaqs : [
                      {
                             question: "What is XpertBid?",
                             answer: "XpertBid is a secure online auction marketplace that connects verified buyers and sellers for properties, vehicles, and other assets. You can list, bid, and close deals digitally — quickly, transparently, and with full control."
@@ -166,14 +170,15 @@ export default function FAQ() {
                     color: #495057;
                 }
                 .faq-tabs .nav-pills .nav-link.active {
-                    background-color: #fff !important;
-                    color: #000 !important;
-                    border-color: #0d6efd !important;
+                    background-color: #23262F !important;
+                    color: #fff !important;
+                    border-color: #23262F !important;
                     border-width: 2px !important;
                 }
                 .faq-tabs .nav-pills .nav-link.active:hover {
-                    background-color: #fff !important;
-                    color: #000 !important;
+                    background-color: #43ACE9 !important;
+                    color: #fff !important;
+                    border-color: #43ACE9 !important;
                 }
                 .faq-accordion .accordion-item {
                     background-color: #fff;
@@ -199,6 +204,9 @@ export default function FAQ() {
                     background-color: #e7f3ff;
                     color: #0d6efd;
                 }
+                .faq-accordion .accordion-button h5 {
+                    color: inherit;
+                }
                 .faq-accordion .accordion-button::after {
                     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23212529'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
                     transition: transform 0.3s ease;
@@ -216,8 +224,12 @@ export default function FAQ() {
                 .faq-accordion .accordion-body {
                     padding: 1.5rem;
                     background-color: #fff;
-                    color: #6c757d;
+                    color: #23262F;
                     line-height: 1.6;
+                    border-top: 1px solid #e9ecef;
+                }
+                .faq-accordion .accordion-body p {
+                    color: #23262F;
                 }
                 @media (max-width: 768px) {
                     .faq-tabs .nav-pills {
@@ -277,11 +289,11 @@ export default function FAQ() {
                                                                                            <h5 className="mb-0">{item.question}</h5>
                                                                                     </button>
                                                                              </div>
-                                                                             <div className={`accordion-collapse collapse ${openAccordion === index ? 'show' : ''}`}>
+                                                                             {openAccordion === index && (
                                                                                     <div className="accordion-body">
                                                                                            <p className="mb-0">{item.answer}</p>
                                                                                     </div>
-                                                                             </div>
+                                                                             )}
                                                                       </div>
                                                                ))}
                                                         </div>

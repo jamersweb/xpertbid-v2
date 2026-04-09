@@ -41,7 +41,7 @@ class LocationController extends Controller
             ]);
         }
 
-        return redirect()->back()->with('success', ucfirst($request->type) . ' created successfully.');
+        return redirect()->route('admin.locations.index')->with('success', ucfirst($request->type) . ' created successfully.');
     }
 
     public function update(Request $request, $id)
@@ -59,12 +59,12 @@ class LocationController extends Controller
             City::findOrFail($id)->update(['name' => $request->name]);
         }
 
-        return redirect()->back()->with('success', ucfirst($request->type) . ' updated successfully.');
+        return redirect()->route('admin.locations.index')->with('success', ucfirst($request->type) . ' updated successfully.');
     }
 
     public function destroy($id, Request $request)
     {
-        $type = $request->query('type');
+        $type = $request->input('type', $request->query('type'));
         
         if ($type == 'country') {
             Country::findOrFail($id)->delete();
@@ -74,6 +74,6 @@ class LocationController extends Controller
             City::findOrFail($id)->delete();
         }
 
-        return redirect()->back()->with('success', ucfirst($type) . ' deleted successfully.');
+        return redirect()->route('admin.locations.index')->with('success', ucfirst($type) . ' deleted successfully.');
     }
 }

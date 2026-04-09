@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FaqQuestion;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -61,6 +62,13 @@ class StaticPageController extends Controller
      */
     public function faq(): Response
     {
-        return Inertia::render('Static/FAQ');
+        $faqs = FaqQuestion::query()
+            ->where('status', 'Active')
+            ->orderBy('id')
+            ->get(['id', 'question_text', 'answer_text']);
+
+        return Inertia::render('Static/FAQ', [
+            'faqs' => $faqs,
+        ]);
     }
 }

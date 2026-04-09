@@ -35,6 +35,39 @@ class ListingController extends Controller
         return 'assets/images/listing_images/' . $filename;
     }
 
+    protected function buildListingData(Request $request, ?Listing $listing, array $albumPaths, ?string $imagePath): array
+    {
+        $existingData = $listing?->listing_data ?? [];
+
+        $typeSpecificData = [
+            'price' => in_array($request->listing_type, ['normal', 'business'], true) ? $request->price : null,
+            'start_price' => $request->listing_type === 'auction' ? $request->price : null,
+            'reserve_price' => $request->listing_type === 'auction' ? $request->reserve_price : null,
+            'start_date' => $request->listing_type === 'auction' ? $request->start_date : null,
+            'end_date' => $request->listing_type === 'auction' ? $request->end_date : null,
+            'stock' => $request->listing_type === 'business' ? $request->stock : null,
+            'image' => $imagePath,
+            'album' => $albumPaths,
+        ];
+
+        $listingData = array_merge($existingData, $typeSpecificData);
+
+        // Remove stale keys when listing type changes.
+        if ($request->listing_type !== 'auction') {
+            unset($listingData['start_price'], $listingData['reserve_price'], $listingData['start_date'], $listingData['end_date']);
+        }
+
+        if ($request->listing_type !== 'business') {
+            unset($listingData['stock']);
+        }
+
+        if ($request->listing_type === 'auction') {
+            unset($listingData['price']);
+        }
+
+        return array_filter($listingData, fn ($value) => !($value === null || $value === '' || $value === []));
+    }
+
     protected function getFormPayload(?Listing $listing = null): array
     {
         return [
@@ -158,15 +191,7 @@ class ListingController extends Controller
             $imagePath = $albumPaths[0];
         }
 
-        $listingData = array_filter([
-            'price' => $request->price,
-            'start_price' => $request->listing_type === 'auction' ? $request->price : null,
-            'reserve_price' => $request->listing_type === 'auction' ? $request->reserve_price : null,
-            'start_date' => $request->listing_type === 'auction' ? $request->start_date : null,
-            'end_date' => $request->listing_type === 'auction' ? $request->end_date : null,
-            'stock' => $request->listing_type === 'business' ? $request->stock : null,
-            'album' => $albumPaths,
-        ], fn ($value) => !($value === null || $value === '' || $value === []));
+        $listingData = $this->buildListingData($request, null, $albumPaths, $imagePath);
 
         Listing::create([
             'user_id' => $request->user_id,
@@ -213,13 +238,22 @@ class ListingController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        $requestHost = $request->getHost();
+
         $existingAlbum = collect($request->input('existing_album', []))
-            ->map(function ($path) {
+            ->map(function ($path) use ($requestHost) {
                 if (!$path) {
                     return null;
                 }
 
                 if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                    $host = parse_url($path, PHP_URL_HOST) ?: '';
+                    $appHost = parse_url(config('app.url'), PHP_URL_HOST) ?: '';
+
+                    if ($host && !in_array($host, array_filter([$appHost, $requestHost]), true)) {
+                        return $path;
+                    }
+
                     $parsedPath = parse_url($path, PHP_URL_PATH) ?: '';
                     $path = ltrim($parsedPath, '/');
                 }
@@ -237,22 +271,18 @@ class ListingController extends Controller
             }
         }
 
-        $imagePath = $listing->image;
+        $imagePath = $listing->getRawOriginal('image') ?: ($listing->listing_data['image'] ?? null);
         if ($request->hasFile('image')) {
             $imagePath = $this->storeOptimizedListingImage($request->file('image'));
         } elseif (!$imagePath && !empty($albumPaths)) {
             $imagePath = $albumPaths[0];
         }
 
-        $listingData = array_filter([
-            'price' => $request->price,
-            'start_price' => $request->listing_type === 'auction' ? $request->price : null,
-            'reserve_price' => $request->listing_type === 'auction' ? $request->reserve_price : null,
-            'start_date' => $request->listing_type === 'auction' ? $request->start_date : null,
-            'end_date' => $request->listing_type === 'auction' ? $request->end_date : null,
-            'stock' => $request->listing_type === 'business' ? $request->stock : null,
-            'album' => $albumPaths,
-        ], fn ($value) => !($value === null || $value === '' || $value === []));
+        if (!$imagePath && !empty($albumPaths)) {
+            $imagePath = $albumPaths[0];
+        }
+
+        $listingData = $this->buildListingData($request, $listing, $albumPaths, $imagePath);
 
         $listing->update([
             'user_id' => $request->user_id,
