@@ -91,6 +91,11 @@ class Listing extends Model
         return $this->hasMany(Bid::class);
     }
 
+    public function pendingEdit()
+    {
+        return $this->hasOne(ListingEdit::class);
+    }
+
     // Helper methods to access listing-type specific data
     public function getPriceAttribute()
     {

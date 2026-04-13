@@ -192,6 +192,16 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
               }).format(date);
        };
 
+       const buildAvatarUrl = (avatar) => {
+              if (!avatar) return '/assets/images/user-fallback.png';
+              if (String(avatar).startsWith('http')) return avatar;
+
+              const normalized = String(avatar).replace(/\\/g, '/');
+              if (normalized.startsWith('/')) return normalized;
+
+              return `/${normalized.replace(/^\/+/, '')}`;
+       };
+
        return (
               <div className="product-details-brief-parent" style={{ padding: '0 10px' }}>
                      <h2 className="product-heading mb-3">{product.title}</h2>
@@ -200,7 +210,7 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                             <div className="owned d-flex align-items-center gap-2">
                                    <div className="customer-profile-wrap">
                                           <img
-                                                 src={product.seller?.profile_pic || '/assets/images/user-fallback.png'}
+                                                 src={buildAvatarUrl(product.seller?.profile_pic || product.user?.profile_pic)}
                                                  alt="Owner"
                                                  style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover' }}
                                                  onError={(e) => { e.target.src = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'; }}

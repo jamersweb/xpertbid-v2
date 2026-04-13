@@ -9,8 +9,16 @@ import MediaUpload from '@/Components/SellSteps/MediaUpload';
 import axios from 'axios';
 import '@/../css/sell.css'; // Import custom styles for Sell page
 
-export default function Create({ categories, listing = null }) {
+export default function Create({ categories, listing = null, vehicleVerification = null, propertyVerification = null }) {
        const { auth } = usePage().props;
+       const individualVerificationStatus =
+              auth?.user?.individual_verification?.status || auth?.user?.individualVerification?.status || '';
+       const corporateVerificationStatus =
+              auth?.user?.corporate_verification?.status || auth?.user?.corporateVerification?.status || '';
+       const canPublishListing = [individualVerificationStatus, corporateVerificationStatus].some(
+              (status) => ['verified', 'approved'].includes(String(status || '').toLowerCase())
+       );
+       const publishBlockedMessage = 'Complete individual or corporate verification before publishing a listing. You can still save it as a draft.';
        const listingData = listing?.listing_data || {};
        const categoryFeatures = listing?.category_features || {};
        const initialListType = listing?.list_type === 'normal' || listing?.listing_type === 'normal'
@@ -70,15 +78,17 @@ export default function Create({ categories, listing = null }) {
               discount_value: listing?.discount_value || listingData.discount_value || '',
               status: listing?.status || 'inactive',
 
-              property_type: listing?.property_type || categoryFeatures.property_type || '',
-              property_address: listing?.property_address || categoryFeatures.property_address || '',
-              title_deed_number: listing?.title_deed_number || categoryFeatures.title_deed_number || '',
+              property_type: listing?.property_type || propertyVerification?.property_type || categoryFeatures.property_type || '',
+              property_address: listing?.property_address || propertyVerification?.property_address || categoryFeatures.property_address || '',
+              title_deed_number: listing?.title_deed_number || propertyVerification?.title_deed_number || categoryFeatures.title_deed_number || '',
               property_documents: [],
 
-              vehicle_make_model: listing?.vehicle_make_model || categoryFeatures.vehicle_make_model || '',
-              year_of_manufacture: listing?.year_of_manufacture || categoryFeatures.year_of_manufacture || '',
-              chassis_vin: listing?.chassis_vin || categoryFeatures.chassis_vin || '',
+              vehicle_make_model: listing?.vehicle_make_model || vehicleVerification?.vehicle_make_model || categoryFeatures.vehicle_make_model || '',
+              year_of_manufacture: listing?.year_of_manufacture || vehicleVerification?.year_of_manufacture || categoryFeatures.year_of_manufacture || '',
+              chassis_vin: listing?.chassis_vin || vehicleVerification?.chassis_vin || categoryFeatures.chassis_vin || '',
               vehicle_documents: [],
+              existing_property_documents: propertyVerification?.property_documents || categoryFeatures.property_documents || [],
+              existing_vehicle_documents: vehicleVerification?.vehicle_documents || categoryFeatures.vehicle_documents || [],
               category_features: categoryFeatures,
               stock: listing?.stock || listingData.stock || '',
               quantity: listingData.quantity || '',
@@ -105,6 +115,7 @@ export default function Create({ categories, listing = null }) {
 
        const [isSavingDraft, setIsSavingDraft] = useState(false);
        const [dynamicFields, setDynamicFields] = useState([]);
+       const isDraftListing = listing?.is_draft === true || listing?.status === 'draft';
 
        // Effect to find category objects if editing
        useEffect(() => {
@@ -257,10 +268,15 @@ export default function Create({ categories, listing = null }) {
 
               data.append('user_id', auth.user.id);
 
-              try {
+                     try {
                      if (listing && listing.id) {
                             data.append('_method', 'PUT');
-                            router.post(route('auctions.update', { listing: listing.slug || listing.id }), data, {
+                            router.post(
+                                   isDraftListing
+                                          ? route('auctions.drafts.update', { draft: listing.id })
+                                          : route('auctions.update', { listing: listing.slug || listing.id }),
+                                   data,
+                                   {
                                    forceFormData: true,
                                    onSuccess: () => {
                                           setIsSavingDraft(false);
@@ -270,7 +286,8 @@ export default function Create({ categories, listing = null }) {
                                           alert("Failed to update listing. Please check the form.");
                                           setIsSavingDraft(false);
                                    }
-                            });
+                                   }
+                            );
                      } else {
                             router.post('/auctions', data, {
                                    forceFormData: true,
@@ -290,7 +307,14 @@ export default function Create({ categories, listing = null }) {
               }
        };
 
-       const handleSubmit = () => submitAuction(listing ? 'resubmit' : 'inactive');
+       const handleSubmit = () => {
+              if (!canPublishListing) {
+                     alert(publishBlockedMessage);
+                     return;
+              }
+
+              submitAuction(listing ? 'resubmit' : 'inactive');
+       };
        const handleSaveDraft = () => submitAuction('draft');
 
        // Summary Data Object for children
@@ -377,6 +401,8 @@ export default function Create({ categories, listing = null }) {
                                           onEditVerification={() => setStep('verification')}
                                           onSaveDraft={handleSaveDraft}
                                           isSavingDraft={isSavingDraft}
+                                          canPublish={canPublishListing}
+                                          publishBlockedMessage={publishBlockedMessage}
                                    />
                             )}
                      </div>

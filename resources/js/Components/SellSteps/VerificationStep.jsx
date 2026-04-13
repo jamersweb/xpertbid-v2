@@ -4,6 +4,8 @@ import SummaryCard from './SummaryCard';
 export default function VerificationStep({ categoryId, formData, setFormData, summaryData, onContinue, onBack, onEditListType, onEditCategory, onEditDetails, onSaveDraft, isSavingDraft }) {
        const isProperty = String(categoryId) === '222';
        const isVehicle = String(categoryId) === '311';
+       const existingPropertyDocs = formData.existing_property_documents || [];
+       const existingVehicleDocs = formData.existing_vehicle_documents || [];
 
        // Local state for file validations/errors
        const [errors, setErrors] = useState({});
@@ -29,13 +31,13 @@ export default function VerificationStep({ categoryId, formData, setFormData, su
                      if (!formData.property_type) newErrors.property_type = "Required";
                      if (!formData.property_address) newErrors.property_address = "Required";
                      if (!formData.title_deed_number) newErrors.title_deed_number = "Required";
-                     if (!formData.property_documents?.length) newErrors.property_documents = "Upload documents";
+                     if (!formData.property_documents?.length && !existingPropertyDocs.length) newErrors.property_documents = "Upload documents";
               }
               if (isVehicle) {
                      if (!formData.vehicle_make_model) newErrors.vehicle_make_model = "Required";
                      if (!formData.year_of_manufacture) newErrors.year_of_manufacture = "Required";
                      if (!formData.chassis_vin) newErrors.chassis_vin = "Required";
-                     if (!formData.vehicle_documents?.length) newErrors.vehicle_documents = "Upload documents";
+                     if (!formData.vehicle_documents?.length && !existingVehicleDocs.length) newErrors.vehicle_documents = "Upload documents";
               }
               setErrors(newErrors);
               return Object.keys(newErrors).length === 0;
@@ -49,6 +51,21 @@ export default function VerificationStep({ categoryId, formData, setFormData, su
        };
 
        if (!isProperty && !isVehicle) return null;
+
+       const getDocumentUrl = (doc) => {
+              if (!doc) return '#';
+              if (typeof doc === 'string' && (doc.startsWith('http://') || doc.startsWith('https://'))) {
+                     return doc;
+              }
+              return `/${String(doc).replace(/^\/+/, '')}`;
+       };
+
+       const getDocumentLabel = (doc, idx) => {
+              if (!doc) return `Document ${idx + 1}`;
+              if (typeof doc !== 'string') return `Document ${idx + 1}`;
+              const parts = doc.split('/');
+              return parts[parts.length - 1] || `Document ${idx + 1}`;
+       };
 
        return (
               <section className="verification-stage py-5">
@@ -147,7 +164,7 @@ export default function VerificationStep({ categoryId, formData, setFormData, su
 
                                           <div className="identity-upload-section mb-4">
                                                  <h4 className="form-label fw-bold mb-3">Upload Ownership & NOC Documents</h4>
-                                                 <ul className="liss mb-3 text-muted small">
+                                                 <ul className="liss mb-3 small" style={{ color: '#4b5563' }}>
                                                         <li>Click the box to select your files (PNG/JPG).</li>
                                                         <li>Maximum 3 documents.</li>
                                                  </ul>
@@ -166,7 +183,7 @@ export default function VerificationStep({ categoryId, formData, setFormData, su
                                                                onChange={(e) => handleDocsChange(e, 'property_documents')}
                                                         />
                                                         <div className="upload-dropzone-content">
-                                                               <i className="fa-solid fa-cloud-arrow-up fa-2x mb-3 text-muted"></i>
+                                                               <i className="fa-solid fa-cloud-arrow-up fa-2x mb-3" style={{ color: '#6b7280' }}></i>
                                                                <p className="mb-1 fw-bold text-dark">Drag & drop or click to upload documents</p>
                                                                <span className="text-dark small">PNG, JPG formats only. Max 3 files.</span>
                                                         </div>
@@ -174,12 +191,31 @@ export default function VerificationStep({ categoryId, formData, setFormData, su
                                                  {errors.property_documents && <p className="text-danger small mt-2">{errors.property_documents}</p>}
 
                                                  {/* Preview Area */}
+                                                 {existingPropertyDocs.length > 0 && (
+                                                        <div className="mt-3">
+                                                               <p className="small fw-bold mb-2" style={{ color: '#111827' }}>Existing Documents:</p>
+                                                               <ul className="list-unstyled mb-0">
+                                                                      {existingPropertyDocs.map((doc, idx) => (
+                                                                             <li key={`existing-property-${idx}`} className="small mb-1">
+                                                                                    <a
+                                                                                           href={getDocumentUrl(doc)}
+                                                                                           target="_blank"
+                                                                                           rel="noreferrer"
+                                                                                           className="text-decoration-underline text-dark"
+                                                                                    >
+                                                                                           {getDocumentLabel(doc, idx)}
+                                                                                    </a>
+                                                                             </li>
+                                                                      ))}
+                                                               </ul>
+                                                        </div>
+                                                 )}
                                                  {formData.property_documents && formData.property_documents.length > 0 && (
                                                         <div className="mt-3">
-                                                               <p className="small fw-bold mb-2">Selected Files:</p>
+                                                               <p className="small fw-bold mb-2" style={{ color: '#111827' }}>Selected Files:</p>
                                                                <ul className="list-unstyled">
                                                                       {Array.from(formData.property_documents).map((file, idx) => (
-                                                                             <li key={idx} className="small text-muted">{file.name}</li>
+                                                                             <li key={idx} className="small" style={{ color: '#374151' }}>{file.name}</li>
                                                                       ))}
                                                                </ul>
                                                         </div>
@@ -231,7 +267,7 @@ export default function VerificationStep({ categoryId, formData, setFormData, su
 
                                           <div className="identity-upload-section mb-4">
                                                  <h4 className="form-label fw-bold mb-3">Upload Vehicle Documents</h4>
-                                                 <ul className="liss mb-3 text-muted small">
+                                                 <ul className="liss mb-3 small" style={{ color: '#4b5563' }}>
                                                         <li>Upload up to 3 documents for verification.</li>
                                                         <li>Accepted formats: PNG/JPG/PDF.</li>
                                                  </ul>
@@ -250,20 +286,39 @@ export default function VerificationStep({ categoryId, formData, setFormData, su
                                                                onChange={(e) => handleDocsChange(e, 'vehicle_documents')}
                                                         />
                                                         <div className="upload-dropzone-content">
-                                                               <i className="fa-solid fa-cloud-arrow-up fa-2x mb-3 text-muted"></i>
-                                                               <p className="mb-1 fw-bold">Drag & drop or click to upload documents</p>
+                                                               <i className="fa-solid fa-cloud-arrow-up fa-2x mb-3" style={{ color: '#6b7280' }}></i>
+                                                               <p className="mb-1 fw-bold" style={{ color: '#111827' }}>Drag & drop or click to upload documents</p>
                                                                <span className="text-dark small">PNG, JPG, PDF formats only. Max 3 files.</span>
                                                         </div>
                                                  </div>
                                                  {errors.vehicle_documents && <p className="text-danger small mt-2">{errors.vehicle_documents}</p>}
 
                                                  {/* Preview Area */}
+                                                 {existingVehicleDocs.length > 0 && (
+                                                        <div className="mt-3">
+                                                               <p className="small fw-bold mb-2" style={{ color: '#111827' }}>Existing Documents:</p>
+                                                               <ul className="list-unstyled mb-0">
+                                                                      {existingVehicleDocs.map((doc, idx) => (
+                                                                             <li key={`existing-vehicle-${idx}`} className="small mb-1">
+                                                                                    <a
+                                                                                           href={getDocumentUrl(doc)}
+                                                                                           target="_blank"
+                                                                                           rel="noreferrer"
+                                                                                           className="text-decoration-underline text-dark"
+                                                                                    >
+                                                                                           {getDocumentLabel(doc, idx)}
+                                                                                    </a>
+                                                                             </li>
+                                                                      ))}
+                                                               </ul>
+                                                        </div>
+                                                 )}
                                                  {formData.vehicle_documents && formData.vehicle_documents.length > 0 && (
                                                         <div className="mt-3">
-                                                               <p className="small fw-bold mb-2">Selected Files:</p>
+                                                               <p className="small fw-bold mb-2" style={{ color: '#111827' }}>Selected Files:</p>
                                                                <ul className="list-unstyled">
                                                                       {Array.from(formData.vehicle_documents).map((file, idx) => (
-                                                                             <li key={idx} className="small text-muted">{file.name}</li>
+                                                                             <li key={idx} className="small" style={{ color: '#374151' }}>{file.name}</li>
                                                                       ))}
                                                                </ul>
                                                         </div>

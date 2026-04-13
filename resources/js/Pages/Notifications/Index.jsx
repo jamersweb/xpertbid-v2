@@ -1,33 +1,53 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import SuccessPopup from '@/Components/SuccessPopup';
-import ErrorPopup from '@/Components/ErrorPopup';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 export default function Index({ notifications }) {
        const { url } = usePage();
        const [filter, setFilter] = useState("most-recent");
        const [localNotifications, setLocalNotifications] = useState(notifications.data);
-       const [showSuccess, setShowSuccess] = useState(false);
-       const [showError, setShowError] = useState(false);
-       const [message, setMessage] = useState("");
+       const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+       const showToast = (message, type = 'success') => {
+              setToast({ show: true, message, type });
+              setTimeout(() => {
+                     setToast({ show: false, message: '', type: 'success' });
+              }, 3500);
+       };
 
        const handleFilterChange = (e) => {
               setFilter(e.target.value);
        };
 
        const deleteNotification = async (id) => {
-              if (!confirm('Are you sure you want to delete this notification?')) return;
+              const result = await Swal.fire({
+                     title: 'Delete notification?',
+                     text: 'Are you sure you want to delete this notification?',
+                     icon: 'warning',
+                     showCancelButton: true,
+                     confirmButtonText: 'Yes, delete it',
+                     cancelButtonText: 'Cancel',
+                     confirmButtonColor: '#43ACE9',
+                     cancelButtonColor: '#1f2937',
+                     background: '#ffffff',
+                     color: '#111827',
+                     customClass: {
+                            popup: 'xb-notification-confirm',
+                            confirmButton: 'xb-notification-confirm-btn',
+                            cancelButton: 'xb-notification-cancel-btn',
+                     },
+              });
+
+              if (!result.isConfirmed) return;
 
               try {
                      await axios.delete(route('notifications.delete', id));
                      setLocalNotifications(prev => prev.filter(n => n.id !== id));
-                     setMessage("Notification deleted successfully!");
-                     setShowSuccess(true);
+                     showToast("Notification deleted successfully!", 'success');
               } catch (error) {
-                     setMessage("Failed to delete notification.");
-                     setShowError(true);
+                     showToast("Failed to delete notification.", 'error');
               }
        };
 
@@ -61,18 +81,23 @@ export default function Index({ notifications }) {
               <AppLayout title="Notifications">
                      <Head title="Notifications" />
 
-                     <SuccessPopup
-                            isOpen={showSuccess}
-                            onClose={() => setShowSuccess(false)}
-                            message={message}
-                     />
-                     <ErrorPopup
-                            isOpen={showError}
-                            onClose={() => setShowError(false)}
-                            message={message}
-                     />
-
                      <div className="py-5 bg-light min-vh-100">
+                            {toast.show && (
+                                   <div className="notification-toast-wrap">
+                                          <div className={`notification-toast notification-toast--${toast.type}`}>
+                                                 <div className="notification-toast__icon">
+                                                        {toast.type === 'success' ? '✓' : '!'}
+                                                 </div>
+                                                 <div className="notification-toast__content">
+                                                        <div className="notification-toast__title">
+                                                               {toast.type === 'success' ? 'Success' : 'Error'}
+                                                        </div>
+                                                        <div className="notification-toast__message">{toast.message}</div>
+                                                 </div>
+                                          </div>
+                                   </div>
+                            )}
+
                             <div className="container">
                                    <div className="row justify-content-center">
                                           <div className="col-lg-10 col-xl-8">
@@ -167,6 +192,74 @@ export default function Index({ notifications }) {
                 }
                 .border-primary {
                     border-color: #0d6efd !important;
+                }
+                .notification-toast-wrap {
+                    position: fixed;
+                    top: 96px;
+                    right: 24px;
+                    z-index: 9999;
+                }
+                .notification-toast {
+                    min-width: 320px;
+                    max-width: 420px;
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 12px;
+                    padding: 14px 16px;
+                    border-radius: 16px;
+                    color: #fff;
+                    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+                    animation: notificationToastIn 0.25s ease-out;
+                }
+                .notification-toast--success {
+                    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+                    border-left: 4px solid #43ACE9;
+                }
+                .notification-toast--error {
+                    background: linear-gradient(135deg, #2b1215 0%, #4a1d24 100%);
+                    border-left: 4px solid #ff6b6b;
+                }
+                .notification-toast__icon {
+                    width: 28px;
+                    height: 28px;
+                    border-radius: 999px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 700;
+                    flex-shrink: 0;
+                    background: rgba(255,255,255,0.16);
+                }
+                .notification-toast__title {
+                    font-weight: 700;
+                    font-size: 14px;
+                    margin-bottom: 2px;
+                }
+                .notification-toast__message {
+                    font-size: 13px;
+                    opacity: 0.9;
+                }
+                .xb-notification-confirm {
+                    border-radius: 22px;
+                    padding: 1.5rem;
+                    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+                }
+                .xb-notification-confirm-btn,
+                .xb-notification-cancel-btn {
+                    border-radius: 999px !important;
+                    padding: 10px 18px !important;
+                    font-weight: 600 !important;
+                    box-shadow: none !important;
+                }
+                @keyframes notificationToastIn {
+                    from {
+                        opacity: 0;
+                        transform: translateX(18px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
                 }
             `}} />
               </AppLayout>

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import SummaryCard from './SummaryCard';
 
-export default function MediaUpload({ files, setFiles, existingFiles = [], setExistingFiles, summaryData, onContinue, onBack, onEditListType, onEditCategory, onEditDetails, onEditVerification, onSaveDraft, isSavingDraft }) {
+export default function MediaUpload({ files, setFiles, existingFiles = [], setExistingFiles, summaryData, onContinue, onBack, onEditListType, onEditCategory, onEditDetails, onEditVerification, onSaveDraft, isSavingDraft, canPublish = true, publishBlockedMessage = '' }) {
        const fileInputRef = useRef(null);
        const [error, setError] = useState("");
 
@@ -75,6 +75,21 @@ export default function MediaUpload({ files, setFiles, existingFiles = [], setEx
 
                      <form className="media-form" onSubmit={handleNext}>
                             <div className="sell-form-inner">
+
+                            {!canPublish && (
+                                   <div
+                                          className="alert border-0 mb-4"
+                                          style={{
+                                                 background: '#FFF4E5',
+                                                 color: '#8A4B08',
+                                                 borderRadius: '18px',
+                                                 padding: '16px 18px',
+                                          }}
+                                   >
+                                          <div className="fw-bold mb-1">Verification required to publish</div>
+                                          <div className="small mb-0">{publishBlockedMessage}</div>
+                                   </div>
+                            )}
 
                             <SummaryCard
                                    type="List Type"
@@ -195,9 +210,10 @@ export default function MediaUpload({ files, setFiles, existingFiles = [], setEx
                                    <button
                                           type="submit"
                                           className="btn btn-black px-5"
-                                          disabled={files.length === 0 && existingFiles.length === 0}
+                                          disabled={!canPublish || (files.length === 0 && existingFiles.length === 0)}
+                                          title={!canPublish ? publishBlockedMessage : undefined}
                                    >
-                                          Continue
+                                          {canPublish ? 'Continue' : 'Verification Required'}
                                    </button>
                             </div>
                             </div>

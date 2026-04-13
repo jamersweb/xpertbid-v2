@@ -15,7 +15,11 @@ class AuctionStatusController extends Controller
     public function index()
     {
         $listings = Listing::with(['user', 'category'])
-            ->whereIn('status', ['inactive', 'declined', 'resubmit'])
+            ->with('pendingEdit')
+            ->where(function ($query) {
+                $query->whereIn('status', ['inactive', 'declined', 'resubmit'])
+                    ->orWhereHas('pendingEdit');
+            })
             ->latest()
             ->paginate(15);
 
@@ -26,7 +30,30 @@ class AuctionStatusController extends Controller
 
     public function accept($id)
     {
-        $auction = Listing::findOrFail($id);
+        $auction = Listing::with('pendingEdit')->findOrFail($id);
+
+        if ($auction->pendingEdit) {
+            $payload = $auction->pendingEdit->data ?? [];
+
+            $auction->update([
+                'category_id' => $payload['category_id'] ?? $auction->category_id,
+                'sub_category_id' => $payload['sub_category_id'] ?? $auction->sub_category_id,
+                'child_category_id' => $payload['child_category_id'] ?? $auction->child_category_id,
+                'listing_type' => $payload['listing_type'] ?? $auction->listing_type,
+                'title' => $payload['title'] ?? $auction->title,
+                'description' => $payload['description'] ?? $auction->description,
+                'image' => $payload['image'] ?? $auction->getRawOriginal('image'),
+                'album' => $payload['album'] ?? $auction->getRawOriginal('album'),
+                'listing_data' => $payload['listing_data'] ?? $auction->listing_data,
+                'category_features' => $payload['category_features'] ?? $auction->category_features,
+                'status' => 'active',
+            ]);
+
+            $auction->pendingEdit->delete();
+
+            return redirect()->back()->with('success', 'Pending edits approved and merged into the live listing.');
+        }
+
         $auction->status = 'active';
         $auction->save();
 
@@ -38,7 +65,14 @@ class AuctionStatusController extends Controller
 
     public function decline(Request $request, $id)
     {
-        $auction = Listing::findOrFail($id);
+        $auction = Listing::with('pendingEdit')->findOrFail($id);
+
+        if ($auction->pendingEdit && $auction->status === 'active') {
+            $auction->pendingEdit->delete();
+
+            return redirect()->back()->with('success', 'Pending edits declined and the live listing was kept unchanged.');
+        }
+
         $auction->status = 'declined';
         $auction->decline_reason = $request->reason;
         $auction->save();

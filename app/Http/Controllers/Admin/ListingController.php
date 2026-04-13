@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\AuctionCategory;
 use App\Models\City;
 use App\Models\Listing;
+use App\Models\ListingEdit;
 use App\Models\State;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -85,7 +87,7 @@ class ListingController extends Controller
      */
     public function index(Request $request)
     {
-        $listings = Listing::with(['user', 'category'])
+        $listings = Listing::with(['user', 'category', 'pendingEdit'])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->string('search')->toString();
                 $query->where(function ($innerQuery) use ($search) {
@@ -121,6 +123,7 @@ class ListingController extends Controller
             'subCategory',
             'childCategory',
             'bids',
+            'pendingEdit',
             'user.country',
             'user.shippingAddress',
             'user.individualVerification',
@@ -298,7 +301,41 @@ class ListingController extends Controller
             'listing_data' => $listingData,
         ]);
 
+        $listing->pendingEdit()?->delete();
+
         return redirect()->route('admin.listings.index')->with('success', 'Listing updated successfully');
+    }
+
+    public function approveEdit($id)
+    {
+        $listing = Listing::with('pendingEdit')->findOrFail($id);
+        $pendingEdit = $listing->pendingEdit;
+
+        if (!$pendingEdit) {
+            return redirect()->back()->with('error', 'No pending edits found for this listing.');
+        }
+
+        $payload = $pendingEdit->data ?? [];
+
+        DB::transaction(function () use ($listing, $pendingEdit, $payload) {
+            $listing->update([
+                'category_id' => $payload['category_id'] ?? $listing->category_id,
+                'sub_category_id' => $payload['sub_category_id'] ?? $listing->sub_category_id,
+                'child_category_id' => $payload['child_category_id'] ?? $listing->child_category_id,
+                'listing_type' => $payload['listing_type'] ?? $listing->listing_type,
+                'title' => $payload['title'] ?? $listing->title,
+                'description' => $payload['description'] ?? $listing->description,
+                'image' => $payload['image'] ?? $listing->getRawOriginal('image'),
+                'album' => $payload['album'] ?? $listing->getRawOriginal('album'),
+                'listing_data' => $payload['listing_data'] ?? $listing->listing_data,
+                'category_features' => $payload['category_features'] ?? $listing->category_features,
+                'status' => 'active',
+            ]);
+
+            $pendingEdit->delete();
+        });
+
+        return redirect()->back()->with('success', 'Pending edits approved and merged into the live listing.');
     }
 
     /**

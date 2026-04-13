@@ -130,6 +130,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/sell', [\App\Http\Controllers\ListingController::class, 'create'])->name('auctions.create');
     Route::post('/auctions', [\App\Http\Controllers\ListingController::class, 'store'])->name('auctions.store');
     Route::get('/my-listings', [\App\Http\Controllers\ListingController::class, 'index'])->name('auctions.mylistings');
+    Route::get('/auction-drafts/{draft}/edit', [\App\Http\Controllers\ListingController::class, 'editDraft'])->name('auctions.drafts.edit');
+    Route::match(['POST', 'PUT'], '/auction-drafts/{draft}', [\App\Http\Controllers\ListingController::class, 'updateDraft'])->name('auctions.drafts.update');
+    Route::post('/auction-drafts/{draft}/cancel', [\App\Http\Controllers\ListingController::class, 'cancelDraft'])->name('auctions.drafts.cancel');
     Route::get('/auctions/{listing}/edit', [\App\Http\Controllers\ListingController::class, 'edit'])->name('auctions.edit');
     Route::match(['POST', 'PUT'], '/auctions/{listing}', [\App\Http\Controllers\ListingController::class, 'update'])->name('auctions.update');
     Route::post('/auctions/{listing}/cancel', [\App\Http\Controllers\ListingController::class, 'cancel'])->name('auctions.cancel');
@@ -243,6 +246,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/listings', [App\Http\Controllers\Admin\ListingController::class, 'index'])->name('listings.index');
     Route::resource('listings', App\Http\Controllers\Admin\ListingController::class)->except(['index'])->names('listings');
     Route::patch('/listings/{id}/status', [App\Http\Controllers\Admin\ListingController::class, 'updateStatus'])->name('listings.update-status');
+    Route::post('/listings/{id}/approve-edit', [App\Http\Controllers\Admin\ListingController::class, 'approveEdit'])->name('listings.approve-edit');
 
     // Unified Category Management (Refactored to legacy system)
     Route::resource('categories', App\Http\Controllers\Admin\AuctionCategoryController::class)->names('categories');

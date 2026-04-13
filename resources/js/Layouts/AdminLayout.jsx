@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import AdminSidebar from '@/Components/Admin/AdminSidebar';
 import CurrencyPicker from '@/Components/CurrencyPicker';
 
@@ -7,6 +7,10 @@ export default function AdminLayout({ children, title }) {
        const [isSidebarOpen, setIsSidebarOpen] = useState(true);
        const { auth } = usePage().props;
        const user = auth?.user;
+
+       const handleLogout = () => {
+              router.post(route('logout'));
+       };
 
        return (
               <div className="admin-layout flex min-h-screen bg-gray-50">
@@ -45,6 +49,21 @@ export default function AdminLayout({ children, title }) {
                                                         </div>
                                                         <i className="fa-solid fa-chevron-down text-[10px] text-gray-400 ms-1 me-1"></i>
                                                  </button>
+
+                                                 <div className="absolute right-0 top-full mt-2 hidden min-w-[180px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg group-hover:block">
+                                                        <div className="px-4 py-3 border-bottom border-gray-100">
+                                                               <p className="mb-1 text-sm fw-bold text-dark">{user?.name || 'Admin'}</p>
+                                                               <p className="mb-0 text-xs text-secondary">{user?.email || 'admin@xpertbid.com'}</p>
+                                                        </div>
+                                                        <button
+                                                               type="button"
+                                                               onClick={handleLogout}
+                                                               className="w-100 text-start px-4 py-3 border-0 bg-white d-flex align-items-center gap-2 text-danger fw-semibold hover:bg-red-50"
+                                                        >
+                                                               <i className="fa-solid fa-right-from-bracket"></i>
+                                                               Log Out
+                                                        </button>
+                                                 </div>
                                           </div>
                                    </div>
                             </header>

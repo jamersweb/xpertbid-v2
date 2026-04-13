@@ -39,6 +39,48 @@ export default function Show({ listing }) {
               return String(value);
        };
 
+       const resolveMediaUrl = (value) => {
+              if (!value) {
+                     return null;
+              }
+
+              if (typeof value === 'string' && (value.startsWith('http://') || value.startsWith('https://'))) {
+                     return value;
+              }
+
+              return `/${String(value).replace(/^\/+/, '')}`;
+       };
+
+       const renderMediaPreview = (value, label) => {
+              const items = (Array.isArray(value) ? value : [value])
+                     .map(resolveMediaUrl)
+                     .filter(Boolean);
+
+              if (!items.length) {
+                     return <p className="mt-1 text-sm text-gray-500">No {label.toLowerCase()} available</p>;
+              }
+
+              return (
+                     <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {items.map((src, index) => (
+                                   <a
+                                          key={`${label}-${index}`}
+                                          href={src}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="block"
+                                   >
+                                          <img
+                                                 src={src}
+                                                 alt={`${label} ${index + 1}`}
+                                                 className="w-full h-28 rounded-xl object-cover border border-gray-200 bg-gray-100"
+                                          />
+                                   </a>
+                            ))}
+                     </div>
+              );
+       };
+
        const seller = listing.user;
        const verificationStatus =
               seller?.individual_verification?.status ||
@@ -89,6 +131,7 @@ export default function Show({ listing }) {
               : listing.image_url
               ? [listing.image_url]
               : [];
+       const pendingEdit = listing.pending_edit?.data || null;
 
        const canApproveListing = ['inactive', 'declined', 'resubmit'].includes(listing.status);
        const canDeclineListing = ['inactive', 'resubmit'].includes(listing.status);
@@ -117,6 +160,12 @@ export default function Show({ listing }) {
               );
        };
 
+       const approvePendingEdit = () => {
+              if (confirm('Are you sure you want to merge the pending edits into the live listing?')) {
+                     router.post(route('admin.listings.approve-edit', listing.id));
+              }
+       };
+
        const renderStructuredData = (data) => {
               if (!data) {
                      return <p className="text-sm text-gray-600 mt-2">N/A</p>;
@@ -132,12 +181,16 @@ export default function Show({ listing }) {
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                             {entries.map(([key, value]) => {
                                    const isComplex = Array.isArray(value) || (typeof value === 'object' && value !== null);
+                                   const normalizedKey = key.toLowerCase();
+                                   const isMediaField = normalizedKey === 'image' || normalizedKey === 'album';
 
                                    return (
                                           <div key={key} className={isComplex ? 'md:col-span-2' : ''}>
                                                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
                                                         <p className="text-xs text-gray-400 uppercase font-bold">{formatLabel(key)}</p>
-                                                        {isComplex ? (
+                                                        {isMediaField ? (
+                                                               renderMediaPreview(value, formatLabel(key))
+                                                        ) : isComplex ? (
                                                                <pre className="mt-2 whitespace-pre-wrap break-words text-xs text-gray-800">
                                                                       {JSON.stringify(value, null, 2)}
                                                                </pre>
@@ -165,6 +218,14 @@ export default function Show({ listing }) {
                                           <p className="text-sm text-gray-500">Review listing data and seller profile from one place.</p>
                                    </div>
                                    <div className="flex items-center gap-3">
+                                          {pendingEdit && (
+                                                 <button
+                                                        onClick={approvePendingEdit}
+                                                        className="px-4 py-2 rounded-xl bg-amber-500 text-sm font-semibold text-white hover:bg-amber-600"
+                                                 >
+                                                        Approve Pending Edits
+                                                 </button>
+                                          )}
                                           {canApproveListing && (
                                                  <>
                                                         <button
@@ -191,8 +252,15 @@ export default function Show({ listing }) {
                                           >
                                                  Back to Approval List
                                           </Link>
+                                          </div>
                                    </div>
-                            </div>
+
+                                   {pendingEdit && (
+                                          <div className="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-2xl">
+                                                 <p className="text-sm font-bold uppercase tracking-wider">Pending Edits</p>
+                                                 <p className="text-sm mb-0 mt-1">This listing has seller changes waiting for admin approval. The frontend is still showing the current live data until you merge these edits.</p>
+                                          </div>
+                                   )}
 
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                    <div className="lg:col-span-2 space-y-6">
@@ -257,6 +325,34 @@ export default function Show({ listing }) {
                                                         </div>
                                                  </div>
                                           </div>
+
+                                          {pendingEdit && (
+                                                 <div className="bg-white text-gray-900 p-6 rounded-2xl shadow-sm border border-amber-200">
+                                                        <h2 className="text-lg font-bold text-gray-900 mb-4">Pending Edit Preview</h2>
+                                                        <div className="space-y-4">
+                                                               <div>
+                                                                      <p className="text-sm font-bold text-gray-700">Main fields</p>
+                                                                     {renderStructuredData({
+                                                                            title: pendingEdit.title,
+                                                                            description: pendingEdit.description,
+                                                                            listing_type: pendingEdit.listing_type,
+                                                                            category_id: pendingEdit.category_id,
+                                                                            sub_category_id: pendingEdit.sub_category_id,
+                                                                            child_category_id: pendingEdit.child_category_id,
+                                                                            album: pendingEdit.album,
+                                                                     })}
+                                                               </div>
+                                                               <div>
+                                                                      <p className="text-sm font-bold text-gray-700">Pending listing_data</p>
+                                                                      {renderStructuredData(pendingEdit.listing_data)}
+                                                               </div>
+                                                               <div>
+                                                                      <p className="text-sm font-bold text-gray-700">Pending category_features</p>
+                                                                      {renderStructuredData(pendingEdit.category_features)}
+                                                               </div>
+                                                        </div>
+                                                 </div>
+                                          )}
                                    </div>
 
                                    <div className="space-y-6">

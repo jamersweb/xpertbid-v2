@@ -11,8 +11,9 @@ export default function Auctions({ auctions }) {
        const [selectedAuction, setSelectedAuction] = useState(null);
        const [declineReason, setDeclineReason] = useState('');
 
-       const canApprove = (status) => ['inactive', 'declined', 'resubmit'].includes(status);
-       const canDecline = (status) => ['inactive', 'resubmit'].includes(status);
+       const hasPendingEdit = (auction) => Boolean(auction.pending_edit);
+       const canApprove = (auction) => ['inactive', 'declined', 'resubmit'].includes(auction.status) || hasPendingEdit(auction);
+       const canDecline = (auction) => ['inactive', 'resubmit'].includes(auction.status) || hasPendingEdit(auction);
 
        const openDeclineModal = (auction) => {
               setSelectedAuction(auction);
@@ -61,7 +62,7 @@ export default function Auctions({ auctions }) {
                      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                             <div className="p-6 border-bottom border-gray-100">
                                    <h2 className="text-lg font-bold text-gray-800">Listing Review Queue</h2>
-                                   <p className="text-xs text-gray-500">Showing inactive, declined, and resubmit listings</p>
+                                   <p className="text-xs text-gray-500">Showing inactive, declined, resubmit, and active listings with pending edits</p>
                             </div>
 
                             <div className="overflow-x-auto">
@@ -85,6 +86,11 @@ export default function Auctions({ auctions }) {
                                                                                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold mt-0.5 mr-1 inline-block ${statusBadges[auction.status] || 'bg-gray-100 text-gray-700'}`}>
                                                                                             {auction.status}
                                                                                      </span>
+                                                                                    {hasPendingEdit(auction) && (
+                                                                                           <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold mt-0.5 mr-1 inline-block bg-blue-100 text-blue-700">
+                                                                                                  pending edit
+                                                                                           </span>
+                                                                                    )}
                                                                                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold mt-0.5 inline-block ${
                                                                                            auction.listing_type === 'auction'
                                                                                                   ? 'bg-violet-100 text-violet-700'
@@ -115,7 +121,7 @@ export default function Auctions({ auctions }) {
                                                                              >
                                                                                     <i className="fa-solid fa-eye text-sm"></i>
                                                                              </Link>
-                                                                             {canApprove(auction.status) && (
+                                                                             {canApprove(auction) && (
                                                                                     <button 
                                                                                            onClick={() => openApproveModal(auction)} 
                                                                                            className="w-8 h-8 flex items-center justify-center bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors"
@@ -124,7 +130,7 @@ export default function Auctions({ auctions }) {
                                                                                            <i className="fa-solid fa-check text-sm"></i>
                                                                                     </button>
                                                                              )}
-                                                                             {canDecline(auction.status) && (
+                                                                             {canDecline(auction) && (
                                                                                     <button 
                                                                                            onClick={() => openDeclineModal(auction)} 
                                                                                            className="w-8 h-8 flex items-center justify-center bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 transition-colors"
@@ -144,7 +150,7 @@ export default function Auctions({ auctions }) {
                             {auctions.data.length === 0 && (
                                    <div className="p-12 text-center text-gray-400">
                                           <i className="fa-solid fa-check-circle text-4xl mb-4 text-emerald-100"></i>
-                                          <p>No inactive, declined, or resubmit listings found</p>
+                                          <p>No listing approvals or pending edits found</p>
                                    </div>
                             )}
                      </div>
@@ -156,7 +162,9 @@ export default function Auctions({ auctions }) {
                                    </div>
                                    <h2 className="text-lg font-bold text-gray-800 mb-2">Approve Listing</h2>
                                    <p className="text-sm text-gray-600 mb-6">
-                                          Are you sure you want to approve **{selectedAuction?.title}**? Once approved, it will be published and visible to all users.
+                                          {selectedAuction?.pending_edit
+                                                 ? `Are you sure you want to approve the pending edits for "${selectedAuction?.title}"? The live listing will be updated immediately.`
+                                                 : `Are you sure you want to approve "${selectedAuction?.title}"? Once approved, it will be published and visible to all users.`}
                                    </p>
                                    <div className="flex justify-end gap-3">
                                           <SecondaryButton onClick={() => setIsApproveModalOpen(false)}>Cancel</SecondaryButton>
@@ -164,7 +172,7 @@ export default function Auctions({ auctions }) {
                                                  onClick={confirmApprove} 
                                                  className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-colors"
                                           >
-                                                 Approve & Publish
+                                                 {selectedAuction?.pending_edit ? 'Approve Edits' : 'Approve & Publish'}
                                           </button>
                                    </div>
                             </div>

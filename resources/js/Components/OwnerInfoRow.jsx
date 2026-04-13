@@ -14,8 +14,11 @@ const formatName = (name = "") => {
 const buildAvatarUrl = (avatar) => {
        if (!avatar) return "/assets/images/user.jpg";
        if (avatar.startsWith("http")) return avatar;
-       const clean = avatar.replace(/^\/+/, "");
-       return `https://admin.xpertbid.com/${clean}`;
+
+       const normalized = String(avatar).replace(/\\/g, "/");
+       if (normalized.startsWith("/")) return normalized;
+
+       return `/${normalized.replace(/^\/+/, "")}`;
 };
 
 const OwnerInfoRow = ({

@@ -27,6 +27,8 @@ use Illuminate\Support\Carbon;      //  import Carbon here
 use App\Mail\AuctionStatusUpdated;
 use App\Models\NewNotification;
 use App\Models\ProductVariation;
+use App\Models\PropertyVerification;
+use App\Models\VehicleVerification;
 use App\Mail\FeaturedListingNotification;
 use Inertia\Inertia;
 
@@ -380,10 +382,15 @@ class AuctionController extends Controller
         $categories = AuctionCategory::whereNull('parent_id')
             ->whereNull('sub_category_id')
             ->get();
+
+        $vehicleVerification = VehicleVerification::where('listing_id', $auction->id)->latest()->first();
+        $propertyVerification = PropertyVerification::where('listing_id', $auction->id)->latest()->first();
         
         return Inertia::render('Auctions/Create', [
             'categories' => $categories,
             'listing' => $auction,
+            'vehicleVerification' => $vehicleVerification,
+            'propertyVerification' => $propertyVerification,
         ]);
     }
 
@@ -1115,12 +1122,27 @@ class AuctionController extends Controller
                     'title' => $listing->title,
                     'status' => $listing->status,
                     'currentBid' => $listing->bids->max('bid_amount'),
-                    'is_draft' => $listing->status === 'draft',
+                    'is_draft' => false,
                     'created_at' => $listing->created_at,
                 ];
             });
 
-        return response()->json($listings);
+        $drafts = \App\Models\ListingDraft::where('user_id', $user->id)
+            ->latest()
+            ->get()
+            ->map(function ($draft) {
+                return [
+                    'id' => $draft->id,
+                    'slug' => null,
+                    'title' => $draft->title,
+                    'status' => 'draft',
+                    'currentBid' => null,
+                    'is_draft' => true,
+                    'created_at' => $draft->created_at,
+                ];
+            });
+
+        return response()->json($listings->concat($drafts)->sortByDesc('created_at')->values());
     }
 
     public function dashboard()
@@ -1227,23 +1249,22 @@ class AuctionController extends Controller
         $userId = auth()->id();
         if (!$userId) return response()->json(['success' => false], 401);
 
-        $listing = \App\Models\Listing::updateOrCreate(
+        $draft = \App\Models\ListingDraft::updateOrCreate(
             ['id' => $request->input('draft_id'), 'user_id' => $userId],
             [
                 'title' => $request->input('title', 'Untitled Draft'),
-                'status' => 'draft',
                 'listing_type' => $request->input('list_type', 'auction'),
                 'listing_data' => $request->all(),
             ]
         );
 
-        return response()->json(['success' => true, 'draft_id' => $listing->id]);
+        return response()->json(['success' => true, 'draft_id' => $draft->id]);
     }
 
     public function api_get_draft($id)
     {
-        $listing = \App\Models\Listing::where('id', $id)->where('status', 'draft')->first();
-        if (!$listing) return response()->json(['success' => false], 404);
-        return response()->json(['success' => true, 'draft' => $listing]);
+        $draft = \App\Models\ListingDraft::where('id', $id)->first();
+        if (!$draft) return response()->json(['success' => false], 404);
+        return response()->json(['success' => true, 'draft' => $draft]);
     }
 }

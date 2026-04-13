@@ -98,7 +98,7 @@ export default function Index({ listings, filters = {} }) {
                                           <tbody className="divide-y divide-gray-100">
                                                  {listings.data.map((listing) => (
                                                         <tr key={listing.id} className="hover:bg-gray-50/50 transition-colors">
-                                                                <td className="px-6 py-4">
+                                                               <td className="px-6 py-4">
                                                                        <div className="flex items-center gap-3">
                                                                               <img src={listing.image_url || '/assets/images/placeholder.png'} className="w-10 h-10 rounded-lg object-cover" alt="" />
                                                                               <div>
@@ -106,6 +106,11 @@ export default function Index({ listings, filters = {} }) {
                                                                                      <p className="text-[10px] text-gray-400 mt-1 mb-0">
                                                                                             ID: {listing.id} | Type: <span className="uppercase">{listing.listing_type}</span>
                                                                                      </p>
+                                                                                     {listing.pending_edit && (
+                                                                                            <p className="text-[10px] font-bold text-amber-600 mt-1 mb-0 uppercase tracking-wider">
+                                                                                                   Pending Edits Awaiting Approval
+                                                                                            </p>
+                                                                                     )}
                                                                               </div>
                                                                        </div>
                                                                 </td>
@@ -129,6 +134,15 @@ export default function Index({ listings, filters = {} }) {
                                                                </td>
                                                                <td className="px-6 py-4 text-right">
                                                                       <div className="flex items-center justify-end gap-2">
+                                                                             {listing.pending_edit && (
+                                                                                    <button
+                                                                                           onClick={() => router.post(route('admin.listings.approve-edit', listing.id))}
+                                                                                           className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors"
+                                                                                           title="Approve Pending Edits"
+                                                                                    >
+                                                                                           Approve Edits
+                                                                                    </button>
+                                                                             )}
                                                                              <button onClick={() => router.get(route('admin.listings.edit', listing.id))} className="p-2 hover:bg-blue-50 rounded-lg text-blue-600 transition-colors" title="Edit"><i className="fa-solid fa-pen"></i></button>
                                                                              <button onClick={() => router.get(route('admin.listings.show', listing.id))} className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors" title="View Details"><i className="fa-solid fa-eye"></i></button>
                                                                              <button onClick={() => handleDelete(listing.id)} className="p-2 hover:bg-rose-50 rounded-lg text-rose-600 transition-colors" title="Delete"><i className="fa-solid fa-trash"></i></button>
