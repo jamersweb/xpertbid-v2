@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Listing;
 use App\Models\AuctionCategory;
 use App\Models\Favorite;
+use App\Models\DynamicField;
+use App\Models\Country;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -41,31 +43,41 @@ class MarketplaceController extends Controller
             return $query->exists();
         };
 
-        // Fetch only categories that have active listings
-        $categories = AuctionCategory::with(['subCategories' => function ($q) {
-            $q->whereHas('listings', function ($q2) {
-                $q2->where('status', 'active');
-            })->orWhereHas('childCategories.listings', function ($q2) {
-                $q2->where('status', 'active');
-            })->with(['childCategories' => function ($q3) {
-                $q3->whereHas('listings', function ($q4) {
-                    $q4->where('status', 'active');
-                });
-            }]);
-        }])
-        ->where(function ($query) {
-            $query->whereHas('listings', function ($q) {
-                $q->where('status', 'active');
-            })
-            ->orWhereHas('subCategories.listings', function ($q) {
-                $q->where('status', 'active');
-            })
-            ->orWhereHas('subCategories.childCategories.listings', function ($q) {
-                $q->where('status', 'active');
-            });
+        // Fetch root categories and keep only those branches that actually have listings.
+        // This is hierarchy-aware (category_id / sub_category_id / child_category_id).
+        $categories = AuctionCategory::with([
+            'subCategories' => function ($q) {
+                $q->orderBy('name')->with(['childCategories' => function ($q2) {
+                    $q2->orderBy('name');
+                }]);
+            },
+        ])
+        ->whereNull('parent_id')
+        ->whereNull('sub_category_id')
+        ->orderBy('name')
+        ->get()
+        ->map(function ($root) use ($categoryHasListings) {
+            $filteredSubs = $root->subCategories
+                ->map(function ($sub) use ($categoryHasListings) {
+                    $filteredChildren = $sub->childCategories
+                        ->filter(fn ($child) => $categoryHasListings($child->id))
+                        ->values();
+
+                    $sub->setRelation('childCategories', $filteredChildren);
+                    return $sub;
+                })
+                ->filter(function ($sub) use ($categoryHasListings) {
+                    return $categoryHasListings($sub->id) || $sub->childCategories->isNotEmpty();
+                })
+                ->values();
+
+            $root->setRelation('subCategories', $filteredSubs);
+            return $root;
         })
-        ->where('parent_id', null)
-        ->get();
+        ->filter(function ($root) use ($categoryHasListings) {
+            return $categoryHasListings($root->id) || $root->subCategories->isNotEmpty();
+        })
+        ->values();
 
         $activeSlug = $slug ?? $request->input('category');
 
@@ -91,10 +103,38 @@ class MarketplaceController extends Controller
         if ($activeSlug && $activeSlug !== 'all') {
             $currentCategory = AuctionCategory::where('slug', $activeSlug)->first();
             if ($currentCategory) {
-                $query->where(function($q) use ($currentCategory) {
-                    $q->where('category_id', $currentCategory->id)
-                      ->orWhere('sub_category_id', $currentCategory->id)
-                      ->orWhere('child_category_id', $currentCategory->id);
+                $categoryIds = collect([$currentCategory->id]);
+                $subCategoryIds = collect([$currentCategory->id]);
+                $childCategoryIds = collect([$currentCategory->id]);
+
+                // Expand selected category into its hierarchy so listings saved with
+                // only main+sub (without child) are still matched correctly.
+                if (is_null($currentCategory->parent_id) && is_null($currentCategory->sub_category_id)) {
+                    $subIds = AuctionCategory::where('parent_id', $currentCategory->id)
+                        ->whereNull('sub_category_id')
+                        ->pluck('id');
+
+                    $childIds = AuctionCategory::where('parent_id', $currentCategory->id)
+                        ->whereNotNull('sub_category_id')
+                        ->pluck('id');
+
+                    $subCategoryIds = $subCategoryIds->merge($subIds);
+                    $childCategoryIds = $childCategoryIds->merge($childIds);
+                } elseif (!is_null($currentCategory->parent_id) && is_null($currentCategory->sub_category_id)) {
+                    $childIds = AuctionCategory::where('sub_category_id', $currentCategory->id)
+                        ->pluck('id');
+
+                    $childCategoryIds = $childCategoryIds->merge($childIds);
+                }
+
+                $categoryIds = $categoryIds->unique()->values();
+                $subCategoryIds = $subCategoryIds->unique()->values();
+                $childCategoryIds = $childCategoryIds->unique()->values();
+
+                $query->where(function($q) use ($categoryIds, $subCategoryIds, $childCategoryIds) {
+                    $q->whereIn('category_id', $categoryIds)
+                      ->orWhereIn('sub_category_id', $subCategoryIds)
+                      ->orWhereIn('child_category_id', $childCategoryIds);
                 });
             }
         }
@@ -159,17 +199,29 @@ class MarketplaceController extends Controller
         }
 
         // Price filtering
-        $minPrice = (float) $request->input('priceMin', 0);
-        $maxPrice = (float) $request->input('priceMax', 10000000);
-        $query->whereRaw(
-            "CAST(COALESCE(
-                NULLIF(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.reserve_price')), 'null'),
-                NULLIF(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.minimum_bid')), 'null'),
-                NULLIF(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.price')), 'null'),
-                '0'
-            ) AS DECIMAL(15,2)) BETWEEN ? AND ?",
-            [$minPrice, $maxPrice]
-        );
+        $minPriceInput = $request->input('priceMin');
+        $maxPriceInput = $request->input('priceMax');
+        $hasMinPrice = is_numeric($minPriceInput);
+        $hasMaxPrice = is_numeric($maxPriceInput);
+
+        if ($hasMinPrice || $hasMaxPrice) {
+            $minPrice = $hasMinPrice ? (float) $minPriceInput : 0;
+            $maxPrice = $hasMaxPrice ? (float) $maxPriceInput : 999999999999;
+
+            if ($maxPrice < $minPrice) {
+                [$minPrice, $maxPrice] = [$maxPrice, $minPrice];
+            }
+
+            $query->whereRaw(
+                "CAST(COALESCE(
+                    NULLIF(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.reserve_price')), 'null'),
+                    NULLIF(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.minimum_bid')), 'null'),
+                    NULLIF(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.price')), 'null'),
+                    '0'
+                ) AS DECIMAL(15,2)) BETWEEN ? AND ?",
+                [$minPrice, $maxPrice]
+            );
+        }
 
         // Search filtering
         if ($request->has('search')) {
@@ -180,8 +232,103 @@ class MarketplaceController extends Controller
             });
         }
 
+        // Location filtering
+        if ($request->filled('country_id')) {
+            $query->where('country_id', $request->input('country_id'));
+        }
+        if ($request->filled('state_id')) {
+            $query->where('state_id', $request->input('state_id'));
+        }
+        if ($request->filled('city_id')) {
+            $query->where('city_id', $request->input('city_id'));
+        }
+
+        // Dynamic field filtering (df_<id>=value)
+        $dynamicFilterInputs = collect($request->query())
+            ->filter(function ($value, $key) {
+                return str_starts_with((string) $key, 'df_')
+                    && $value !== null
+                    && $value !== '';
+            });
+
+        if ($dynamicFilterInputs->isNotEmpty()) {
+            $fieldIds = $dynamicFilterInputs
+                ->keys()
+                ->map(fn ($key) => (int) str_replace('df_', '', (string) $key))
+                ->filter()
+                ->values();
+
+            $dynamicFieldMap = DynamicField::whereIn('id', $fieldIds)->get()->keyBy('id');
+
+            $dynamicFilterInputs->each(function ($value, $key) use ($query, $dynamicFieldMap) {
+                $fieldId = (int) str_replace('df_', '', (string) $key);
+                if (!$fieldId) {
+                    return;
+                }
+
+                $field = $dynamicFieldMap->get($fieldId);
+                $fieldName = $field?->field_name ? trim((string) $field->field_name) : '';
+                $fieldNameWithId = $fieldName !== '' ? "{$fieldName}__{$fieldId}" : '';
+                $fieldIdKey = "field_{$fieldId}";
+                $values = collect(explode(',', (string) $value))
+                    ->map(fn ($item) => trim((string) $item))
+                    ->filter(fn ($item) => $item !== '')
+                    ->values();
+
+                if ($values->isEmpty()) {
+                    return;
+                }
+
+                $query->where(function ($fieldQuery) use ($values, $fieldIdKey, $fieldName, $fieldNameWithId) {
+                    foreach ($values as $singleValue) {
+                        $fieldQuery->orWhere("category_features->{$fieldIdKey}", $singleValue);
+
+                        if ($fieldName !== '') {
+                            $fieldQuery->orWhere("category_features->{$fieldName}", $singleValue);
+                        }
+
+                        if ($fieldNameWithId !== '') {
+                            $fieldQuery->orWhere("category_features->{$fieldNameWithId}", $singleValue);
+                        }
+                    }
+                });
+            });
+        }
+
         // Type filtering (Marketplace Tabs)
         $applyTypeFilter($query);
+
+        $listingTypeForFields = $type;
+        if (in_array($listingTypeForFields, ['normal', 'normal_list'], true)) {
+            $listingTypeForFields = 'normal';
+        } elseif (in_array($listingTypeForFields, ['business', 'business_list'], true)) {
+            $listingTypeForFields = 'business';
+        }
+
+        $dynamicFields = collect();
+        if ($currentCategory) {
+            $dynamicCategoryIds = collect([$currentCategory->id]);
+            if (!is_null($currentCategory->parent_id)) {
+                $dynamicCategoryIds->push($currentCategory->parent_id);
+            }
+            if (!is_null($currentCategory->sub_category_id)) {
+                $dynamicCategoryIds->push($currentCategory->sub_category_id);
+            }
+
+            $dynamicFields = DynamicField::query()
+                ->where(function ($q) use ($dynamicCategoryIds) {
+                    $q->whereIn('category_id', $dynamicCategoryIds->unique()->values())
+                        ->orWhereNull('category_id');
+                })
+                ->where(function ($q) use ($listingTypeForFields) {
+                    $q->where('listing_type', $listingTypeForFields)
+                        ->orWhere('listing_type', 'all');
+                })
+                ->orderBy('id')
+                ->get(['id', 'field_name', 'label', 'input_type', 'options']);
+        }
+
+        $countries = Country::query()->select('id', 'name')->orderBy('name')->get();
 
         $products = $query->paginate(12)->withQueryString();
 
@@ -194,6 +341,8 @@ class MarketplaceController extends Controller
             'currentSubcategory' => $currentSubcategory,
             'childCategoryTabs' => $childCategoryTabs,
             'favoriteListingIds' => $favoriteListingIds,
+            'countries' => $countries,
+            'dynamicFields' => $dynamicFields,
             'filters' => $request->all(),
         ]);
     }

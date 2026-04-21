@@ -6732,7 +6732,8 @@ tbody tr {
 
     .right-section .swiper-container img {
         height: 275px;
-        width: 300px;
+        width: 100%;
+        max-width: none;
         border-radius: 25px;
         box-shadow: 0 12px 55px 0 #43ACE942;
     }
@@ -7669,7 +7670,11 @@ tbody tr {
     }
 
     .products-brief-parent {
-        padding: 15px;
+        padding: 8px;
+    }
+
+    .product-image-and-brief .products-brief-parent .row {
+        --bs-gutter-x: 0.75rem;
     }
 
     .product-images-parent {
@@ -10330,12 +10335,12 @@ a.qlwapp-toggle {
         aspect-ratio: 1/1;
         height: auto !important;
         width: 100% !important;
-        max-width: 330px !important;
+        max-width: 100% !important;
     }
 
     .right-section .relative {
         width: 100% !important;
-        max-width: 330px !important;
+        max-width: 100% !important;
         margin: 0 auto;
         height: 250px !important;
         min-height: 250px !important;
@@ -10348,7 +10353,7 @@ a.qlwapp-toggle {
         display: block !important;
         visibility: visible !important;
         width: 100% !important;
-        max-width: 330px !important;
+        max-width: 100% !important;
         height: 250px !important;
         position: relative !important;
     }
@@ -10376,7 +10381,7 @@ a.qlwapp-toggle {
             display: block !important;
             visibility: visible !important;
             width: 100% !important;
-            max-width: 330px !important;
+            max-width: 100% !important;
             height: 250px !important;
             min-height: 250px !important;
             position: relative !important;

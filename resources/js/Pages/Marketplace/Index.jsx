@@ -1,8 +1,56 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import ExploreProducts from './Components/ExploreProducts';
 import Pagination from '@/Components/Pagination';
+
+const parseDynamicOptions = (options) => {
+       if (Array.isArray(options)) {
+              return options.filter((item) => String(item || '').trim() !== '');
+       }
+
+       if (typeof options === 'string') {
+              const trimmed = options.trim();
+              if (trimmed === '') {
+                     return [];
+              }
+
+              try {
+                     const parsed = JSON.parse(trimmed);
+                     if (Array.isArray(parsed)) {
+                            return parsed.filter((item) => String(item || '').trim() !== '');
+                     }
+              } catch (error) {
+                     // Fallback to comma split for non-JSON values.
+              }
+
+              return trimmed.split(',').map((item) => item.trim()).filter(Boolean);
+       }
+
+       return [];
+};
+
+const getInitialDynamicFilters = (filters = {}) => {
+       const initial = {};
+       Object.entries(filters || {}).forEach(([key, value]) => {
+              if (!String(key).startsWith('df_')) {
+                     return;
+              }
+
+              if (Array.isArray(value)) {
+                     initial[key] = value.map((item) => String(item));
+                     return;
+              }
+
+              if (value === null || value === undefined || value === '') {
+                     return;
+              }
+
+              const text = String(value);
+              initial[key] = text.includes(',') ? text.split(',').map((item) => item.trim()).filter(Boolean) : text;
+       });
+       return initial;
+};
 
 export default function Index({
        products = { data: [], links: [] },
@@ -12,9 +60,18 @@ export default function Index({
        subcategoryTabs = [],
        currentSubcategory = null,
        childCategoryTabs = [],
+       countries = [],
+       dynamicFields = [],
        filters = {},
 }) {
        const [searchTerm, setSearchTerm] = useState(filters?.search || '');
+       const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+       const [selectedCountryId, setSelectedCountryId] = useState(filters?.country_id ? String(filters.country_id) : '');
+       const [selectedStateId, setSelectedStateId] = useState(filters?.state_id ? String(filters.state_id) : '');
+       const [selectedCityId, setSelectedCityId] = useState(filters?.city_id ? String(filters.city_id) : '');
+       const [states, setStates] = useState([]);
+       const [cities, setCities] = useState([]);
+       const [dynamicFilterValues, setDynamicFilterValues] = useState(() => getInitialDynamicFilters(filters));
        const heroImage = currentTopCategory?.image_url || currentCategory?.image_url || null;
        const currentType = filters?.type || 'auction';
        const showChildTabs = Boolean(currentSubcategory);
@@ -69,6 +126,187 @@ export default function Index({
                             preserveScroll: true,
                      }
               );
+       };
+
+       useEffect(() => {
+              setSearchTerm(filters?.search || '');
+              setSelectedCountryId(filters?.country_id ? String(filters.country_id) : '');
+              setSelectedStateId(filters?.state_id ? String(filters.state_id) : '');
+              setSelectedCityId(filters?.city_id ? String(filters.city_id) : '');
+              setDynamicFilterValues(getInitialDynamicFilters(filters));
+       }, [filters]);
+
+       useEffect(() => {
+              let cancelled = false;
+
+              const loadStates = async () => {
+                     if (!selectedCountryId) {
+                            setStates([]);
+                            setSelectedStateId('');
+                            setCities([]);
+                            setSelectedCityId('');
+                            return;
+                     }
+
+                     try {
+                            const response = await fetch(`/get-states/${selectedCountryId}`);
+                            const data = await response.json();
+                            if (cancelled) {
+                                   return;
+                            }
+
+                            const nextStates = Array.isArray(data?.state) ? data.state : [];
+                            setStates(nextStates);
+
+                            if (!nextStates.find((state) => String(state.id) === String(selectedStateId))) {
+                                   setSelectedStateId('');
+                                   setCities([]);
+                                   setSelectedCityId('');
+                            }
+                     } catch (error) {
+                            if (!cancelled) {
+                                   setStates([]);
+                                   setSelectedStateId('');
+                                   setCities([]);
+                                   setSelectedCityId('');
+                            }
+                     }
+              };
+
+              loadStates();
+
+              return () => {
+                     cancelled = true;
+              };
+       }, [selectedCountryId]);
+
+       useEffect(() => {
+              let cancelled = false;
+
+              const loadCities = async () => {
+                     if (!selectedStateId) {
+                            setCities([]);
+                            setSelectedCityId('');
+                            return;
+                     }
+
+                     try {
+                            const response = await fetch(`/get-cities/${selectedStateId}`);
+                            const data = await response.json();
+                            if (cancelled) {
+                                   return;
+                            }
+
+                            const nextCities = Array.isArray(data?.city) ? data.city : [];
+                            setCities(nextCities);
+                            if (!nextCities.find((city) => String(city.id) === String(selectedCityId))) {
+                                   setSelectedCityId('');
+                            }
+                     } catch (error) {
+                            if (!cancelled) {
+                                   setCities([]);
+                                   setSelectedCityId('');
+                            }
+                     }
+              };
+
+              loadCities();
+
+              return () => {
+                     cancelled = true;
+              };
+       }, [selectedStateId]);
+
+       const applyFilters = () => {
+              const nextFilters = {
+                     ...filters,
+                     search: searchTerm,
+                     page: 1,
+              };
+
+              if (selectedCountryId) nextFilters.country_id = selectedCountryId;
+              else delete nextFilters.country_id;
+
+              if (selectedStateId) nextFilters.state_id = selectedStateId;
+              else delete nextFilters.state_id;
+
+              if (selectedCityId) nextFilters.city_id = selectedCityId;
+              else delete nextFilters.city_id;
+
+              dynamicFields.forEach((field) => {
+                     const key = `df_${field.id}`;
+                     const value = dynamicFilterValues[key];
+                     if (Array.isArray(value)) {
+                            if (value.length > 0) {
+                                   nextFilters[key] = value.join(',');
+                            } else {
+                                   delete nextFilters[key];
+                            }
+                            return;
+                     }
+
+                     if (value !== undefined && value !== null && String(value).trim() !== '') {
+                            nextFilters[key] = value;
+                     } else {
+                            delete nextFilters[key];
+                     }
+              });
+
+              router.get(route('marketplace.index', route().params), nextFilters, {
+                     preserveState: true,
+                     preserveScroll: true,
+              });
+
+              setIsFilterDrawerOpen(false);
+       };
+
+       const clearFilters = () => {
+              setSelectedCountryId('');
+              setSelectedStateId('');
+              setSelectedCityId('');
+              setStates([]);
+              setCities([]);
+              setDynamicFilterValues({});
+
+              const nextFilters = {
+                     ...filters,
+                     search: searchTerm,
+                     page: 1,
+              };
+
+              delete nextFilters.country_id;
+              delete nextFilters.state_id;
+              delete nextFilters.city_id;
+              Object.keys(nextFilters).forEach((key) => {
+                     if (key.startsWith('df_')) {
+                            delete nextFilters[key];
+                     }
+              });
+
+              router.get(route('marketplace.index', route().params), nextFilters, {
+                     preserveState: true,
+                     preserveScroll: true,
+              });
+       };
+
+       const handleCheckboxDynamicChange = (fieldId, option, checked) => {
+              const key = `df_${fieldId}`;
+              setDynamicFilterValues((prev) => {
+                     const previousValue = prev[key];
+                     const currentValues = Array.isArray(previousValue)
+                            ? previousValue
+                            : previousValue
+                                   ? [String(previousValue)]
+                                   : [];
+                     const nextValues = checked
+                            ? Array.from(new Set([...currentValues, option]))
+                            : currentValues.filter((item) => item !== option);
+
+                     return {
+                            ...prev,
+                            [key]: nextValues,
+                     };
+              });
        };
 
        return (
@@ -146,12 +384,24 @@ export default function Index({
                                                  )}
 
                                                  <form onSubmit={handleSearchSubmit} className="marketplace-searchbar mb-3">
-                                                        <input
-                                                               type="text"
-                                                               value={searchTerm}
-                                                               onChange={(e) => setSearchTerm(e.target.value)}
-                                                               placeholder="Search products..."
-                                                        />
+                                                        <div className="marketplace-searchbar-row">
+                                                               <input
+                                                                      type="text"
+                                                                      value={searchTerm}
+                                                                      onChange={(e) => setSearchTerm(e.target.value)}
+                                                                      placeholder="Search products..."
+                                                               />
+                                                               <button
+                                                                      type="button"
+                                                                      className="marketplace-filter-btn"
+                                                                      onClick={() => setIsFilterDrawerOpen(true)}
+                                                                      aria-label="Open filters"
+                                                               >
+                                                                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                                             <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                                                                      </svg>
+                                                               </button>
+                                                        </div>
                                                  </form>
 
                                                  <div className="marketplace-top-tabs">
@@ -208,6 +458,190 @@ export default function Index({
                                           )}
                                    </div>
                             </div>
+
+                            {isFilterDrawerOpen && (
+                                   <>
+                                          <div className="marketplace-filter-backdrop" onClick={() => setIsFilterDrawerOpen(false)} />
+                                          <aside className="marketplace-filter-drawer">
+                                                 <div className="marketplace-filter-header">
+                                                        <h3>Filters</h3>
+                                                        <button type="button" onClick={() => setIsFilterDrawerOpen(false)} aria-label="Close filters">
+                                                               &times;
+                                                        </button>
+                                                 </div>
+
+                                                 <div className="marketplace-filter-body">
+                                                        <div className="marketplace-filter-group">
+                                                               <label>Country</label>
+                                                               <select
+                                                                      value={selectedCountryId}
+                                                                      onChange={(e) => {
+                                                                             const value = e.target.value;
+                                                                             setSelectedCountryId(value);
+                                                                             setSelectedStateId('');
+                                                                             setSelectedCityId('');
+                                                                      }}
+                                                               >
+                                                                      <option value="">All Countries</option>
+                                                                      {countries.map((country) => (
+                                                                             <option key={country.id} value={country.id}>
+                                                                                    {country.name}
+                                                                             </option>
+                                                                      ))}
+                                                               </select>
+                                                        </div>
+
+                                                        <div className="marketplace-filter-group">
+                                                               <label>State</label>
+                                                               <select
+                                                                      value={selectedStateId}
+                                                                      onChange={(e) => {
+                                                                             setSelectedStateId(e.target.value);
+                                                                             setSelectedCityId('');
+                                                                      }}
+                                                                      disabled={!selectedCountryId}
+                                                               >
+                                                                      <option value="">All States</option>
+                                                                      {states.map((state) => (
+                                                                             <option key={state.id} value={state.id}>
+                                                                                    {state.name}
+                                                                             </option>
+                                                                      ))}
+                                                               </select>
+                                                        </div>
+
+                                                        <div className="marketplace-filter-group">
+                                                               <label>City</label>
+                                                               <select
+                                                                      value={selectedCityId}
+                                                                      onChange={(e) => setSelectedCityId(e.target.value)}
+                                                                      disabled={!selectedStateId}
+                                                               >
+                                                                      <option value="">All Cities</option>
+                                                                      {cities.map((city) => (
+                                                                             <option key={city.id} value={city.id}>
+                                                                                    {city.name}
+                                                                             </option>
+                                                                      ))}
+                                                               </select>
+                                                        </div>
+
+                                                        {dynamicFields.map((field) => {
+                                                               const key = `df_${field.id}`;
+                                                               const inputType = String(field.input_type || '').toLowerCase();
+                                                               const options = parseDynamicOptions(field.options);
+
+                                                               if (options.length === 0) {
+                                                                      return null;
+                                                               }
+
+                                                               const fieldLabel = field.label || field.field_name || `Field ${field.id}`;
+                                                               const selectedValue = dynamicFilterValues[key];
+
+                                                               return (
+                                                                      <div className="marketplace-filter-group" key={field.id}>
+                                                                             <label>{fieldLabel}</label>
+
+                                                                             {inputType === 'select' && (
+                                                                                    <select
+                                                                                           value={Array.isArray(selectedValue) ? '' : selectedValue || ''}
+                                                                                           onChange={(e) =>
+                                                                                                  setDynamicFilterValues((prev) => ({
+                                                                                                         ...prev,
+                                                                                                         [key]: e.target.value,
+                                                                                                  }))
+                                                                                           }
+                                                                                    >
+                                                                                           <option value="">All</option>
+                                                                                           {options.map((option) => (
+                                                                                                  <option key={`${field.id}-${option}`} value={option}>
+                                                                                                         {option}
+                                                                                                  </option>
+                                                                                           ))}
+                                                                                    </select>
+                                                                             )}
+
+                                                                             {inputType === 'radio' && (
+                                                                                    <div className="marketplace-filter-options">
+                                                                                           {options.map((option) => (
+                                                                                                  <label key={`${field.id}-${option}`} className="marketplace-filter-option-row">
+                                                                                                         <input
+                                                                                                                type="radio"
+                                                                                                                name={`dynamic-radio-${field.id}`}
+                                                                                                                value={option}
+                                                                                                                checked={String(selectedValue || '') === option}
+                                                                                                                onChange={() =>
+                                                                                                                       setDynamicFilterValues((prev) => ({
+                                                                                                                              ...prev,
+                                                                                                                              [key]: option,
+                                                                                                                       }))
+                                                                                                                }
+                                                                                                         />
+                                                                                                         <span>{option}</span>
+                                                                                                  </label>
+                                                                                           ))}
+                                                                                    </div>
+                                                                             )}
+
+                                                                             {inputType === 'checkbox' && (
+                                                                                    <div className="marketplace-filter-options">
+                                                                                           {options.map((option) => {
+                                                                                                  const values = Array.isArray(selectedValue)
+                                                                                                         ? selectedValue
+                                                                                                         : selectedValue
+                                                                                                                ? [String(selectedValue)]
+                                                                                                                : [];
+
+                                                                                                  return (
+                                                                                                         <label key={`${field.id}-${option}`} className="marketplace-filter-option-row">
+                                                                                                                <input
+                                                                                                                       type="checkbox"
+                                                                                                                       checked={values.includes(option)}
+                                                                                                                       onChange={(e) =>
+                                                                                                                              handleCheckboxDynamicChange(field.id, option, e.target.checked)
+                                                                                                                       }
+                                                                                                                />
+                                                                                                                <span>{option}</span>
+                                                                                                         </label>
+                                                                                                  );
+                                                                                           })}
+                                                                                    </div>
+                                                                             )}
+
+                                                                             {!['select', 'radio', 'checkbox'].includes(inputType) && (
+                                                                                    <select
+                                                                                           value={Array.isArray(selectedValue) ? '' : selectedValue || ''}
+                                                                                           onChange={(e) =>
+                                                                                                  setDynamicFilterValues((prev) => ({
+                                                                                                         ...prev,
+                                                                                                         [key]: e.target.value,
+                                                                                                  }))
+                                                                                           }
+                                                                                    >
+                                                                                           <option value="">All</option>
+                                                                                           {options.map((option) => (
+                                                                                                  <option key={`${field.id}-${option}`} value={option}>
+                                                                                                         {option}
+                                                                                                  </option>
+                                                                                           ))}
+                                                                                    </select>
+                                                                             )}
+                                                                      </div>
+                                                               );
+                                                        })}
+                                                 </div>
+
+                                                 <div className="marketplace-filter-footer">
+                                                        <button type="button" className="filter-clear-btn" onClick={clearFilters}>
+                                                               Clear
+                                                        </button>
+                                                        <button type="button" className="filter-apply-btn" onClick={applyFilters}>
+                                                               Apply Filters
+                                                        </button>
+                                                 </div>
+                                          </aside>
+                                   </>
+                            )}
                      </div>
 
                      <style>{`
@@ -265,6 +699,134 @@ export default function Index({
                             .marketplace-searchbar input:focus {
                                    outline: none;
                                    background: rgba(255, 255, 255, 0.96);
+                            }
+                            .marketplace-searchbar-row {
+                                   display: grid;
+                                   grid-template-columns: 1fr 58px;
+                                   gap: 10px;
+                                   align-items: center;
+                            }
+                            .marketplace-filter-btn {
+                                   width: 58px;
+                                   height: 58px;
+                                   border: none;
+                                   border-radius: 16px;
+                                   background: #0f172a;
+                                   color: #fff;
+                                   display: inline-flex;
+                                   align-items: center;
+                                   justify-content: center;
+                                   transition: all 0.2s ease;
+                            }
+                            .marketplace-filter-btn:hover {
+                                   background: #111827;
+                            }
+                            .marketplace-filter-btn svg {
+                                   width: 22px;
+                                   height: 22px;
+                            }
+                            .marketplace-filter-backdrop {
+                                   position: fixed;
+                                   inset: 0;
+                                   z-index: 1040;
+                                   background: rgba(15, 23, 42, 0.42);
+                            }
+                            .marketplace-filter-drawer {
+                                   position: fixed;
+                                   top: 0;
+                                   right: 0;
+                                   width: 360px;
+                                   max-width: 94vw;
+                                   height: 100vh;
+                                   z-index: 1050;
+                                   background: #fff;
+                                   box-shadow: -12px 0 28px rgba(15, 23, 42, 0.2);
+                                   display: flex;
+                                   flex-direction: column;
+                            }
+                            .marketplace-filter-header {
+                                   display: flex;
+                                   align-items: center;
+                                   justify-content: space-between;
+                                   padding: 20px 18px 14px;
+                                   border-bottom: 1px solid #e5e7eb;
+                            }
+                            .marketplace-filter-header h3 {
+                                   margin: 0;
+                                   font-size: 20px;
+                                   font-weight: 800;
+                                   color: #0f172a;
+                            }
+                            .marketplace-filter-header button {
+                                   width: 36px;
+                                   height: 36px;
+                                   border: none;
+                                   border-radius: 10px;
+                                   background: #f3f4f6;
+                                   font-size: 24px;
+                                   line-height: 1;
+                                   color: #0f172a;
+                            }
+                            .marketplace-filter-body {
+                                   flex: 1;
+                                   overflow-y: auto;
+                                   padding: 16px 18px;
+                            }
+                            .marketplace-filter-group {
+                                   margin-bottom: 14px;
+                            }
+                            .marketplace-filter-group > label {
+                                   display: block;
+                                   margin-bottom: 8px;
+                                   font-size: 13px;
+                                   font-weight: 700;
+                                   color: #0f172a;
+                            }
+                            .marketplace-filter-group select {
+                                   width: 100%;
+                                   height: 46px;
+                                   border-radius: 12px;
+                                   border: 1px solid #d1d5db;
+                                   background: #fff;
+                                   color: #111827;
+                                   padding: 0 12px;
+                            }
+                            .marketplace-filter-options {
+                                   display: flex;
+                                   flex-direction: column;
+                                   gap: 8px;
+                            }
+                            .marketplace-filter-option-row {
+                                   display: flex;
+                                   align-items: center;
+                                   gap: 8px;
+                                   font-size: 14px;
+                                   color: #111827;
+                            }
+                            .marketplace-filter-footer {
+                                   display: flex;
+                                   gap: 10px;
+                                   border-top: 1px solid #e5e7eb;
+                                   padding: 14px 18px 16px;
+                            }
+                            .filter-clear-btn,
+                            .filter-apply-btn {
+                                   flex: 1;
+                                   min-height: 44px;
+                                   border-radius: 12px;
+                                   font-size: 14px;
+                                   font-weight: 700;
+                                   transition: all 0.2s ease;
+                            }
+                            .filter-clear-btn {
+                                   border: 1px solid #cbd5e1;
+                                   background: #fff;
+                                   color: #334155;
+                            }
+                            .filter-apply-btn {
+                                   border: none;
+                                   background: #111827;
+                                   color: #fff;
                             }
                             .marketplace-top-tabs {
                                    display: grid;
@@ -349,6 +911,19 @@ export default function Index({
                                           padding: 0 10px;
                                           font-size: 12px;
                                           border-radius: 12px;
+                                   }
+                                   .marketplace-searchbar-row {
+                                          grid-template-columns: 1fr 52px;
+                                          gap: 8px;
+                                   }
+                                   .marketplace-filter-btn {
+                                          width: 52px;
+                                          height: 52px;
+                                          border-radius: 12px;
+                                   }
+                                   .marketplace-filter-drawer {
+                                          width: 100%;
+                                          max-width: 100%;
                                    }
                                    .marketplace-subcategory-tabs {
                                           display: flex;

@@ -14,6 +14,7 @@ use App\Models\State;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use App\Services\OneSignalService;
 use App\Models\Wallet;
 use App\Mail\AuctionLostNotification;
@@ -29,6 +30,7 @@ use App\Models\NewNotification;
 use App\Models\ProductVariation;
 use App\Models\PropertyVerification;
 use App\Models\VehicleVerification;
+use App\Models\DynamicField;
 use App\Mail\FeaturedListingNotification;
 use Inertia\Inertia;
 
@@ -118,6 +120,21 @@ class AuctionController extends Controller
             'favoriteListingIds' => $favoriteListingIds,
             'canLogin' => \Illuminate\Support\Facades\Route::has('login'),
             'canRegister' => \Illuminate\Support\Facades\Route::has('register'),
+        ]);
+    }
+
+    public function categoriesPage()
+    {
+        $categories = AuctionCategory::whereNull('parent_id')
+            ->whereNull('sub_category_id')
+            ->whereHas('listings', function ($q) {
+                $q->where('status', 'active');
+            })
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('Categories/Index', [
+            'categories' => $categories,
         ]);
     }
 
@@ -367,6 +384,29 @@ class AuctionController extends Controller
                 ->exists();
         }
 
+        $categoryIds = [$listing->category_id];
+        $category = AuctionCategory::find($listing->category_id);
+        if ($category) {
+            if (!empty($category->sub_category_id)) {
+                $categoryIds[] = $category->sub_category_id;
+            }
+            if (!empty($category->parent_id)) {
+                $categoryIds[] = $category->parent_id;
+            }
+        }
+        $categoryIds = array_values(array_unique(array_filter($categoryIds)));
+
+        $dynamicFields = DynamicField::where(function ($query) use ($categoryIds) {
+                $query->whereIn('category_id', $categoryIds)
+                    ->orWhereNull('category_id');
+            })
+            ->where(function ($query) use ($listing) {
+                $query->where('listing_type', $listing->listing_type)
+                    ->orWhere('listing_type', 'all');
+            })
+            ->orderBy('id')
+            ->get(['id', 'field_name', 'label', 'input_type']);
+
         return Inertia::render('Auctions/Show', [
             'auction' => $listing,
             'bids' => $listing->bids()->with('user')->orderBy('created_at', 'desc')->get(), // specific order for history
@@ -375,6 +415,7 @@ class AuctionController extends Controller
             'winnerDetails' => $winnerDetails,
             'files' => $listing->album ?: [], // album is already cast to array in Listing model
             'isFavorite' => $isFavorite,
+            'dynamicFields' => $dynamicFields,
         ]);
     }
     public function edit(\App\Models\Listing $auction)
@@ -864,6 +905,56 @@ class AuctionController extends Controller
     {
         $city = City::where('state_id', $state_id)->get();
         return response()->json(['city' => $city]);
+    }
+
+    public function detect_location_ip(Request $request)
+    {
+        $ip = $request->ip();
+
+        if (in_array($ip, ['127.0.0.1', '::1'], true) || str_starts_with((string) $ip, '192.168.') || str_starts_with((string) $ip, '10.') || str_starts_with((string) $ip, '172.16.')) {
+            $ip = null;
+        }
+
+        try {
+            $ipApiUrl = $ip ? "https://ipapi.co/{$ip}/json/" : 'https://ipapi.co/json/';
+            $ipApi = Http::timeout(8)->acceptJson()->get($ipApiUrl);
+            if ($ipApi->ok()) {
+                $data = $ipApi->json();
+                if (!empty($data['country_name']) || !empty($data['region']) || !empty($data['city'])) {
+                    return response()->json([
+                        'country' => $data['country_name'] ?? null,
+                        // IP based state/city is often inaccurate; keep them null.
+                        'state' => null,
+                        'city' => null,
+                        'source' => 'ipapi',
+                    ]);
+                }
+            }
+
+            $ipWhoUrl = $ip ? "https://ipwho.is/{$ip}" : 'https://ipwho.is/';
+            $ipWho = Http::timeout(8)->acceptJson()->get($ipWhoUrl);
+            if ($ipWho->ok()) {
+                $data = $ipWho->json();
+                if (($data['success'] ?? false) || !empty($data['country']) || !empty($data['region'])) {
+                    return response()->json([
+                        'country' => $data['country'] ?? null,
+                        // IP based state/city is often inaccurate; keep them null.
+                        'state' => null,
+                        'city' => null,
+                        'source' => 'ipwhois',
+                    ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Silent fail with empty payload for frontend fallback behavior.
+        }
+
+        return response()->json([
+            'country' => null,
+            'state' => null,
+            'city' => null,
+            'source' => 'none',
+        ]);
     }
 
     public function bid(Request $request, $auctionId)

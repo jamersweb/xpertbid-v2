@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import SummaryCard from './SummaryCard';
 
-export default function VerificationStep({ categoryId, formData, setFormData, summaryData, onContinue, onBack, onEditListType, onEditCategory, onEditDetails, onSaveDraft, isSavingDraft }) {
+export default function VerificationStep({ categoryId, formData, setFormData, summaryData, onContinue, onBack, onEditListType, onEditCategory, onEditDetails, onSaveDraft, isSavingDraft, progressPercent = 0 }) {
        const isProperty = String(categoryId) === '222';
        const isVehicle = String(categoryId) === '311';
        const existingPropertyDocs = formData.existing_property_documents || [];
@@ -93,6 +93,18 @@ export default function VerificationStep({ categoryId, formData, setFormData, su
                             <p className="verification-stage-subtitle">
                                    Provide verification details before continuing.
                             </p>
+                            <div className="px-3 pb-2 bg-white">
+                                   <div className="progress" style={{ height: '8px' }}>
+                                          <div
+                                                 className="progress-bar bg-primary"
+                                                 role="progressbar"
+                                                 style={{ width: `${progressPercent}%` }}
+                                                 aria-valuenow={progressPercent}
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100"
+                                          />
+                                   </div>
+                            </div>
                      </div>
 
                      <form className="verification-form" onSubmit={handleNext} noValidate>

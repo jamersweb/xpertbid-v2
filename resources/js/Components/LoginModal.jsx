@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { Link, useForm, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import axios from "axios";
+import useTranslate from '@/hooks/useTranslate';
 
 const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
+       const { t } = useTranslate();
        const [currentStep, setCurrentStep] = useState("loginStep");
        const [errorMessage, setErrorMessage] = useState("");
        const [otpSent, setOtpSent] = useState(false);
@@ -47,7 +49,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                      await axios.post("https://admin.xpertbid.com/api/forgot-password", { email: forgotEmail });
                      setForgotMessage("sent");
               } catch (error) {
-                     setForgotErrors(error.response?.data?.error || { email: "Failed to send link. Please try again." });
+                     setForgotErrors(error.response?.data?.error || { email: t('auth.failed_send_link') });
               } finally {
                      setForgotProcessing(false);
               }
@@ -61,7 +63,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                             onClose();
                      },
                      onError: (err) => {
-                            setErrorMessage(err.email || "Invalid credentials");
+                            setErrorMessage(err.email || t('auth.invalid_credentials'));
                      }
               });
        };
@@ -78,11 +80,11 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
        const handlePhoneLogin = (e) => {
               e.preventDefault();
               if (!validatePhoneNumber(phoneData.phone)) {
-                     setErrorMessage("Invalid phone number.");
+                     setErrorMessage(t('auth.invalid_phone'));
                      return;
               }
               if (!phoneData.password) {
-                     setErrorMessage("Please enter your password.");
+                     setErrorMessage(t('auth.enter_password'));
                      return;
               }
               setErrorMessage("");
@@ -102,14 +104,14 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                             // Current backend LoginRequest throws 'auth.failed' generic error.
                             // Ideally we checks if verified.
                             // For now, just show error.
-                            setErrorMessage(err.email || "Invalid credentials. If you forgot your password, please use Forgot Password.");
+                            setErrorMessage(err.email || t('auth.invalid_credentials_forgot'));
                      }
               });
        };
 
        const sendOtp = async () => {
               if (!validatePhoneNumber(phoneData.phone)) {
-                     setErrorMessage("Invalid phone number.");
+                     setErrorMessage(t('auth.invalid_phone'));
                      return;
               }
               setErrorMessage("");
@@ -124,7 +126,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                      setCurrentStep("otpStep");
                      startTimer();
               } catch (error) {
-                     setErrorMessage(error.response?.data?.message || "Failed to send OTP");
+                     setErrorMessage(error.response?.data?.message || t('auth.failed_send_otp'));
               }
        };
 
@@ -139,7 +141,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                      onClose();
                      router.visit(route('dashboard'));
               } catch (error) {
-                     setErrorMessage(error.response?.data?.message || "Invalid OTP");
+                     setErrorMessage(error.response?.data?.message || t('auth.invalid_otp'));
               }
        };
 
@@ -173,31 +175,31 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
 
                             {currentStep === "loginStep" && (
                                    <div id="loginStep" className="login-form-step active text-center">
-                                          <h3 className="mb-4 fw-bold">Login or Sign up</h3>
+                                          <h3 className="mb-4 fw-bold">{t('auth.login_or_signup')}</h3>
 
                                           <button onClick={() => handleContinueWithPhone('sms')} className="loginContinueIcon">
                                                  <img src="/assets/images/MobileLogo.svg" alt="Phone" width={20} className="me-2" />
-                                                 Continue with Phone
+                                                 {t('auth.continue_phone')}
                                           </button>
 
                                           <button onClick={handleGoogleLogin} className="loginContinueIcon">
                                                  <img src="/assets/images/googleLogo.svg" alt="Google" width={20} className="me-2" />
-                                                 Continue with Google
+                                                 {t('auth.continue_google')}
                                           </button>
 
                                           <button onClick={() => setCurrentStep("loginEmail")} className="loginContinueIcon">
                                                  <img src="/assets/images/smsLogo.svg" alt="Email" width={20} className="me-2" />
-                                                 Continue with Email
+                                                 {t('auth.continue_email')}
                                           </button>
 
                                           {/* Placeholder for Apple Login - functionality to be implemented */}
                                           <button className="loginContinueIcon">
                                                  <img src="/assets/images/appleLogo.svg" alt="Apple" width={20} className="me-2" />
-                                                 Continue with Apple
+                                                 {t('auth.continue_apple')}
                                           </button>
 
                                           <p className="small text-left text-muted mb-0 mt-3">
-                                                 By continuing, I agree to xpertBid <Link href="/terms" className="text-decoration-underline text-primary" onClick={onClose}>Terms of service</Link> and <Link href="/privacy-policy" className="text-decoration-underline text-primary" onClick={onClose}>privacy policy.</Link>
+                                                 {t('auth.by_continuing_prefix')} xpertBid <Link href="/terms" className="text-decoration-underline text-primary" onClick={onClose}>{t('auth.terms_of_service')}</Link> {t('auth.and')} <Link href="/privacy-policy" className="text-decoration-underline text-primary" onClick={onClose}>{t('auth.privacy_policy')}</Link>
                                           </p>
 
                                           {/* <div className="text-center mt-3">
@@ -215,7 +217,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                                  <button id="backPhoneLogin" onClick={() => setCurrentStep("loginStep")}>
                                                         <i className="fa-solid fa-chevron-left"></i>
                                                  </button>
-                                                 <h3 className="mb-0 fw-bold">Login with Phone</h3>
+                                                 <h3 className="mb-0 fw-bold">{t('auth.login_with_phone')}</h3>
                                           </div>
 
                                           <div className="mb-3">
@@ -231,7 +233,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                                  <input
                                                         type="tel"
                                                         className="form-control"
-                                                        placeholder="Enter Phone Number"
+                                                        placeholder={t('auth.enter_phone_number')}
                                                         value={phoneData.phone}
                                                         onChange={(e) => setPhoneData({ ...phoneData, phone: e.target.value.replace(/\D/g, "") })}
                                                         style={{ width: '100%', marginBottom: '20px', height: '68px', borderRadius: '12px', border: '1px solid #FAFAFA', backgroundColor: '#FAFAFA', fontSize: '18px', fontWeight: '600', color: '#23262F', boxShadow: '15px 19px 50px 0 #0000001c' }}
@@ -241,7 +243,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                           <div className="mb-3 position-relative">
                                                  <input
                                                         type={showPassword ? "text" : "password"}
-                                                        placeholder="Enter Password"
+                                                        placeholder={t('auth.enter_password_placeholder')}
                                                         value={phoneData.password || ""}
                                                         onChange={(e) => setPhoneData({ ...phoneData, password: e.target.value })}
                                                         className="form-control"
@@ -259,10 +261,10 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
 
                                           {errorMessage && <div className="alert alert-danger py-2 small mb-3">{errorMessage}</div>}
 
-                                          <p className="mt-2 mb-4 text-muted small">Enter your phone number and password to login.</p>
+                                          <p className="mt-2 mb-4 text-muted small">{t('auth.login_phone_hint')}</p>
 
                                           <button className="form-button-1" onClick={handlePhoneLogin}>
-                                                 Login
+                                                 {t('Login')}
                                           </button>
                                    </div>
                             )}
@@ -274,10 +276,10 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                                  <button id="backOtpLogin" onClick={() => setCurrentStep("phoneLogin")}>
                                                         <i className="fa-solid fa-chevron-left"></i>
                                                  </button>
-                                                 <h3 className="mb-0 fw-bold">Verify OTP</h3>
+                                                 <h3 className="mb-0 fw-bold">{t('auth.verify_otp')}</h3>
                                           </div>
 
-                                          <p className="mb-4 small text-muted text-center">Enter the OTP sent to {phoneData.countryCode}{phoneData.phone}</p>
+                                          <p className="mb-4 small text-muted text-center">{t('auth.enter_sent_otp')} {phoneData.countryCode}{phoneData.phone}</p>
 
                                           <div className="mb-4 d-flex justify-content-center gap-2">
                                                  {[0, 1, 2, 3, 4, 5].map((index) => (
@@ -325,7 +327,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                           {errorMessage && <div className="alert alert-danger py-2 small mb-3">{errorMessage}</div>}
 
                                           <button className="form-button-1" disabled={phoneData.otp.length < 6} onClick={verifyOtp}>
-                                                 Verify & Login
+                                                 {t('auth.verify_and_login')}
                                           </button>
 
                                           <div className="text-center mt-3">
@@ -333,8 +335,8 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                                         className="btn btn-link text-decoration-none p-0 small text-dark fw-bold"
                                                         disabled={isResendDisabled}
                                                         onClick={sendOtp}
-                                                 >
-                                                        {isResendDisabled ? `Resend in ${resendTimer}s` : "Resend Code"}
+                                                >
+                                                        {isResendDisabled ? `${t('auth.resend_in')} ${resendTimer}s` : t('auth.resend_code')}
                                                  </button>
                                           </div>
                                    </div>
@@ -346,14 +348,14 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                                  <button id="backValidationLogin" onClick={() => setCurrentStep("loginStep")}>
                                                         <i className="fa-solid fa-chevron-left"></i>
                                                  </button>
-                                                 <h3 className="mb-0 fw-bold">Login with Email</h3>
+                                                 <h3 className="mb-0 fw-bold">{t('auth.login_with_email')}</h3>
                                           </div>
 
                                           <form onSubmit={handleEmailLogin}>
                                                  <div className="mb-3">
                                                         <input
                                                                type="email"
-                                                               placeholder="Enter your email"
+                                                               placeholder={t('auth.enter_email')}
                                                                value={emailData.email}
                                                                onChange={(e) => setEmailData('email', e.target.value)}
                                                                required
@@ -363,7 +365,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                                  <div className="mb-3 position-relative">
                                                         <input
                                                                type={showPassword ? "text" : "password"}
-                                                               placeholder="Enter password"
+                                                               placeholder={t('auth.enter_password_placeholder')}
                                                                value={emailData.password}
                                                                onChange={(e) => setEmailData('password', e.target.value)}
                                                                required
@@ -390,7 +392,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                                                       style={{ marginTop: '0.2rem' }}
                                                                />
                                                                <label className="form-check-label small text-muted ms-2" htmlFor="rememberMe" style={{ paddingTop: '1px' }}>
-                                                                      Remember me
+                                                                      {t('auth.remember_me')}
                                                                </label>
                                                         </div>
                                                         <button
@@ -398,14 +400,14 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                                                className="btn btn-link small text-dark fw-bold text-decoration-none p-0"
                                                                onClick={() => setCurrentStep("forgotPassword")}
                                                         >
-                                                               Forgot Password?
+                                                               {t('auth.forgot_password')}
                                                         </button>
                                                  </div>
 
                                                  {errorMessage && <div className="alert alert-danger py-2 small mb-3">{errorMessage}</div>}
 
                                                  <button className="form-button-1" disabled={emailProcessing}>
-                                                        {emailProcessing ? "Logging in..." : "Continue"}
+                                                        {emailProcessing ? t('auth.logging_in') : t('auth.continue')}
                                                  </button>
                                           </form>
                                    </div>
@@ -427,7 +429,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                                         <i className="fa-solid fa-chevron-left"></i>
                                                  </button>
                                                  {/* The frontend has "Login or Sign up" here, but "Forgot Password" might be clearer? Sticking to reference: "Login or Sign up" */}
-                                                 <h3 className="mb-0 fw-bold">Login or Sign up</h3>
+                                                 <h3 className="mb-0 fw-bold">{t('auth.login_or_signup')}</h3>
                                           </div>
 
                                           {forgotMessage === "sent" ? (
@@ -435,9 +437,9 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                                         <div className="mb-4">
                                                                <img src="/assets/images/send_email.png" alt="Email sent" width={120} height={120} className="mx-auto" />
                                                         </div>
-                                                        <h2 className="fw-bold mb-3" style={{ fontSize: '24px' }}>Please Check your email</h2>
+                                                        <h2 className="fw-bold mb-3" style={{ fontSize: '24px' }}>{t('auth.check_email')}</h2>
                                                         <p className="text-muted small mb-4">
-                                                               We sent password reset link to your email. Sometimes<br /> it shows in spam folder so please do check that.
+                                                               {t('auth.reset_link_sent_line_1')}<br />{t('auth.reset_link_sent_line_2')}
                                                         </p>
                                                         <button
                                                                className="form-button-1"
@@ -446,23 +448,23 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                                                       setCurrentStep("loginEmail");
                                                                }}
                                                         >
-                                                               Back to login
+                                                               {t('auth.back_to_login')}
                                                         </button>
                                                  </div>
                                           ) : (
                                                  <>
                                                         <div className="text-center">
                                                                <img src="/assets/images/forgetpassword.svg" className="mx-auto mt-4 mb-4" alt="Forgot password illustration" />
-                                                               <h2 className="fw-bold mb-3" style={{ fontSize: '24px' }}>Forgot your password?</h2>
+                                                               <h2 className="fw-bold mb-3" style={{ fontSize: '24px' }}>{t('auth.forgot_your_password')}</h2>
                                                                <p className="text-muted small mb-4">
-                                                                      Enter your registered email to get a new password link.
+                                                                      {t('auth.forgot_password_hint')}
                                                                </p>
                                                         </div>
 
                                                         <div className="mb-3">
                                                                <input
                                                                       type="email"
-                                                                      placeholder="Enter your email"
+                                                                      placeholder={t('auth.enter_email')}
                                                                       value={forgotEmail}
                                                                       onChange={(e) => setForgotEmail(e.target.value)}
                                                                       className="form-control"
@@ -476,7 +478,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                                         </div>
 
                                                         <button className="form-button-1" onClick={handleForgotPassword} disabled={forgotProcessing}>
-                                                               {forgotProcessing ? "Sending..." : "Send Link"}
+                                                               {forgotProcessing ? t('auth.sending') : t('auth.send_link')}
                                                         </button>
                                                  </>
                                           )}

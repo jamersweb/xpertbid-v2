@@ -2,6 +2,7 @@ import { Link, usePage, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import { useState, useEffect, useRef } from 'react';
 import { useAuthModal } from '@/Contexts/AuthModalContext';
+import useTranslate from '@/hooks/useTranslate';
 
 const UserProfile = () => {
        const { auth } = usePage().props;
@@ -23,6 +24,7 @@ export default function MobileBottomNav() {
        const { auth } = props;
        const user = auth?.user;
        const { openLogin } = useAuthModal();
+       const { t } = useTranslate();
        const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
        const menuRef = useRef(null);
        const isAuthenticated = Boolean(user);
@@ -71,7 +73,7 @@ export default function MobileBottomNav() {
                                    aria-label="Home"
                             >
                                    <i className="fa-solid fa-house mobile-bottom-nav__icon" />
-                                   <span className="mobile-bottom-nav__label">Home</span>
+                                   <span className="mobile-bottom-nav__label">{t('Home')}</span>
                             </Link>
 
                             {isAuthenticated ? (
@@ -81,7 +83,7 @@ export default function MobileBottomNav() {
                                           aria-label="Chat"
                                    >
                                           <i className="fa-solid fa-comment-dots mobile-bottom-nav__icon" />
-                                          <span className="mobile-bottom-nav__label">Chat</span>
+                                          <span className="mobile-bottom-nav__label">{t('Chat')}</span>
                                    </Link>
                             ) : (
                                    <button
@@ -91,7 +93,7 @@ export default function MobileBottomNav() {
                                           aria-label="Chat"
                                    >
                                           <i className="fa-solid fa-comment-dots mobile-bottom-nav__icon" />
-                                          <span className="mobile-bottom-nav__label">Chat</span>
+                                          <span className="mobile-bottom-nav__label">{t('Chat')}</span>
                                    </button>
                             )}
 
@@ -102,7 +104,7 @@ export default function MobileBottomNav() {
                                    style={{ background: "transparent", border: "none", cursor: "pointer", padding: 0 }}
                             >
                                    <i className="fa-solid fa-plus mobile-bottom-nav__icon" />
-                                   <span className="mobile-bottom-nav__label">Sell</span>
+                                   <span className="mobile-bottom-nav__label">{t('Sell')}</span>
                             </button>
 
                             <Link
@@ -123,7 +125,7 @@ export default function MobileBottomNav() {
                                                  aria-label="User menu"
                                           >
                                                  <UserProfile />
-                                                 <span className="mobile-bottom-nav__label">Profile</span>
+                                                 <span className="mobile-bottom-nav__label">{t('Profile')}</span>
                                           </button>
 
                                           {isUserMenuOpen && (
@@ -132,61 +134,61 @@ export default function MobileBottomNav() {
                                                                <li>
                                                                       <Link href={route('dashboard')} onClick={() => setIsUserMenuOpen(false)}>
                                                                              <i className="fa-solid fa-table-columns text-center" style={{ width: '20px', fontSize: '18px' }}></i>
-                                                                             Dashboard
+                                                                             {t('Dashboard')}
                                                                       </Link>
                                                                </li>
                                                                <li>
                                                                       <Link href={route('profile.edit')} onClick={() => setIsUserMenuOpen(false)}>
                                                                              <img src="/assets/images/profile-setting.svg" alt="Settings" width={20} height={20} />
-                                                                             Account Settings
+                                                                             {t('Account Settings')}
                                                                       </Link>
                                                                </li>
                                                                <li>
                                                                       <Link href={route('chat.index')} onClick={() => setIsUserMenuOpen(false)}>
                                                                              <i className="fa-solid fa-comment-dots text-center" style={{ width: '20px', fontSize: '18px' }}></i>
-                                                                             Messages
+                                                                             {t('Messages')}
                                                                       </Link>
                                                                </li>
                                                                <li>
                                                                       <Link href={route('favorites.index')} onClick={() => setIsUserMenuOpen(false)}>
                                                                              <img src="/assets/images/setting-heart.svg" alt="Favorites" width={20} height={20} />
-                                                                             My Favorites
+                                                                             {t('My Favorites')}
                                                                       </Link>
                                                                </li>
                                                                <li>
                                                                       <Link href={route('auctions.mylistings')} onClick={() => setIsUserMenuOpen(false)}>
                                                                              <img src="/assets/images/mainListing.svg" alt="Listings" width={20} height={20} />
-                                                                             My Listings
+                                                                             {t('My Listings')}
                                                                       </Link>
                                                                </li>
                                                                <li>
                                                                       <Link href={route('bids.index')} onClick={() => setIsUserMenuOpen(false)}>
                                                                              <img src="/assets/images/myBids.svg" alt="Bids" width={20} height={20} />
-                                                                             My Bids
+                                                                             {t('My Bids')}
                                                                       </Link>
                                                                </li>
                                                                <li>
                                                                       <Link href={route('orders.index')} onClick={() => setIsUserMenuOpen(false)}>
                                                                              <i className="fa-solid fa-box-open text-center" style={{ width: '20px', fontSize: '18px' }}></i>
-                                                                             My Orders
+                                                                             {t('My Orders')}
                                                                       </Link>
                                                                </li>
                                                                <li>
                                                                       <Link href={route('payment_requests.index')} onClick={() => setIsUserMenuOpen(false)}>
                                                                              <i className="fa-solid fa-money-check text-center" style={{ width: '20px', fontSize: '18px' }}></i>
-                                                                             Payment Request
+                                                                             {t('Payment Request')}
                                                                       </Link>
                                                                </li>
                                                                <li>
                                                                       <Link href={route('verification.identity')} onClick={() => setIsUserMenuOpen(false)}>
                                                                              <i className="fa-solid fa-id-card text-center" style={{ width: '20px', fontSize: '18px' }}></i>
-                                                                             Verification
+                                                                             {t('Verification')}
                                                                       </Link>
                                                                </li>
                                                                <li>
                                                                       <button className="mobile-bottom-nav__logout-btn" onClick={handleLogout}>
                                                                              <img src="/assets/images/logout.svg" alt="Logout" width={20} height={20} />
-                                                                             Log Out
+                                                                             {t('Log Out')}
                                                                       </button>
                                                                </li>
                                                         </ul>
@@ -201,7 +203,7 @@ export default function MobileBottomNav() {
                                           aria-label="Login"
                                    >
                                           <i className="fa-regular fa-user mobile-bottom-nav__icon" />
-                                          <span className="mobile-bottom-nav__label">Profile</span>
+                                          <span className="mobile-bottom-nav__label">{t('Profile')}</span>
                                    </button>
                             )}
                      </div>

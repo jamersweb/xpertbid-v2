@@ -3,24 +3,26 @@ import { Autoplay, Pagination } from "swiper/modules";
 import { FaClock, FaLock, FaGlobe, FaClipboardList } from "react-icons/fa";
 import "swiper/css";
 import "swiper/css/pagination";
+import useTranslate from "@/hooks/useTranslate";
 
 export default function WhyChooseXpertBid() {
+       const { t } = useTranslate();
        const whyChooseData = [
               {
-                     icon: <FaClock />, title: "Real-time Auctions", description: "Get better offers through live bidding."
+                     icon: <FaClock />, title: t("Real-time Auctions"), description: t("Get better offers through live bidding.")
               },
               {
-                     icon: <FaGlobe />, title: "Wide Market Reach", description: "Pakistan, UAE & expanding regions."
+                     icon: <FaGlobe />, title: t("Wide Market Reach"), description: t("Pakistan, UAE & expanding regions.")
               },
               {
-                     icon: <FaClipboardList />, title: "Easy Listing & Tracking", description: "Tools to list and manage all your sales."
+                     icon: <FaClipboardList />, title: t("Easy Listing & Tracking"), description: t("Tools to list and manage all your sales.")
               }
        ];
 
        return (
               <section className="why-choose-section pt-5 bg-light">
                      <div className="container">
-                            <h2 className="text-center mb-4 heading-text" style={{ fontWeight: 700, color: "#333" }}>Why Choose XpertBid?</h2>
+                            <h2 className="text-center mb-4 heading-text" style={{ fontWeight: 700, color: "#333" }}>{t('Why Choose XpertBid?')}</h2>
                             <Swiper
                                    modules={[Autoplay, Pagination]}
                                    autoplay={{ delay: 3000, disableOnInteraction: false }}

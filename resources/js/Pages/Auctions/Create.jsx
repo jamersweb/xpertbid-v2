@@ -9,7 +9,7 @@ import MediaUpload from '@/Components/SellSteps/MediaUpload';
 import axios from 'axios';
 import '@/../css/sell.css'; // Import custom styles for Sell page
 
-export default function Create({ categories, listing = null, vehicleVerification = null, propertyVerification = null }) {
+export default function Create({ categories, countries = [], profileLocation = null, listing = null, vehicleVerification = null, propertyVerification = null }) {
        const { auth } = usePage().props;
        const individualVerificationStatus =
               auth?.user?.individual_verification?.status || auth?.user?.individualVerification?.status || '';
@@ -65,14 +65,11 @@ export default function Create({ categories, listing = null, vehicleVerification
 
               title: listing?.title || '',
               description: listing?.description || '',
-              product_year: listing?.product_year || listingData.product_year || listingData.year || '',
-              product_location: listing?.product_location || listingData.product_location || '',
 
               minimum_bid: listing?.minimum_bid || listingData.minimum_bid || listingData.start_price || listingData.price || '',
               reserve_price: listing?.reserve_price || listingData.reserve_price || '',
               start_date: formatDateForInput(listing?.start_date),
               end_date: formatDateForInput(listing?.end_date),
-              product_condition: listing?.product_condition || listingData.product_condition || listingData.condition || '',
               variations: listing?.variations || listingData.variations || [],
               discount_type: listing?.discount_type || listingData.discount_type || '',
               discount_value: listing?.discount_value || listingData.discount_value || '',
@@ -92,6 +89,9 @@ export default function Create({ categories, listing = null, vehicleVerification
               category_features: categoryFeatures,
               stock: listing?.stock || listingData.stock || '',
               quantity: listingData.quantity || '',
+              country_id: ['', null, undefined, 'null', 'undefined'].includes(listing?.country_id) ? (['', null, undefined, 'null', 'undefined'].includes(listingData.country_id) ? '' : String(listingData.country_id)) : String(listing?.country_id),
+              state_id: ['', null, undefined, 'null', 'undefined'].includes(listing?.state_id) ? (['', null, undefined, 'null', 'undefined'].includes(listingData.state_id) ? '' : String(listingData.state_id)) : String(listing?.state_id),
+              city_id: ['', null, undefined, 'null', 'undefined'].includes(listing?.city_id) ? (['', null, undefined, 'null', 'undefined'].includes(listingData.city_id) ? '' : String(listingData.city_id)) : String(listing?.city_id),
        });
 
        const [files, setFiles] = useState([]);
@@ -115,7 +115,126 @@ export default function Create({ categories, listing = null, vehicleVerification
 
        const [isSavingDraft, setIsSavingDraft] = useState(false);
        const [dynamicFields, setDynamicFields] = useState([]);
+       const [locationCountries, setLocationCountries] = useState(countries || []);
+       const [locationStates, setLocationStates] = useState([]);
+       const [locationCities, setLocationCities] = useState([]);
+       const [autoLocationTried, setAutoLocationTried] = useState(false);
+       const [profileLocationTried, setProfileLocationTried] = useState(false);
        const isDraftListing = listing?.is_draft === true || listing?.status === 'draft';
+
+       const hasValidLocationId = (value) => !['', null, undefined, 'null', 'undefined', 0, '0'].includes(value);
+
+       const normalizeLocationName = (value) => String(value || '')
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, '');
+
+       const findLocationMatch = (items, targetName) => {
+              if (!targetName || !Array.isArray(items)) return null;
+              const target = normalizeLocationName(targetName);
+              if (!target) return null;
+
+              return items.find((item) => {
+                     const name = normalizeLocationName(item?.name);
+                     return name === target || name.includes(target) || target.includes(name);
+              }) || null;
+       };
+
+       const loadStates = async (countryId) => {
+              if (!countryId) {
+                     setLocationStates([]);
+                     return [];
+              }
+
+              try {
+                     const res = await axios.get('/get-states/' + countryId);
+                     const states = res.data?.state || [];
+                     setLocationStates(states);
+                     return states;
+              } catch (err) {
+                     console.error("Failed to fetch states", err);
+                     setLocationStates([]);
+                     return [];
+              }
+       };
+
+       const loadCities = async (stateId) => {
+              if (!stateId) {
+                     setLocationCities([]);
+                     return [];
+              }
+
+              try {
+                     const res = await axios.get('/get-cities/' + stateId);
+                     const cities = res.data?.city || [];
+                     setLocationCities(cities);
+                     return cities;
+              } catch (err) {
+                     console.error("Failed to fetch cities", err);
+                     setLocationCities([]);
+                     return [];
+              }
+       };
+
+       const detectLocationFromBrowser = () => new Promise((resolve, reject) => {
+              if (typeof window === 'undefined' || !navigator?.geolocation) {
+                     reject(new Error('Geolocation not supported'));
+                     return;
+              }
+              const geoErrorMap = {
+                     1: 'PERMISSION_DENIED',
+                     2: 'POSITION_UNAVAILABLE',
+                     3: 'TIMEOUT',
+              };
+
+              if (navigator?.permissions?.query) {
+                     navigator.permissions
+                            .query({ name: 'geolocation' })
+                            .then((status) => {
+                                   console.info(`[Geolocation] permission state: ${status.state}`);
+                            })
+                            .catch(() => {
+                                   // Ignore permissions API errors, geolocation call below is the source of truth.
+                            });
+              }
+
+              navigator.geolocation.getCurrentPosition(
+                     async (position) => {
+                            try {
+                                   const { latitude, longitude } = position.coords;
+                                   const response = await fetch(
+                                          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+                                   );
+                                   const data = await response.json();
+
+                                   resolve({
+                                          country: data?.countryName || '',
+                                          state: data?.principalSubdivision || '',
+                                          city: data?.city || data?.locality || '',
+                                   });
+                            } catch (error) {
+                                   reject(error);
+                            }
+                     },
+                     (error) => reject({
+                            code: error?.code ?? null,
+                            reason: geoErrorMap[error?.code] || 'UNKNOWN',
+                            message: error?.message || 'Geolocation failed',
+                     }),
+                     { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+              );
+       });
+
+       const detectLocationFromIP = async () => {
+              const response = await fetch('/detect-location-ip');
+              const data = await response.json();
+
+              return {
+                     country: data?.country || '',
+                     state: data?.state || '',
+                     city: data?.city || '',
+                     source: data?.source || 'ip',
+              };
+       };
 
        // Effect to find category objects if editing
        useEffect(() => {
@@ -124,6 +243,177 @@ export default function Create({ categories, listing = null, vehicleVerification
                      if (cat) setSelectedCategory(cat);
               }
        }, [listing, categories, selectedCategory]);
+
+       useEffect(() => {
+              if (Array.isArray(countries) && countries.length > 0) {
+                     setLocationCountries(countries);
+                     return;
+              }
+
+              axios.get('/get-countries')
+                     .then(res => setLocationCountries(res.data?.country || []))
+                     .catch(err => console.error("Failed to fetch countries", err));
+       }, [countries]);
+
+       useEffect(() => {
+              if (!hasValidLocationId(formData.country_id)) {
+                     setLocationStates([]);
+                     setLocationCities([]);
+                     return;
+              }
+
+              loadStates(formData.country_id);
+       }, [formData.country_id]);
+
+       useEffect(() => {
+              if (!hasValidLocationId(formData.state_id)) {
+                     setLocationCities([]);
+                     return;
+              }
+
+              loadCities(formData.state_id);
+       }, [formData.state_id]);
+
+       useEffect(() => {
+              if (profileLocationTried) return;
+              if (
+                     !hasValidLocationId(profileLocation?.country_id) &&
+                     !hasValidLocationId(profileLocation?.state_id) &&
+                     !hasValidLocationId(profileLocation?.city_id)
+              ) {
+                     setProfileLocationTried(true);
+                     return;
+              }
+
+              let cancelled = false;
+
+              const prefillFromProfileLocation = async () => {
+                     try {
+                            const countryId = hasValidLocationId(profileLocation?.country_id) ? String(profileLocation.country_id) : '';
+                            const stateIdFromProfile = hasValidLocationId(profileLocation?.state_id) ? String(profileLocation.state_id) : '';
+                            const cityIdFromProfile = hasValidLocationId(profileLocation?.city_id) ? String(profileLocation.city_id) : '';
+
+                            if (!countryId) return;
+
+                            const states = await loadStates(countryId);
+                            if (cancelled) return;
+
+                            const stateId = stateIdFromProfile && states.some((state) => String(state.id) === stateIdFromProfile)
+                                   ? stateIdFromProfile
+                                   : '';
+
+                            let cityId = '';
+                            if (stateId) {
+                                   const cities = await loadCities(stateId);
+                                   if (cancelled) return;
+
+                                   if (cityIdFromProfile && cities.some((city) => String(city.id) === cityIdFromProfile)) {
+                                          cityId = cityIdFromProfile;
+                                   }
+                            }
+
+                            setFormData((prev) => {
+                                   return {
+                                          ...prev,
+                                          country_id: hasValidLocationId(prev.country_id) ? prev.country_id : countryId,
+                                          state_id: hasValidLocationId(prev.state_id) ? prev.state_id : stateId,
+                                          city_id: hasValidLocationId(prev.city_id) ? prev.city_id : cityId,
+                                   };
+                            });
+                     } finally {
+                            if (!cancelled) {
+                                   setProfileLocationTried(true);
+                            }
+                     }
+              };
+
+              prefillFromProfileLocation();
+
+              return () => {
+                     cancelled = true;
+              };
+       }, [profileLocationTried, profileLocation, formData.country_id, formData.state_id, formData.city_id]);
+
+       useEffect(() => {
+              if (autoLocationTried) return;
+              if (!profileLocationTried) return;
+              if (!locationCountries.length) return;
+              if (hasValidLocationId(formData.country_id) && hasValidLocationId(formData.state_id) && hasValidLocationId(formData.city_id)) return;
+
+              let cancelled = false;
+
+              const autoFillLocation = async () => {
+                     try {
+                            let detected = null;
+                            let usedIpFallback = false;
+                            try {
+                                   detected = await detectLocationFromBrowser();
+                            } catch (err) {
+                                   console.warn('Geolocation denied/failed, trying IP fallback.', {
+                                          code: err?.code ?? null,
+                                          reason: err?.reason || 'UNKNOWN',
+                                          message: err?.message || '',
+                                   });
+                            }
+
+                            if (!detected) {
+                                   try {
+                                          detected = await detectLocationFromIP();
+                                          usedIpFallback = true;
+                                   } catch (err) {
+                                          console.warn('IP location fallback failed.');
+                                          return;
+                                   }
+                            }
+
+                            if (cancelled || !detected) return;
+
+                            const selectedCountry = hasValidLocationId(formData.country_id)
+                                   ? locationCountries.find((country) => String(country.id) === String(formData.country_id))
+                                   : null;
+                            const detectedCountry = findLocationMatch(locationCountries, detected.country);
+                            const matchedCountry = selectedCountry || detectedCountry;
+                            if (!matchedCountry) return;
+
+                            const states = await loadStates(matchedCountry.id);
+                            if (cancelled) return;
+
+                            const matchedState = !usedIpFallback ? findLocationMatch(states, detected.state) : null;
+                            const stateId = hasValidLocationId(formData.state_id)
+                                   ? String(formData.state_id)
+                                   : (matchedState?.id ? String(matchedState.id) : '');
+
+                            let cityId = '';
+                            if (stateId && !usedIpFallback) {
+                                   const cities = await loadCities(stateId);
+                                   if (cancelled) return;
+                                   const matchedCity = findLocationMatch(cities, detected.city);
+                                   cityId = hasValidLocationId(formData.city_id)
+                                          ? String(formData.city_id)
+                                          : (matchedCity?.id ? String(matchedCity.id) : '');
+                            }
+
+                            setFormData((prev) => {
+                                   return {
+                                          ...prev,
+                                          country_id: hasValidLocationId(prev.country_id) ? prev.country_id : (matchedCountry.id || ''),
+                                          state_id: hasValidLocationId(prev.state_id) ? prev.state_id : stateId,
+                                          city_id: hasValidLocationId(prev.city_id) ? prev.city_id : cityId,
+                                   };
+                            });
+                     } finally {
+                            if (!cancelled) {
+                                   setAutoLocationTried(true);
+                            }
+                     }
+              };
+
+              autoFillLocation();
+
+              return () => {
+                     cancelled = true;
+              };
+       }, [autoLocationTried, profileLocationTried, locationCountries, formData.country_id, formData.state_id, formData.city_id]);
 
        // Effect to fetch dynamic fields
        useEffect(() => {
@@ -209,14 +499,14 @@ export default function Create({ categories, listing = null, vehicleVerification
                      reserve_price: formData.reserve_price,
                      start_date: formData.start_date,
                      end_date: formData.end_date,
-                     product_condition: formData.product_condition,
-                     product_year: formData.product_year,
-                     product_location: formData.product_location,
                      variations: formData.variations,
                      discount_type: formData.discount_type,
                      discount_value: formData.discount_value,
                      stock: formData.stock,
                      quantity: formData.quantity,
+                     country_id: formData.country_id,
+                     state_id: formData.state_id,
+                     city_id: formData.city_id,
               });
 
               let category_features = { ...formData.category_features };
@@ -248,6 +538,9 @@ export default function Create({ categories, listing = null, vehicleVerification
               data.append('child_category_id', formData.child_category_id);
               data.append('title', formData.title);
               data.append('description', formData.description);
+              data.append('country_id', formData.country_id || '');
+              data.append('state_id', formData.state_id || '');
+              data.append('city_id', formData.city_id || '');
               data.append('status', status);
               data.append('selected_currency', selectedCurrency);
               if (sourcePlatform) {
@@ -332,6 +625,13 @@ export default function Create({ categories, listing = null, vehicleVerification
               listingTitle: formData.title,
        };
 
+       const needsVerificationStep = ['222', '311'].includes(String(formData.category_id || ''));
+       const progressSteps = needsVerificationStep
+              ? ['listType', 'category', 'details', 'verification', 'media']
+              : ['listType', 'category', 'details', 'media'];
+       const currentStepIndex = Math.max(progressSteps.indexOf(step), 0);
+       const progressPercent = Math.round(((currentStepIndex + 1) / progressSteps.length) * 100);
+
        return (
               <AppLayout title={listing ? "Edit Listing" : "Start Selling"}>
                      <Head title={listing ? "Edit Listing" : "Start Selling"} />
@@ -341,6 +641,7 @@ export default function Create({ categories, listing = null, vehicleVerification
                                           onSelect={handleListTypeSelect}
                                           onSaveDraft={handleSaveDraft}
                                           isSavingDraft={isSavingDraft}
+                                          progressPercent={progressPercent}
                                    />
                             )}
 
@@ -351,6 +652,7 @@ export default function Create({ categories, listing = null, vehicleVerification
                                           onBack={() => setStep('listType')}
                                           onSaveDraft={handleSaveDraft}
                                           isSavingDraft={isSavingDraft}
+                                          progressPercent={progressPercent}
                                    />
                             )}
 
@@ -359,6 +661,9 @@ export default function Create({ categories, listing = null, vehicleVerification
                                           listType={formData.list_type}
                                           formData={formData}
                                           setFormData={setFormData}
+                                          countries={locationCountries}
+                                          states={locationStates}
+                                          cities={locationCities}
                                           summaryData={summaryData}
                                           dynamicFields={dynamicFields}
                                           onContinue={handleDetailsContinue}
@@ -367,6 +672,7 @@ export default function Create({ categories, listing = null, vehicleVerification
                                           onEditCategory={() => setStep('category')}
                                           onSaveDraft={handleSaveDraft}
                                           isSavingDraft={isSavingDraft}
+                                          progressPercent={progressPercent}
                                    />
                             )}
 
@@ -383,6 +689,7 @@ export default function Create({ categories, listing = null, vehicleVerification
                                           onEditDetails={() => setStep('details')}
                                           onSaveDraft={handleSaveDraft}
                                           isSavingDraft={isSavingDraft}
+                                          progressPercent={progressPercent}
                                    />
                             )}
 
@@ -403,6 +710,7 @@ export default function Create({ categories, listing = null, vehicleVerification
                                           isSavingDraft={isSavingDraft}
                                           canPublish={canPublishListing}
                                           publishBlockedMessage={publishBlockedMessage}
+                                          progressPercent={progressPercent}
                                    />
                             )}
                      </div>

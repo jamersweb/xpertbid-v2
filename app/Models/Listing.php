@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Country;
+use App\Models\State;
+use App\Models\City;
 
 class Listing extends Model
 {
@@ -15,6 +18,9 @@ class Listing extends Model
         'category_id',
         'sub_category_id',
         'child_category_id',
+        'country_id',
+        'state_id',
+        'city_id',
         'listing_type', // This field already exists
         'title',
         'slug',
@@ -89,6 +95,21 @@ class Listing extends Model
     public function bids()
     {
         return $this->hasMany(Bid::class);
+    }
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class, 'country_id');
+    }
+
+    public function state()
+    {
+        return $this->belongsTo(State::class, 'state_id');
+    }
+
+    public function city()
+    {
+        return $this->belongsTo(City::class, 'city_id');
     }
 
     public function pendingEdit()

@@ -3,11 +3,13 @@ import { route } from 'ziggy-js';
 import { Oval } from "react-loader-spinner";
 import axios from 'axios';
 import { useState, useEffect } from "react";
+import useTranslate from '@/hooks/useTranslate';
 
 export default function Footer() {
        const [cats, setCats] = useState([]);
        const [loading, setLoading] = useState(true);
        const [error, setError] = useState(null);
+       const { t } = useTranslate();
 
        useEffect(() => {
               // In Inertia, we might pass categories as props from HandleInertiaRequests middleware
@@ -18,7 +20,7 @@ export default function Footer() {
                      .then(res => setCats(res.data.categories || []))
                      .catch(err => {
                             console.error(err);
-                            setError("Could not load categories.");
+                            setError(t("Could not load categories."));
                      })
                      .finally(() => setLoading(false));
        }, []);
@@ -46,7 +48,7 @@ export default function Footer() {
                                                         />
                                                  </Link>
                                           </div>
-                                          <p>First ever UAE  based auction platform, providing you a one stop shop, auction marketplace/ Platform. From RealEstate, Vehicles, bulk goods and much more, XpertBid powers auctions that deliver value, security, and results one auction at a time.
+                                          <p>{t('First ever UAE based auction platform, providing you a one stop shop, auction marketplace/platform. From real estate, vehicles, bulk goods and much more, XpertBid powers auctions that deliver value, security, and results one auction at a time.')}
                                           </p>              <div className="social-icons my-3">
                                                  <a href="https://www.instagram.com/xpert_bid?igsh=NWFqcmh5eTgwOWpq" target="_blank"
                                                         rel="noopener noreferrer"><i className="fa-brands fa-instagram"></i></a>
@@ -62,12 +64,12 @@ export default function Footer() {
                                    </div>
                                    <div className="col-xl-4   col-sm-6 footer-child3">
                                           <div className="footer-menu ps-0 ps-sm-4">
-                                                 <p className="foot-menu-heading my-4"> Get To Know Us</p>
+                                                 <p className="foot-menu-heading my-4"> {t('Get To Know Us')}</p>
                                                  <ul>
-                                                        <li><Link href={route('faq')}>FAQ</Link></li>
-                                                        <li><Link href={route('blogs.index')}>Blogs</Link></li>
-                                                        <li><Link href={route('about')}>About Us</Link></li>
-                                                        <li><Link href={route('contact')}> Contact Us</Link></li>
+                                                        <li><Link href={route('faq')}>{t('FAQ')}</Link></li>
+                                                        <li><Link href={route('blogs.index')}>{t('Blogs')}</Link></li>
+                                                        <li><Link href={route('about')}>{t('About Us')}</Link></li>
+                                                        <li><Link href={route('contact')}>{t('Contact Us')}</Link></li>
 
                                                  </ul>
                                           </div>
@@ -75,10 +77,10 @@ export default function Footer() {
                                    <div className="col-xl-4   col-sm-6 footer-child3 mt-0 mt-sm-3">
                                           <div className="footer-menu ps-0 ps-sm-4 mt-0 mt-sm-5">
                                                  <ul>
-                                                        <li><Link href={route('refund.policy')}>Refund Policy</Link></li>
-                                                        <li><Link href={route('shipping.policy')}>Shipping Policy</Link></li>
-                                                        <li><Link href={route('privacy.policy')}>Privacy Policy</Link></li>
-                                                        <li><Link href={route('terms')}>Terms & Conditions</Link></li>
+                                                        <li><Link href={route('refund.policy')}>{t('Refund Policy')}</Link></li>
+                                                        <li><Link href={route('shipping.policy')}>{t('Shipping Policy')}</Link></li>
+                                                        <li><Link href={route('privacy.policy')}>{t('Privacy Policy')}</Link></li>
+                                                        <li><Link href={route('terms')}>{t('Terms & Conditions')}</Link></li>
                                                  </ul>
                                           </div>
                                    </div>
@@ -86,7 +88,7 @@ export default function Footer() {
                                           <div className="footer-menu ps-0 ps-sm-4 mt-0 mt-lg-3" >
                                                  {loading && (
                                                         <div className="d-flex justify-content-center">
-                                                               <Oval height={30} width={30} ariaLabel="Loading categories" />
+                                                               <Oval height={30} width={30} ariaLabel={t('Loading categories')} />
                                                         </div>
                                                  )}
                                                  {error && <p className="text-danger">{error}</p>}

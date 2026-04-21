@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Favorite;
+use App\Support\TranslationManager;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
@@ -32,6 +33,9 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $authUser = $request->user()?->loadMissing(['individualVerification', 'corporateVerification']);
+        $currentLocale = app()->getLocale();
+        $supportedLocales = TranslationManager::getSupportedLanguages();
+        $translations = TranslationManager::getTranslations($currentLocale);
 
         return [
             ...parent::share($request),
@@ -67,6 +71,12 @@ class HandleInertiaRequests extends Middleware
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
             ],
+            'locale' => [
+                'current' => $currentLocale,
+                'fallback' => config('app.fallback_locale', 'en'),
+                'supported' => $supportedLocales,
+            ],
+            'translations' => $translations,
             'favoriteListingIds' => $request->user()
                 ? Favorite::where('user_id', $request->user()->id)->pluck('listing_id')->all()
                 : [],

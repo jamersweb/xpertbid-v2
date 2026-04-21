@@ -21,6 +21,250 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+html[dir="rtl"] body,
+body.locale-rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+body.locale-rtl .toast-container {
+  left: 20px;
+  right: auto !important;
+}
+
+body.locale-rtl .global-verify-account-btn {
+  right: 18px;
+  left: auto !important;
+}
+
+body.locale-rtl #mainNavbar .container-fluid {
+  flex-direction: row-reverse;
+  justify-content: space-between;
+}
+
+body.locale-rtl #mainNavbar .navbar-brand {
+  order: 3;
+}
+
+body.locale-rtl #mainNavbar .navbar-collapse {
+  order: 2;
+  flex-grow: 1;
+  justify-content: flex-end;
+  margin-right: 1.5rem;
+  margin-left: 0 !important;
+}
+
+body.locale-rtl #mainNavbar .navbar-brand {
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+}
+
+body.locale-rtl #mainNavbar .mobile-header-actions {
+  margin-right: auto !important;
+  margin-left: .5rem !important;
+}
+
+body.locale-rtl #mainNavbar .navbar-nav {
+  margin-right: 0 !important;
+  margin-left: 1.25rem !important;
+  padding-right: 0;
+}
+
+body.locale-rtl #mainNavbar .search-trigger {
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+body.locale-rtl #mainNavbar .search-trigger svg {
+  flex-shrink: 0;
+}
+
+body.locale-rtl #mainNavbar .search-trigger span {
+  margin-right: .5rem;
+  margin-left: 0 !important;
+  text-align: right;
+  width: 100%;
+}
+
+body.locale-rtl #mainNavbar .nav-item.d-none.d-lg-block.me-3 {
+  margin-right: 1rem !important;
+  margin-left: 0 !important;
+}
+
+body.locale-rtl #mainNavbar .header-account-cluster {
+  flex-direction: row;
+  order: 1;
+  margin-left: 1.25rem;
+  margin-right: 0 !important;
+}
+
+body.locale-rtl #mainNavbar .header-desktop-actions {
+  order: 1;
+  flex-direction: row-reverse;
+}
+
+body.locale-rtl #mainNavbar .registration-btns,
+body.locale-rtl #mainNavbar .header-user-actions {
+  order: 2;
+  flex-direction: row-reverse;
+}
+
+body.locale-rtl #mainNavbar .header-user-actions {
+  flex-direction: row;
+}
+
+body.locale-rtl #mainNavbar .login {
+  margin-right: 20px !important;
+  margin-left: 0 !important;
+}
+
+body.locale-rtl #mainNavbar .sellnow {
+  margin-right: 20px !important;
+  margin-left: 0 !important;
+}
+
+body.locale-rtl .user-profile-setting-popup,
+body.locale-rtl .notification-popup {
+  left: 0 !important;
+  right: auto !important;
+}
+
+body.locale-rtl .user-profile-setting-popup {
+  direction: rtl;
+  text-align: right;
+}
+
+body.locale-rtl .user-profile-setting-popup .user-setting-menu li,
+body.locale-rtl .user-profile-setting-popup .user-setting-menu li a,
+body.locale-rtl .user-profile-setting-popup .user-setting-menu li button {
+  text-align: right;
+}
+
+body.locale-rtl .user-profile-setting-popup .user-setting-menu li a,
+body.locale-rtl .user-profile-setting-popup .user-setting-menu li button {
+  width: 100%;
+  direction: rtl;
+  justify-content: flex-end;
+  flex-direction: row !important;
+}
+
+body.locale-rtl .user-profile-setting-popup .user-setting-menu li img,
+body.locale-rtl .user-profile-setting-popup .user-setting-menu li i {
+  flex-shrink: 0;
+}
+
+body.locale-rtl .notification-container .notification button span,
+body.locale-rtl .notification-container .notification span[style*="position: absolute"] {
+  left: 0 !important;
+  right: auto !important;
+}
+
+body.locale-rtl .footer,
+body.locale-rtl .footer p,
+body.locale-rtl .footer li,
+body.locale-rtl .footer a,
+body.locale-rtl .footer-menu,
+body.locale-rtl .foot-menu-heading {
+  text-align: right;
+}
+
+body.locale-rtl .footer .row {
+  direction: rtl;
+}
+
+body.locale-rtl .footer .social-icons {
+  display: flex;
+  justify-content: flex-end;
+  flex-direction: row-reverse;
+  gap: 18px;
+}
+
+body.locale-rtl .footer .social-icons a {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+body.locale-rtl .footer .social-icons i,
+body.locale-rtl .footer .qlwapp-toggle,
+body.locale-rtl .footer .logo img {
+  direction: ltr;
+}
+
+body.locale-rtl .user-profile-setting-popup .d-flex.align-items-center.gap-2,
+body.locale-rtl .user-profile-setting-popup .transparent-button.d-flex.align-items-center.gap-2,
+body.locale-rtl .notification-popup .d-flex,
+body.locale-rtl .notification-popup .notification-item .d-flex {
+  flex-direction: row-reverse;
+}
+
+body.locale-rtl .notification-popup .notification-content,
+body.locale-rtl .notification-popup .notification-footer,
+body.locale-rtl .notification-popup .notification-item {
+  text-align: right;
+}
+
+body.locale-rtl .notification-popup .markAsRead img {
+  margin-left: .25rem;
+  margin-right: 0 !important;
+}
+
+body.locale-rtl .loginContinueIcon,
+body.locale-rtl .signUpContinueIcon {
+  flex-direction: row-reverse;
+}
+
+body.locale-rtl .modal,
+body.locale-rtl .modal-content,
+body.locale-rtl .loginModal-content,
+body.locale-rtl .signupmodal-content,
+body.locale-rtl .auth-input-group,
+body.locale-rtl .login-form-step,
+body.locale-rtl .signupModal {
+  direction: rtl;
+  text-align: right;
+}
+
+body.locale-rtl .step-heading-and-back button,
+body.locale-rtl #backPhoneLogin,
+body.locale-rtl #backEmail,
+body.locale-rtl #backForgotPassword,
+body.locale-rtl #backOtpLogin,
+body.locale-rtl #backValidationLogin {
+  right: 0;
+  left: auto !important;
+}
+
+body.locale-rtl .loginContinueIcon img,
+body.locale-rtl .signUpContinueIcon img {
+  margin-left: 12px;
+  margin-right: 0 !important;
+}
+
+body.locale-rtl .admin-layout {
+  direction: rtl;
+}
+
+body.locale-rtl .admin-layout .text-left {
+  text-align: right !important;
+}
+
+body.locale-rtl .admin-layout .group-hover\:block,
+body.locale-rtl .admin-layout [class*="group-hover:block"] {
+  text-align: right;
+}
+
+body.locale-rtl .admin-layout .absolute.right-0 {
+  left: 0 !important;
+  right: auto !important;
+}
+
+body.locale-rtl .admin-layout main,
+body.locale-rtl .admin-layout header,
+body.locale-rtl .admin-layout aside {
+  text-align: right;
+}
+
 /* Quill Editor Styles - Matching verify_input theme */
 .quill-editor.verify_input {
   background: #F8F8F8 !important;

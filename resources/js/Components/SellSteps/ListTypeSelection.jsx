@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from '@inertiajs/react';
 
-export default function ListTypeSelection({ onSelect, onSaveDraft, isSavingDraft }) {
+export default function ListTypeSelection({ onSelect, onSaveDraft, isSavingDraft, progressPercent = 0 }) {
     const [infoTab, setInfoTab] = useState(null);
 
     const listingTypes = [
@@ -65,6 +65,18 @@ export default function ListTypeSelection({ onSelect, onSaveDraft, isSavingDraft
                     <p className="list-type-subtitle">
                         Select the listing format that suits your product.
                     </p>
+                    <div className="px-3 pb-2 bg-white">
+                        <div className="progress" style={{ height: '8px' }}>
+                            <div
+                                className="progress-bar bg-primary"
+                                role="progressbar"
+                                style={{ width: `${progressPercent}%` }}
+                                aria-valuenow={progressPercent}
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                            />
+                        </div>
+                    </div>
 
                     <div className="list-type-grid">
                         {listingTypes.map((type, index) => (

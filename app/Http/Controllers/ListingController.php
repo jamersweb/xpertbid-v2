@@ -6,6 +6,9 @@ use App\Models\Listing;
 use App\Models\ListingDraft;
 use App\Models\ListingEdit;
 use App\Models\Currency;
+use App\Models\Country;
+use App\Models\State;
+use App\Models\City;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\File;
@@ -16,6 +19,69 @@ use Intervention\Image\Encoders\WebpEncoder;
 
 class ListingController extends Controller
 {
+    protected function normalizeLocationName(?string $value): ?string
+    {
+        if (!$value) {
+            return null;
+        }
+
+        return strtolower(preg_replace('/[^a-z0-9]/i', '', trim($value)));
+    }
+
+    protected function resolveProfileLocation(): array
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return ['country_id' => null, 'state_id' => null, 'city_id' => null];
+        }
+
+        $countryId = $user->country_id ?: null;
+        $stateId = null;
+        $cityId = $user->city_id ?: null;
+
+        if ($cityId) {
+            $city = City::find($cityId);
+            if ($city) {
+                $stateId = $city->state_id;
+                if (!$countryId) {
+                    $countryId = State::where('id', $stateId)->value('country_id');
+                }
+            }
+        }
+
+        $shipping = $user->shippingAddress;
+        $countryName = $this->normalizeLocationName($shipping?->country);
+        $stateName = $this->normalizeLocationName($shipping?->state);
+        $cityName = $this->normalizeLocationName($shipping?->city);
+
+        if (!$countryId && $countryName) {
+            $country = Country::all(['id', 'name'])->first(function ($country) use ($countryName) {
+                return $this->normalizeLocationName($country->name) === $countryName;
+            });
+            $countryId = $country?->id;
+        }
+
+        if (!$stateId && $stateName && $countryId) {
+            $state = State::where('country_id', $countryId)->get(['id', 'name'])->first(function ($state) use ($stateName) {
+                return $this->normalizeLocationName($state->name) === $stateName;
+            });
+            $stateId = $state?->id;
+        }
+
+        if (!$cityId && $cityName && $stateId) {
+            $city = City::where('state_id', $stateId)->get(['id', 'name'])->first(function ($city) use ($cityName) {
+                return $this->normalizeLocationName($city->name) === $cityName;
+            });
+            $cityId = $city?->id;
+        }
+
+        return [
+            'country_id' => $countryId,
+            'state_id' => $stateId,
+            'city_id' => $cityId,
+        ];
+    }
+
     protected function sellerCanPublish(): bool
     {
         $user = auth()->user()?->loadMissing(['individualVerification', 'corporateVerification']);
@@ -145,6 +211,9 @@ class ListingController extends Controller
             'category_id' => $request->category_id ?? $listing->category_id,
             'sub_category_id' => $request->sub_category_id ?? $listing->sub_category_id,
             'child_category_id' => $request->child_category_id ?? $listing->child_category_id,
+            'country_id' => $request->country_id ?? $listing->country_id,
+            'state_id' => $request->state_id ?? $listing->state_id,
+            'city_id' => $request->city_id ?? $listing->city_id,
             'listing_type' => $request->listing_type ?? $listing->listing_type,
             'title' => $request->title ?? $listing->title,
             'description' => $request->description ?? $listing->description,
@@ -188,6 +257,9 @@ class ListingController extends Controller
     {
         $listingData = is_array($request->listing_data) ? $request->listing_data : ($draft?->listing_data ?? []);
         $listingData = $this->normalizeListingDataToPkr($listingData, $request->input('selected_currency'));
+        $listingData['country_id'] = $request->country_id ?? ($draft?->listing_data['country_id'] ?? null);
+        $listingData['state_id'] = $request->state_id ?? ($draft?->listing_data['state_id'] ?? null);
+        $listingData['city_id'] = $request->city_id ?? ($draft?->listing_data['city_id'] ?? null);
         $categoryFeatures = is_array($request->category_features) ? $request->category_features : ($draft?->category_features ?? []);
         $existingAlbum = $this->normalizeExistingAlbum($request->input('existing_album', $draft?->album ?? []));
 
@@ -246,6 +318,9 @@ class ListingController extends Controller
             'category_id' => $draft->category_id,
             'sub_category_id' => $draft->sub_category_id,
             'child_category_id' => $draft->child_category_id,
+            'country_id' => $listingData['country_id'] ?? null,
+            'state_id' => $listingData['state_id'] ?? null,
+            'city_id' => $listingData['city_id'] ?? null,
             'listing_type' => $draft->listing_type ?: 'auction',
             'listing_source' => $draft->listing_source,
             'title' => $draft->title ?: 'Untitled Listing',
@@ -312,9 +387,13 @@ class ListingController extends Controller
         $categories = \App\Models\AuctionCategory::whereNull('parent_id')
             ->whereNull('sub_category_id')
             ->get();
+        $countries = Country::query()->select('id', 'name')->orderBy('name')->get();
+        $profileLocation = $this->resolveProfileLocation();
  
         return \Inertia\Inertia::render('Auctions/Create', [
-            'categories' => $categories
+            'categories' => $categories,
+            'countries' => $countries,
+            'profileLocation' => $profileLocation,
         ]);
     }
  
@@ -342,6 +421,9 @@ class ListingController extends Controller
             'category_id' => 'required',
             'sub_category_id' => 'nullable',
             'child_category_id' => 'nullable',
+            'country_id' => 'nullable|exists:countries,id',
+            'state_id' => 'nullable|exists:states,id',
+            'city_id' => 'nullable|exists:cities,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'listing_type' => 'required|in:normal,auction,business',
@@ -405,6 +487,9 @@ class ListingController extends Controller
             'category_id' => $categoryId,
             'sub_category_id' => $request->sub_category_id,
             'child_category_id' => $request->child_category_id,
+            'country_id' => $request->country_id,
+            'state_id' => $request->state_id,
+            'city_id' => $request->city_id,
             'listing_type' => $request->listing_type,
             'listing_source' => $this->resolveSource($request, 'listing_source'),
             'title' => $request->title,
@@ -427,10 +512,14 @@ class ListingController extends Controller
         $categories = \App\Models\AuctionCategory::whereNull('parent_id')
             ->whereNull('sub_category_id')
             ->get();
+        $countries = Country::query()->select('id', 'name')->orderBy('name')->get();
+        $profileLocation = $this->resolveProfileLocation();
  
         return \Inertia\Inertia::render('Auctions/Create', [
             'listing' => $listing,
-            'categories' => $categories
+            'categories' => $categories,
+            'countries' => $countries,
+            'profileLocation' => $profileLocation,
         ]);
     }
 
@@ -441,6 +530,8 @@ class ListingController extends Controller
         $categories = \App\Models\AuctionCategory::whereNull('parent_id')
             ->whereNull('sub_category_id')
             ->get();
+        $countries = Country::query()->select('id', 'name')->orderBy('name')->get();
+        $profileLocation = $this->resolveProfileLocation();
 
         $draft->setAttribute('status', 'draft');
         $draft->setAttribute('is_draft', true);
@@ -448,12 +539,19 @@ class ListingController extends Controller
         return \Inertia\Inertia::render('Auctions/Create', [
             'listing' => $draft,
             'categories' => $categories,
+            'countries' => $countries,
+            'profileLocation' => $profileLocation,
         ]);
     }
  
     public function update(Request $request, Listing $listing)
     {
         $this->parseIncomingPayload($request);
+        $request->validate([
+            'country_id' => 'nullable|exists:countries,id',
+            'state_id' => 'nullable|exists:states,id',
+            'city_id' => 'nullable|exists:cities,id',
+        ]);
 
         if ($request->input('status') === 'draft') {
             $draft = $this->saveDraft($request, null, $listing->id);
@@ -515,6 +613,9 @@ class ListingController extends Controller
             'category_id' => $request->category_id ?? $listing->category_id,
             'sub_category_id' => $request->sub_category_id ?? $listing->sub_category_id,
             'child_category_id' => $request->child_category_id ?? $listing->child_category_id,
+            'country_id' => $request->country_id ?? $listing->country_id,
+            'state_id' => $request->state_id ?? $listing->state_id,
+            'city_id' => $request->city_id ?? $listing->city_id,
             'listing_type' => $request->listing_type ?? $listing->listing_type,
             'listing_source' => $listing->listing_source ?: $this->resolveSource($request, 'listing_source'),
             'title' => $request->title ?? $listing->title,

@@ -1,103 +1,98 @@
 {
   "node_modules/laravel-vite-plugin/inertia-helpers/index.js": [],
   "node_modules/swiper/modules/autoplay.css": [
-    "/build/assets/Home-D8c9FmEj.js",
-    "/build/assets/Home-BMkTZUaG.css",
+    "/build/assets/Home-CK5ml3yD.js",
+    "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "node_modules/swiper/modules/effect-fade.css": [
-    "/build/assets/Home-D8c9FmEj.js",
-    "/build/assets/Home-BMkTZUaG.css",
+    "/build/assets/Home-CK5ml3yD.js",
+    "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "node_modules/swiper/modules/free-mode.css": [
-    "/build/assets/Show-BMUyel1m.js",
+    "/build/assets/Show-KzZnZQ7z.js",
     "/build/assets/Show-wnoU-AQS.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
-  "node_modules/swiper/modules/grid.css": [
-    "/build/assets/Home-D8c9FmEj.js",
-    "/build/assets/Home-BMkTZUaG.css",
-    "/build/assets/swiper-C2J0D0kV.css"
-  ],
   "node_modules/swiper/modules/navigation.css": [
-    "/build/assets/Show-BMUyel1m.js",
+    "/build/assets/Show-KzZnZQ7z.js",
     "/build/assets/Show-wnoU-AQS.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "node_modules/swiper/modules/pagination.css": [
-    "/build/assets/Home-D8c9FmEj.js",
-    "/build/assets/Home-BMkTZUaG.css",
+    "/build/assets/Home-CK5ml3yD.js",
+    "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "node_modules/swiper/modules/thumbs.css": [
-    "/build/assets/Show-BMUyel1m.js",
+    "/build/assets/Show-KzZnZQ7z.js",
     "/build/assets/Show-wnoU-AQS.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/css/sell.css": [
-    "/build/assets/Create-BhPrBpeL.js",
+    "/build/assets/Create-BYzmdj8r.js",
     "/build/assets/Create-D6y7fv-P.css",
     "/build/assets/quill-D32Un0ak.css"
   ],
   "resources/js/Components/Admin/AdminSidebar.jsx": [
-    "/build/assets/AdminLayout-d9CWnUKb.js"
+    "/build/assets/AdminLayout-BftjA1Zj.js"
   ],
   "resources/js/Components/ApplicationLogo.jsx": [
     "/build/assets/GuestLayout-DaSCEquR.js"
   ],
   "resources/js/Components/AuctionCard.jsx": [
-    "/build/assets/AuctionCard-BtoirWdd.js"
+    "/build/assets/AuctionCard-CZnrqB8V.js"
   ],
   "resources/js/Components/AuctionSection.jsx": [
-    "/build/assets/Home-D8c9FmEj.js",
-    "/build/assets/Home-BMkTZUaG.css",
+    "/build/assets/Home-CK5ml3yD.js",
+    "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/CartPopup.jsx": [
-    "/build/assets/AppLayout-C9PL0wyf.js"
+    "/build/assets/AppLayout-BWciRgbg.js"
   ],
   "resources/js/Components/CategoriesDropdown.jsx": [
-    "/build/assets/AppLayout-C9PL0wyf.js"
+    "/build/assets/AppLayout-BWciRgbg.js"
   ],
   "resources/js/Components/ContactForm.jsx": [
-    "/build/assets/ContactUs-_nhUhGkJ.js"
+    "/build/assets/ContactUs-HjvXhULk.js"
   ],
   "resources/js/Components/CountdownTimer.jsx": [
     "/build/assets/OwnerInfoRow-BzmY3N9i.js"
   ],
   "resources/js/Components/CurrencyPicker.jsx": [
-    "/build/assets/CurrencyPicker-BYSFLoir.js"
+    "/build/assets/CurrencyPicker-KgG9a2BI.js"
   ],
   "resources/js/Components/DangerButton.jsx": [
     "/build/assets/DeleteUserForm-BsL2Edn-.js"
   ],
   "resources/js/Components/DesktopCategoriesDropdown.jsx": [
-    "/build/assets/AppLayout-C9PL0wyf.js"
+    "/build/assets/AppLayout-BWciRgbg.js"
   ],
   "resources/js/Components/ErrorPopup.jsx": [
     "/build/assets/ErrorPopup-VSFE5nHL.js"
   ],
   "resources/js/Components/FavoriteCard.jsx": [
-    "/build/assets/Index--3oaToU0.js"
+    "/build/assets/Index-ooefdGEB.js"
   ],
   "resources/js/Components/FavoriteToggleButton.jsx": [
     "/build/assets/FavoriteToggleButton-1jmbejDw.js"
   ],
   "resources/js/Components/FeaturedProducts.jsx": [
-    "/build/assets/Home-D8c9FmEj.js",
-    "/build/assets/Home-BMkTZUaG.css",
+    "/build/assets/Home-CK5ml3yD.js",
+    "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/Footer.jsx": [
-    "/build/assets/AppLayout-C9PL0wyf.js"
+    "/build/assets/AppLayout-BWciRgbg.js"
   ],
   "resources/js/Components/Header.jsx": [
-    "/build/assets/AppLayout-C9PL0wyf.js"
+    "/build/assets/AppLayout-BWciRgbg.js"
   ],
   "resources/js/Components/HeroSection.jsx": [
-    "/build/assets/Home-D8c9FmEj.js",
-    "/build/assets/Home-BMkTZUaG.css",
+    "/build/assets/Home-CK5ml3yD.js",
+    "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/InputError.jsx": [
@@ -113,21 +108,21 @@
     "/build/assets/ListingCard-CJY8Wtib.js"
   ],
   "resources/js/Components/LoginModal.jsx": [
-    "/build/assets/AppLayout-C9PL0wyf.js"
+    "/build/assets/AppLayout-BWciRgbg.js"
   ],
   "resources/js/Components/MobileBottomNav.jsx": [
-    "/build/assets/AppLayout-C9PL0wyf.js"
+    "/build/assets/AppLayout-BWciRgbg.js"
   ],
   "resources/js/Components/Modal.jsx": [
     "/build/assets/Modal-BeSeEOS3.js"
   ],
   "resources/js/Components/NormalListSection.jsx": [
-    "/build/assets/Home-D8c9FmEj.js",
-    "/build/assets/Home-BMkTZUaG.css",
+    "/build/assets/Home-CK5ml3yD.js",
+    "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/NotificationDropdown.jsx": [
-    "/build/assets/AppLayout-C9PL0wyf.js"
+    "/build/assets/AppLayout-BWciRgbg.js"
   ],
   "resources/js/Components/OwnerInfoRow.jsx": [
     "/build/assets/OwnerInfoRow-BzmY3N9i.js"
@@ -142,242 +137,248 @@
     "/build/assets/PrimaryButton-DgVfVBwo.js"
   ],
   "resources/js/Components/ProductDetails/BidHistory.jsx": [
-    "/build/assets/Show-BMUyel1m.js",
+    "/build/assets/Show-KzZnZQ7z.js",
     "/build/assets/Show-wnoU-AQS.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/ProductDetails/BidSection.jsx": [
-    "/build/assets/Show-BMUyel1m.js",
+    "/build/assets/Show-KzZnZQ7z.js",
     "/build/assets/Show-wnoU-AQS.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/ProductDetails/ProductHeader.jsx": [
-    "/build/assets/Show-BMUyel1m.js",
+    "/build/assets/Show-KzZnZQ7z.js",
     "/build/assets/Show-wnoU-AQS.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/ProductDetails/ProductImages.jsx": [
-    "/build/assets/Show-BMUyel1m.js",
+    "/build/assets/Show-KzZnZQ7z.js",
     "/build/assets/Show-wnoU-AQS.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/ProductDetails/RelatedItems.jsx": [
-    "/build/assets/Show-BMUyel1m.js",
+    "/build/assets/Show-KzZnZQ7z.js",
     "/build/assets/Show-wnoU-AQS.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/PropertySection.jsx": [
-    "/build/assets/Home-D8c9FmEj.js",
-    "/build/assets/Home-BMkTZUaG.css",
+    "/build/assets/Home-CK5ml3yD.js",
+    "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/RegisterModal.jsx": [
-    "/build/assets/AppLayout-C9PL0wyf.js"
+    "/build/assets/AppLayout-BWciRgbg.js"
   ],
   "resources/js/Components/Search.jsx": [
-    "/build/assets/AppLayout-C9PL0wyf.js"
+    "/build/assets/AppLayout-BWciRgbg.js"
   ],
   "resources/js/Components/SecondaryButton.jsx": [
     "/build/assets/SecondaryButton-C9TQBbBR.js"
   ],
   "resources/js/Components/SellSteps/CategorySelection.jsx": [
-    "/build/assets/Create-BhPrBpeL.js",
+    "/build/assets/Create-BYzmdj8r.js",
     "/build/assets/Create-D6y7fv-P.css",
     "/build/assets/quill-D32Un0ak.css"
   ],
   "resources/js/Components/SellSteps/DetailsForm.jsx": [
-    "/build/assets/Create-BhPrBpeL.js",
+    "/build/assets/Create-BYzmdj8r.js",
     "/build/assets/Create-D6y7fv-P.css",
     "/build/assets/quill-D32Un0ak.css"
   ],
   "resources/js/Components/SellSteps/ListTypeSelection.jsx": [
-    "/build/assets/Create-BhPrBpeL.js",
+    "/build/assets/Create-BYzmdj8r.js",
     "/build/assets/Create-D6y7fv-P.css",
     "/build/assets/quill-D32Un0ak.css"
   ],
   "resources/js/Components/SellSteps/MediaUpload.jsx": [
-    "/build/assets/Create-BhPrBpeL.js",
+    "/build/assets/Create-BYzmdj8r.js",
     "/build/assets/Create-D6y7fv-P.css",
     "/build/assets/quill-D32Un0ak.css"
   ],
   "resources/js/Components/SellSteps/SummaryCard.jsx": [
-    "/build/assets/Create-BhPrBpeL.js",
+    "/build/assets/Create-BYzmdj8r.js",
     "/build/assets/Create-D6y7fv-P.css",
     "/build/assets/quill-D32Un0ak.css"
   ],
   "resources/js/Components/SellSteps/VerificationStep.jsx": [
-    "/build/assets/Create-BhPrBpeL.js",
+    "/build/assets/Create-BYzmdj8r.js",
     "/build/assets/Create-D6y7fv-P.css",
     "/build/assets/quill-D32Un0ak.css"
   ],
   "resources/js/Components/SeoContentSection.jsx": [
-    "/build/assets/Home-D8c9FmEj.js",
-    "/build/assets/Home-BMkTZUaG.css",
+    "/build/assets/Home-CK5ml3yD.js",
+    "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/SliderBrowseCategories.jsx": [
-    "/build/assets/Home-D8c9FmEj.js",
-    "/build/assets/Home-BMkTZUaG.css",
+    "/build/assets/Home-CK5ml3yD.js",
+    "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/SuccessPopup.jsx": [
     "/build/assets/ErrorPopup-VSFE5nHL.js"
   ],
   "resources/js/Components/TabNavigation.jsx": [
-    "/build/assets/Index-0ufms_x_.js"
+    "/build/assets/Index-CXecve1F.js"
   ],
   "resources/js/Components/TextInput.jsx": [
     "/build/assets/InputError-CuGgaxYl.js"
   ],
   "resources/js/Components/VehicleSection.jsx": [
-    "/build/assets/Home-D8c9FmEj.js",
-    "/build/assets/Home-BMkTZUaG.css",
+    "/build/assets/Home-CK5ml3yD.js",
+    "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/WhyChooseXpertBid.jsx": [
-    "/build/assets/Home-D8c9FmEj.js",
-    "/build/assets/Home-BMkTZUaG.css",
+    "/build/assets/Home-CK5ml3yD.js",
+    "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Contexts/AuthModalContext.jsx": [
-    "/build/assets/AppLayout-C9PL0wyf.js"
+    "/build/assets/AppLayout-BWciRgbg.js"
   ],
   "resources/js/Contexts/CartContext.jsx": [
     "/build/assets/CartContext-DXNQZwkV.js"
   ],
   "resources/js/Layouts/AdminLayout.jsx": [
-    "/build/assets/AdminLayout-d9CWnUKb.js"
+    "/build/assets/AdminLayout-BftjA1Zj.js"
   ],
   "resources/js/Layouts/AppLayout.jsx": [
-    "/build/assets/AppLayout-C9PL0wyf.js"
+    "/build/assets/AppLayout-BWciRgbg.js"
   ],
   "resources/js/Layouts/GuestLayout.jsx": [
     "/build/assets/GuestLayout-DaSCEquR.js"
   ],
   "resources/js/Pages/Admin/Auctions/Index.jsx": [
-    "/build/assets/Index-BnRLQx5q.js"
+    "/build/assets/Index-Ct1qtDZ3.js"
   ],
   "resources/js/Pages/Admin/Bids/Index.jsx": [
-    "/build/assets/Index-COWWnY_z.js"
+    "/build/assets/Index-CSIeWG5N.js"
   ],
   "resources/js/Pages/Admin/Blogs/Create.jsx": [
-    "/build/assets/Create-Dd_r_oHw.js",
+    "/build/assets/Create-_fAWxYel.js",
     "/build/assets/quill-D32Un0ak.css"
   ],
   "resources/js/Pages/Admin/Blogs/Edit.jsx": [
-    "/build/assets/Edit-YlBAUfHm.js",
+    "/build/assets/Edit-xTc7AWGr.js",
     "/build/assets/quill-D32Un0ak.css"
   ],
   "resources/js/Pages/Admin/Blogs/Index.jsx": [
-    "/build/assets/Index-DvfURlYy.js"
+    "/build/assets/Index-1Evecsqi.js"
   ],
   "resources/js/Pages/Admin/CRM/Index.jsx": [
-    "/build/assets/Index-DvGC39fn.js"
+    "/build/assets/Index-BYF6N5oI.js"
   ],
   "resources/js/Pages/Admin/Categories/Index.jsx": [
-    "/build/assets/Index-D8FNo_95.js"
+    "/build/assets/Index-BFrzou0L.js"
   ],
   "resources/js/Pages/Admin/Communication/BidderMessaging.jsx": [
-    "/build/assets/BidderMessaging-DnJ88LdR.js"
+    "/build/assets/BidderMessaging-sIJ6cTXa.js"
   ],
   "resources/js/Pages/Admin/Dashboard.jsx": [
-    "/build/assets/Dashboard-D9xlpiyy.js"
+    "/build/assets/Dashboard-6mewvZxY.js"
   ],
   "resources/js/Pages/Admin/DynamicFields/Index.jsx": [
-    "/build/assets/Index-BpTlhB7v.js"
+    "/build/assets/Index-8hAWIP0I.js"
   ],
   "resources/js/Pages/Admin/EmailLogs/Index.jsx": [
-    "/build/assets/Index-AJcCHX03.js"
+    "/build/assets/Index-CUiTAJge.js"
   ],
   "resources/js/Pages/Admin/Faqs/Create.jsx": [
-    "/build/assets/Create-BTUyhkA3.js"
+    "/build/assets/Create-BiNwyAUF.js"
   ],
   "resources/js/Pages/Admin/Faqs/Edit.jsx": [
-    "/build/assets/Edit-C9ruQJlN.js"
+    "/build/assets/Edit-BJntrcQA.js"
   ],
   "resources/js/Pages/Admin/Faqs/Index.jsx": [
-    "/build/assets/Index-BtNR2_-I.js"
+    "/build/assets/Index-CXXl-m42.js"
   ],
   "resources/js/Pages/Admin/Finance/PaymentRequests.jsx": [
-    "/build/assets/PaymentRequests-CR0kDqCj.js"
+    "/build/assets/PaymentRequests-BDsyg7ov.js"
+  ],
+  "resources/js/Pages/Admin/Languages/Edit.jsx": [
+    "/build/assets/Edit-BjQt6MMG.js"
+  ],
+  "resources/js/Pages/Admin/Languages/Index.jsx": [
+    "/build/assets/Index-CIaM9u5g.js"
   ],
   "resources/js/Pages/Admin/Listings/Form.jsx": [
-    "/build/assets/Form-CPMOuCOa.js",
+    "/build/assets/Form-B6POK5UL.js",
     "/build/assets/quill-D32Un0ak.css"
   ],
   "resources/js/Pages/Admin/Listings/Index.jsx": [
-    "/build/assets/Index-eFBSCODc.js"
+    "/build/assets/Index-Bey0ks7q.js"
   ],
   "resources/js/Pages/Admin/Listings/Show.jsx": [
-    "/build/assets/Show-AW_JSsnX.js"
+    "/build/assets/Show-DVGx-Z0c.js"
   ],
   "resources/js/Pages/Admin/Locations/Index.jsx": [
-    "/build/assets/Index-Q7adMbG4.js"
+    "/build/assets/Index-BQbdVP8L.js"
   ],
   "resources/js/Pages/Admin/Orders/Index.jsx": [
-    "/build/assets/Index-DujPLDtv.js"
+    "/build/assets/Index-CeWFU71l.js"
   ],
   "resources/js/Pages/Admin/Orders/Show.jsx": [
-    "/build/assets/Show-BupNlr-_.js"
+    "/build/assets/Show-ByV8JlEy.js"
   ],
   "resources/js/Pages/Admin/Roles/Index.jsx": [
-    "/build/assets/Index-CBXEFJTU.js"
+    "/build/assets/Index-DdpE-hsA.js"
   ],
   "resources/js/Pages/Admin/Seo/Create.jsx": [
-    "/build/assets/Create-CGNUryiT.js"
+    "/build/assets/Create-ByQndzAy.js"
   ],
   "resources/js/Pages/Admin/Seo/Edit.jsx": [
-    "/build/assets/Edit-LL1vZSb9.js"
+    "/build/assets/Edit-Djy9NXC-.js"
   ],
   "resources/js/Pages/Admin/Seo/Form.jsx": [
-    "/build/assets/Form-CbgMiL6S.js"
+    "/build/assets/Form-DPU2X-jG.js"
   ],
   "resources/js/Pages/Admin/Seo/Index.jsx": [
-    "/build/assets/Index-BVA6vxBz.js"
+    "/build/assets/Index-BidDCqFL.js"
   ],
   "resources/js/Pages/Admin/Settings/Index.jsx": [
-    "/build/assets/Index-Cedmb7lj.js"
+    "/build/assets/Index-Bs_byE1v.js"
   ],
   "resources/js/Pages/Admin/Sliders/Create.jsx": [
-    "/build/assets/Create-DoCGjiKM.js"
+    "/build/assets/Create-v1nZ9hEm.js"
   ],
   "resources/js/Pages/Admin/Sliders/Edit.jsx": [
-    "/build/assets/Edit-DCZzz28R.js"
+    "/build/assets/Edit-BFmrs1kt.js"
   ],
   "resources/js/Pages/Admin/Sliders/Index.jsx": [
-    "/build/assets/Index-Dcgh-P5w.js"
+    "/build/assets/Index-BhpPxArn.js"
   ],
   "resources/js/Pages/Admin/Users/Index.jsx": [
-    "/build/assets/Index-BziBe5gQ.js"
+    "/build/assets/Index-Br1c44Pt.js"
   ],
   "resources/js/Pages/Admin/Users/Show.jsx": [
-    "/build/assets/Show-DbubqFPq.js"
+    "/build/assets/Show-DmAd1QIT.js"
   ],
   "resources/js/Pages/Admin/Verifications/Auctions.jsx": [
-    "/build/assets/Auctions-BzTguYjf.js"
+    "/build/assets/Auctions-BftSKizV.js"
   ],
   "resources/js/Pages/Admin/Verifications/Corporate.jsx": [
-    "/build/assets/Corporate-MmKj-2eU.js"
+    "/build/assets/Corporate-BKYXriR-.js"
   ],
   "resources/js/Pages/Admin/Verifications/Individual.jsx": [
-    "/build/assets/Individual-DYR4e2W2.js"
+    "/build/assets/Individual-COYPVxzB.js"
   ],
   "resources/js/Pages/Admin/Verifications/Property.jsx": [
-    "/build/assets/Property-D30Ss0uO.js"
+    "/build/assets/Property-DuV_SLcx.js"
   ],
   "resources/js/Pages/Admin/Verifications/Vehicle.jsx": [
-    "/build/assets/Vehicle-3yAKvAj6.js"
+    "/build/assets/Vehicle-CMf6Pvcb.js"
   ],
   "resources/js/Pages/Auctions/Create.jsx": [
-    "/build/assets/Create-BhPrBpeL.js",
+    "/build/assets/Create-BYzmdj8r.js",
     "/build/assets/Create-D6y7fv-P.css",
     "/build/assets/quill-D32Un0ak.css"
   ],
   "resources/js/Pages/Auctions/MyListings.jsx": [
-    "/build/assets/MyListings-DcCof69D.js"
+    "/build/assets/MyListings-BWArH0iD.js"
   ],
   "resources/js/Pages/Auctions/Show.jsx": [
-    "/build/assets/Show-BMUyel1m.js",
+    "/build/assets/Show-KzZnZQ7z.js",
     "/build/assets/Show-wnoU-AQS.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
@@ -388,10 +389,10 @@
     "/build/assets/ForgotPassword-vchj3ARb.js"
   ],
   "resources/js/Pages/Auth/Login.jsx": [
-    "/build/assets/Login-HDxyAAy2.js"
+    "/build/assets/Login-Ba91MeVU.js"
   ],
   "resources/js/Pages/Auth/Register.jsx": [
-    "/build/assets/Register-Des80NhO.js"
+    "/build/assets/Register-KsKxf_Pk.js"
   ],
   "resources/js/Pages/Auth/ResetPassword.jsx": [
     "/build/assets/ResetPassword-DAAmqHXa.js"
@@ -400,19 +401,22 @@
     "/build/assets/VerifyEmail-BsPTu5x5.js"
   ],
   "resources/js/Pages/Bids/Index.jsx": [
-    "/build/assets/Index-0ufms_x_.js"
+    "/build/assets/Index-CXecve1F.js"
   ],
   "resources/js/Pages/Blogs/Index.jsx": [
-    "/build/assets/Index-DHlx3130.js"
+    "/build/assets/Index-CZ8GHI8P.js"
   ],
   "resources/js/Pages/Blogs/Show.jsx": [
-    "/build/assets/Show-BssCmLS1.js"
+    "/build/assets/Show-weUIuSew.js"
   ],
   "resources/js/Pages/Cart/Index.jsx": [
-    "/build/assets/Index-Bid_MYUw.js"
+    "/build/assets/Index--Y66oLXh.js"
+  ],
+  "resources/js/Pages/Categories/Index.jsx": [
+    "/build/assets/Index-CW-NeXwJ.js"
   ],
   "resources/js/Pages/Chat/Index.jsx": [
-    "/build/assets/Index-CL2Z_9lW.js"
+    "/build/assets/Index-DIPuRHEO.js"
   ],
   "resources/js/Pages/Chat/Partials/ChatList.jsx": [
     "/build/assets/ChatList-B0aGYeKu.js"
@@ -421,48 +425,48 @@
     "/build/assets/ChatWindow-CoMYECK9.js"
   ],
   "resources/js/Pages/Checkout/Index.jsx": [
-    "/build/assets/Index-C4fEyUo9.js"
+    "/build/assets/Index-BhWyJk1t.js"
   ],
   "resources/js/Pages/Dashboard.jsx": [
-    "/build/assets/Dashboard-8pGsDRcX.js"
+    "/build/assets/Dashboard-DqDOgcuq.js"
   ],
   "resources/js/Pages/Favorites/Index.jsx": [
-    "/build/assets/Index--3oaToU0.js"
+    "/build/assets/Index-ooefdGEB.js"
   ],
   "resources/js/Pages/Home.jsx": [
-    "/build/assets/Home-D8c9FmEj.js",
-    "/build/assets/Home-BMkTZUaG.css",
+    "/build/assets/Home-CK5ml3yD.js",
+    "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Pages/Invoices/Index.jsx": [
-    "/build/assets/Index-DxuEru3l.js"
+    "/build/assets/Index-BTeMkFU9.js"
   ],
   "resources/js/Pages/Marketplace/Components/ExploreProducts.jsx": [
-    "/build/assets/ExploreProducts-DJkY93Si.js"
+    "/build/assets/ExploreProducts-kg0d-6as.js"
   ],
   "resources/js/Pages/Marketplace/Components/Filter.jsx": [
     "/build/assets/Filter-DfJshiV3.js"
   ],
   "resources/js/Pages/Marketplace/Index.jsx": [
-    "/build/assets/Index-BfSr0LvE.js"
+    "/build/assets/Index-rMNBcFaZ.js"
   ],
   "resources/js/Pages/Notifications/Index.jsx": [
-    "/build/assets/Index-DG9KoQzY.js"
+    "/build/assets/Index-V-_880-i.js"
   ],
   "resources/js/Pages/OneRupeeAuctions/Index.jsx": [
-    "/build/assets/Index-CBWB4j2q.js"
+    "/build/assets/Index-Dh9A_X9A.js"
   ],
   "resources/js/Pages/Orders/Index.jsx": [
-    "/build/assets/Index-w-aGHSiy.js"
+    "/build/assets/Index-C5EZtsUA.js"
   ],
   "resources/js/Pages/Orders/Show.jsx": [
-    "/build/assets/Show-1WIWTnXS.js"
+    "/build/assets/Show-CNuStws8.js"
   ],
   "resources/js/Pages/PaymentRequests/Index.jsx": [
-    "/build/assets/Index-C8mFsAlc.js"
+    "/build/assets/Index-Px_YnA0h.js"
   ],
   "resources/js/Pages/Profile/Edit.jsx": [
-    "/build/assets/Edit-CFnSuP4Q.js"
+    "/build/assets/Edit-CXwaJ_cK.js"
   ],
   "resources/js/Pages/Profile/Partials/AddressSection.jsx": [
     "/build/assets/AddressSection-C3VT2wVE.js"
@@ -492,27 +496,27 @@
     "/build/assets/UpdateProfileInformationForm-C4jN28Me.js"
   ],
   "resources/js/Pages/Static/AboutUs.jsx": [
-    "/build/assets/AboutUs-DTbmPvfw.js"
+    "/build/assets/AboutUs-DccBMrgV.js"
   ],
   "resources/js/Pages/Static/ContactUs.jsx": [
-    "/build/assets/ContactUs-_nhUhGkJ.js"
+    "/build/assets/ContactUs-HjvXhULk.js"
   ],
   "resources/js/Pages/Static/FAQ.jsx": [
-    "/build/assets/FAQ-CMB-Qr_7.js"
+    "/build/assets/FAQ-BqXjv1Vi.js"
   ],
   "resources/js/Pages/Static/PrivacyPolicy.jsx": [
-    "/build/assets/PrivacyPolicy-O2WDqNyI.js"
+    "/build/assets/PrivacyPolicy-DNkyW7Pr.js"
   ],
   "resources/js/Pages/Static/RefundPolicy.jsx": [
-    "/build/assets/RefundPolicy-CsXT_2M0.js",
+    "/build/assets/RefundPolicy-zO19-fzN.js",
     "/build/assets/policy-o0-3k7fP.css"
   ],
   "resources/js/Pages/Static/ShippingPolicy.jsx": [
-    "/build/assets/ShippingPolicy-B9Rd7jn5.js",
+    "/build/assets/ShippingPolicy-COh5fa4f.js",
     "/build/assets/policy-o0-3k7fP.css"
   ],
   "resources/js/Pages/Static/Terms.jsx": [
-    "/build/assets/Terms-B2BcRQK0.js"
+    "/build/assets/Terms-BqalnLad.js"
   ],
   "resources/js/Pages/Wallet/Components/AddMoneyModal.jsx": [
     "/build/assets/AddMoneyModal-DJFFUHYD.js"
@@ -521,7 +525,7 @@
     "/build/assets/PayoutModal-BMBWWqMj.js"
   ],
   "resources/js/Pages/Wallet/Index.jsx": [
-    "/build/assets/Index-CQwUAtVC.js"
+    "/build/assets/Index-By-Ermgp.js"
   ],
   "resources/js/Pages/Welcome.jsx": [
     "/build/assets/Welcome-SEhQsnTJ.js"
@@ -531,6 +535,9 @@
   ],
   "resources/js/Utils/useCurrencyList.js": [
     "/build/assets/useCurrencyList-Ce5tJXO9.js"
+  ],
+  "resources/js/hooks/useTranslate.js": [
+    "/build/assets/CurrencyPicker-KgG9a2BI.js"
   ],
   "resources/js/ssr.jsx": [],
   "vendor/tightenco/ziggy/dist/index.js": []

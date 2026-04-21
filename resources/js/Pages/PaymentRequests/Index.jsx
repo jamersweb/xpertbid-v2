@@ -2,8 +2,11 @@ import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import Price from '@/Components/Price';
+import useTranslate from '@/hooks/useTranslate';
 
 export default function Index({ requests }) {
+       const { t } = useTranslate();
+
        const statusStyles = (status) => {
               if (status === 'completed' || status === 'approved') {
                      return { backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#065f46', border: '1px solid rgba(16, 185, 129, 0.3)' };
@@ -14,28 +17,28 @@ export default function Index({ requests }) {
        };
 
        return (
-              <AppLayout title="Payment Requests">
-                     <Head title="Payment Requests" />
+              <AppLayout title={t('Payment Requests')}>
+                     <Head title={t('Payment Requests')} />
 
                      <div style={{ padding: '50px 0', minHeight: '70vh', backgroundColor: '#fff' }}>
                             <div className="container">
                                    <h1 style={{ fontSize: '42px', fontWeight: '800', color: '#23262F', margin: '0 0 32px 0' }}>
-                                          My Payment Requests
+                                          {t('My Payment Requests')}
                                    </h1>
 
                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                           <thead>
                                                  <tr style={{ borderBottom: '2px solid #E6E8EC' }}>
-                                                        <th style={{ padding: '14px 0', fontWeight: '700', color: '#23262F', fontSize: '15px', textAlign: 'left' }}>Amount</th>
-                                                        <th style={{ padding: '14px 0', fontWeight: '700', color: '#23262F', fontSize: '15px', textAlign: 'left' }}>Payment Method</th>
-                                                        <th style={{ padding: '14px 0', fontWeight: '700', color: '#23262F', fontSize: '15px', textAlign: 'left' }}>Status</th>
+                                                        <th style={{ padding: '14px 0', fontWeight: '700', color: '#23262F', fontSize: '15px', textAlign: 'left' }}>{t('Amount')}</th>
+                                                        <th style={{ padding: '14px 0', fontWeight: '700', color: '#23262F', fontSize: '15px', textAlign: 'left' }}>{t('Payment Method')}</th>
+                                                        <th style={{ padding: '14px 0', fontWeight: '700', color: '#23262F', fontSize: '15px', textAlign: 'left' }}>{t('Status')}</th>
                                                  </tr>
                                           </thead>
                                           <tbody>
                                                  {requests.data.length === 0 ? (
                                                         <tr>
                                                                <td colSpan="3" style={{ padding: '20px 0', color: '#353945', fontSize: '15px', fontWeight: '500' }}>
-                                                                      No payment requests found.
+                                                                      {t('No payment requests found.')}
                                                                </td>
                                                         </tr>
                                                  ) : (
@@ -45,7 +48,7 @@ export default function Index({ requests }) {
                                                                              <Price amountAED={request.amount} />
                                                                       </td>
                                                                       <td style={{ padding: '16px 0', color: '#353945', fontSize: '15px' }}>
-                                                                             {request.payment_method?.paymentMethod || "Direct Transfer"}
+                                                                             {request.payment_method?.paymentMethod || t('Direct Transfer')}
                                                                       </td>
                                                                       <td style={{ padding: '16px 0' }}>
                                                                              <span style={{

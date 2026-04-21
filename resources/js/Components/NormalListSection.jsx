@@ -2,6 +2,7 @@ import { Link } from "@inertiajs/react";
 import Price from "@/Components/Price";
 import OwnerInfoRow from "@/Components/OwnerInfoRow";
 import FavoriteToggleButton from "@/Components/FavoriteToggleButton";
+import useTranslate from "@/hooks/useTranslate";
 
 const getProductImageSrc = (product) => {
        const directImage = product?.image_url;
@@ -23,6 +24,7 @@ const getProductImageSrc = (product) => {
 };
 
 export default function NormalListSection({ products }) {
+       const { t } = useTranslate();
        const displayProducts = (products || []).slice(0, 3);
 
        if (displayProducts.length === 0) return null;
@@ -32,9 +34,9 @@ export default function NormalListSection({ products }) {
                      <div className="container">
                             <div className="home-section-header">
                                    <div className="featured-heading mb-0">
-                                          <h2>Latest Listings</h2>
+                                          <h2>{t('Latest Listings')}</h2>
                                    </div>
-                                   <Link href="/marketplace" className="section-view-all-btn">View All</Link>
+                                   <Link href="/marketplace" className="section-view-all-btn">{t('View All')}</Link>
                             </div>
 
                             <div className="row g-4 home-mobile-scroll-row">
@@ -84,7 +86,7 @@ export default function NormalListSection({ products }) {
 
                                                                <div className="pro-meta">
                                                                       <div className="pro-price">
-                                                                             <span>{isBusinessListing ? "Business Price" : "Price"}</span>
+                                                                             <span>{isBusinessListing ? t('Business Price') : t('Price')}</span>
                                                                              <div className="price">
                                                                                     <span className="me-1" style={{ color: "#23262F" }}>
                                                                                            {(() => {
@@ -119,7 +121,7 @@ export default function NormalListSection({ products }) {
                                                                       <div className="pro-buy-btn">
                                                                              <div className="pro-bid-btn">
                                                                                     <Link href={`/product/${product.slug}`}>
-                                                                                           {isBusinessListing ? "View Product" : "Buy Now"}
+                                                                                           {isBusinessListing ? t('View Product') : t('Buy Now')}
                                                                                     </Link>
                                                                              </div>
                                                                       </div>

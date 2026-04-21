@@ -6,11 +6,30 @@ import Price from "@/Components/Price";
 import FavoriteToggleButton from "@/Components/FavoriteToggleButton";
 import { useCart } from "@/Contexts/CartContext";
 
-const AuctionCard = ({ auction, activeTab = "active" }) => {
+const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }) => {
        const { addToCart } = useCart();
        const isWonAuction = activeTab === "won";
        const listingKind = auction?.list_type || auction?.listing_type;
        const isDirectBuyListing = ["normal", "normal_list", "business", "business_list"].includes(listingKind);
+       const categoryFeatures = auction?.category_features && typeof auction.category_features === "object" ? auction.category_features : {};
+       const isPropertyListing = String(auction?.category_id || "") === "222";
+
+       const getFeatureValue = (...keys) => {
+              for (const key of keys) {
+                     const value = categoryFeatures?.[key];
+                     if (value !== undefined && value !== null && String(value).trim() !== "") {
+                            return String(value).trim();
+                     }
+              }
+              return "";
+       };
+
+       const beds = getFeatureValue("field_5", "5");
+       const baths = getFeatureValue("field_6", "6__6", "6");
+       const areaSize = getFeatureValue("field_3", "3");
+       const areaUnit = getFeatureValue("field_4", "4");
+       const area = [areaSize, areaUnit].filter(Boolean).join(" ");
+       const shouldRenderPropertyMeta = showPropertyMeta && isPropertyListing && (beds || baths || area);
 
        const handleCheckout = async (e) => {
               e.preventDefault();
@@ -77,6 +96,29 @@ const AuctionCard = ({ auction, activeTab = "active" }) => {
                                    </Link>
                             </h2>
                      </div>
+
+                     {shouldRenderPropertyMeta && (
+                            <div className="d-flex flex-wrap gap-2 mt-2 mb-2">
+                                   {beds && (
+                                          <span className="badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-3 py-2">
+                                                 <i className="fa-solid fa-bed text-primary" aria-hidden="true"></i>
+                                                 {beds} Beds
+                                          </span>
+                                   )}
+                                   {baths && (
+                                          <span className="badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-3 py-2">
+                                                 <i className="fa-solid fa-bath text-primary" aria-hidden="true"></i>
+                                                 {baths} Baths
+                                          </span>
+                                   )}
+                                   {area && (
+                                          <span className="badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-3 py-2">
+                                                 <i className="fa-solid fa-ruler-combined text-primary" aria-hidden="true"></i>
+                                                 {area}
+                                          </span>
+                                   )}
+                            </div>
+                     )}
 
                      <div className="pro-meta">
                             <div className="pro-price">

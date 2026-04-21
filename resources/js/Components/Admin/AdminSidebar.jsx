@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, usePage } from '@inertiajs/react';
+import useTranslate from '@/hooks/useTranslate';
 
 const menuItems = [
        { name: 'Dashboard', icon: 'fa-gauge-high', route: 'admin.dashboard' },
@@ -23,6 +24,7 @@ const menuItems = [
        { name: 'FAQs', icon: 'fa-circle-question', route: 'admin.faqs.index' },
        { type: 'divider', label: 'System' },
        { name: 'General Settings', icon: 'fa-gears', route: 'admin.master-settings.index' },
+       { name: 'Languages', icon: 'fa-language', route: 'admin.languages.index' },
        { name: 'Currencies', icon: 'fa-money-bill-wave', route: 'admin.master-settings.index' },
        { name: 'Locations', icon: 'fa-location-dot', route: 'admin.locations.index' },
        { type: 'divider', label: 'Tools' },
@@ -35,6 +37,7 @@ const menuItems = [
 
 export default function AdminSidebar({ isOpen, setIsOpen }) {
        const { url } = usePage();
+       const { t } = useTranslate();
 
        return (
               <aside
@@ -51,7 +54,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }) {
                                    if (item.type === 'divider') {
                                           return isOpen ? (
                                                  <div key={index} className="px-3 pt-4 pb-1">
-                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{item.label}</span>
+                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t(item.label)}</span>
                                                  </div>
                                           ) : <div key={index} className="h-px bg-gray-100 my-4 mx-2" />;
                                    }
@@ -72,12 +75,12 @@ export default function AdminSidebar({ isOpen, setIsOpen }) {
                                                  </div>
 
                                                  {isOpen && (
-                                                        <span className="text-sm font-semibold truncate">{item.name}</span>
+                                                        <span className="text-sm font-semibold truncate">{t(item.name)}</span>
                                                  )}
 
                                                  {!isOpen && (
                                                         <div className="absolute left-full ml-4 px-3 py-2 bg-black text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
-                                                               {item.name}
+                                                               {t(item.name)}
                                                         </div>
                                                  )}
                                           </Link>

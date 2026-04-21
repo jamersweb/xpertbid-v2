@@ -23,6 +23,7 @@ use App\Http\Controllers\VerificationCodeController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\LocaleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +45,7 @@ Route::get('/search-auctions', [AuctionController::class, 'search'])->name('auct
 Route::get('/search', [AuctionController::class, 'filterAuctions'])->name('auctions.index');
 Route::get('/marketplace/{slug?}', [MarketplaceController::class, 'index'])->name('marketplace.index');
 Route::get('/search-marketplace', [MarketplaceController::class, 'index'])->name('marketplace.search');
+Route::get('/categories', [AuctionController::class, 'categoriesPage'])->name('categories.page');
 
 // Static/Info Pages
 Route::get('/about', [App\Http\Controllers\StaticPageController::class, 'about'])->name('about');
@@ -87,6 +89,7 @@ Route::get('/get-states/{id}', [AuctionController::class, 'get_states']);
 Route::get('/get-states-by-country-name/{id}', [AuctionController::class, 'get_states_country_name']);
 Route::get('/get-cities/{id}', [AuctionController::class, 'get_cities']);
 Route::get('/get-cities-by-state-name/{id}', [AuctionController::class, 'get_cities_by_state_name']);
+Route::get('/detect-location-ip', [AuctionController::class, 'detect_location_ip']);
 
 // Sliders (Public)
 Route::get('/get-slider', [SliderController::class, 'get_slider']);
@@ -97,6 +100,7 @@ Route::get('/get-slider-service', [SliderController::class, 'get_slider_service'
 // Public Forms
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::post('/buy-now-inquiry', [BuyNowInquiryController::class, 'store'])->name('buy_now.store');
+Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
 
 // Guest-friendly Cart & Checkout
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -260,6 +264,11 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     // System Settings
     Route::resource('master-settings', App\Http\Controllers\Admin\MasterSettingController::class)->names('master-settings');
     Route::resource('locations', App\Http\Controllers\Admin\LocationController::class)->names('locations');
+    Route::get('/languages', [App\Http\Controllers\Admin\LanguageController::class, 'index'])->name('languages.index');
+    Route::post('/languages', [App\Http\Controllers\Admin\LanguageController::class, 'store'])->name('languages.store');
+    Route::patch('/languages/{language}/toggle-status', [App\Http\Controllers\Admin\LanguageController::class, 'toggleStatus'])->name('languages.toggle-status');
+    Route::get('/languages/{language}/edit', [App\Http\Controllers\Admin\LanguageController::class, 'edit'])->name('languages.edit');
+    Route::put('/languages/{language}/translations', [App\Http\Controllers\Admin\LanguageController::class, 'updateTranslations'])->name('languages.update-translations');
 
     // Bidder Communication
     Route::get('/bidder-communication', [App\Http\Controllers\Admin\BidderCommunicationController::class, 'index'])->name('bidder-communication.index');

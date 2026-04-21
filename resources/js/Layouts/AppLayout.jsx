@@ -5,11 +5,15 @@ import MobileBottomNav from '@/Components/MobileBottomNav';
 import { CartProvider } from '@/Contexts/CartContext';
 import { AuthModalProvider } from '@/Contexts/AuthModalContext';
 import { useState, useEffect } from 'react';
+import useTranslate from '@/hooks/useTranslate';
 
 export default function AppLayout({ children, title }) {
-       const { flash, auth, ziggy } = usePage().props;
+       const { flash, auth, ziggy, locale } = usePage().props;
+       const { t } = useTranslate();
        const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
        const [isHiding, setIsHiding] = useState(false);
+       const currentLocale = locale?.current || 'en';
+       const currentDirection = locale?.supported?.[currentLocale]?.direction || (currentLocale === 'ur' ? 'rtl' : 'ltr');
 
        const individualVerificationStatus =
               auth?.user?.individual_verification?.status || auth?.user?.individualVerification?.status;
@@ -40,6 +44,15 @@ export default function AppLayout({ children, title }) {
               }
        }, [flash]);
 
+       useEffect(() => {
+              if (typeof document === 'undefined') return;
+
+              document.documentElement.lang = currentLocale;
+              document.documentElement.dir = currentDirection;
+              document.body.classList.toggle('locale-ur', currentLocale === 'ur');
+              document.body.classList.toggle('locale-rtl', currentDirection === 'rtl');
+       }, [currentLocale, currentDirection]);
+
        return (
               <CartProvider>
                      <AuthModalProvider>
@@ -58,7 +71,7 @@ export default function AppLayout({ children, title }) {
                                                                )}
                                                         </div>
                                                         <div className="premium-toast-content">
-                                                               <div style={{ fontWeight: '600', fontSize: '15px', color: '#fff' }}>{toast.type === 'error' ? 'Error' : 'Success'}</div>
+                                                               <div style={{ fontWeight: '600', fontSize: '15px', color: '#fff' }}>{toast.type === 'error' ? t('Error') : t('Success')}</div>
                                                                <div style={{ fontSize: '13px', opacity: 0.8, color: '#fff' }}>{toast.message}</div>
                                                         </div>
                                                  </div>
@@ -78,7 +91,7 @@ export default function AppLayout({ children, title }) {
                                                  onClick={() => window.location.href = route('verification.identity')}
                                           >
                                                  <i className="fa-solid fa-user-check"></i>
-                                                 <span>Verify Account</span>
+                                                 <span>{t('Verify Account')}</span>
                                           </button>
                                    )}
 

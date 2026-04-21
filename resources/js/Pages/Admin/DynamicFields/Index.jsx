@@ -169,7 +169,7 @@ export default function Index({ fields, categories }) {
                         <div>
                             <InputLabel value="Field Label (e.g. Mileage)" required />
                             <TextInput
-                                className="mt-1 block w-full"
+                                className="mt-1 block w-full text-gray-900 bg-white placeholder:text-gray-400"
                                 value={data.label}
                                 onChange={e => setData('label', e.target.value)}
                                 required
@@ -180,7 +180,7 @@ export default function Index({ fields, categories }) {
                         <div>
                             <InputLabel value="Field ID / Name (e.g. mileage)" required />
                             <TextInput
-                                className="mt-1 block w-full"
+                                className="mt-1 block w-full text-gray-900 bg-white placeholder:text-gray-400"
                                 value={data.field_name}
                                 onChange={e => setData('field_name', e.target.value)}
                                 required
@@ -191,7 +191,7 @@ export default function Index({ fields, categories }) {
                         <div>
                             <InputLabel value="Listing Type" required />
                             <select
-                                className="mt-1 block w-full border-gray-300 focus:border-black focus:ring-black rounded-xl shadow-sm text-gray-900"
+                                className="mt-1 block w-full border-gray-300 focus:border-black focus:ring-black rounded-xl shadow-sm text-gray-900 bg-white"
                                 value={data.listing_type}
                                 onChange={e => setData('listing_type', e.target.value)}
                                 required
@@ -208,7 +208,7 @@ export default function Index({ fields, categories }) {
                             <div>
                                 <InputLabel value="Main Category" />
                                 <select
-                                    className="mt-1 block w-full border-gray-300 focus:border-black focus:ring-black rounded-xl shadow-sm text-gray-900"
+                                    className="mt-1 block w-full border-gray-300 focus:border-black focus:ring-black rounded-xl shadow-sm text-gray-900 bg-white"
                                     value={(() => {
                                         const cat = categories.find(c =>
                                             c.id == data.category_id ||
@@ -230,7 +230,7 @@ export default function Index({ fields, categories }) {
                             <div>
                                 <InputLabel value="Sub Category" />
                                 <select
-                                    className="mt-1 block w-full border-gray-300 focus:border-black focus:ring-black rounded-xl shadow-sm text-gray-900"
+                                    className="mt-1 block w-full border-gray-300 focus:border-black focus:ring-black rounded-xl shadow-sm text-gray-900 bg-white"
                                     disabled={!categories.find(c =>
                                         c.id == data.category_id ||
                                         c.sub_categories?.some(sc => sc.id == data.category_id || sc.child_categories?.some(cc => cc.id == data.category_id))
@@ -272,7 +272,7 @@ export default function Index({ fields, categories }) {
                             <div>
                                 <InputLabel value="Child Category" />
                                 <select
-                                    className="mt-1 block w-full border-gray-300 focus:border-black focus:ring-black rounded-xl shadow-sm text-gray-900"
+                                    className="mt-1 block w-full border-gray-300 focus:border-black focus:ring-black rounded-xl shadow-sm text-gray-900 bg-white"
                                     disabled={!(() => {
                                         const root = categories.find(c =>
                                             c.id == data.category_id ||
@@ -336,7 +336,7 @@ export default function Index({ fields, categories }) {
                         <div>
                             <InputLabel value="Input Type" required />
                             <select
-                                className="mt-1 block w-full border-gray-300 focus:border-black focus:ring-black rounded-xl shadow-sm text-gray-900"
+                                className="mt-1 block w-full border-gray-300 focus:border-black focus:ring-black rounded-xl shadow-sm text-gray-900 bg-white"
                                 value={data.input_type}
                                 onChange={e => setData('input_type', e.target.value)}
                                 required
@@ -367,7 +367,7 @@ export default function Index({ fields, categories }) {
                             <div className="md:col-span-2 border-t pt-4">
                                 <InputLabel value="Options (JSON array of strings)" />
                                 <textarea
-                                    className="mt-1 block w-full border-gray-300 focus:border-black focus:ring-black rounded-xl shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-black focus:ring-black rounded-xl shadow-sm text-gray-900 bg-white placeholder:text-gray-400"
                                     rows="3"
                                     placeholder='["Option 1", "Option 2"]'
                                     value={typeof data.options === 'string' ? data.options : JSON.stringify(data.options)}

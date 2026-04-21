@@ -3,6 +3,7 @@ import CountdownTimer from "@/Components/CountdownTimer";
 import Price from "@/Components/Price";
 import OwnerInfoRow from "@/Components/OwnerInfoRow";
 import FavoriteToggleButton from "@/Components/FavoriteToggleButton";
+import useTranslate from "@/hooks/useTranslate";
 
 const getProductImageSrc = (product) => {
        const directImage = product?.image_url;
@@ -24,6 +25,7 @@ const getProductImageSrc = (product) => {
 };
 
 export default function FeaturedProducts({ products }) {
+       const { t } = useTranslate();
        const displayProducts = (products || []).slice(0, 3);
 
        return (
@@ -31,9 +33,9 @@ export default function FeaturedProducts({ products }) {
                      <div className="container">
                             <div className="home-section-header">
                                    <div className="featured-heading mb-0">
-                                          <h2>Featured Listings</h2>
+                                          <h2>{t('Featured Listings')}</h2>
                                    </div>
-                                   <Link href="/marketplace?featured=home_featured" className="section-view-all-btn">View All</Link>
+                                   <Link href="/marketplace?featured=home_featured" className="section-view-all-btn">{t('View All')}</Link>
                             </div>
 
                             {displayProducts.length > 0 ? (
@@ -44,7 +46,7 @@ export default function FeaturedProducts({ products }) {
                                                  const hasMaxBid = Number.isFinite(maxBid) && maxBid > 0;
                                                  const normalizedListType = (product?.list_type || product?.listing_type || "").toLowerCase();
                                                  const isNormalList = normalizedListType === "normal" || normalizedListType === "normal_list";
-                                                 const displayLabel = isNormalList ? "Price" : (hasMaxBid ? "Current Bid" : "Minimum Bid");
+                                                 const displayLabel = isNormalList ? t('Price') : (hasMaxBid ? t('Current Bid') : t('Minimum Bid'));
                                                  const displayAmount = hasMaxBid ? maxBid : minBid;
                                                  const imageSrc = getProductImageSrc(product);
 
@@ -126,7 +128,7 @@ export default function FeaturedProducts({ products }) {
                                                                              <div className="pro-buy-btn">
                                                                                     <div className="pro-bid-btn">
                                                                                            <Link href={`/product/${product.slug}`}>
-                                                                                                  {isNormalList ? "Buy Now" : "Place Bid"}
+                                                                                                  {isNormalList ? t('Buy Now') : t('Place Bid')}
                                                                                            </Link>
                                                                                     </div>
                                                                              </div>
@@ -137,7 +139,7 @@ export default function FeaturedProducts({ products }) {
                                           })}
                                    </div>
                             ) : (
-                                   <p>No products found.</p>
+                                   <p>{t('No products found.')}</p>
                             )}
                      </div>
               </section>

@@ -3,12 +3,15 @@ import AppLayout from "@/Layouts/AppLayout";
 import TabNavigation from "@/Components/TabNavigation";
 import AuctionCard from "@/Components/AuctionCard";
 import { Head, router } from "@inertiajs/react";
+import useTranslate from "@/hooks/useTranslate";
 
 export default function Index({ auctions, activeTab }) {
+       const { t } = useTranslate();
+
        const tabs = [
-              { id: "active", label: "Active Bids", imageSrc: "/assets/images/active_bids.png" },
-              { id: "won", label: "Won Auctions", imageSrc: "/assets/images/won_bids.png" },
-              { id: "lost", label: "Lost Auctions", imageSrc: "/assets/images/lost_bids.png" },
+              { id: "active", label: t("Active Bids"), imageSrc: "/assets/images/active_bids.png" },
+              { id: "won", label: t("Won Auctions"), imageSrc: "/assets/images/won_bids.png" },
+              { id: "lost", label: t("Lost Auctions"), imageSrc: "/assets/images/lost_bids.png" },
        ];
 
        const handleTabChange = (tabId) => {
@@ -21,7 +24,7 @@ export default function Index({ auctions, activeTab }) {
        const currentTab = tabs.find(t => t.id === activeTab) || tabs[0];
 
        return (
-              <AppLayout title="My Bids">
+              <AppLayout title={t("My Bids")}>
                      <section className="biddings-tabs py-5">
                             <div className="container">
                                    <div className="mb-4">
@@ -54,9 +57,9 @@ export default function Index({ auctions, activeTab }) {
                                                                       />
                                                                )}
                                                                <p style={{ color: '#777E91', fontSize: '16px', fontWeight: '500', textAlign: 'center' }}>
-                                                                      {activeTab === "active" && "You have no active bids yet."}
-                                                                      {activeTab === "won" && "You haven't won any auctions yet."}
-                                                                      {activeTab === "lost" && "You haven't lost any auctions yet."}
+                                                                      {activeTab === "active" && t("You have no active bids yet.")}
+                                                                      {activeTab === "won" && t("You haven't won any auctions yet.")}
+                                                                      {activeTab === "lost" && t("You haven't lost any auctions yet.")}
                                                                </p>
                                                         </div>
                                                  )}

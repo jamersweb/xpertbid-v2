@@ -8,10 +8,13 @@ import AuctionSection from '@/Components/AuctionSection'; // Imported
 import NormalListSection from '@/Components/NormalListSection'; // Imported
 import WhyChooseXpertBid from '@/Components/WhyChooseXpertBid'; // Imported
 import SeoContentSection from '@/Components/SeoContentSection'; // Imported
+import useTranslate from '@/hooks/useTranslate';
 
 export default function Home({ auth, sliders, categories, featuredAuctions, latestAuctions, latestVehicles, latestProperties, latestNormalLists, favoriteListingIds }) {
+       const { t } = useTranslate();
+
        return (
-              <AppLayout title="Online Auction Marketplace Pakistan | Bid & Sell on XpertBid">
+              <AppLayout title={t('Online Auction Marketplace Pakistan | Bid & Sell on XpertBid')}>
                      <div className="home-page overflow-x-hidden">
                             <HeroSection sliders={sliders} />
                             <SliderBrowseCategories categories={categories} />

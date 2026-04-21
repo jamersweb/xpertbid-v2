@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import useTranslate from '@/hooks/useTranslate';
 
 export default function Login({ status, canResetPassword }) {
+    const { t } = useTranslate();
     const [step, setStep] = useState('main'); // main, email, phone
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
@@ -37,7 +39,7 @@ export default function Login({ status, canResetPassword }) {
             });
             setOtpSent(true);
         } catch (error) {
-            setPhoneErrors(error.response?.data?.errors || { phone: error.response?.data?.message || 'Failed to send OTP' });
+            setPhoneErrors(error.response?.data?.errors || { phone: error.response?.data?.message || t('auth.failed_send_otp') });
         } finally {
             setLoading(false);
         }
@@ -54,7 +56,7 @@ export default function Login({ status, canResetPassword }) {
             // On success, redirect to dashboard or intended route
             router.visit(route('dashboard'));
         } catch (error) {
-            setPhoneErrors(error.response?.data?.errors || { otp: error.response?.data?.message || 'Invalid OTP' });
+            setPhoneErrors(error.response?.data?.errors || { otp: error.response?.data?.message || t('auth.invalid_otp') });
         } finally {
             setLoading(false);
         }
@@ -65,39 +67,39 @@ export default function Login({ status, canResetPassword }) {
     };
 
     return (
-        <AppLayout title="Log in">
-            <Head title="Log in" />
+        <AppLayout title={t('auth.login_page_title')}>
+            <Head title={t('auth.login_page_title')} />
 
             <div className="container-fluid py-5" style={{ background: '#f8f9fa', minHeight: '80vh' }}>
 
                 {step === 'main' && (
                     <div className="login-form-step text-center">
-                        <h3 className="mb-4 fw-bold">Login or Sign up</h3>
+                        <h3 className="mb-4 fw-bold">{t('auth.login_or_signup')}</h3>
 
                         {status && <div className="mb-4 font-medium text-sm text-green-600">{status}</div>}
 
                         <button onClick={() => { setStep('phone'); setPhoneData({ ...phoneData, otp_type: 'whatsapp' }); }} className="loginContinueIcon">
                             <i className="fa-brands fa-whatsapp me-2 fs-5 text-success"></i>
-                            Continue with WhatsApp
+                            {t('auth.continue_whatsapp')}
                         </button>
 
                         <button onClick={() => { setStep('phone'); setPhoneData({ ...phoneData, otp_type: 'sms' }); }} className="loginContinueIcon">
                             <i className="fa-solid fa-mobile-screen me-2 fs-5"></i>
-                            Continue with Phone
+                            {t('auth.continue_phone')}
                         </button>
 
                         <button onClick={handleGoogleLogin} className="loginContinueIcon">
                             <i className="fa-brands fa-google me-2 fs-5 text-danger"></i>
-                            Continue with Google
+                            {t('auth.continue_google')}
                         </button>
 
                         <button onClick={() => setStep('email')} className="loginContinueIcon">
                             <i className="fa-regular fa-envelope me-2 fs-5"></i>
-                            Continue with Email
+                            {t('auth.continue_email')}
                         </button>
 
                         <p className="mt-4 text-muted small">
-                            By continuing, I agree to  xpertBid <Link href={route('terms')} className="text-decoration-underline text-primary">Terms of service</Link> and <Link href={route('privacy.policy')} className="text-decoration-underline text-primary">Privacy policy</Link>.
+                            {t('auth.by_continuing_prefix')} xpertBid <Link href={route('terms')} className="text-decoration-underline text-primary">{t('auth.terms_of_service')}</Link> {t('auth.and')} <Link href={route('privacy.policy')} className="text-decoration-underline text-primary">{t('auth.privacy_policy')}</Link>.
                         </p>
                     </div>
                 )}
@@ -108,7 +110,7 @@ export default function Login({ status, canResetPassword }) {
                             <button id="backPhoneLogin" onClick={() => setStep('main')}>
                                 <i className="fa-solid fa-chevron-left"></i>
                             </button>
-                            <h3>Login with Email</h3>
+                            <h3>{t('auth.login_with_email')}</h3>
                         </div>
 
                         <form onSubmit={submit} className="auth-input-group">
@@ -116,7 +118,7 @@ export default function Login({ status, canResetPassword }) {
                                 <input
                                     id="email"
                                     type="email"
-                                    placeholder="Enter your email"
+                                    placeholder={t('auth.enter_email')}
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
                                     required
@@ -129,7 +131,7 @@ export default function Login({ status, canResetPassword }) {
                                 <input
                                     id="password"
                                     type="password"
-                                    placeholder="Enter Password"
+                                    placeholder={t('auth.enter_password_placeholder')}
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
                                     required
@@ -146,25 +148,25 @@ export default function Login({ status, canResetPassword }) {
                                         className="me-2"
                                         style={{ width: 'auto', margin: 0 }}
                                     />
-                                    Remember me
+                                    {t('auth.remember_me')}
                                 </label>
                                 {canResetPassword && (
                                     <Link
                                         href={route('password.request')}
                                         className="small text-decoration-none text-dark fw-bold"
                                     >
-                                        Forgot Password?
+                                        {t('auth.forgot_password')}
                                     </Link>
                                 )}
                             </div>
 
                             <button className="form-button-1" disabled={processing}>
-                                {processing ? 'Logging in...' : 'Continue'}
+                                {processing ? t('auth.logging_in') : t('auth.continue')}
                             </button>
 
                             <div className="text-center mt-3">
-                                <span className="text-muted small">Don't have an account? </span>
-                                <Link href={route('register')} className="small fw-bold text-dark text-decoration-underline">Register</Link>
+                                <span className="text-muted small">{t('auth.no_account')} </span>
+                                <Link href={route('register')} className="small fw-bold text-dark text-decoration-underline">{t('auth.register')}</Link>
                             </div>
                         </form>
                     </div>
@@ -176,7 +178,7 @@ export default function Login({ status, canResetPassword }) {
                             <button id="backPhoneLogin" onClick={() => setStep('main')}>
                                 <i className="fa-solid fa-chevron-left"></i>
                             </button>
-                            <h3>Login with {phoneData.otp_type === 'whatsapp' ? 'WhatsApp' : 'Phone'}</h3>
+                            <h3>{phoneData.otp_type === 'whatsapp' ? t('auth.login_with_whatsapp') : t('auth.login_with_phone')}</h3>
                         </div>
 
                         <div className="auth-input-group">

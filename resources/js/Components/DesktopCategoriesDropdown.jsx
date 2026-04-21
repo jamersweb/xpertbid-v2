@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Link } from '@inertiajs/react';
 import { route } from 'ziggy-js';
+import useTranslate from '@/hooks/useTranslate';
 
 export default function DesktopCategoriesDropdown() {
+       const { t } = useTranslate();
        const [categories, setCategories] = useState([]);
        const [isOpen, setIsOpen] = useState(false);
        const dropdownRef = useRef(null);
@@ -47,7 +49,7 @@ export default function DesktopCategoriesDropdown() {
                             aria-expanded={isOpen}
                             style={{ border: "none" }}
                      >
-                            Categories
+                            {t('Categories')}
                             <svg
                                    xmlns="http://www.w3.org/2000/svg"
                                    width="20"

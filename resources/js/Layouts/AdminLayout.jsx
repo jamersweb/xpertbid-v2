@@ -1,16 +1,38 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import AdminSidebar from '@/Components/Admin/AdminSidebar';
 import CurrencyPicker from '@/Components/CurrencyPicker';
+import useTranslate from '@/hooks/useTranslate';
 
 export default function AdminLayout({ children, title }) {
        const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-       const { auth } = usePage().props;
+       const { auth, locale } = usePage().props;
        const user = auth?.user;
+       const { t } = useTranslate();
+       const supportedLocales = Object.entries(locale?.supported || {});
+       const currentLocale = locale?.current || 'en';
+       const currentDirection = locale?.supported?.[currentLocale]?.direction || (currentLocale === 'ur' ? 'rtl' : 'ltr');
 
        const handleLogout = () => {
               router.post(route('logout'));
        };
+
+       const handleLocaleChange = (nextLocale) => {
+              if (nextLocale === currentLocale) return;
+
+              router.post(route('locale.update'), { locale: nextLocale }, {
+                     preserveScroll: true,
+              });
+       };
+
+       useEffect(() => {
+              if (typeof document === 'undefined') return;
+
+              document.documentElement.lang = currentLocale;
+              document.documentElement.dir = currentDirection;
+              document.body.classList.toggle('locale-ur', currentLocale === 'ur');
+              document.body.classList.toggle('locale-rtl', currentDirection === 'rtl');
+       }, [currentLocale, currentDirection]);
 
        return (
               <div className="admin-layout flex min-h-screen bg-gray-50">
@@ -32,7 +54,21 @@ export default function AdminLayout({ children, title }) {
                                           </button>
                                    </div>
 
-                                   <div className="flex items-center gap-6">
+                                   <div className="flex items-center gap-4">
+                                          <div className="admin-language-switcher">
+                                                 <select
+                                                        className="admin-language-select"
+                                                        value={currentLocale}
+                                                        onChange={(e) => handleLocaleChange(e.target.value)}
+                                                        aria-label={t('Select Language')}
+                                                 >
+                                                        {supportedLocales.map(([code, details]) => (
+                                                               <option key={code} value={code}>
+                                                                      {details.native || details.name || code.toUpperCase()}
+                                                               </option>
+                                                        ))}
+                                                 </select>
+                                          </div>
                                           <CurrencyPicker />
                                           <div className="relative group">
                                                  <button className="flex items-center gap-2 p-1.5 hover:bg-gray-50 rounded-xl transition-colors border border-gray-100">
@@ -61,7 +97,7 @@ export default function AdminLayout({ children, title }) {
                                                                className="w-100 text-start px-4 py-3 border-0 bg-white d-flex align-items-center gap-2 text-danger fw-semibold hover:bg-red-50"
                                                         >
                                                                <i className="fa-solid fa-right-from-bracket"></i>
-                                                               Log Out
+                                                               {t('Log Out')}
                                                         </button>
                                                  </div>
                                           </div>
@@ -79,6 +115,17 @@ export default function AdminLayout({ children, title }) {
                 .admin-layout .bg-primary { background-color: #000; }
                 .admin-layout .text-primary { color: #000; }
                 .admin-layout .border-primary { border-color: #000; }
+                .admin-language-select {
+                    height: 38px;
+                    border: 1px solid #d8e0ea;
+                    border-radius: 10px;
+                    padding: 0 12px;
+                    background: #f8fbff;
+                    color: #23262f;
+                    font-size: 14px;
+                    font-weight: 600;
+                    outline: none;
+                }
             `}} />
               </div>
        );

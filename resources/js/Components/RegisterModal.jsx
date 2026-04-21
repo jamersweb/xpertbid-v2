@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { Link, useForm, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import axios from "axios";
+import useTranslate from '@/hooks/useTranslate';
 
 const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
+       const { t } = useTranslate();
        const [activeStep, setActiveStep] = useState("step1");
        const [errorMessage, setErrorMessage] = useState("");
        const [loading, setLoading] = useState(false);
@@ -42,14 +44,14 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                             onClose();
                      },
                      onError: (err) => {
-                            setErrorMessage(Object.values(err)[0] || "Registration failed");
+                            setErrorMessage(Object.values(err)[0] || t('auth.registration_failed'));
                      }
               });
        };
 
        const registerWithPhone = async () => {
               if (!formData.name || !formData.phone || !formData.password) {
-                     setErrorMessage("All fields are required.");
+                     setErrorMessage(t('auth.all_fields_required'));
                      return;
               }
               setLoading(true);
@@ -65,7 +67,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                      setActiveStep("otpVerification");
                      startTimer();
               } catch (error) {
-                     setErrorMessage(error.response?.data?.message || "Failed to send OTP");
+                     setErrorMessage(error.response?.data?.message || t('auth.failed_send_otp'));
               } finally {
                      setLoading(false);
               }
@@ -86,7 +88,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                      onClose();
                      router.visit(route('dashboard'));
               } catch (error) {
-                     setErrorMessage(error.response?.data?.message || "Invalid OTP");
+                     setErrorMessage(error.response?.data?.message || t('auth.invalid_otp'));
               } finally {
                      setLoading(false);
               }
@@ -122,31 +124,31 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
 
                             {activeStep === "step1" && (
                                    <div className="text-center">
-                                          <h2 className="mb-4 fw-bold text-center">Sign Up</h2>
+                                          <h2 className="mb-4 fw-bold text-center">{t('Sign Up')}</h2>
 
                                           <button onClick={handleGoogleSignUp} className="signUpContinueIcon">
                                                  <img src="/assets/images/googleLogo.svg" alt="Google" width={20} className="me-2" />
-                                                 Continue with Google
+                                                 {t('auth.continue_google')}
                                           </button>
 
                                           {/* Placeholder for Apple Signup - functionality to be implemented */}
                                           <button className="signUpContinueIcon">
                                                  <img src="/assets/images/appleLogo.svg" alt="Apple" width={20} className="me-2" />
-                                                 Continue with Apple
+                                                 {t('auth.continue_apple')}
                                           </button>
 
                                           <button onClick={() => handleStepChange("emailSignup")} className="signUpContinueIcon">
                                                  <img src="/assets/images/smsLogo.svg" alt="Email" width={20} className="me-2" />
-                                                 Sign Up with Email
+                                                 {t('auth.signup_with_email')}
                                           </button>
 
                                           <button onClick={() => handleStepChange("phoneSignup")} className="signUpContinueIcon">
                                                  <img src="/assets/images/MobileLogo.svg" alt="Phone" width={20} className="me-2" />
-                                                 Sign Up with Phone
+                                                 {t('auth.signup_with_phone')}
                                           </button>
 
                                           <p className="small text-left text-muted my-4">
-                                                 By continuing, I agree to xpertBid <Link href="/terms" className="text-decoration-underline text-primary" onClick={onClose}>Terms of service</Link> and <Link href="/privacy-policy" className="text-decoration-underline text-primary" onClick={onClose}>privacy policy.</Link>
+                                                 {t('auth.by_continuing_prefix')} xpertBid <Link href="/terms" className="text-decoration-underline text-primary" onClick={onClose}>{t('auth.terms_of_service')}</Link> {t('auth.and')} <Link href="/privacy-policy" className="text-decoration-underline text-primary" onClick={onClose}>{t('auth.privacy_policy')}</Link>
                                           </p>
                                    </div>
                             )}
@@ -157,14 +159,14 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                                                  <button id="backEmail" onClick={() => handleStepChange("step1")}>
                                                         <i className="fa-solid fa-chevron-left"></i>
                                                  </button>
-                                                 <h3 className="mb-0 fw-bold">Sign Up with Email</h3>
+                                                 <h3 className="mb-0 fw-bold">{t('auth.signup_with_email')}</h3>
                                           </div>
 
                                           <form onSubmit={handleEmailRegister}>
                                                  <div className="mb-3">
                                                         <input
                                                                type="text"
-                                                               placeholder="Enter your name"
+                                                               placeholder={t('auth.enter_name')}
                                                                value={formData.name}
                                                                onChange={(e) => setData('name', e.target.value)}
                                                                required
@@ -173,7 +175,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                                                  <div className="mb-3">
                                                         <input
                                                                type="email"
-                                                               placeholder="Enter your email"
+                                                               placeholder={t('auth.enter_email')}
                                                                value={formData.email}
                                                                onChange={(e) => setData('email', e.target.value)}
                                                                required
@@ -182,7 +184,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                                                  <div className="mb-3">
                                                         <input
                                                                type="tel"
-                                                               placeholder="Enter phone number"
+                                                               placeholder={t('auth.enter_phone_number')}
                                                                value={formData.phone}
                                                                onChange={(e) => setData('phone', e.target.value)}
                                                                required
@@ -191,7 +193,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                                                  <div className="mb-4">
                                                         <input
                                                                type="password"
-                                                               placeholder="Create password"
+                                                               placeholder={t('auth.create_password')}
                                                                value={formData.password}
                                                                onChange={(e) => setData('password', e.target.value)}
                                                                required
@@ -201,14 +203,14 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                                                  {errorMessage && <div className="alert-message">{errorMessage}</div>}
 
                                                  <button className="form-button-1" disabled={processing}>
-                                                        {processing ? "Creating Account..." : "Continue"}
+                                                        {processing ? t('auth.creating_account') : t('auth.continue')}
                                                  </button>
                                           </form>
 
                                           <div className="text-center mt-3">
-                                                 <span className="small text-muted">Already have an account? </span>
+                                                 <span className="small text-muted">{t('auth.already_have_account')} </span>
                                                  <button className="btn btn-link text-decoration-underline p-0 small text-dark fw-bold" onClick={onSwitchToLogin}>
-                                                        Login
+                                                        {t('Login')}
                                                  </button>
                                           </div>
                                    </div>
@@ -220,14 +222,14 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                                                  <button className="backbuttonSignup" onClick={() => handleStepChange("step1")}>
                                                         <i className="fa-solid fa-chevron-left"></i>
                                                  </button>
-                                                 <h3 className="mb-0 fw-bold">Sign Up with Phone</h3>
+                                                 <h3 className="mb-0 fw-bold">{t('auth.signup_with_phone')}</h3>
                                           </div>
 
                                           <div className="mb-3">
                                                  <div className="steps-input-select">
                                                         <input
                                                                type="text"
-                                                               placeholder="Enter your name"
+                                                               placeholder={t('auth.enter_name')}
                                                                value={formData.name}
                                                                onChange={(e) => setData('name', e.target.value)}
                                                                required
@@ -249,7 +251,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                                                         <input
                                                                type="tel"
                                                                className="form-control"
-                                                               placeholder="Enter Phone Number"
+                                                               placeholder={t('auth.enter_phone_number')}
                                                                value={formData.phone}
                                                                onChange={(e) => setData('phone', e.target.value.replace(/\D/g, ""))}
                                                                style={{ borderRadius: '0 12px 12px 0' }}

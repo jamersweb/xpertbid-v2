@@ -9,13 +9,19 @@ import CurrencyPicker from '@/Components/CurrencyPicker';
 import NotificationDropdown from '@/Components/NotificationDropdown';
 import Search from '@/Components/Search';
 import { useAuthModal } from '@/Contexts/AuthModalContext';
+import useTranslate from '@/hooks/useTranslate';
 
 
 export default function Header() {
-       const { auth } = usePage().props;
+       const { auth, locale } = usePage().props;
        const { url } = usePage();
        const user = auth?.user;
        const { openLogin, openRegister } = useAuthModal();
+       const { t } = useTranslate();
+       const supportedLocales = Object.entries(locale?.supported || {});
+       const currentLocale = locale?.current || 'en';
+       const currentDirection = locale?.supported?.[currentLocale]?.direction || (currentLocale === 'ur' ? 'rtl' : 'ltr');
+       const isRtl = currentDirection === 'rtl';
        const profileImageSrc = (() => {
               const src = user?.profile_pic;
               if (!src) return "/assets/images/user.jpg";
@@ -33,6 +39,32 @@ export default function Header() {
        const [isUserSettingsOpenMobile, setUserSettingsOpenMobile] = useState(false);
        const [isSearchOpen, setSearchOpen] = useState(false);
        const [isMenuOpen, setIsMenuOpen] = useState(false);
+       const profileMenuItemStyle = {
+              width: '100%',
+              color: '#24282B',
+              fontFamily: '"Inter", sans-serif',
+              direction: isRtl ? 'rtl' : 'ltr',
+              flexDirection: 'row',
+              justifyContent: isRtl ? 'flex-end' : 'flex-start',
+              textAlign: isRtl ? 'right' : 'left',
+       };
+       const profileMenuButtonStyle = {
+              ...profileMenuItemStyle,
+              color: '#E94343',
+       };
+       const renderProfileMenuContent = (label, icon) => (
+              isRtl ? (
+                     <>
+                            <span>{label}</span>
+                            {icon}
+                     </>
+              ) : (
+                     <>
+                            {icon}
+                            <span>{label}</span>
+                     </>
+              )
+       );
 
        const toggleUserSettingPopupDesktop = () => {
               setUserSettingsOpenDesktop(prev => !prev);
@@ -48,6 +80,12 @@ export default function Header() {
 
        const handleLogout = () => {
               router.post(route('logout'));
+       };
+
+       const handleLocaleChange = (nextLocale) => {
+              if (nextLocale === currentLocale) return;
+
+              router.post(route('locale.update'), { locale: nextLocale }, { preserveScroll: true });
        };
 
        const handleSellClick = (e) => {
@@ -121,7 +159,7 @@ export default function Header() {
                                                         type="button"
                                                         className="btn btn-link p-0 text-muted"
                                                         onClick={() => setSearchOpen(true)}
-                                                        aria-label="Search"
+                                                        aria-label={t('Search')}
                                                  >
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 20 20" fill="none">
                                                                <path d="M9.58317 17.4998C13.9554 17.4998 17.4998 13.9554 17.4998 9.58317C17.4998 5.21092 13.9554 1.6665 9.58317 1.6665C5.21092 1.6665 1.6665 5.21092 1.6665 9.58317C1.6665 13.9554 5.21092 17.4998 9.58317 17.4998Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -137,14 +175,14 @@ export default function Header() {
                                                                       className="mobile-auth-btn mobile-auth-login"
                                                                       onClick={openLogin}
                                                                >
-                                                                      Login
+                                                                      {t('Login')}
                                                                </button>
                                                                <button
                                                                       type="button"
                                                                       className="mobile-auth-btn mobile-auth-signup"
                                                                       onClick={openRegister}
                                                                >
-                                                                      Sign Up
+                                                                      {t('Sign Up')}
                                                                </button>
                                                         </div>
                                                  )}
@@ -174,7 +212,7 @@ export default function Header() {
                                                                              <path d="M9.58317 17.4998C13.9554 17.4998 17.4998 13.9554 17.4998 9.58317C17.4998 5.21092 13.9554 1.6665 9.58317 1.6665C5.21092 1.6665 1.6665 5.21092 1.6665 9.58317C1.6665 13.9554 5.21092 17.4998 9.58317 17.4998Z" stroke="#606060" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                                                              <path d="M18.3332 18.3332L16.6665 16.6665" stroke="#606060" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                                                       </svg>
-                                                                      <span className="ms-2 text-muted small">Search auctions</span>
+                                                                      <span className="ms-2 text-muted small">{t('Search auctions')}</span>
                                                                </div>
                                                         </li>
 
@@ -187,18 +225,32 @@ export default function Header() {
                                                                </div>
                                                         </li>
                                                         <li className="nav-item">
-                                                               <Link href={route('auctions.one_rupee')} className="nav-link" onClick={closeMobileMenu}>1 Rupee Auction</Link>
+                                                               <Link href={route('auctions.one_rupee')} className="nav-link" onClick={closeMobileMenu}>{t('1 Rupee Auction')}</Link>
                                                         </li>
                                                         <li className="nav-item">
-                                                               <Link href={route('about')} className="nav-link" onClick={closeMobileMenu}>About</Link>
+                                                               <Link href={route('about')} className="nav-link" onClick={closeMobileMenu}>{t('About')}</Link>
                                                         </li>
                                                         <li className="nav-item">
-                                                               <Link href={route('contact')} className="nav-link" onClick={closeMobileMenu}>Contact Us</Link>
+                                                               <Link href={route('contact')} className="nav-link" onClick={closeMobileMenu}>{t('Contact Us')}</Link>
                                                         </li>
                                                  </ul>
 
-                                                 <div className="d-flex align-items-center mt-3 mt-lg-0">
+                                                 <div className="d-flex align-items-center mt-3 mt-lg-0 header-account-cluster">
                                                         <div className="d-none d-lg-flex align-items-center mt-2 header-desktop-actions">
+                                                               <div className="header-language-switcher">
+                                                                      <select
+                                                                             className="header-language-select"
+                                                                             value={currentLocale}
+                                                                             onChange={(e) => handleLocaleChange(e.target.value)}
+                                                                             aria-label={t('Select Language')}
+                                                                      >
+                                                                             {supportedLocales.map(([code, details]) => (
+                                                                                    <option key={code} value={code}>
+                                                                                           {details.native || details.name || code.toUpperCase()}
+                                                                                    </option>
+                                                                             ))}
+                                                                      </select>
+                                                               </div>
                                                                {/* Aligned with xpertbid-frontend: Cart then Currency */}
                                                                <div className="header-action-currency">
                                                                       <CurrencyPicker />
@@ -215,17 +267,17 @@ export default function Header() {
 
                                                         {!user ? (
                                                                <div className="registration-btns d-flex align-items-center">
-                                                                      <button className="login me-4" onClick={openLogin}>Login</button>
-                                                                      <button className="signup me-2" onClick={openRegister}>Sign Up</button>
+                                                                      <button className="login me-4" onClick={openLogin}>{t('Login')}</button>
+                                                                      <button className="signup me-2" onClick={openRegister}>{t('Sign Up')}</button>
                                                                       <button
                                                                              className="sellnow mx-3 px-3 d-none d-lg-inline-flex"
                                                                              onClick={handleSellClick}
                                                                       >
-                                                                             Sell Now
+                                                                             {t('Sell Now')}
                                                                       </button>
                                                                </div>
                                                         ) : (
-                                                               <div className="d-flex align-items-center">
+                                                               <div className="d-flex align-items-center header-user-actions">
                                                                       <div className="user-profile-setting-container d-none d-lg-block" ref={userProfileRefDesktop}>
                                                                              <button
                                                                                     className="user-profile-setting btn btn-link p-0 text-decoration-none d-flex align-items-center gap-2"
@@ -248,52 +300,52 @@ export default function Header() {
                                                                              </button>
 
                                                                              {isUserSettingsOpenDesktop && (
-                                                                                    <div id="userProfileSettingPopup" className="user-profile-setting-popup show" style={{ position: 'absolute', right: 0, top: '100%' }}>
-                                                                                           <div className="user-profile-setting-content" style={{ padding: '18px 18px 18px 12px' }}>
+                                                                                    <div id="userProfileSettingPopup" className="user-profile-setting-popup show" style={{ position: 'absolute', right: isRtl ? 'auto' : 0, left: isRtl ? 0 : 'auto', top: '100%' }}>
+                                                                                           <div className="user-profile-setting-content" style={{ padding: isRtl ? '18px 12px 18px 18px' : '18px 18px 18px 12px', textAlign: isRtl ? 'right' : 'left' }}>
                                                                                                   <ul className="user-setting-menu" style={{ paddingLeft: 0, listStyle: 'none', marginBottom: 0, width: '100%' }}>
                                                                                                          <li style={{ borderBottom: '1px solid #EDEDED', padding: '0px 0', fontSize: '16px', fontWeight: '400', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={{ color: '#24282B', fontFamily: '"Inter", sans-serif' }} href={route('profile.edit')}>
-                                                                                                                       <img src="/assets/images/profile-setting.svg" alt="Settings" width={20} height={20} /> Account Settings
+                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={profileMenuItemStyle} href={route('profile.edit')}>
+                                                                                                                       {renderProfileMenuContent(t('Account Settings'), <img src="/assets/images/profile-setting.svg" alt="Settings" width={20} height={20} />)}
                                                                                                                 </Link>
                                                                                                          </li>
                                                                                                          <li style={{ borderBottom: '1px solid #EDEDED', padding: '0px 0', fontSize: '16px', fontWeight: '400', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={{ color: '#24282B', fontFamily: '"Inter", sans-serif' }} href={route('chat.index')}>
-                                                                                                                       <i className="fa-solid fa-comment-dots text-center" style={{ width: '20px', fontSize: '18px' }}></i> Messages
+                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={profileMenuItemStyle} href={route('chat.index')}>
+                                                                                                                       {renderProfileMenuContent(t('Messages'), <i className="fa-solid fa-comment-dots text-center" style={{ width: '20px', fontSize: '18px' }}></i>)}
                                                                                                                 </Link>
                                                                                                          </li>
                                                                                                          <li style={{ borderBottom: '1px solid #EDEDED', padding: '0px 0', fontSize: '16px', fontWeight: '400', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={{ color: '#24282B', fontFamily: '"Inter", sans-serif' }} href={route('favorites.index')}>
-                                                                                                                       <img src="/assets/images/setting-heart.svg" alt="Favorites" width={20} height={20} /> My Favorites
+                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={profileMenuItemStyle} href={route('favorites.index')}>
+                                                                                                                       {renderProfileMenuContent(t('My Favorites'), <img src="/assets/images/setting-heart.svg" alt="Favorites" width={20} height={20} />)}
                                                                                                                 </Link>
                                                                                                          </li>
                                                                                                          <li style={{ borderBottom: '1px solid #EDEDED', padding: '0px 0', fontSize: '16px', fontWeight: '400', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={{ color: '#24282B', fontFamily: '"Inter", sans-serif' }} href={route('auctions.mylistings')}>
-                                                                                                                       <img src="/assets/images/mainListing.svg" alt="Listings" width={20} height={20} /> My Listings
+                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={profileMenuItemStyle} href={route('auctions.mylistings')}>
+                                                                                                                       {renderProfileMenuContent(t('My Listings'), <img src="/assets/images/mainListing.svg" alt="Listings" width={20} height={20} />)}
                                                                                                                 </Link>
                                                                                                          </li>
                                                                                                          <li style={{ borderBottom: '1px solid #EDEDED', padding: '0px 0', fontSize: '16px', fontWeight: '400', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={{ color: '#24282B', fontFamily: '"Inter", sans-serif' }} href={route('bids.index')}>
-                                                                                                                       <img src="/assets/images/myBids.svg" alt="Bids" width={20} height={20} /> My Bids
+                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={profileMenuItemStyle} href={route('bids.index')}>
+                                                                                                                       {renderProfileMenuContent(t('My Bids'), <img src="/assets/images/myBids.svg" alt="Bids" width={20} height={20} />)}
                                                                                                                 </Link>
                                                                                                          </li>
                                                                                                          <li style={{ borderBottom: '1px solid #EDEDED', padding: '0px 0', fontSize: '16px', fontWeight: '400', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={{ color: '#24282B', fontFamily: '"Inter", sans-serif' }} href={route('orders.index')}>
-                                                                                                                       <i className="fa-solid fa-box-open text-center" style={{ width: '20px', fontSize: '18px' }}></i> My Orders
+                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={profileMenuItemStyle} href={route('orders.index')}>
+                                                                                                                       {renderProfileMenuContent(t('My Orders'), <i className="fa-solid fa-box-open text-center" style={{ width: '20px', fontSize: '18px' }}></i>)}
                                                                                                                 </Link>
                                                                                                          </li>
                                                                                                          <li style={{ borderBottom: '1px solid #EDEDED', padding: '0px 0', fontSize: '16px', fontWeight: '400', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={{ color: '#24282B', fontFamily: '"Inter", sans-serif' }} href={route('payment_requests.index')}>
-                                                                                                                       <i className="fa-solid fa-money-check text-center" style={{ width: '20px', fontSize: '18px' }}></i> Payment Request
+                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={profileMenuItemStyle} href={route('payment_requests.index')}>
+                                                                                                                       {renderProfileMenuContent(t('Payment Request'), <i className="fa-solid fa-money-check text-center" style={{ width: '20px', fontSize: '18px' }}></i>)}
                                                                                                                 </Link>
                                                                                                          </li>
                                                                                                          <li style={{ borderBottom: '1px solid #EDEDED', padding: '0px 0', fontSize: '16px', fontWeight: '400', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={{ color: '#24282B', fontFamily: '"Inter", sans-serif' }} href={route('verification.identity')}>
-                                                                                                                       <i className="fa-solid fa-id-card text-center" style={{ width: '20px', fontSize: '18px' }}></i> Verification
+                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={profileMenuItemStyle} href={route('verification.identity')}>
+                                                                                                                       {renderProfileMenuContent(t('Verification'), <i className="fa-solid fa-id-card text-center" style={{ width: '20px', fontSize: '18px' }}></i>)}
                                                                                                                 </Link>
                                                                                                          </li>
                                                                                                          <li style={{ padding: '0px 0', fontSize: '16px', fontWeight: '400', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '15px', marginTop: '14px' }}>
-                                                                                                                <button className="transparent-button d-flex align-items-center gap-2 border-0 bg-transparent p-0" style={{ color: '#E94343', fontFamily: '"Inter", sans-serif' }} onClick={handleLogout}>
-                                                                                                                       <img src="/assets/images/logout.svg" alt="Logout" /> Log Out
+                                                                                                                <button className="transparent-button d-flex align-items-center gap-2 border-0 bg-transparent p-0" style={profileMenuButtonStyle} onClick={handleLogout}>
+                                                                                                                       {renderProfileMenuContent(t('Log Out'), <img src="/assets/images/logout.svg" alt="Logout" />)}
                                                                                                                 </button>
                                                                                                          </li>
                                                                                                   </ul>
@@ -305,7 +357,7 @@ export default function Header() {
                                                                              className="sellnow header-sell-btn px-3 d-none d-lg-inline-flex"
                                                                              onClick={handleSellClick}
                                                                       >
-                                                                             Sell Now
+                                                                             {t('Sell Now')}
                                                                       </button>
                                                                </div>
                                                         )}
@@ -348,6 +400,21 @@ export default function Header() {
                         .header-desktop-actions {
                             gap: 10px;
                             margin-right: 12px;
+                        }
+                        .header-language-switcher {
+                            display: inline-flex;
+                            align-items: center;
+                        }
+                        .header-language-select {
+                            height: 38px;
+                            border: 1px solid #D8E0EA;
+                            border-radius: 10px;
+                            padding: 0 12px;
+                            background: #F8FBFF;
+                            color: #23262F;
+                            font-size: 14px;
+                            font-weight: 600;
+                            outline: none;
                         }
                         .header-action-currency,
                         .header-action-cart,
@@ -401,6 +468,13 @@ export default function Header() {
                             }
                             .mobile-auth-buttons {
                                 margin-right: 4px;
+                            }
+                            .header-language-switcher {
+                                width: 100%;
+                                margin-bottom: 12px;
+                            }
+                            .header-language-select {
+                                width: 100%;
                             }
                             .mobile-auth-btn {
                                 border: none;

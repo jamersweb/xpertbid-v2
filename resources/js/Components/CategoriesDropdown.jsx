@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { Link } from '@inertiajs/react';
 import { route } from 'ziggy-js';
+import useTranslate from '@/hooks/useTranslate';
 
 export default function CategoriesDropdown() {
+       const { t } = useTranslate();
        const [categories, setCategories] = useState([]);
        const [isOpen, setIsOpen] = useState(false);
        const btnRef = useRef();
@@ -51,7 +53,7 @@ export default function CategoriesDropdown() {
                             ref={btnRef}
                             style={{ border: "none", display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                      >
-                            Categories
+                            {t('Categories')}
                             <svg xmlns="http://www.w3.org/2000/svg"
                                    width="20"
                                    height="20"

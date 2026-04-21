@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DynamicField;
 use App\Models\AuctionCategory;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class DynamicFieldController extends Controller
@@ -36,7 +37,16 @@ class DynamicFieldController extends Controller
         $request->validate([
             'listing_type' => 'required|in:normal,auction,business,all',
             'category_id' => 'nullable|exists:auction_categories,id',
-            'field_name' => 'required|string|max:255',
+            'field_name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('dynamic_fields', 'field_name')
+                    ->where(fn ($q) => $q
+                        ->where('listing_type', $request->listing_type)
+                        ->where('category_id', $request->category_id)
+                    ),
+            ],
             'label' => 'required|string|max:255',
             'input_type' => 'required|string',
             'options' => 'nullable|array',
@@ -58,7 +68,17 @@ class DynamicFieldController extends Controller
         $request->validate([
             'listing_type' => 'required|in:normal,auction,business,all',
             'category_id' => 'nullable|exists:auction_categories,id',
-            'field_name' => 'required|string|max:255',
+            'field_name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('dynamic_fields', 'field_name')
+                    ->ignore($field->id)
+                    ->where(fn ($q) => $q
+                        ->where('listing_type', $request->listing_type)
+                        ->where('category_id', $request->category_id)
+                    ),
+            ],
             'label' => 'required|string|max:255',
             'input_type' => 'required|string',
             'options' => 'nullable|array',

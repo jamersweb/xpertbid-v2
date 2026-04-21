@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import SummaryCard from './SummaryCard';
 
-export default function MediaUpload({ files, setFiles, existingFiles = [], setExistingFiles, summaryData, onContinue, onBack, onEditListType, onEditCategory, onEditDetails, onEditVerification, onSaveDraft, isSavingDraft, canPublish = true, publishBlockedMessage = '' }) {
+export default function MediaUpload({ files, setFiles, existingFiles = [], setExistingFiles, summaryData, onContinue, onBack, onEditListType, onEditCategory, onEditDetails, onEditVerification, onSaveDraft, isSavingDraft, canPublish = true, publishBlockedMessage = '', progressPercent = 0 }) {
        const fileInputRef = useRef(null);
        const [error, setError] = useState("");
 
@@ -71,6 +71,18 @@ export default function MediaUpload({ files, setFiles, existingFiles = [], setEx
                             <p className="media-stage-subtitle">
                                    Add images or videos for your listing.
                             </p>
+                            <div className="px-3 pb-2 bg-white">
+                                   <div className="progress" style={{ height: '8px' }}>
+                                          <div
+                                                 className="progress-bar bg-primary"
+                                                 role="progressbar"
+                                                 style={{ width: `${progressPercent}%` }}
+                                                 aria-valuenow={progressPercent}
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100"
+                                          />
+                                   </div>
+                            </div>
                      </div>
 
                      <form className="media-form" onSubmit={handleNext}>

@@ -2,6 +2,7 @@ import React from "react";
 import AppLayout from "@/Layouts/AppLayout";
 import { Head, Link, router } from "@inertiajs/react";
 import Price from "@/Components/Price";
+import useTranslate from "@/hooks/useTranslate";
 
 // Helper for date formatting
 const formatDate = (dateString) => {
@@ -15,11 +16,13 @@ const getImageUrl = (listing) => {
 };
 
 export default function Index({ orders }) {
+       const { t } = useTranslate();
+
        return (
-              <AppLayout title="My Orders">
+              <AppLayout title={t("My Orders")}>
                      <div className="container py-5">
                             <div className="d-flex justify-content-between align-items-center mb-4">
-                                   <h3 style={{ fontWeight: '700', color: '#1a1a1a', margin: 0 }}>My Orders</h3>
+                                   <h3 style={{ fontWeight: '700', color: '#1a1a1a', margin: 0 }}>{t("My Orders")}</h3>
                             </div>
 
                             {orders.data.length === 0 ? (
@@ -27,16 +30,16 @@ export default function Index({ orders }) {
                                           <div className="mb-4">
                                                  <i className="fa-solid fa-box-open" style={{ fontSize: "60px", color: "#ddd" }}></i>
                                           </div>
-                                          <h4 style={{ color: "#666" }}>No orders found</h4>
+                                          <h4 style={{ color: "#666" }}>{t("No orders found")}</h4>
                                           <p style={{ color: "#999", marginBottom: "30px" }}>
-                                                 You haven't placed any orders yet.
+                                                 {t("You haven't placed any orders yet.")}
                                           </p>
                                           <Link
                                                  href="/marketplace"
                                                  className="btn btn-dark px-4 py-2 fw-bold"
                                                  style={{ borderRadius: '8px' }}
                                           >
-                                                 Start Shopping
+                                                 {t("Start Shopping")}
                                           </Link>
                                    </div>
                             ) : (
@@ -98,7 +101,7 @@ export default function Index({ orders }) {
                                                                                     </div>
                                                                                     <div className="flex-grow-1">
                                                                                            <h6 className="mb-1 fw-bold" style={{ fontSize: '15px', color: '#333' }}>
-                                                                                                  {item.listing?.title || "Product"}
+                                                                                                  {item.listing?.title || t("Product")}
                                                                                            </h6>
                                                                                            <div className="text-muted small">
                                                                                                   Qty: <span className="fw-semibold">{item.quantity}</span> &times; <span className="fw-semibold"><Price amountAED={item.price} /></span>
@@ -109,7 +112,7 @@ export default function Index({ orders }) {
                                                                                                   href={route('orders.show', order.order_number)}
                                                                                                   className="btn btn-dark btn-sm rounded-pill px-4"
                                                                                            >
-                                                                                                  View Details
+                                                                                                  {t("View Details")}
                                                                                            </Link>
                                                                                     </div>
                                                                              </div>

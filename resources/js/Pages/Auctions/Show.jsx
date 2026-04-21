@@ -41,8 +41,65 @@ function formatHuman(d) {
        return `${dd}/${mm}/${mon}`;
 }
 
-export default function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite }) {
+export default function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, dynamicFields = [] }) {
        // Bids update automatically via Inertia props after a successful POST
+       const categoryFeatures = auction?.category_features && typeof auction.category_features === 'object'
+              ? auction.category_features
+              : {};
+
+       const fieldNameCounts = dynamicFields.reduce((acc, field) => {
+              const key = String(field?.field_name || '').trim();
+              if (key) acc[key] = (acc[key] || 0) + 1;
+              return acc;
+       }, {});
+
+       const prettifyKey = (rawKey) => String(rawKey || '')
+              .replace(/^field_/, '')
+              .replace(/__\d+$/, '')
+              .replace(/[_-]+/g, ' ')
+              .replace(/\s+/g, ' ')
+              .trim()
+              .replace(/\b\w/g, (c) => c.toUpperCase());
+
+       const formatFeatureValue = (value) => {
+              if (value === null || value === undefined || value === '') return '';
+              if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+              if (Array.isArray(value)) return value.join(', ');
+              return String(value);
+       };
+
+       const mappedKeys = new Set();
+       const dynamicFeatureRows = dynamicFields
+              .map((field) => {
+                     const idKey = `field_${field.id}`;
+                     const base = String(field?.field_name || '').trim();
+                     const featureKey = fieldNameCounts[base] > 1 ? `${base}__${field.id}` : base;
+                     const value = categoryFeatures[idKey] ?? categoryFeatures[featureKey] ?? categoryFeatures[base] ?? '';
+                     const formatted = formatFeatureValue(value);
+
+                     if (!formatted) return null;
+
+                     mappedKeys.add(idKey);
+                     if (base) mappedKeys.add(base);
+                     if (featureKey) mappedKeys.add(featureKey);
+
+                     return {
+                            key: idKey,
+                            label: field?.label || prettifyKey(base || idKey),
+                            value: formatted,
+                     };
+              })
+              .filter(Boolean);
+
+       const fallbackRows = Object.entries(categoryFeatures)
+              .filter(([key, value]) => !mappedKeys.has(key) && formatFeatureValue(value))
+              .map(([key, value]) => ({
+                     key,
+                     label: prettifyKey(key),
+                     value: formatFeatureValue(value),
+              }));
+
+       const allFeatureRows = [...dynamicFeatureRows, ...fallbackRows];
 
        return (
               <AppLayout title={auction.title}>
@@ -102,21 +159,26 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
                                                  <div className="col-lg-7 col-md-6">
                                                         <div className="x-accordions">
                                                                {/* Key Information */}
-                                                               {(auction.description || auction.product_year || auction.product_location) && (
+                                                               {(auction.description || auction.product_location) && (
                                                                       <AccordionItem title="Key Information" defaultOpen={true}>
                                                                              {auction.description && (
                                                                                     <div className="mb-3" dangerouslySetInnerHTML={{ __html: auction.description }} />
                                                                              )}
-                                                                             {auction.product_year && (
-                                                                                    <div className="row gx-3 gy-2 align-items-center mb-2">
-                                                                                           <div className="col-auto">
-                                                                                                  <span className="badge bg-dark-subtle text-dark fw-normal">Year</span>
+                                                                      </AccordionItem>
+                                                               )}
+
+                                                               {allFeatureRows.length > 0 && (
+                                                                      <AccordionItem title="Additional Details" defaultOpen={true}>
+                                                                             <div className="row gx-3 gy-2">
+                                                                                    {allFeatureRows.map((item) => (
+                                                                                           <div className="col-md-6" key={item.key}>
+                                                                                                  <div className="d-flex justify-content-between align-items-center border rounded px-3 py-2">
+                                                                                                         <span className="text-muted small">{item.label}</span>
+                                                                                                         <strong className="small text-dark">{item.value}</strong>
+                                                                                                  </div>
                                                                                            </div>
-                                                                                           <div className="col">
-                                                                                                  <strong>{auction.product_year}</strong>
-                                                                                           </div>
-                                                                                    </div>
-                                                                             )}
+                                                                                    ))}
+                                                                             </div>
                                                                       </AccordionItem>
                                                                )}
 

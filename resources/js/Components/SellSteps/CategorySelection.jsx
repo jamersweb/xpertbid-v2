@@ -20,7 +20,7 @@ const OTHER_CHILD_CATEGORY_OPTION = {
        isOther: true,
 };
 
-export default function CategorySelection({ categories: initialCategories, onSelect, onBack, onSaveDraft, isSavingDraft }) {
+export default function CategorySelection({ categories: initialCategories, onSelect, onBack, onSaveDraft, isSavingDraft, progressPercent = 0 }) {
        const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
 
        const [categories, setCategories] = useState(initialCategories || []);
@@ -167,6 +167,18 @@ export default function CategorySelection({ categories: initialCategories, onSel
                                    <p className="category-stage-subtitle">
                                           Choose a category that best matches your product.
                                    </p>
+                                   <div className="px-3 pb-2 bg-white">
+                                          <div className="progress" style={{ height: '8px' }}>
+                                                 <div
+                                                        className="progress-bar bg-primary"
+                                                        role="progressbar"
+                                                        style={{ width: `${progressPercent}%` }}
+                                                        aria-valuenow={progressPercent}
+                                                        aria-valuemin="0"
+                                                        aria-valuemax="100"
+                                                 />
+                                          </div>
+                                   </div>
 
                                    {/* Summary Card Placeholder - skipped for brevity or added if needed */}
                             </div>
@@ -222,6 +234,18 @@ export default function CategorySelection({ categories: initialCategories, onSel
                             <p className="category-stage-subtitle">
                                    Choose a category that best matches your product.
                             </p>
+                            <div className="px-3 pb-2 bg-white">
+                                   <div className="progress" style={{ height: '8px' }}>
+                                          <div
+                                                 className="progress-bar bg-primary"
+                                                 role="progressbar"
+                                                 style={{ width: `${progressPercent}%` }}
+                                                 aria-valuenow={progressPercent}
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100"
+                                          />
+                                   </div>
+                            </div>
                      </div>
 
                      <div className="category-list-wrapper">

@@ -24,7 +24,7 @@ export default function ExploreProducts({ products }) {
               <div className="row makt-parent w-100 mx-auto">
                      {products.map((product) => (
                             <div className="col-md-6 col-xl-4 mkt-child mb-4" key={product.id}>
-                                   <AuctionCard auction={product} />
+                                   <AuctionCard auction={product} showPropertyMeta />
                             </div>
                      ))}
               </div>

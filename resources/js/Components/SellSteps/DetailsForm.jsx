@@ -4,12 +4,117 @@ import ReactQuill from 'react-quill';
 import SummaryCard from './SummaryCard';
 import 'react-quill/dist/quill.snow.css';
 
-export default function DetailsForm({ listType, formData, setFormData, summaryData, dynamicFields = [], onContinue, onBack, onEditListType, onEditCategory, onSaveDraft, isSavingDraft }) {
+export default function DetailsForm({
+       listType,
+       formData,
+       setFormData,
+       countries = [],
+       states = [],
+       cities = [],
+       summaryData,
+       dynamicFields = [],
+       onContinue,
+       onBack,
+       onEditListType,
+       onEditCategory,
+       onSaveDraft,
+       isSavingDraft,
+       progressPercent = 0
+}) {
        const [errors, setErrors] = useState({});
+
+       const parseFieldOptions = (options) => {
+              if (Array.isArray(options)) return options;
+              if (typeof options === 'string') {
+                     try {
+                            const parsed = JSON.parse(options);
+                            return Array.isArray(parsed) ? parsed : [];
+                     } catch {
+                            return [];
+                     }
+              }
+              return [];
+       };
+
+       const normalizedFieldName = (field) => {
+              const raw = String(field?.field_name || '').trim();
+              return raw || `field_${field?.id}`;
+       };
+
+       const getSafeFeatures = () => {
+              const rawFeatures = formData?.category_features;
+              if (!rawFeatures || typeof rawFeatures !== 'object' || Array.isArray(rawFeatures)) {
+                     return {};
+              }
+              return rawFeatures;
+       };
+
+       const fieldNameCounts = (dynamicFields || []).reduce((acc, field) => {
+              const base = normalizedFieldName(field);
+              acc[base] = (acc[base] || 0) + 1;
+              return acc;
+       }, {});
+
+       const getIdFeatureKey = (field) => `field_${field?.id}`;
+
+       const getFeatureKey = (field) => {
+              const base = normalizedFieldName(field);
+              const idKey = getIdFeatureKey(field);
+              return fieldNameCounts[base] > 1 ? `${base}__${field.id}` : (base || idKey);
+       };
+
+       const getFeatureValue = (field) => {
+              const features = getSafeFeatures();
+              const idKey = getIdFeatureKey(field);
+              const key = getFeatureKey(field);
+              const base = normalizedFieldName(field);
+              return features[idKey] ?? features[key] ?? features[base] ?? '';
+       };
+
+       const updateFeatureValue = (field, value) => {
+              const base = normalizedFieldName(field);
+              const key = getFeatureKey(field);
+              const idKey = getIdFeatureKey(field);
+              const isDuplicateFieldName = fieldNameCounts[base] > 1;
+
+              setFormData((prev) => {
+                     const prevFeatures =
+                            prev?.category_features && typeof prev.category_features === 'object' && !Array.isArray(prev.category_features)
+                                   ? prev.category_features
+                                   : {};
+
+                     const nextFeatures = {
+                            ...prevFeatures,
+                            [idKey]: value,
+                            [key]: value,
+                     };
+
+                     // Keep human-readable field_name key only when unique to avoid collisions.
+                     if (!isDuplicateFieldName && base) {
+                            nextFeatures[base] = value;
+                     }
+
+                     return {
+                            ...prev,
+                            category_features: nextFeatures,
+                     };
+              });
+       };
 
        const handleChange = (e) => {
               const { name, value } = e.target;
-              setFormData(prev => ({ ...prev, [name]: value }));
+              setFormData(prev => {
+                     const next = { ...prev, [name]: value };
+
+                     if (name === 'country_id') {
+                            next.state_id = '';
+                            next.city_id = '';
+                     } else if (name === 'state_id') {
+                            next.city_id = '';
+                     }
+
+                     return next;
+              });
               if (errors[name]) {
                      setErrors(prev => {
                             const newErrors = { ...prev };
@@ -44,9 +149,6 @@ export default function DetailsForm({ listType, formData, setFormData, summaryDa
               const newErrors = {};
               if (!formData.title) newErrors.title = "Title is required";
               if (!formData.description || formData.description === '<p><br></p>') newErrors.description = "Description is required";
-              if (!formData.product_condition) newErrors.product_condition = "Product condition is required";
-              if (!formData.product_year) newErrors.product_year = "Year is required";
-              if (!formData.product_location) newErrors.product_location = "Location is required";
 
               if (listType === 'auction') {
                      if (!formData.minimum_bid) newErrors.minimum_bid = "Starting bid is required";
@@ -68,7 +170,7 @@ export default function DetailsForm({ listType, formData, setFormData, summaryDa
 
               // Dynamic fields validation
               dynamicFields.forEach(field => {
-                     if (field.is_required && !formData.category_features?.[field.field_name]) {
+                     if (field.is_required && !getFeatureValue(field)) {
                             newErrors[`field_${field.id}`] = `${field.label} is required`;
                      }
               });
@@ -110,6 +212,18 @@ export default function DetailsForm({ listType, formData, setFormData, summaryDa
                             <p className="details-stage-subtitle">
                                    Fill in the information below to describe your product.
                             </p>
+                            <div className="px-3 pb-2 bg-white">
+                                   <div className="progress" style={{ height: '8px' }}>
+                                          <div
+                                                 className="progress-bar bg-primary"
+                                                 role="progressbar"
+                                                 style={{ width: `${progressPercent}%` }}
+                                                 aria-valuenow={progressPercent}
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100"
+                                          />
+                                   </div>
+                            </div>
                      </div>
 
                      <form className="details-form" onSubmit={handleNext} noValidate>
@@ -157,46 +271,50 @@ export default function DetailsForm({ listType, formData, setFormData, summaryDa
 
                                    <div className="details-row mb-4">
                                           <div className="form-group flex-fill mb-0">
-                                                 <label className="form-label fw-bold">Condition <span className="text-danger">*</span></label>
+                                                 <label className="form-label fw-bold">Country</label>
                                                  <select
-                                                        name="product_condition"
+                                                        name="country_id"
                                                         className="form-control verify_input"
-                                                        value={formData.product_condition || ''}
+                                                        value={formData.country_id || ''}
                                                         onChange={handleChange}
                                                  >
-                                                        <option value="">Select Condition</option>
-                                                        <option value="New">New</option>
-                                                        <option value="Like New">Like New</option>
-                                                        <option value="Used">Used</option>
-                                                        <option value="Refurbished">Refurbished</option>
+                                                        <option value="">Select Country</option>
+                                                        {countries.map((country) => (
+                                                               <option key={country.id} value={country.id}>{country.name}</option>
+                                                        ))}
                                                  </select>
-                                                 {errors.product_condition && <p className="text-danger small mt-1">{errors.product_condition}</p>}
                                           </div>
                                           <div className="form-group flex-fill mb-0">
-                                                 <label className="form-label fw-bold">Year <span className="text-danger">*</span></label>
-                                                 <input
-                                                        type="number"
-                                                        name="product_year"
+                                                 <label className="form-label fw-bold">State</label>
+                                                 <select
+                                                        name="state_id"
                                                         className="form-control verify_input"
-                                                        placeholder="e.g. 2024"
-                                                        value={formData.product_year || ''}
+                                                        value={formData.state_id || ''}
                                                         onChange={handleChange}
-                                                 />
-                                                 {errors.product_year && <p className="text-danger small mt-1">{errors.product_year}</p>}
+                                                        disabled={!formData.country_id}
+                                                 >
+                                                        <option value="">Select State</option>
+                                                        {states.map((state) => (
+                                                               <option key={state.id} value={state.id}>{state.name}</option>
+                                                        ))}
+                                                 </select>
                                           </div>
                                    </div>
 
                                    <div className="form-group mb-4">
-                                          <label className="form-label fw-bold">Product Location <span className="text-danger">*</span></label>
-                                          <input
-                                                 type="text"
-                                                 name="product_location"
+                                          <label className="form-label fw-bold">City</label>
+                                          <select
+                                                 name="city_id"
                                                  className="form-control verify_input"
-                                                 placeholder="e.g. Dubai, UAE"
-                                                 value={formData.product_location || ''}
+                                                 value={formData.city_id || ''}
                                                  onChange={handleChange}
-                                          />
-                                          {errors.product_location && <p className="text-danger small mt-1">{errors.product_location}</p>}
+                                                 disabled={!formData.state_id}
+                                          >
+                                                 <option value="">Select City</option>
+                                                 {cities.map((city) => (
+                                                        <option key={city.id} value={city.id}>{city.name}</option>
+                                                 ))}
+                                          </select>
                                    </div>
 
                                    {listType === 'auction' && (
@@ -411,55 +529,64 @@ export default function DetailsForm({ listType, formData, setFormData, summaryDa
                                    {dynamicFields && dynamicFields.length > 0 && (
                                           <div className="dynamic-fields-section mb-4">
                                                  <div className="row">
-                                                        {dynamicFields.map((field) => (
+                                                        {dynamicFields.map((field) => {
+                                                               const inputType = String(field.input_type || 'text').trim().toLowerCase();
+                                                               const fieldOptions = parseFieldOptions(field.options);
+
+                                                               return (
                                                                <div className="col-md-6 mb-4" key={field.id}>
                                                                       <label className="form-label fw-bold">
                                                                              {field.label} {field.is_required ? <span className="text-danger">*</span> : ''}
                                                                       </label>
-                                                                      {field.input_type === 'select' ? (
+                                                                     {inputType === 'select' ? (
                                                                              <select
                                                                                     className="form-control verify_input"
-                                                                                    value={formData.category_features?.[field.field_name] || ''}
-                                                                                    onChange={(e) => setFormData(prev => ({
-                                                                                           ...prev,
-                                                                                           category_features: {
-                                                                                                  ...prev.category_features,
-                                                                                                  [field.field_name]: e.target.value
-                                                                                           }
-                                                                                    }))}
+                                                                                    value={getFeatureValue(field)}
+                                                                                    onChange={(e) => updateFeatureValue(field, e.target.value)}
                                                                                     required={field.is_required}
                                                                              >
                                                                                     <option value="">Select {field.label}</option>
-                                                                                    {(field.options || []).map((opt, i) => (
+                                                                                    {fieldOptions.map((opt, i) => (
                                                                                            <option key={i} value={opt}>{opt}</option>
                                                                                     ))}
                                                                              </select>
-                                                                      ) : field.input_type === 'textarea' ? (
+                                                                      ) : inputType === 'radio' ? (
+                                                                             <div className="pt-2">
+                                                                                    {fieldOptions.map((opt, i) => {
+                                                                                           const radioId = `field_${field.id}_${i}`;
+                                                                                           const currentValue = getFeatureValue(field);
+                                                                                           return (
+                                                                                                  <div className="form-check mb-2 d-inline-flex align-items-center gap-2" key={radioId}>
+                                                                                                         <input
+                                                                                                                className="form-check-input m-0 align-self-center"
+                                                                                                                type="radio"
+                                                                                                                id={radioId}
+                                                                                                                name={`field_${field.id}`}
+                                                                                                                value={opt}
+                                                                                                                checked={currentValue === opt}
+                                                                                                                onChange={(e) => updateFeatureValue(field, e.target.value)}
+                                                                                                         />
+                                                                                                         <label className="form-check-label small m-0 text-dark d-flex align-items-center" style={{ color: '#23262F', opacity: 1, lineHeight: 1.2 }} htmlFor={radioId}>
+                                                                                                                {opt}
+                                                                                                         </label>
+                                                                                                  </div>
+                                                                                           );
+                                                                                    })}
+                                                                             </div>
+                                                                      ) : inputType === 'textarea' ? (
                                                                              <textarea
                                                                                     className="form-control verify_input"
-                                                                                    value={formData.category_features?.[field.field_name] || ''}
-                                                                                    onChange={(e) => setFormData(prev => ({
-                                                                                           ...prev,
-                                                                                           category_features: {
-                                                                                                  ...prev.category_features,
-                                                                                                  [field.field_name]: e.target.value
-                                                                                           }
-                                                                                    }))}
+                                                                                    value={getFeatureValue(field)}
+                                                                                    onChange={(e) => updateFeatureValue(field, e.target.value)}
                                                                                     required={field.is_required}
                                                                              />
-                                                                      ) : field.input_type === 'checkbox' ? (
+                                                                     ) : inputType === 'checkbox' ? (
                                                                              <div className="form-check pt-2">
                                                                                     <input
                                                                                            className="form-check-input"
                                                                                            type="checkbox"
-                                                                                           checked={!!formData.category_features?.[field.field_name]}
-                                                                                           onChange={(e) => setFormData(prev => ({
-                                                                                                  ...prev,
-                                                                                                  category_features: {
-                                                                                                         ...prev.category_features,
-                                                                                                         [field.field_name]: e.target.checked
-                                                                                                  }
-                                                                                           }))}
+                                                                                           checked={!!getFeatureValue(field)}
+                                                                                           onChange={(e) => updateFeatureValue(field, e.target.checked)}
                                                                                            id={`field_${field.id}`}
                                                                                     />
                                                                                     <label className="form-check-label small ms-2" htmlFor={`field_${field.id}`}>
@@ -468,22 +595,16 @@ export default function DetailsForm({ listType, formData, setFormData, summaryDa
                                                                              </div>
                                                                       ) : (
                                                                              <input
-                                                                                    type={field.input_type || "text"}
+                                                                                    type={inputType || "text"}
                                                                                     className="form-control verify_input"
-                                                                                    value={formData.category_features?.[field.field_name] || ''}
-                                                                                    onChange={(e) => setFormData(prev => ({
-                                                                                           ...prev,
-                                                                                           category_features: {
-                                                                                                  ...prev.category_features,
-                                                                                                  [field.field_name]: e.target.value
-                                                                                           }
-                                                                                    }))}
+                                                                                    value={getFeatureValue(field)}
+                                                                                    onChange={(e) => updateFeatureValue(field, e.target.value)}
                                                                                     required={field.is_required}
                                                                              />
                                                                       )}
                                                                       {errors[`field_${field.id}`] && <p className="text-danger small mt-1">{errors[`field_${field.id}`]}</p>}
                                                                </div>
-                                                        ))}
+                                                        )})}
                                                  </div>
                                           </div>
                                    )}
