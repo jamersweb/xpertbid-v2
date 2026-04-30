@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\YoutubeVideoId;
 use App\Models\AuctionCategory;
 use App\Models\City;
 use App\Models\Listing;
@@ -174,10 +175,18 @@ class ListingController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
             'album' => 'nullable|array',
             'album.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:4096',
+            'youtube_video_id' => 'nullable|string|max:512',
         ]);
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
+        }
+
+        $youtubeVideoId = YoutubeVideoId::normalize($request->input('youtube_video_id'));
+        if ($request->filled('youtube_video_id') && $youtubeVideoId === null) {
+            return back()->withErrors([
+                'youtube_video_id' => 'Enter a valid YouTube video ID, watch URL, live URL, or youtu.be link.',
+            ])->withInput();
         }
 
         $albumPaths = [];
@@ -208,6 +217,7 @@ class ListingController extends Controller
             'image' => $imagePath,
             'album' => $albumPaths,
             'listing_data' => $listingData,
+            'youtube_video_id' => $youtubeVideoId,
         ]);
 
         return redirect()->route('admin.listings.index')->with('success', 'Listing created successfully');
@@ -235,10 +245,18 @@ class ListingController extends Controller
             'album' => 'nullable|array',
             'album.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:4096',
             'existing_album' => 'nullable|array',
+            'youtube_video_id' => 'nullable|string|max:512',
         ]);
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
+        }
+
+        $youtubeVideoId = YoutubeVideoId::normalize($request->input('youtube_video_id'));
+        if ($request->filled('youtube_video_id') && $youtubeVideoId === null) {
+            return back()->withErrors([
+                'youtube_video_id' => 'Enter a valid YouTube video ID, watch URL, live URL, or youtu.be link.',
+            ])->withInput();
         }
 
         $requestHost = $request->getHost();
@@ -299,6 +317,7 @@ class ListingController extends Controller
             'image' => $imagePath,
             'album' => $albumPaths,
             'listing_data' => $listingData,
+            'youtube_video_id' => $youtubeVideoId,
         ]);
 
         $listing->pendingEdit()?->delete();

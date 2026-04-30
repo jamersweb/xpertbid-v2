@@ -24,6 +24,8 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\LiveAuctionDemoController;
+use App\Http\Controllers\ListingLiveChatController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,6 +42,11 @@ use App\Http\Controllers\LocaleController;
 
 Route::get('/', [AuctionController::class, 'home'])->name('home'); // Replaces Welcome
 Route::get('/product/{slug}', [AuctionController::class, 'show'])->name('product.show');
+Route::get('/demo/live-auction-car-showcase', [LiveAuctionDemoController::class, 'show'])->name('demo.live_auction_car_showcase');
+
+Route::get('/live-chat/listings/{listing}/messages', [ListingLiveChatController::class, 'index'])
+    ->middleware('throttle:120,1')
+    ->name('live-chat.listing.messages.index');
 Route::get('/1-rupee-auctions', [AuctionController::class, 'one_rupee_page'])->name('auctions.one_rupee');
 Route::get('/search-auctions', [AuctionController::class, 'search'])->name('auctions.search-api');
 Route::get('/search', [AuctionController::class, 'filterAuctions'])->name('auctions.index');
@@ -140,6 +147,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/auctions/{listing}/edit', [\App\Http\Controllers\ListingController::class, 'edit'])->name('auctions.edit');
     Route::match(['POST', 'PUT'], '/auctions/{listing}', [\App\Http\Controllers\ListingController::class, 'update'])->name('auctions.update');
     Route::post('/auctions/{listing}/cancel', [\App\Http\Controllers\ListingController::class, 'cancel'])->name('auctions.cancel');
+
+    Route::post('/live-chat/listings/{listing}/messages', [ListingLiveChatController::class, 'store'])
+        ->middleware('throttle:30,1')
+        ->name('live-chat.listing.messages.store');
 
     // Bidding & Favorites
     Route::post('/bids', [BidController::class, 'placeBid'])->name('bids.store');

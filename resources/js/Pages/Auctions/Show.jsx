@@ -1,10 +1,12 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import ProductHeader from '@/Components/ProductDetails/ProductHeader';
 import ProductImages from '@/Components/ProductDetails/ProductImages';
 import BidSection from '@/Components/ProductDetails/BidSection';
 import BidHistory from '@/Components/ProductDetails/BidHistory';
 import RelatedItems from '@/Components/ProductDetails/RelatedItems';
+import YoutubeLiveEmbed from '@/Components/ProductDetails/YoutubeLiveEmbed';
+import ListingLiveChat from '@/Components/ProductDetails/ListingLiveChat';
 import { useState } from 'react';
 import axios from 'axios';
 
@@ -42,6 +44,11 @@ function formatHuman(d) {
 }
 
 export default function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, dynamicFields = [] }) {
+       const { auth } = usePage().props;
+       const listingType = String(auction?.listing_type || '').toLowerCase();
+       const listingStatus = String(auction?.status || '').trim().toLowerCase();
+       const showLiveChat = listingType === 'auction' && listingStatus === 'active';
+
        // Bids update automatically via Inertia props after a successful POST
        const categoryFeatures = auction?.category_features && typeof auction.category_features === 'object'
               ? auction.category_features
@@ -113,6 +120,19 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
                             slug={auction.slug}
                      />
 
+                     {auction.slug === 'car-showcase-4-vkxgiyxw' && (
+                            <div className="container-fluid pt-3">
+                                   <div className="alert alert-primary d-flex flex-wrap align-items-center justify-content-between gap-2 mb-0" role="status">
+                                          <span className="small mb-0">
+                                                 <strong>Live demo:</strong> open the same auction with YouTube video, XpertBid live chat, and bidding in one layout.
+                                          </span>
+                                          <Link href={route('demo.live_auction_car_showcase')} className="btn btn-sm btn-light text-primary fw-semibold">
+                                                 Open live demo
+                                          </Link>
+                                   </div>
+                            </div>
+                     )}
+
                      <section className="product-image-and-brief">
                             <div className="container-fluid">
                                    <div className={`products-brief-parent${auction.featured_name === 'home_featured' ? ' listing_promoted' : ''}`}>
@@ -148,6 +168,18 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
                                                         />
                                                  </div>
                                           </div>
+
+                                          {auction.youtube_video_id ? (
+                                                 <div className="row mt-4">
+                                                        <div className="col-12">
+                                                               <h2 className="h5 fw-bold mb-3">Live stream</h2>
+                                                               <YoutubeLiveEmbed videoId={auction.youtube_video_id} title={auction.title} />
+                                                               <p className="small text-muted mt-2 mb-0">
+                                                                      Stream is hosted on YouTube. Bid timing and results follow this listing on XpertBid, not the video clock.
+                                                               </p>
+                                                        </div>
+                                                 </div>
+                                          ) : null}
                                    </div>
                             </div>
                      </section>
@@ -217,6 +249,23 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
                                    </div>
                             </div>
                      </section>
+
+                     {showLiveChat && (
+                            <section className="container-fluid py-4 border-top">
+                                   <h2 className="h5 fw-bold mb-3">Auction live chat</h2>
+                                   <div className="row g-3">
+                                          <div className="col-lg-5 col-xl-4">
+                                                 <ListingLiveChat listingId={auction.id} listingSlug={auction.slug} />
+                                          </div>
+                                          <div className="col-lg-7 col-xl-8">
+                                                 <p className="text-muted small mb-0">
+                                                        Public room for this listing. Sign in to send messages; everyone can read recent
+                                                        history. For private questions to the seller, use <Link href={route('chat.index')}>Messages</Link>.
+                                                 </p>
+                                          </div>
+                                   </div>
+                            </section>
+                     )}
 
                      <RelatedItems items={related} />
 

@@ -1,0 +1,14 @@
+# 480p demo: RTMP -> HLS via nginx-rtmp (no FFmpeg transcode in this demo).
+# Install: Docker + Docker Compose plugin on your VPS, then from this directory:
+#   docker compose up -d
+#
+services:
+  rtmp-hls:
+    image: alfg/nginx-rtmp:latest
+    container_name: xpertbid-stream-demo
+    ports:
+      - "1935:1935"   # RTMP / SRT-style ingest (OBS uses RTMP here)
+      - "8899:8080"   # HTTP HLS + health (8899 avoids clashing with other stacks on 8080)
+    volumes:
+      - ./nginx-stream-demo.conf:/etc/nginx/nginx.conf:ro
+    restart: unless-stopped

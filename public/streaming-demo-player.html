@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Streaming demo player (HLS)</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7"></script>
+  <style>
+    :root { color-scheme: dark light; font-family: system-ui, sans-serif; }
+    body { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+    video { width: 100%; max-height: 70vh; background: #111; border-radius: 8px; }
+    .row { margin: 1rem 0; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+    input[type="url"] { flex: 1; min-width: 240px; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid #888; }
+    button { padding: 0.5rem 1rem; border-radius: 6px; border: 0; cursor: pointer; background: #2563eb; color: #fff; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    #status { font-size: 0.9rem; opacity: 0.85; }
+    code { font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <h1>Live HLS demo player</h1>
+  <p id="status">Paste your <code>.m3u8</code> URL (from the streaming demo README) and press Play.</p>
+
+  <div class="row">
+    <input type="url" id="src" placeholder="http://SERVER:8899/hls/demo480.m3u8" autocomplete="off" />
+    <button type="button" id="playBtn">Play</button>
+    <button type="button" id="stopBtn" disabled>Stop</button>
+  </div>
+
+  <video id="v" controls playsinline></video>
+
+  <p><small>Query shortcuts: <code>?hls=URL</code> or <code>?stream=KEY&amp;base=http://IP:8899/hls/</code></small></p>
+
+  <script>
+    (function () {
+      const video = document.getElementById('v');
+      const input = document.getElementById('src');
+      const playBtn = document.getElementById('playBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const status = document.getElementById('status');
+      let hls = null;
+
+      const params = new URLSearchParams(window.location.search);
+      const direct = params.get('hls');
+      const stream = params.get('stream');
+      const base = (params.get('base') || '').replace(/\/?$/, '/');
+      if (direct) input.value = direct;
+      else if (stream && base) input.value = base + encodeURIComponent(stream) + '.m3u8';
+
+      function teardown() {
+        if (hls) {
+          hls.destroy();
+          hls = null;
+        }
+        video.removeAttribute('src');
+        video.load();
+      }
+
+      function playUrl(url) {
+        teardown();
+        if (!url) {
+          status.textContent = 'Enter a playlist URL.';
+          return;
+        }
+        status.textContent = 'Loading…';
+        if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = url;
+          video.play().catch(function () { status.textContent = 'Play blocked or failed (check autoplay / URL).'; });
+          status.textContent = 'Using native HLS (Safari).';
+          stopBtn.disabled = false;
+          return;
+        }
+        if (Hls.isSupported()) {
+          hls = new Hls({ lowLatencyMode: false, backBufferLength: 30 });
+          hls.loadSource(url);
+          hls.attachMedia(video);
+          hls.on(Hls.Events.MANIFEST_PARSED, function () {
+            status.textContent = 'Playing (hls.js).';
+            video.play().catch(function () { status.textContent = 'Press play on the video if blocked.'; });
+          });
+          hls.on(Hls.Events.ERROR, function (_, data) {
+            if (data.fatal) status.textContent = 'Fatal error: ' + (data.type || '') + ' ' + (data.details || '');
+          });
+          stopBtn.disabled = false;
+          return;
+        }
+        status.textContent = 'HLS not supported in this browser.';
+      }
+
+      playBtn.addEventListener('click', function () { playUrl(input.value.trim()); });
+      stopBtn.addEventListener('click', function () {
+        teardown();
+        stopBtn.disabled = true;
+        status.textContent = 'Stopped.';
+      });
+
+      if (input.value) playUrl(input.value);
+    })();
+  </script>
+</body>
+</html>

@@ -13,3 +13,11 @@ Broadcast::channel('chat.{conversationId}', function ($user, $conversationId) {
                   ->orWhere('user_two_id', $user->id);
         })->exists();
 });
+
+Broadcast::channel('listing-live-chat.{listingId}', function ($user, $listingId) {
+    if (! $user) {
+        return false;
+    }
+
+    return \App\Models\Listing::where('id', (int) $listingId)->exists();
+});

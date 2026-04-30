@@ -41,6 +41,7 @@ export default function Form({ listing = null, users = [], categories = [], stat
               image: null,
               album: [],
               existing_album: initialAlbum,
+              youtube_video_id: listing?.youtube_video_id || '',
        });
 
        const [imagePreview, setImagePreview] = useState(listing?.image_url || '');
@@ -216,6 +217,22 @@ export default function Form({ listing = null, users = [], categories = [], stat
                                                         No image selected
                                                  </div>
                                           )}
+
+                                          <Field
+                                                 label="YouTube Live / video"
+                                                 error={errors.youtube_video_id}
+                                          >
+                                                 <input
+                                                        type="text"
+                                                        className={inputClass}
+                                                        value={data.youtube_video_id}
+                                                        onChange={(e) => setData('youtube_video_id', e.target.value)}
+                                                        placeholder="Video ID or URL (watch, /live/, youtu.be)"
+                                                 />
+                                                 <p className="text-xs text-gray-500 mt-1">
+                                                        Optional. Paste the live or watch URL after you go live; the embed appears on the public listing. Bidding still runs on XpertBid.
+                                                 </p>
+                                          </Field>
 
                                           <Field label="Album Images" error={errors.album}>
                                                  <input

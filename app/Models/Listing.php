@@ -31,6 +31,7 @@ class Listing extends Model
         'featured_name',
         'is_1_rupee',
         'listing_source',
+        'youtube_video_id',
         'views',
         'listing_data',
         'category_features',
@@ -115,6 +116,11 @@ class Listing extends Model
     public function pendingEdit()
     {
         return $this->hasOne(ListingEdit::class);
+    }
+
+    public function liveChatMessages()
+    {
+        return $this->hasMany(ListingLiveChatMessage::class, 'listing_id');
     }
 
     // Helper methods to access listing-type specific data

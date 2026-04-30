@@ -11,12 +11,12 @@
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "node_modules/swiper/modules/free-mode.css": [
-    "/build/assets/Show-KzZnZQ7z.js",
+    "/build/assets/Show-BRiqRV0w.js",
     "/build/assets/Show-wnoU-AQS.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "node_modules/swiper/modules/navigation.css": [
-    "/build/assets/Show-KzZnZQ7z.js",
+    "/build/assets/Show-BRiqRV0w.js",
     "/build/assets/Show-wnoU-AQS.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
@@ -26,7 +26,7 @@
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "node_modules/swiper/modules/thumbs.css": [
-    "/build/assets/Show-KzZnZQ7z.js",
+    "/build/assets/Show-BRiqRV0w.js",
     "/build/assets/Show-wnoU-AQS.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
@@ -137,29 +137,31 @@
     "/build/assets/PrimaryButton-DgVfVBwo.js"
   ],
   "resources/js/Components/ProductDetails/BidHistory.jsx": [
-    "/build/assets/Show-KzZnZQ7z.js",
-    "/build/assets/Show-wnoU-AQS.css",
-    "/build/assets/swiper-C2J0D0kV.css"
+    "/build/assets/ListingLiveChat-BkzNLxbk.js"
   ],
   "resources/js/Components/ProductDetails/BidSection.jsx": [
-    "/build/assets/Show-KzZnZQ7z.js",
-    "/build/assets/Show-wnoU-AQS.css",
-    "/build/assets/swiper-C2J0D0kV.css"
+    "/build/assets/ListingLiveChat-BkzNLxbk.js"
+  ],
+  "resources/js/Components/ProductDetails/ListingLiveChat.jsx": [
+    "/build/assets/ListingLiveChat-BkzNLxbk.js"
   ],
   "resources/js/Components/ProductDetails/ProductHeader.jsx": [
-    "/build/assets/Show-KzZnZQ7z.js",
+    "/build/assets/Show-BRiqRV0w.js",
     "/build/assets/Show-wnoU-AQS.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/ProductDetails/ProductImages.jsx": [
-    "/build/assets/Show-KzZnZQ7z.js",
+    "/build/assets/Show-BRiqRV0w.js",
     "/build/assets/Show-wnoU-AQS.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/ProductDetails/RelatedItems.jsx": [
-    "/build/assets/Show-KzZnZQ7z.js",
+    "/build/assets/Show-BRiqRV0w.js",
     "/build/assets/Show-wnoU-AQS.css",
     "/build/assets/swiper-C2J0D0kV.css"
+  ],
+  "resources/js/Components/ProductDetails/YoutubeLiveEmbed.jsx": [
+    "/build/assets/ListingLiveChat-BkzNLxbk.js"
   ],
   "resources/js/Components/PropertySection.jsx": [
     "/build/assets/Home-CK5ml3yD.js",
@@ -303,7 +305,7 @@
     "/build/assets/Index-CIaM9u5g.js"
   ],
   "resources/js/Pages/Admin/Listings/Form.jsx": [
-    "/build/assets/Form-B6POK5UL.js",
+    "/build/assets/Form-C0NvvASA.js",
     "/build/assets/quill-D32Un0ak.css"
   ],
   "resources/js/Pages/Admin/Listings/Index.jsx": [
@@ -378,7 +380,7 @@
     "/build/assets/MyListings-BWArH0iD.js"
   ],
   "resources/js/Pages/Auctions/Show.jsx": [
-    "/build/assets/Show-KzZnZQ7z.js",
+    "/build/assets/Show-BRiqRV0w.js",
     "/build/assets/Show-wnoU-AQS.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
@@ -429,6 +431,9 @@
   ],
   "resources/js/Pages/Dashboard.jsx": [
     "/build/assets/Dashboard-DqDOgcuq.js"
+  ],
+  "resources/js/Pages/Demo/LiveAuction.jsx": [
+    "/build/assets/LiveAuction-DZ8uvIGb.js"
   ],
   "resources/js/Pages/Favorites/Index.jsx": [
     "/build/assets/Index-ooefdGEB.js"

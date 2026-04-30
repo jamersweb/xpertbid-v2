@@ -38,7 +38,8 @@ function Form({ listing = null, users = [], categories = [], statuses = [] }) {
     stock: listing?.listing_data?.stock ?? "",
     image: null,
     album: [],
-    existing_album: initialAlbum
+    existing_album: initialAlbum,
+    youtube_video_id: listing?.youtube_video_id || ""
   });
   const [imagePreview, setImagePreview] = useState(listing?.image_url || "");
   const availableSubCategories = subCategories.filter((item) => String(item.parent_id) === String(data.category_id));
@@ -163,6 +164,26 @@ function Form({ listing = null, users = [], categories = [], statuses = [] }) {
             }
           ) }),
           imagePreview ? /* @__PURE__ */ jsx("img", { src: imagePreview, alt: "Preview", className: "w-full h-48 object-cover rounded-xl border border-gray-100" }) : /* @__PURE__ */ jsx("div", { className: "w-full h-48 rounded-xl border border-dashed border-gray-200 flex items-center justify-center text-sm text-gray-400", children: "No image selected" }),
+          /* @__PURE__ */ jsxs(
+            Field,
+            {
+              label: "YouTube Live / video",
+              error: errors.youtube_video_id,
+              children: [
+                /* @__PURE__ */ jsx(
+                  "input",
+                  {
+                    type: "text",
+                    className: inputClass,
+                    value: data.youtube_video_id,
+                    onChange: (e) => setData("youtube_video_id", e.target.value),
+                    placeholder: "Video ID or URL (watch, /live/, youtu.be)"
+                  }
+                ),
+                /* @__PURE__ */ jsx("p", { className: "text-xs text-gray-500 mt-1", children: "Optional. Paste the live or watch URL after you go live; the embed appears on the public listing. Bidding still runs on XpertBid." })
+              ]
+            }
+          ),
           /* @__PURE__ */ jsx(Field, { label: "Album Images", error: errors.album, children: /* @__PURE__ */ jsx(
             "input",
             {
