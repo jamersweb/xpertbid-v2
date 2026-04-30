@@ -98,6 +98,12 @@ export default function HeroSection() {
           display: none !important;
         }
 
+        @media (min-width: 1500px) {
+          .final-banner-section .container {
+            max-width: 1380px;
+          }
+        }
+
         @media (max-width: 991px) {
           .hero-banner-image {
             height: 430px;

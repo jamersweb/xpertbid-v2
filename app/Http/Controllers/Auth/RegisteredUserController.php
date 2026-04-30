@@ -9,7 +9,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use App\Mail\UserSignupConfirmation;
+use App\Mail\AdminNewUserRegistration;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
@@ -53,6 +55,27 @@ class RegisteredUserController extends Controller
         ]);
 
         event(new Registered($user));
+
+        try {
+            Mail::to($user->email)->send(new UserSignupConfirmation($user));
+        } catch (\Throwable $e) {
+            Log::warning('User signup confirmation email failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        $adminEmail = env('ADMIN_EMAIL');
+        if (!empty($adminEmail)) {
+            try {
+                Mail::to($adminEmail)->send(new AdminNewUserRegistration($user));
+            } catch (\Throwable $e) {
+                Log::warning('Admin new user registration email failed', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
        // Auth::login($user);
        

@@ -1,7 +1,7 @@
 import { jsxs, jsx } from "react/jsx-runtime";
 import "react";
 import { Link, router } from "@inertiajs/react";
-import { C as CountdownTimer, O as OwnerInfoRow } from "./OwnerInfoRow-BzmY3N9i.js";
+import { C as CountdownTimer, O as OwnerInfoRow } from "./OwnerInfoRow-C3IMd42a.js";
 import { P as Price } from "./Price-CF5NSPt0.js";
 import { F as FavoriteToggleButton } from "./FavoriteToggleButton-1jmbejDw.js";
 import { u as useCart } from "./CartContext-DXNQZwkV.js";
@@ -68,25 +68,47 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
       {
         owner: auction.user,
         fallbackName: auction.user?.name,
-        fallbackAvatar: auction.user?.profile_pic
+        fallbackAvatar: auction.user?.profile_pic,
+        isFeatured: Boolean(auction?.featured_name)
       }
     ),
     /* @__PURE__ */ jsx("div", { className: "pro-title", style: { color: "black" }, children: /* @__PURE__ */ jsx("h2", { children: /* @__PURE__ */ jsx(Link, { href: `/product/${auction.slug}`, className: "text-color-black", children: auction.title || auction.name || "Untitled" }) }) }),
-    shouldRenderPropertyMeta && /* @__PURE__ */ jsxs("div", { className: "d-flex flex-wrap gap-2 mt-2 mb-2", children: [
-      beds && /* @__PURE__ */ jsxs("span", { className: "badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-3 py-2", children: [
-        /* @__PURE__ */ jsx("i", { className: "fa-solid fa-bed text-primary", "aria-hidden": "true" }),
-        beds,
-        " Beds"
-      ] }),
-      baths && /* @__PURE__ */ jsxs("span", { className: "badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-3 py-2", children: [
-        /* @__PURE__ */ jsx("i", { className: "fa-solid fa-bath text-primary", "aria-hidden": "true" }),
-        baths,
-        " Baths"
-      ] }),
-      area && /* @__PURE__ */ jsxs("span", { className: "badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-3 py-2", children: [
-        /* @__PURE__ */ jsx("i", { className: "fa-solid fa-ruler-combined text-primary", "aria-hidden": "true" }),
-        area
-      ] })
+    shouldRenderPropertyMeta && /* @__PURE__ */ jsxs("div", { className: "d-flex flex-nowrap gap-1 mt-2 mb-2 align-items-center overflow-hidden", children: [
+      beds && /* @__PURE__ */ jsxs(
+        "span",
+        {
+          className: "badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-2 py-2 text-truncate",
+          style: { maxWidth: "31%", fontSize: "0.92rem", minWidth: 0 },
+          children: [
+            /* @__PURE__ */ jsx("i", { className: "fa-solid fa-bed text-primary", "aria-hidden": "true" }),
+            beds,
+            " Beds"
+          ]
+        }
+      ),
+      baths && /* @__PURE__ */ jsxs(
+        "span",
+        {
+          className: "badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-2 py-2 text-truncate",
+          style: { maxWidth: "31%", fontSize: "0.92rem", minWidth: 0 },
+          children: [
+            /* @__PURE__ */ jsx("i", { className: "fa-solid fa-bath text-primary", "aria-hidden": "true" }),
+            baths,
+            " Baths"
+          ]
+        }
+      ),
+      area && /* @__PURE__ */ jsxs(
+        "span",
+        {
+          className: "badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-2 py-2 text-truncate",
+          style: { maxWidth: "38%", fontSize: "0.88rem", minWidth: 0 },
+          children: [
+            /* @__PURE__ */ jsx("i", { className: "fa-solid fa-ruler-combined text-primary", "aria-hidden": "true" }),
+            area
+          ]
+        }
+      )
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "pro-meta", children: [
       /* @__PURE__ */ jsxs("div", { className: "pro-price", children: [

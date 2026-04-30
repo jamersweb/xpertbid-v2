@@ -225,8 +225,8 @@ class CheckoutController extends Controller
 
             DB::commit();
 
-            // 5. Notifications & Mails (Placeholder for actual implementation)
-            // Mail::to($order->billing_email)->send(new OrderPlacedMail($order));
+            // 5. Notifications & Mails
+            Mail::to($order->billing_email)->send(new OrderPlacedMail($order));
 
             if ($request->expectsJson()) {
                 return response()->json([

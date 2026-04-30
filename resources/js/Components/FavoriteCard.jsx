@@ -57,6 +57,7 @@ const FavoriteCard = ({ favorite }) => {
                                           owner={favorite.owner}
                                           fallbackName={favorite.user_name}
                                           fallbackAvatar={favorite.profile_pic}
+                                          isFeatured={Boolean(favorite?.featured_name)}
                                    />
 
                                    <div className="mkt-detail">

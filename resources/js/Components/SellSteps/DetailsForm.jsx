@@ -387,7 +387,7 @@ export default function DetailsForm({
 
                                                         {formData.variations?.length > 0 && (
                                                                <div className="mb-4">
-                                                                      <label className="mb-2 fw-bold">Variations</label>
+                                                                      <label className="mb-2 fw-bold text-dark">Variations</label>
                                                                       {(formData.variations || []).map((variation, index) => (
                                                                              <div className="d-flex gap-2 mb-2 align-items-center flex-wrap" key={index}>
                                                                                     <div className="flex-grow-1">

@@ -489,6 +489,7 @@ function LandingAuctionCard({ item }) {
                                           owner={item.owner || item.user}
                                           fallbackName={item.owner?.name || item.user?.name}
                                           fallbackAvatar={item.owner?.avatar || item.user?.profile_pic}
+                                          isFeatured={Boolean(item?.featured_name)}
                                    />
 
                                    <div className="mktDetail">

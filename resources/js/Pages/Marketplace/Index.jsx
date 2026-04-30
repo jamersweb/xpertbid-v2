@@ -3,6 +3,11 @@ import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import ExploreProducts from './Components/ExploreProducts';
 import Pagination from '@/Components/Pagination';
+import AuctionCard from '@/Components/AuctionCard';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
 
 const parseDynamicOptions = (options) => {
        if (Array.isArray(options)) {
@@ -52,6 +57,64 @@ const getInitialDynamicFilters = (filters = {}) => {
        return initial;
 };
 
+const sanitizeSeoHtml = (html) => {
+       if (typeof html !== 'string' || html.trim() === '') {
+              return '';
+       }
+
+       return html
+              .replace(/<li\b[^>]*>(?:\s|&nbsp;|&#160;|<br\s*\/?>|<span\b[^>]*>\s*<\/span>)*<\/li>/gi, '')
+              .replace(/<p\b[^>]*>(?:\s|&nbsp;|&#160;|<br\s*\/?>|<span\b[^>]*>\s*<\/span>)*<\/p>/gi, '')
+              .replace(/<ul\b([^>]*)>\s*<\/ul>/gi, '<ul$1></ul>')
+              .replace(/<ol\b([^>]*)>\s*<\/ol>/gi, '<ol$1></ol>');
+};
+
+const CuratedMarketplaceSection = ({ title, items = [], slider = false }) => {
+       if (!items || items.length === 0) {
+              return null;
+       }
+
+       return (
+              <section className="marketplace-curated-section">
+                     <div className="marketplace-curated-header">
+                            <h3>{title}</h3>
+                     </div>
+
+                     {slider ? (
+                            <div className="marketplace-curated-slider">
+                                   <Swiper
+                                          modules={[Navigation]}
+                                          navigation={items.length > 3}
+                                          spaceBetween={20}
+                                          loop={items.length > 4}
+                                          breakpoints={{
+                                                 360: { slidesPerView: 1.05 },
+                                                 550: { slidesPerView: 1.4 },
+                                                 768: { slidesPerView: 2 },
+                                                 1024: { slidesPerView: 2.6 },
+                                                 1280: { slidesPerView: 3 },
+                                          }}
+                                   >
+                                          {items.map((item) => (
+                                                 <SwiperSlide key={`curated-${title}-${item.id}`}>
+                                                        <AuctionCard auction={item} showPropertyMeta />
+                                                 </SwiperSlide>
+                                          ))}
+                                   </Swiper>
+                            </div>
+                     ) : (
+                            <div className="row">
+                                   {items.map((item) => (
+                                          <div className="col-md-6 col-xl-4 mb-4" key={`curated-${title}-${item.id}`}>
+                                                 <AuctionCard auction={item} showPropertyMeta />
+                                          </div>
+                                   ))}
+                            </div>
+                     )}
+              </section>
+       );
+};
+
 export default function Index({
        products = { data: [], links: [] },
        categories = [],
@@ -62,6 +125,9 @@ export default function Index({
        childCategoryTabs = [],
        countries = [],
        dynamicFields = [],
+       featuredProducts = [],
+       latestProducts = [],
+       mostViewedProducts = [],
        filters = {},
 }) {
        const [searchTerm, setSearchTerm] = useState(filters?.search || '');
@@ -75,6 +141,9 @@ export default function Index({
        const heroImage = currentTopCategory?.image_url || currentCategory?.image_url || null;
        const currentType = filters?.type || 'auction';
        const showChildTabs = Boolean(currentSubcategory);
+       const sectionEntityName = currentTopCategory?.name || currentCategory?.name || 'Products';
+       const seoShortContent = sanitizeSeoHtml(currentCategory?.seo_short_content);
+       const seoContent = sanitizeSeoHtml(currentCategory?.seo_content);
 
        const tabs = [
               { key: 'auction', label: 'Auction', mobileLabel: 'Auction' },
@@ -436,13 +505,31 @@ export default function Index({
                             </div>
 
                             <div className="container-fluid px-lg-5 pt-4">
-                                   {currentCategory?.seo_short_content && (
-                                          <div className="bg-white rounded-4 p-4 shadow-sm mb-4 border text-center text-dark content-wrapper">
-                                                 <div dangerouslySetInnerHTML={{ __html: currentCategory.seo_short_content }} />
+                                   {seoShortContent && (
+                                          <div className="content-wrapper content-wrapper-short mb-4 text-dark">
+                                                 <div dangerouslySetInnerHTML={{ __html: seoShortContent }} />
                                           </div>
                                    )}
 
                                    <div className="mkt-right">
+                                          <CuratedMarketplaceSection
+                                                 title={`Featured ${sectionEntityName}`}
+                                                 items={featuredProducts}
+                                                 slider
+                                          />
+
+                                          <CuratedMarketplaceSection
+                                                 title={`Latest ${sectionEntityName}`}
+                                                 items={latestProducts}
+                                                 slider
+                                          />
+
+                                          <CuratedMarketplaceSection
+                                                 title={`Most Viewed ${sectionEntityName}`}
+                                                 items={mostViewedProducts}
+                                                 slider
+                                          />
+
                                           <ExploreProducts products={products.data} />
 
                                           {products.links && (
@@ -451,9 +538,9 @@ export default function Index({
                                                  </div>
                                           )}
 
-                                          {currentCategory?.seo_content && (
-                                                 <div className="bg-white rounded-4 p-5 shadow-sm mt-5 border text-dark content-wrapper">
-                                                        <div dangerouslySetInnerHTML={{ __html: currentCategory.seo_content }} />
+                                          {seoContent && (
+                                                 <div className="content-wrapper content-wrapper-long mt-5 text-dark">
+                                                        <div dangerouslySetInnerHTML={{ __html: seoContent }} />
                                                  </div>
                                           )}
                                    </div>
@@ -646,10 +733,127 @@ export default function Index({
 
                      <style>{`
                             .content-wrapper {
+                                   position: relative;
+                                   overflow: hidden;
                                    color: #212529 !important;
+                                   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.96) 100%);
+                                   border: 1px solid rgba(226, 232, 240, 0.95);
+                                   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+                                   border-radius: 28px;
                             }
                             .content-wrapper * {
                                    color: #212529 !important;
+                            }
+                            .content-wrapper::before {
+                                   content: "";
+                                   position: absolute;
+                                   inset: 0 auto auto 0;
+                                   width: 100%;
+                                   height: 5px;
+                                   background: linear-gradient(90deg, #020617 0%, #0f172a 32%, #1d4ed8 68%, #0ea5e9 100%);
+                            }
+                            .content-wrapper-short {
+                                   padding: 28px 36px;
+                                   text-align: center;
+                            }
+                            .content-wrapper-long {
+                                   padding: 38px 42px;
+                            }
+                            .content-wrapper > div {
+                                   position: relative;
+                                   z-index: 1;
+                            }
+                            .content-wrapper p {
+                                   margin-bottom: 0;
+                                   color: #475569 !important;
+                                   line-height: 1.9;
+                                   font-size: 1.05rem;
+                            }
+                            .content-wrapper p + p {
+                                   margin-top: 16px;
+                            }
+                            .content-wrapper-short p {
+                                   max-width: 1100px;
+                                   margin-left: auto;
+                                   margin-right: auto;
+                                   font-size: 1.08rem;
+                            }
+                            .content-wrapper-short strong,
+                            .content-wrapper-short b {
+                                   display: block;
+                                   margin-bottom: 10px;
+                                   color: #0f172a !important;
+                                   font-size: clamp(1.45rem, 2vw, 2rem);
+                                   line-height: 1.25;
+                                   font-weight: 800;
+                                   letter-spacing: -0.02em;
+                            }
+                            .content-wrapper-long h1,
+                            .content-wrapper-long h2,
+                            .content-wrapper-long h3,
+                            .content-wrapper-long h4 {
+                                   color: #0f172a !important;
+                                   font-weight: 800;
+                                   line-height: 1.2;
+                                   letter-spacing: -0.03em;
+                                   margin-bottom: 16px;
+                            }
+                            .content-wrapper-long h1 {
+                                   font-size: clamp(2rem, 3vw, 3rem);
+                            }
+                            .content-wrapper-long h2 {
+                                   font-size: clamp(1.7rem, 2.4vw, 2.35rem);
+                            }
+                            .content-wrapper-long h3 {
+                                   font-size: clamp(1.35rem, 1.8vw, 1.7rem);
+                            }
+                            .content-wrapper-long ul,
+                            .content-wrapper-long ol {
+                                   margin: 20px 0;
+                                   padding-left: 0;
+                                   list-style: none;
+                                   display: grid;
+                                   gap: 12px;
+                            }
+                            .content-wrapper-long li {
+                                   position: relative;
+                                   display: flex;
+                                   align-items: center;
+                                   padding-left: 34px;
+                                   color: #475569 !important;
+                                   line-height: 1.8;
+                                   min-height: 24px;
+                            }
+                            .content-wrapper-long li:empty,
+                            .content-wrapper-long p:empty {
+                                   display: none !important;
+                            }
+                            .content-wrapper-long li:has(> br:only-child),
+                            .content-wrapper-long p:has(> br:only-child) {
+                                   display: none !important;
+                            }
+                            .content-wrapper-long li::before {
+                                   content: "";
+                                   position: absolute;
+                                   left: 0;
+                                   top: 50%;
+                                   transform: translateY(-50%);
+                                   width: 18px;
+                                   height: 18px;
+                                   border-radius: 50%;
+                                   background: linear-gradient(135deg, #0f172a, #334155);
+                                   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.15);
+                            }
+                            .content-wrapper-long li::after {
+                                   content: "";
+                                   position: absolute;
+                                   left: 7px;
+                                   top: 50%;
+                                   transform: translateY(-50%);
+                                   width: 4px;
+                                   height: 4px;
+                                   border-radius: 50%;
+                                   background: #fff;
                             }
                             .marketplace-topbar-wrap {
                                    width: 100%;
@@ -894,7 +1098,89 @@ export default function Index({
                             .marketplace-subcategory-back:hover {
                                    background: #0b1220;
                             }
+                            .marketplace-curated-section {
+                                   margin-bottom: 38px;
+                                   overflow: hidden;
+                            }
+                            .marketplace-curated-header {
+                                   display: flex;
+                                   align-items: center;
+                                   justify-content: space-between;
+                                   margin-bottom: 14px;
+                            }
+                            .marketplace-curated-header h3 {
+                                   margin: 0;
+                                   font-size: 28px;
+                                   font-weight: 800;
+                                   color: #0f172a;
+                            }
+                            .marketplace-curated-slider {
+                                   position: relative;
+                            }
+                            .marketplace-curated-slider .swiper {
+                                   overflow: hidden;
+                                   padding: 4px 2px 78px;
+                            }
+                            .marketplace-curated-slider .swiper-slide {
+                                   height: auto;
+                            }
+                            .marketplace-curated-slider .swiper-button-prev,
+                            .marketplace-curated-slider .swiper-button-next {
+                                   top: auto !important;
+                                   bottom: 14px !important;
+                                   left: auto !important;
+                                   right: auto !important;
+                                   transform: none !important;
+                                   width: 44px;
+                                   height: 40px;
+                                   border-radius: 0;
+                                   background: #ffffff;
+                                   color: #111827;
+                                   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+                                   border: 1px solid #e5e7eb;
+                                   z-index: 5;
+                            }
+                            .marketplace-curated-slider .swiper-button-prev {
+                                   left: calc(50% - 43px) !important;
+                                   border-top-left-radius: 12px;
+                                   border-bottom-left-radius: 12px;
+                                   margin-right: 0 !important;
+                            }
+                            .marketplace-curated-slider .swiper-button-next {
+                                   left: calc(50% + 3px) !important;
+                                   border-top-right-radius: 12px;
+                                   border-bottom-right-radius: 12px;
+                                   border-left: none;
+                            }
+                            .marketplace-curated-slider .swiper-button-prev::after,
+                            .marketplace-curated-slider .swiper-button-next::after {
+                                   font-size: 16px;
+                                   font-weight: 700;
+                            }
+                            .marketplace-curated-slider .swiper-button-disabled {
+                                   opacity: 1 !important;
+                                   color: #cbd5e1 !important;
+                                   background: #ffffff !important;
+                            }
                             @media (max-width: 767px) {
+                                   .content-wrapper-short {
+                                          padding: 22px 18px;
+                                          border-radius: 22px;
+                                   }
+                                   .content-wrapper-long {
+                                          padding: 26px 18px;
+                                          border-radius: 22px;
+                                   }
+                                   .content-wrapper p,
+                                   .content-wrapper-short p {
+                                          font-size: 0.98rem;
+                                          line-height: 1.8;
+                                   }
+                                   .content-wrapper-short strong,
+                                   .content-wrapper-short b {
+                                          margin-bottom: 8px;
+                                          font-size: 1.25rem;
+                                   }
                                    .marketplace-topbar {
                                           padding-inline: 0;
                                           min-height: 380px;
@@ -949,6 +1235,19 @@ export default function Index({
                                           min-width: 44px;
                                           height: 44px;
                                           flex: 0 0 auto;
+                                   }
+                                   .marketplace-curated-header h3 {
+                                          font-size: 22px;
+                                   }
+                                   .marketplace-curated-slider {
+                                          padding-bottom: 2px;
+                                   }
+                                   .marketplace-curated-slider .swiper {
+                                          padding-bottom: 8px;
+                                   }
+                                   .marketplace-curated-slider .swiper-button-prev,
+                                   .marketplace-curated-slider .swiper-button-next {
+                                          display: none !important;
                                    }
                             }
                      `}</style>

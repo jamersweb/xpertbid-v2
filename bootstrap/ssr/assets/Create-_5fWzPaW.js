@@ -854,7 +854,7 @@ function DetailsForm({
             }
           ),
           formData.variations?.length > 0 && /* @__PURE__ */ jsxs("div", { className: "mb-4", children: [
-            /* @__PURE__ */ jsx("label", { className: "mb-2 fw-bold", children: "Variations" }),
+            /* @__PURE__ */ jsx("label", { className: "mb-2 fw-bold text-dark", children: "Variations" }),
             (formData.variations || []).map((variation, index) => /* @__PURE__ */ jsxs("div", { className: "d-flex gap-2 mb-2 align-items-center flex-wrap", children: [
               /* @__PURE__ */ jsxs("div", { className: "flex-grow-1", children: [
                 /* @__PURE__ */ jsx(
@@ -1795,30 +1795,51 @@ function Create({ categories, countries = [], profileLocation = null, listing = 
       }).catch(() => {
       });
     }
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          const response = await fetch(
-            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-          );
-          const data = await response.json();
-          resolve({
-            country: data?.countryName || "",
-            state: data?.principalSubdivision || "",
-            city: data?.city || data?.locality || ""
-          });
-        } catch (error) {
-          reject(error);
-        }
-      },
-      (error) => reject({
+    const getCurrentPositionAsync = (options) => new Promise((resolvePosition, rejectPosition) => {
+      navigator.geolocation.getCurrentPosition(resolvePosition, rejectPosition, options);
+    });
+    const resolveAddressFromCoords = async (position) => {
+      const { latitude, longitude } = position.coords;
+      const response = await fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+      );
+      const data = await response.json();
+      return {
+        country: data?.countryName || "",
+        state: data?.principalSubdivision || "",
+        city: data?.city || data?.locality || ""
+      };
+    };
+    const failWithGeoError = (error) => {
+      reject({
         code: error?.code ?? null,
         reason: geoErrorMap[error?.code] || "UNKNOWN",
         message: error?.message || "Geolocation failed"
-      }),
-      { enableHighAccuracy: false, timeout: 8e3, maximumAge: 3e5 }
-    );
+      });
+    };
+    (async () => {
+      try {
+        const position = await getCurrentPositionAsync({
+          enableHighAccuracy: false,
+          timeout: 1e4,
+          maximumAge: 3e5
+        });
+        const detected = await resolveAddressFromCoords(position);
+        resolve(detected);
+      } catch (firstError) {
+        try {
+          const retryPosition = await getCurrentPositionAsync({
+            enableHighAccuracy: false,
+            timeout: 16e3,
+            maximumAge: 0
+          });
+          const detected = await resolveAddressFromCoords(retryPosition);
+          resolve(detected);
+        } catch (retryError) {
+          failWithGeoError(retryError || firstError);
+        }
+      }
+    })().catch((error) => failWithGeoError(error));
   });
   const detectLocationFromIP = async () => {
     const response = await fetch("/detect-location-ip");
@@ -1910,23 +1931,38 @@ function Create({ categories, countries = [], profileLocation = null, listing = 
     const autoFillLocation = async () => {
       try {
         let detected = null;
-        let usedIpFallback = false;
+        let ipDetected = null;
         try {
           detected = await detectLocationFromBrowser();
         } catch (err) {
-          console.warn("Geolocation denied/failed, trying IP fallback.", {
+          const reason = err?.reason || "UNKNOWN";
+          const logTitle = reason === "PERMISSION_DENIED" ? "Geolocation permission denied, trying IP fallback." : "Geolocation unavailable (position/timeout), trying IP fallback.";
+          console.warn(logTitle, {
             code: err?.code ?? null,
-            reason: err?.reason || "UNKNOWN",
+            reason,
             message: err?.message || ""
           });
         }
         if (!detected) {
           try {
-            detected = await detectLocationFromIP();
-            usedIpFallback = true;
+            ipDetected = await detectLocationFromIP();
+            detected = ipDetected;
           } catch (err) {
             console.warn("IP location fallback failed.");
             return;
+          }
+        } else {
+          const needsIpEnrichment = !String(detected.state || "").trim() || !String(detected.city || "").trim();
+          if (needsIpEnrichment) {
+            try {
+              ipDetected = await detectLocationFromIP();
+              detected = {
+                country: detected.country || ipDetected?.country || "",
+                state: detected.state || ipDetected?.state || "",
+                city: detected.city || ipDetected?.city || ""
+              };
+            } catch (err) {
+            }
           }
         }
         if (cancelled || !detected) return;
@@ -1936,14 +1972,26 @@ function Create({ categories, countries = [], profileLocation = null, listing = 
         if (!matchedCountry) return;
         const states = await loadStates(matchedCountry.id);
         if (cancelled) return;
-        const matchedState = !usedIpFallback ? findLocationMatch(states, detected.state) : null;
+        const matchedState = findLocationMatch(states, detected.state);
         const stateId = hasValidLocationId(formData.state_id) ? String(formData.state_id) : matchedState?.id ? String(matchedState.id) : "";
+        if (!matchedState && String(detected.state || "").trim()) {
+          console.info("[Geolocation] state not matched in local DB", {
+            detectedState: detected.state,
+            country: detected.country
+          });
+        }
         let cityId = "";
-        if (stateId && !usedIpFallback) {
+        if (stateId) {
           const cities = await loadCities(stateId);
           if (cancelled) return;
           const matchedCity = findLocationMatch(cities, detected.city);
           cityId = hasValidLocationId(formData.city_id) ? String(formData.city_id) : matchedCity?.id ? String(matchedCity.id) : "";
+          if (!matchedCity && String(detected.city || "").trim()) {
+            console.info("[Geolocation] city not matched in local DB", {
+              detectedCity: detected.city,
+              stateId
+            });
+          }
         }
         setFormData((prev) => {
           return {

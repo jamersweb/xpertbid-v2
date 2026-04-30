@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AdminNewUserRegistration;
+use App\Mail\UserSignupConfirmation;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -55,6 +59,27 @@ class SocialAuthController extends Controller
                     'signup_source' => $this->resolveSignupSource(request()),
                     'email_verified_at' => now(), // Auto-verify email
                 ]);
+
+                try {
+                    Mail::to($user->email)->send(new UserSignupConfirmation($user));
+                } catch (\Throwable $e) {
+                    Log::warning('Google signup user email failed', [
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                $adminEmail = env('ADMIN_EMAIL');
+                if (!empty($adminEmail)) {
+                    try {
+                        Mail::to($adminEmail)->send(new AdminNewUserRegistration($user));
+                    } catch (\Throwable $e) {
+                        Log::warning('Google signup admin email failed', [
+                            'user_id' => $user->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
             } else {
                 // Update existing user
                 $user->update([
@@ -99,6 +124,29 @@ class SocialAuthController extends Controller
                     'signup_source' => $this->resolveSignupSource(request()),
                     'email_verified_at' => now(),
                 ]);
+
+                if (!empty($user->email)) {
+                    try {
+                        Mail::to($user->email)->send(new UserSignupConfirmation($user));
+                    } catch (\Throwable $e) {
+                        Log::warning('Apple signup user email failed', [
+                            'user_id' => $user->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+
+                $adminEmail = env('ADMIN_EMAIL');
+                if (!empty($adminEmail)) {
+                    try {
+                        Mail::to($adminEmail)->send(new AdminNewUserRegistration($user));
+                    } catch (\Throwable $e) {
+                        Log::warning('Apple signup admin email failed', [
+                            'user_id' => $user->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
             }
 
             Auth::login($user);

@@ -82,6 +82,7 @@ export default function FeaturedProducts({ products }) {
                                                                              owner={product.user}
                                                                              fallbackName={product.user?.name}
                                                                              fallbackAvatar={product.user?.profile_pic}
+                                                                             isFeatured={Boolean(product?.featured_name)}
                                                                       />
 
                                                                       <div className="pro-title" style={{ color: "black" }}>

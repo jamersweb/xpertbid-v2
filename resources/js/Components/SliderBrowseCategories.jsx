@@ -1,5 +1,7 @@
 import { Link } from '@inertiajs/react';
+import { Swiper, SwiperSlide } from "swiper/react";
 import useTranslate from "@/hooks/useTranslate";
+import "swiper/css";
 
 export default function SliderBrowseCategories({ categories }) {
        const { t } = useTranslate();
@@ -17,9 +19,19 @@ export default function SliderBrowseCategories({ categories }) {
                                    <Link href={route('categories.page')} className="section-view-all-btn">{t('View All')}</Link>
                             </div>
 
-                            <div className="categories-grid-container">
+                            <Swiper
+                                   className="categories-slider"
+                                   spaceBetween={14}
+                                   slidesPerView={3.1}
+                                   breakpoints={{
+                                          576: { slidesPerView: 3.6, spaceBetween: 14 },
+                                          768: { slidesPerView: 5, spaceBetween: 18 },
+                                          992: { slidesPerView: 6, spaceBetween: 20 },
+                                          1200: { slidesPerView: 7, spaceBetween: 20 },
+                                   }}
+                            >
                                    {displayCategories.map((cat, i) => (
-                                          <div className="category-item-wrapper" key={cat.id || i}>
+                                          <SwiperSlide className="category-item-wrapper" key={cat.id || i}>
                                                  <Link
                                                         href={`/marketplace?category=${cat.slug}`}
                                                         className="text-decoration-none category-link"
@@ -35,9 +47,9 @@ export default function SliderBrowseCategories({ categories }) {
                                                                <h3 className="category-name">{cat.name}</h3>
                                                         </div>
                                                  </Link>
-                                          </div>
+                                          </SwiperSlide>
                                    ))}
-                            </div>
+                            </Swiper>
                      </div>
 
                      <style>{`
@@ -48,15 +60,12 @@ export default function SliderBrowseCategories({ categories }) {
           margin-bottom: 20px;
         }
 
-        .categories-grid-container {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 14px;
+        .categories-slider {
           padding: 0 6px;
         }
 
         .category-item-wrapper {
-          width: 100%;
+          width: auto;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -119,11 +128,7 @@ export default function SliderBrowseCategories({ categories }) {
         }
 
         @media (min-width: 768px) {
-          .categories-grid-container {
-            grid-template-columns: repeat(6, minmax(0, 1fr));
-            gap: 20px;
-            padding: 0;
-          }
+          .categories-slider { padding: 0; }
           .image-circle,
           .category-title-wrapper {
             max-width: 150px;

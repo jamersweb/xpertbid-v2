@@ -4,10 +4,11 @@ import { A as AppLayout } from "./AppLayout-BWciRgbg.js";
 import { useState, useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 /* empty css                */
+/* empty css                    */
 import { FreeMode, Navigation, Thumbs } from "swiper/modules";
-import { C as CountdownTimer } from "./OwnerInfoRow-BzmY3N9i.js";
+import { C as CountdownTimer } from "./OwnerInfoRow-C3IMd42a.js";
 import { B as BidSection, Y as YoutubeLiveEmbed, a as BidHistory, L as ListingLiveChat } from "./ListingLiveChat-BkzNLxbk.js";
-import { A as AuctionCard } from "./AuctionCard-CZnrqB8V.js";
+import { A as AuctionCard } from "./AuctionCard-Dhs-0L0m.js";
 import "ziggy-js";
 import "./CartContext-DXNQZwkV.js";
 import "./Price-CF5NSPt0.js";

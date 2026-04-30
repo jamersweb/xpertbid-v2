@@ -2,7 +2,7 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import "react";
 import { Link, router, Head } from "@inertiajs/react";
 import { A as AppLayout } from "./AppLayout-BWciRgbg.js";
-import { C as CountdownTimer, O as OwnerInfoRow } from "./OwnerInfoRow-BzmY3N9i.js";
+import { C as CountdownTimer, O as OwnerInfoRow } from "./OwnerInfoRow-C3IMd42a.js";
 import { P as Price } from "./Price-CF5NSPt0.js";
 import "ziggy-js";
 import "./CartContext-DXNQZwkV.js";
@@ -54,7 +54,8 @@ const FavoriteCard = ({ favorite }) => {
         {
           owner: favorite.owner,
           fallbackName: favorite.user_name,
-          fallbackAvatar: favorite.profile_pic
+          fallbackAvatar: favorite.profile_pic,
+          isFeatured: Boolean(favorite?.featured_name)
         }
       ),
       /* @__PURE__ */ jsxs("div", { className: "mkt-detail", children: [

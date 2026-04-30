@@ -386,6 +386,20 @@ body.locale-rtl .admin-layout aside {
   border-color: transparent !important;
 }
 
+.verify_input {
+  color: #23262f !important;
+}
+
+.verify_input::placeholder {
+  color: #9aa2af !important;
+  opacity: 1 !important;
+}
+
+.verify_input:disabled {
+  color: #6b7280 !important;
+  opacity: 1 !important;
+}
+
 .sell-page-stage {
   position: relative;
   min-height: 520px;

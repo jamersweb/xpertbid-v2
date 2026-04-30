@@ -87,6 +87,7 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
                             owner={auction.user}
                             fallbackName={auction.user?.name}
                             fallbackAvatar={auction.user?.profile_pic}
+                            isFeatured={Boolean(auction?.featured_name)}
                      />
 
                      <div className="pro-title" style={{ color: "black" }}>
@@ -98,21 +99,30 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
                      </div>
 
                      {shouldRenderPropertyMeta && (
-                            <div className="d-flex flex-wrap gap-2 mt-2 mb-2">
+                            <div className="d-flex flex-nowrap gap-1 mt-2 mb-2 align-items-center overflow-hidden">
                                    {beds && (
-                                          <span className="badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-3 py-2">
+                                          <span
+                                                 className="badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-2 py-2 text-truncate"
+                                                 style={{ maxWidth: "31%", fontSize: "0.92rem", minWidth: 0 }}
+                                          >
                                                  <i className="fa-solid fa-bed text-primary" aria-hidden="true"></i>
                                                  {beds} Beds
                                           </span>
                                    )}
                                    {baths && (
-                                          <span className="badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-3 py-2">
+                                          <span
+                                                 className="badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-2 py-2 text-truncate"
+                                                 style={{ maxWidth: "31%", fontSize: "0.92rem", minWidth: 0 }}
+                                          >
                                                  <i className="fa-solid fa-bath text-primary" aria-hidden="true"></i>
                                                  {baths} Baths
                                           </span>
                                    )}
                                    {area && (
-                                          <span className="badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-3 py-2">
+                                          <span
+                                                 className="badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-2 py-2 text-truncate"
+                                                 style={{ maxWidth: "38%", fontSize: "0.88rem", minWidth: 0 }}
+                                          >
                                                  <i className="fa-solid fa-ruler-combined text-primary" aria-hidden="true"></i>
                                                  {area}
                                           </span>

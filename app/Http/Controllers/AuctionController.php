@@ -923,9 +923,8 @@ class AuctionController extends Controller
                 if (!empty($data['country_name']) || !empty($data['region']) || !empty($data['city'])) {
                     return response()->json([
                         'country' => $data['country_name'] ?? null,
-                        // IP based state/city is often inaccurate; keep them null.
-                        'state' => null,
-                        'city' => null,
+                        'state' => $data['region'] ?? null,
+                        'city' => $data['city'] ?? null,
                         'source' => 'ipapi',
                     ]);
                 }
@@ -938,9 +937,8 @@ class AuctionController extends Controller
                 if (($data['success'] ?? false) || !empty($data['country']) || !empty($data['region'])) {
                     return response()->json([
                         'country' => $data['country'] ?? null,
-                        // IP based state/city is often inaccurate; keep them null.
-                        'state' => null,
-                        'city' => null,
+                        'state' => $data['region'] ?? null,
+                        'city' => $data['city'] ?? null,
                         'source' => 'ipwhois',
                     ]);
                 }

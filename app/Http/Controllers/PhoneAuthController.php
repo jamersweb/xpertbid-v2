@@ -1,12 +1,16 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Mail\AdminNewUserRegistration;
+use App\Mail\UserSignupConfirmation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use App\Services\MsgpkService;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class PhoneAuthController extends Controller
@@ -112,6 +116,29 @@ class PhoneAuthController extends Controller
                         'is_phone_verified' => true,
                         'phone_verified_at' => now(),
                     ]);
+
+                    if (!empty($user->email)) {
+                        try {
+                            Mail::to($user->email)->send(new UserSignupConfirmation($user));
+                        } catch (\Throwable $e) {
+                            Log::warning('Phone signup user email failed', [
+                                'user_id' => $user->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+
+                    $adminEmail = env('ADMIN_EMAIL');
+                    if (!empty($adminEmail)) {
+                        try {
+                            Mail::to($adminEmail)->send(new AdminNewUserRegistration($user));
+                        } catch (\Throwable $e) {
+                            Log::warning('Phone signup admin email failed', [
+                                'user_id' => $user->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
                 } catch (\Exception $e) {
                      return response()->json(['message' => 'User creation failed: ' . $e->getMessage()], 500);
                 }

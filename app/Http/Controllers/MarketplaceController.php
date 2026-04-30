@@ -93,6 +93,7 @@ class MarketplaceController extends Controller
             'category',
             'bids',
         ]);
+        $categoryScopeIds = null;
 
         $currentCategory = null;
         $currentTopCategory = null;
@@ -130,6 +131,11 @@ class MarketplaceController extends Controller
                 $categoryIds = $categoryIds->unique()->values();
                 $subCategoryIds = $subCategoryIds->unique()->values();
                 $childCategoryIds = $childCategoryIds->unique()->values();
+                $categoryScopeIds = [
+                    'category' => $categoryIds,
+                    'subcategory' => $subCategoryIds,
+                    'child' => $childCategoryIds,
+                ];
 
                 $query->where(function($q) use ($categoryIds, $subCategoryIds, $childCategoryIds) {
                     $q->whereIn('category_id', $categoryIds)
@@ -298,6 +304,45 @@ class MarketplaceController extends Controller
         // Type filtering (Marketplace Tabs)
         $applyTypeFilter($query);
 
+        $curatedBaseQuery = Listing::where('status', 'active')->with([
+            'user.individualVerification',
+            'user.corporateVerification',
+            'category',
+            'bids',
+        ]);
+
+        if ($categoryScopeIds) {
+            $categoryIds = $categoryScopeIds['category'];
+            $subCategoryIds = $categoryScopeIds['subcategory'];
+            $childCategoryIds = $categoryScopeIds['child'];
+
+            $curatedBaseQuery->where(function($q) use ($categoryIds, $subCategoryIds, $childCategoryIds) {
+                $q->whereIn('category_id', $categoryIds)
+                  ->orWhereIn('sub_category_id', $subCategoryIds)
+                  ->orWhereIn('child_category_id', $childCategoryIds);
+            });
+        }
+
+        $applyTypeFilter($curatedBaseQuery);
+
+        $featuredProducts = (clone $curatedBaseQuery)
+            ->whereNotNull('featured_name')
+            ->where('featured_name', '!=', '')
+            ->latest('id')
+            ->limit(12)
+            ->get();
+
+        $latestProducts = (clone $curatedBaseQuery)
+            ->latest('id')
+            ->limit(12)
+            ->get();
+
+        $mostViewedProducts = (clone $curatedBaseQuery)
+            ->orderByDesc('views')
+            ->latest('id')
+            ->limit(12)
+            ->get();
+
         $listingTypeForFields = $type;
         if (in_array($listingTypeForFields, ['normal', 'normal_list'], true)) {
             $listingTypeForFields = 'normal';
@@ -343,6 +388,9 @@ class MarketplaceController extends Controller
             'favoriteListingIds' => $favoriteListingIds,
             'countries' => $countries,
             'dynamicFields' => $dynamicFields,
+            'featuredProducts' => $featuredProducts,
+            'latestProducts' => $latestProducts,
+            'mostViewedProducts' => $mostViewedProducts,
             'filters' => $request->all(),
         ]);
     }

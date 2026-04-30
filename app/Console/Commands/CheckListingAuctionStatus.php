@@ -2,12 +2,15 @@
 
 namespace App\Console\Commands;
 
+use App\Mail\AuctionResultNotification;
 use App\Models\Bid;
 use App\Models\Listing;
 use App\Models\NewNotification;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class CheckListingAuctionStatus extends Command
 {
@@ -61,6 +64,47 @@ class CheckListingAuctionStatus extends Command
                     'image_url' => NewNotification::getImageForType('auction'),
                 ]);
 
+                if ($highestBid->user?->email) {
+                    try {
+                        Mail::to($highestBid->user->email)->send(
+                            new AuctionResultNotification($listing, 'winner', 'awarded', (float) $highestBid->bid_amount)
+                        );
+                    } catch (\Throwable $e) {
+                        Log::warning('Winner auction email failed', [
+                            'listing_id' => $listing->id,
+                            'user_id' => $highestBid->user_id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+
+                $losingBidderIds = Bid::query()
+                    ->where('listing_id', $listing->id)
+                    ->where('user_id', '!=', $highestBid->user_id)
+                    ->distinct()
+                    ->pluck('user_id');
+
+                if ($losingBidderIds->isNotEmpty()) {
+                    $losingBidders = \App\Models\User::query()
+                        ->whereIn('id', $losingBidderIds)
+                        ->whereNotNull('email')
+                        ->get(['id', 'email']);
+
+                    foreach ($losingBidders as $losingBidder) {
+                        try {
+                            Mail::to($losingBidder->email)->send(
+                                new AuctionResultNotification($listing, 'loser', 'awarded', (float) $highestBid->bid_amount)
+                            );
+                        } catch (\Throwable $e) {
+                            Log::warning('Loser auction email failed', [
+                                'listing_id' => $listing->id,
+                                'user_id' => $losingBidder->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+                }
+
                 if ($listing->user_id) {
                     NewNotification::create([
                         'user_id' => $listing->user_id,
@@ -69,6 +113,20 @@ class CheckListingAuctionStatus extends Command
                         'type' => 'auction',
                         'image_url' => NewNotification::getImageForType('auction'),
                     ]);
+
+                    if ($listing->user?->email) {
+                        try {
+                            Mail::to($listing->user->email)->send(
+                                new AuctionResultNotification($listing, 'seller', 'awarded', (float) $highestBid->bid_amount)
+                            );
+                        } catch (\Throwable $e) {
+                            Log::warning('Seller awarded auction email failed', [
+                                'listing_id' => $listing->id,
+                                'user_id' => $listing->user_id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
                 }
 
                 $awardedCount++;
@@ -88,6 +146,20 @@ class CheckListingAuctionStatus extends Command
                     'type' => 'auction',
                     'image_url' => NewNotification::getImageForType('auction'),
                 ]);
+
+                if ($listing->user?->email) {
+                    try {
+                        Mail::to($listing->user->email)->send(
+                            new AuctionResultNotification($listing, 'seller', 'closed')
+                        );
+                    } catch (\Throwable $e) {
+                        Log::warning('Seller closed auction email failed', [
+                            'listing_id' => $listing->id,
+                            'user_id' => $listing->user_id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
             }
 
             $closedCount++;

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Head, Link } from "@inertiajs/react";
 import { A as AppLayout } from "./AppLayout-BWciRgbg.js";
 import { P as Price } from "./Price-CF5NSPt0.js";
-import { C as CountdownTimer, O as OwnerInfoRow } from "./OwnerInfoRow-BzmY3N9i.js";
+import { C as CountdownTimer, O as OwnerInfoRow } from "./OwnerInfoRow-C3IMd42a.js";
 import { FaSearch, FaGavel, FaCheckCircle, FaChevronRight } from "react-icons/fa";
 import "ziggy-js";
 import "./CartContext-DXNQZwkV.js";
@@ -441,7 +441,8 @@ function LandingAuctionCard({ item }) {
         {
           owner: item.owner || item.user,
           fallbackName: item.owner?.name || item.user?.name,
-          fallbackAvatar: item.owner?.avatar || item.user?.profile_pic
+          fallbackAvatar: item.owner?.avatar || item.user?.profile_pic,
+          isFeatured: Boolean(item?.featured_name)
         }
       ),
       /* @__PURE__ */ jsx("div", { className: "mktDetail", children: item.status === "awarded" || item.status === "awarded " ? /* @__PURE__ */ jsxs("div", { className: "winnerSection", children: [

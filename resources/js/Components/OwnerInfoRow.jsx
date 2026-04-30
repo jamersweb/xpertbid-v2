@@ -25,6 +25,7 @@ const OwnerInfoRow = ({
        owner = {},
        fallbackName = "",
        fallbackAvatar = "",
+       isFeatured = false,
 }) => {
        const displayName = formatName(owner?.name || fallbackName);
        const avatarSrc = buildAvatarUrl(owner?.profile || owner?.profile_pic || fallbackAvatar);
@@ -44,13 +45,20 @@ const OwnerInfoRow = ({
                             }}
                      />
                      <div className="owner-info-row__content">
-                            <span className="owner-info-row__name-text">{displayName}</span>
-                            {isVerified && (
-                                   <span className="owner-info-row__verified" title="Verified seller" aria-label="Verified seller">
-                                          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                                 <circle cx="10" cy="10" r="8" fill="#2F80ED" />
-                                                 <path d="M6.8 10.2L8.9 12.3L13.3 7.9" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                          </svg>
+                            <span className="owner-info-row__identity">
+                                   <span className="owner-info-row__name-text">{displayName}</span>
+                                   {isVerified && (
+                                          <span className="owner-info-row__verified" title="Verified seller" aria-label="Verified seller">
+                                                 <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                                        <circle cx="10" cy="10" r="8" fill="#2F80ED" />
+                                                        <path d="M6.8 10.2L8.9 12.3L13.3 7.9" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                                 </svg>
+                                          </span>
+                                   )}
+                            </span>
+                            {isFeatured && (
+                                   <span className="owner-info-row__featured">
+                                          Featured
                                    </span>
                             )}
                      </div>
