@@ -10,6 +10,7 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
        const { addToCart } = useCart();
        const isWonAuction = activeTab === "won";
        const listingKind = auction?.list_type || auction?.listing_type;
+       const isLiveAuction = listingKind === "live_auction";
        const isDirectBuyListing = ["normal", "normal_list", "business", "business_list"].includes(listingKind);
        const categoryFeatures = auction?.category_features && typeof auction.category_features === "object" ? auction.category_features : {};
        const isPropertyListing = String(auction?.category_id || "") === "222";
@@ -53,14 +54,16 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
               ? (auction.current_highest_bid || auction.reserve_price || auction.minimum_bid || 0)
               : null;
 
-       const imgPath = auction.image_url || "/assets/images/WebsiteBanner2.png";
+       const imgPath = auction.image_url
+              || (isLiveAuction && auction.youtube_video_id ? `https://img.youtube.com/vi/${auction.youtube_video_id}/hqdefault.jpg` : null)
+              || "/assets/images/WebsiteBanner2.png";
        const maxBid = Number(auction?.current_highest_bid || auction?.bids_max_bid_amount || 0);
        const minBid = Number(auction?.minimum_bid || auction?.price || 0);
        const hasMaxBid = Number.isFinite(maxBid) && maxBid > 0;
        const displayAmount = isWonAuction ? winningBidAmount : (hasMaxBid ? maxBid : minBid);
        const displayLabel = isWonAuction
               ? "Winning Bid"
-              : (isDirectBuyListing ? "Price" : (hasMaxBid ? "Current Bid" : "Minimum Bid"));
+              : (isDirectBuyListing ? "Price" : (isLiveAuction ? (hasMaxBid ? "Live Bid" : "Start Price") : (hasMaxBid ? "Current Bid" : "Minimum Bid")));
 
        return (
               <div className="product-card-wrapper h-100">
@@ -78,7 +81,17 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
                                    </div>
                             </Link>
 
-                            {!isWonAuction && !isDirectBuyListing && (
+                            {isLiveAuction && (
+                                   <span
+                                          className="badge rounded-pill bg-danger text-white"
+                                          style={{ position: "absolute", top: 12, left: 12, zIndex: 3, fontSize: 12, padding: "7px 11px" }}
+                                   >
+                                          <i className="fa-solid fa-circle me-1" style={{ fontSize: 8 }}></i>
+                                          Live Auction
+                                   </span>
+                            )}
+
+                            {!isWonAuction && !isDirectBuyListing && !isLiveAuction && (
                                    <CountdownTimer startDate={auction.start_date} endDate={auction.end_date} />
                             )}
                      </div>
@@ -161,7 +174,7 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
                                    ) : (
                                           <div className="pro-bid-btn">
                                                  <Link href={`/product/${auction.slug}`}>
-                                                        {isDirectBuyListing ? "Buy Now" : "Place Bid"}
+                                                        {isDirectBuyListing ? "Buy Now" : (isLiveAuction ? "Join Live" : "Place Bid")}
                                                  </Link>
                                           </div>
                                    )}

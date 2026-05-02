@@ -5,7 +5,6 @@ import axios from 'axios';
 import CartPopup from '@/Components/CartPopup';
 import DesktopCategoriesDropdown from '@/Components/DesktopCategoriesDropdown';
 import CategoriesDropdown from '@/Components/CategoriesDropdown';
-import CurrencyPicker from '@/Components/CurrencyPicker';
 import NotificationDropdown from '@/Components/NotificationDropdown';
 import Search from '@/Components/Search';
 import { useAuthModal } from '@/Contexts/AuthModalContext';
@@ -18,7 +17,6 @@ export default function Header() {
        const user = auth?.user;
        const { openLogin, openRegister } = useAuthModal();
        const { t } = useTranslate();
-       const supportedLocales = Object.entries(locale?.supported || {});
        const currentLocale = locale?.current || 'en';
        const currentDirection = locale?.supported?.[currentLocale]?.direction || (currentLocale === 'ur' ? 'rtl' : 'ltr');
        const isRtl = currentDirection === 'rtl';
@@ -80,12 +78,6 @@ export default function Header() {
 
        const handleLogout = () => {
               router.post(route('logout'));
-       };
-
-       const handleLocaleChange = (nextLocale) => {
-              if (nextLocale === currentLocale) return;
-
-              router.post(route('locale.update'), { locale: nextLocale }, { preserveScroll: true });
        };
 
        const handleSellClick = (e) => {
@@ -224,8 +216,11 @@ export default function Header() {
                                                                       <CategoriesDropdown />
                                                                </div>
                                                         </li>
-                                                        <li className="nav-item">
+                                                        <li className="nav-item d-none d-lg-block">
                                                                <Link href={route('auctions.one_rupee')} className="nav-link" onClick={closeMobileMenu}>{t('1 Rupee Auction')}</Link>
+                                                        </li>
+                                                        <li className="nav-item d-block d-lg-none">
+                                                               <Link href="/live-auctions" className="nav-link" onClick={closeMobileMenu}>{t('Live Auction')}</Link>
                                                         </li>
                                                         <li className="nav-item">
                                                                <Link href={route('about')} className="nav-link" onClick={closeMobileMenu}>{t('About')}</Link>
@@ -236,25 +231,7 @@ export default function Header() {
                                                  </ul>
 
                                                  <div className="d-flex align-items-center mt-3 mt-lg-0 header-account-cluster">
-                                                        <div className="d-none d-lg-flex align-items-center mt-2 header-desktop-actions">
-                                                               <div className="header-language-switcher">
-                                                                      <select
-                                                                             className="header-language-select"
-                                                                             value={currentLocale}
-                                                                             onChange={(e) => handleLocaleChange(e.target.value)}
-                                                                             aria-label={t('Select Language')}
-                                                                      >
-                                                                             {supportedLocales.map(([code, details]) => (
-                                                                                    <option key={code} value={code}>
-                                                                                           {details.native || details.name || code.toUpperCase()}
-                                                                                    </option>
-                                                                             ))}
-                                                                      </select>
-                                                               </div>
-                                                               {/* Aligned with xpertbid-frontend: Cart then Currency */}
-                                                               <div className="header-action-currency">
-                                                                      <CurrencyPicker />
-                                                               </div>
+                                                       <div className="d-none d-lg-flex align-items-center mt-2 header-desktop-actions">
                                                                <div className="header-action-cart">
                                                                       <CartPopup />
                                                                </div>
@@ -401,22 +378,6 @@ export default function Header() {
                             gap: 10px;
                             margin-right: 12px;
                         }
-                        .header-language-switcher {
-                            display: inline-flex;
-                            align-items: center;
-                        }
-                        .header-language-select {
-                            height: 38px;
-                            border: 1px solid #D8E0EA;
-                            border-radius: 10px;
-                            padding: 0 12px;
-                            background: #F8FBFF;
-                            color: #23262F;
-                            font-size: 14px;
-                            font-weight: 600;
-                            outline: none;
-                        }
-                        .header-action-currency,
                         .header-action-cart,
                         .header-action-notification {
                             display: inline-flex;
@@ -468,13 +429,6 @@ export default function Header() {
                             }
                             .mobile-auth-buttons {
                                 margin-right: 4px;
-                            }
-                            .header-language-switcher {
-                                width: 100%;
-                                margin-bottom: 12px;
-                            }
-                            .header-language-select {
-                                width: 100%;
                             }
                             .mobile-auth-btn {
                                 border: none;

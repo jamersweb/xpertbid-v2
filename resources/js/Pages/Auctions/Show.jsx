@@ -5,7 +5,6 @@ import ProductImages from '@/Components/ProductDetails/ProductImages';
 import BidSection from '@/Components/ProductDetails/BidSection';
 import BidHistory from '@/Components/ProductDetails/BidHistory';
 import RelatedItems from '@/Components/ProductDetails/RelatedItems';
-import YoutubeLiveEmbed from '@/Components/ProductDetails/YoutubeLiveEmbed';
 import ListingLiveChat from '@/Components/ProductDetails/ListingLiveChat';
 import { useState } from 'react';
 import axios from 'axios';
@@ -47,7 +46,8 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
        const { auth } = usePage().props;
        const listingType = String(auction?.listing_type || '').toLowerCase();
        const listingStatus = String(auction?.status || '').trim().toLowerCase();
-       const showLiveChat = listingType === 'auction' && listingStatus === 'active';
+       const isAuctionLikeListing = ['auction', 'live_auction'].includes(listingType);
+       const showLiveChat = isAuctionLikeListing && listingStatus === 'active';
 
        // Bids update automatically via Inertia props after a successful POST
        const categoryFeatures = auction?.category_features && typeof auction.category_features === 'object'
@@ -146,6 +146,7 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
                                                                listType={auction.list_type}
                                                                startDate={auction.start_date}
                                                                endDate={auction.end_date}
+                                                               youtubeVideoId={auction.youtube_video_id}
                                                         />
                                                  </div>
 
@@ -169,17 +170,6 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
                                                  </div>
                                           </div>
 
-                                          {auction.youtube_video_id ? (
-                                                 <div className="row mt-4">
-                                                        <div className="col-12">
-                                                               <h2 className="h5 fw-bold mb-3">Live stream</h2>
-                                                               <YoutubeLiveEmbed videoId={auction.youtube_video_id} title={auction.title} />
-                                                               <p className="small text-muted mt-2 mb-0">
-                                                                      Stream is hosted on YouTube. Bid timing and results follow this listing on XpertBid, not the video clock.
-                                                               </p>
-                                                        </div>
-                                                 </div>
-                                          ) : null}
                                    </div>
                             </div>
                      </section>

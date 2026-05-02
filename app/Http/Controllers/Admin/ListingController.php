@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Support\YoutubeVideoId;
 use App\Models\AuctionCategory;
+use App\Models\Bid;
 use App\Models\City;
 use App\Models\Listing;
+use App\Models\LiveAuctionSession;
 use App\Models\ListingEdit;
 use App\Models\State;
 use App\Models\User;
@@ -41,11 +43,10 @@ class ListingController extends Controller
     protected function buildListingData(Request $request, ?Listing $listing, array $albumPaths, ?string $imagePath): array
     {
         $existingData = $listing?->listing_data ?? [];
-
         $typeSpecificData = [
             'price' => in_array($request->listing_type, ['normal', 'business'], true) ? $request->price : null,
-            'start_price' => $request->listing_type === 'auction' ? $request->price : null,
-            'reserve_price' => $request->listing_type === 'auction' ? $request->reserve_price : null,
+            'start_price' => in_array($request->listing_type, ['auction', 'live_auction'], true) ? $request->price : null,
+            'reserve_price' => in_array($request->listing_type, ['auction', 'live_auction'], true) ? $request->reserve_price : null,
             'start_date' => $request->listing_type === 'auction' ? $request->start_date : null,
             'end_date' => $request->listing_type === 'auction' ? $request->end_date : null,
             'stock' => $request->listing_type === 'business' ? $request->stock : null,
@@ -56,8 +57,12 @@ class ListingController extends Controller
         $listingData = array_merge($existingData, $typeSpecificData);
 
         // Remove stale keys when listing type changes.
-        if ($request->listing_type !== 'auction') {
+        if (!in_array($request->listing_type, ['auction', 'live_auction'], true)) {
             unset($listingData['start_price'], $listingData['reserve_price'], $listingData['start_date'], $listingData['end_date']);
+        }
+
+        if ($request->listing_type !== 'auction') {
+            unset($listingData['start_date'], $listingData['end_date']);
         }
 
         if ($request->listing_type !== 'business') {
@@ -68,7 +73,25 @@ class ListingController extends Controller
             unset($listingData['price']);
         }
 
+        if ($request->listing_type === 'live_auction') {
+            unset($listingData['price'], $listingData['start_date'], $listingData['end_date'], $listingData['stock']);
+        }
+
         return array_filter($listingData, fn ($value) => !($value === null || $value === '' || $value === []));
+    }
+
+    protected function fallbackAdminListingUserId(): ?int
+    {
+        return auth()->id() ?: User::query()->orderBy('id')->value('id');
+    }
+
+    protected function fallbackListingCategoryId(): ?int
+    {
+        return AuctionCategory::query()
+            ->whereNull('parent_id')
+            ->whereNull('sub_category_id')
+            ->orderBy('name')
+            ->value('id') ?: AuctionCategory::query()->orderBy('id')->value('id');
     }
 
     protected function getFormPayload(?Listing $listing = null): array
@@ -86,9 +109,10 @@ class ListingController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    protected function renderListingIndex(Request $request, ?string $listingType = null, array $pageProps = [])
     {
         $listings = Listing::with(['user', 'category', 'pendingEdit'])
+            ->when($listingType, fn ($query) => $query->where('listing_type', $listingType))
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->string('search')->toString();
                 $query->where(function ($innerQuery) use ($search) {
@@ -103,15 +127,223 @@ class ListingController extends Controller
             ->latest()
             ->paginate(10);
 
-        return Inertia::render('Admin/Listings/Index', [
+        return Inertia::render('Admin/Listings/Index', array_merge([
             'listings' => $listings,
             'filters' => $request->only(['search', 'status']),
+        ], $pageProps));
+    }
+
+    public function index(Request $request)
+    {
+        return $this->renderListingIndex($request, null, [
+            'pageTitle' => 'Listings Management',
+            'pageDescription' => 'Manage all normal, auction, business, and live auction listings.',
+            'filterRouteName' => 'admin.listings.index',
+            'createRouteName' => 'admin.listings.create',
+            'createButtonLabel' => 'Create Listing',
+        ]);
+    }
+
+    public function liveAuctions(Request $request)
+    {
+        return $this->renderListingIndex($request, 'live_auction', [
+            'pageTitle' => 'Live Auctions',
+            'pageDescription' => 'Manage live auction streams and their listing details.',
+            'filterRouteName' => 'admin.live-auctions.index',
+            'createRouteName' => 'admin.live-auctions.create',
+            'createButtonLabel' => 'Create Live Auction',
+            'isLiveAuctionPage' => true,
         ]);
     }
 
     public function create()
     {
         return Inertia::render('Admin/Listings/Form', $this->getFormPayload());
+    }
+
+    public function createLiveAuction()
+    {
+        return Inertia::render('Admin/Listings/Form', array_merge($this->getFormPayload(), [
+            'defaultListingType' => 'live_auction',
+            'backRouteName' => 'admin.live-auctions.index',
+            'returnTo' => 'live_auctions',
+        ]));
+    }
+
+    public function setupLiveAuction()
+    {
+        $liveAuctions = Listing::query()
+            ->where('listing_type', 'live_auction')
+            ->select('id', 'title', 'slug', 'status', 'youtube_video_id', 'listing_data', 'category_id')
+            ->with('category:id,name')
+            ->latest()
+            ->get();
+
+        return Inertia::render('Admin/LiveAuctions/Setup', [
+            'liveAuctions' => $liveAuctions,
+        ]);
+    }
+
+    public function launchLiveAuction(Request $request)
+    {
+        $validated = $request->validate([
+            'live_url' => ['required', 'string', 'max:500'],
+            'auction_ids' => ['required', 'array', 'min:1'],
+            'auction_ids.*' => ['integer', 'exists:listings,id'],
+        ]);
+
+        $ids = Listing::query()
+            ->where('listing_type', 'live_auction')
+            ->whereIn('id', $validated['auction_ids'])
+            ->pluck('id')
+            ->all();
+
+        if (empty($ids)) {
+            return redirect()->back()->with('error', 'Please select at least one live auction.');
+        }
+
+        LiveAuctionSession::query()->where('status', 'active')->update(['status' => 'inactive']);
+
+        $session = LiveAuctionSession::create([
+            'live_url' => $validated['live_url'],
+            'youtube_video_id' => YoutubeVideoId::normalize($validated['live_url']),
+            'selected_listing_ids' => array_values($ids),
+            'status' => 'active',
+        ]);
+
+        return redirect()->route('admin.live-auctions.room', [
+            'session' => $session->id,
+            'ids' => implode(',', $ids),
+            'live_url' => $validated['live_url'],
+        ]);
+    }
+
+    public function liveAuctionRoom(Request $request)
+    {
+        $session = $request->query('session')
+            ? LiveAuctionSession::query()->find($request->query('session'))
+            : null;
+
+        $idsSource = $session?->selected_listing_ids ?: explode(',', (string) $request->query('ids'));
+        $ids = collect($idsSource)
+            ->map(fn ($id) => (int) trim($id))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($ids)) {
+            return redirect()->route('admin.live-auctions.setup')->with('error', 'Please select live auction products first.');
+        }
+
+        $liveUrl = $session?->live_url ?: (string) $request->query('live_url');
+        $globalVideoId = $session?->youtube_video_id ?: YoutubeVideoId::normalize($liveUrl);
+
+        $liveAuctions = Listing::query()
+            ->where('listing_type', 'live_auction')
+            ->whereIn('id', $ids)
+            ->with(['user:id,name,email', 'category:id,name'])
+            ->withMax('bids', 'bid_amount')
+            ->withCount('bids')
+            ->orderByRaw('FIELD(id, ' . implode(',', array_map('intval', $ids)) . ')')
+            ->get();
+
+        return Inertia::render('Admin/LiveAuctions/Room', [
+            'liveAuctions' => $liveAuctions,
+            'selectedIds' => $ids,
+            'liveUrl' => $liveUrl,
+            'globalVideoId' => $globalVideoId,
+        ]);
+    }
+
+    public function startLiveAuction($id)
+    {
+        $listing = Listing::query()
+            ->where('listing_type', 'live_auction')
+            ->findOrFail($id);
+
+        $listing->update(['status' => 'active']);
+
+        return redirect()->back()->with('success', 'Live auction started successfully.');
+    }
+
+    public function endLiveAuction($id)
+    {
+        $listing = Listing::query()
+            ->where('listing_type', 'live_auction')
+            ->findOrFail($id);
+
+        $highestBid = Bid::query()
+            ->where('listing_id', $listing->id)
+            ->orderByDesc('bid_amount')
+            ->first();
+
+        $listingData = is_array($listing->listing_data) ? $listing->listing_data : [];
+
+        if ($highestBid) {
+            $listingData['winner_id'] = $highestBid->user_id;
+            $listingData['winning_bid_amount'] = $highestBid->bid_amount;
+
+            $listing->update([
+                'status' => 'awarded',
+                'listing_data' => $listingData,
+            ]);
+
+            return redirect()->back()->with('success', 'Live auction ended and awarded to the highest bidder.');
+        }
+
+        unset($listingData['winner_id'], $listingData['winning_bid_amount']);
+
+        $listing->update([
+            'status' => 'ended',
+            'listing_data' => $listingData,
+        ]);
+
+        return redirect()->back()->with('success', 'Live auction ended without any bids.');
+    }
+
+    public function closeLiveAuction($id)
+    {
+        $listing = Listing::query()
+            ->where('listing_type', 'live_auction')
+            ->findOrFail($id);
+
+        $listingData = is_array($listing->listing_data) ? $listing->listing_data : [];
+        unset($listingData['winner_id'], $listingData['winning_bid_amount']);
+
+        $listing->update([
+            'status' => 'closed',
+            'listing_data' => $listingData,
+        ]);
+
+        return redirect()->back()->with('success', 'Live auction closed successfully.');
+    }
+
+    public function awardLiveAuction($id)
+    {
+        $listing = Listing::query()
+            ->where('listing_type', 'live_auction')
+            ->findOrFail($id);
+
+        $highestBid = Bid::query()
+            ->where('listing_id', $listing->id)
+            ->orderByDesc('bid_amount')
+            ->first();
+
+        if (!$highestBid) {
+            return redirect()->back()->with('error', 'This live auction has no bids to award.');
+        }
+
+        $listingData = is_array($listing->listing_data) ? $listing->listing_data : [];
+        $listingData['winner_id'] = $highestBid->user_id;
+        $listingData['winning_bid_amount'] = $highestBid->bid_amount;
+
+        $listing->update([
+            'status' => 'awarded',
+            'listing_data' => $listingData,
+        ]);
+
+        return redirect()->back()->with('success', 'Live auction awarded to the highest bidder.');
     }
 
     /**
@@ -152,17 +384,23 @@ class ListingController extends Controller
     public function edit($id)
     {
         $listing = Listing::findOrFail($id);
+        $extraPayload = $listing->listing_type === 'live_auction'
+            ? [
+                'backRouteName' => 'admin.live-auctions.index',
+                'returnTo' => 'live_auctions',
+            ]
+            : [];
 
-        return Inertia::render('Admin/Listings/Form', $this->getFormPayload($listing));
+        return Inertia::render('Admin/Listings/Form', array_merge($this->getFormPayload($listing), $extraPayload));
     }
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
+            'user_id' => 'required_unless:listing_type,live_auction|nullable|exists:users,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'listing_type' => 'required|in:normal,auction,business',
+            'listing_type' => 'required|in:normal,auction,business,live_auction',
             'status' => 'required|string',
             'category_id' => 'required|exists:auction_categories,id',
             'sub_category_id' => 'nullable|exists:auction_categories,id',
@@ -175,17 +413,20 @@ class ListingController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
             'album' => 'nullable|array',
             'album.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:4096',
-            'youtube_video_id' => 'nullable|string|max:512',
         ]);
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
 
-        $youtubeVideoId = YoutubeVideoId::normalize($request->input('youtube_video_id'));
-        if ($request->filled('youtube_video_id') && $youtubeVideoId === null) {
+        $userId = $request->listing_type === 'live_auction'
+            ? ($request->user_id ?: $this->fallbackAdminListingUserId())
+            : $request->user_id;
+        $categoryId = $request->category_id;
+
+        if (!$userId) {
             return back()->withErrors([
-                'youtube_video_id' => 'Enter a valid YouTube video ID, watch URL, live URL, or youtu.be link.',
+                'listing_type' => 'A seller must exist before creating a live auction.',
             ])->withInput();
         }
 
@@ -206,8 +447,8 @@ class ListingController extends Controller
         $listingData = $this->buildListingData($request, null, $albumPaths, $imagePath);
 
         Listing::create([
-            'user_id' => $request->user_id,
-            'category_id' => $request->category_id,
+            'user_id' => $userId,
+            'category_id' => $categoryId,
             'sub_category_id' => $request->sub_category_id,
             'child_category_id' => $request->child_category_id,
             'listing_type' => $request->listing_type,
@@ -217,10 +458,13 @@ class ListingController extends Controller
             'image' => $imagePath,
             'album' => $albumPaths,
             'listing_data' => $listingData,
-            'youtube_video_id' => $youtubeVideoId,
         ]);
 
-        return redirect()->route('admin.listings.index')->with('success', 'Listing created successfully');
+        $redirectRoute = $request->input('return_to') === 'live_auctions' || $request->listing_type === 'live_auction'
+            ? 'admin.live-auctions.index'
+            : 'admin.listings.index';
+
+        return redirect()->route($redirectRoute)->with('success', 'Listing created successfully');
     }
 
     public function update(Request $request, $id)
@@ -228,10 +472,10 @@ class ListingController extends Controller
         $listing = Listing::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
+            'user_id' => 'required_unless:listing_type,live_auction|nullable|exists:users,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'listing_type' => 'required|in:normal,auction,business',
+            'listing_type' => 'required|in:normal,auction,business,live_auction',
             'status' => 'required|string',
             'category_id' => 'required|exists:auction_categories,id',
             'sub_category_id' => 'nullable|exists:auction_categories,id',
@@ -245,17 +489,20 @@ class ListingController extends Controller
             'album' => 'nullable|array',
             'album.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:4096',
             'existing_album' => 'nullable|array',
-            'youtube_video_id' => 'nullable|string|max:512',
         ]);
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
 
-        $youtubeVideoId = YoutubeVideoId::normalize($request->input('youtube_video_id'));
-        if ($request->filled('youtube_video_id') && $youtubeVideoId === null) {
+        $userId = $request->listing_type === 'live_auction'
+            ? ($request->user_id ?: $listing->user_id ?: $this->fallbackAdminListingUserId())
+            : $request->user_id;
+        $categoryId = $request->category_id;
+
+        if (!$userId) {
             return back()->withErrors([
-                'youtube_video_id' => 'Enter a valid YouTube video ID, watch URL, live URL, or youtu.be link.',
+                'listing_type' => 'A seller must exist before updating a live auction.',
             ])->withInput();
         }
 
@@ -306,8 +553,8 @@ class ListingController extends Controller
         $listingData = $this->buildListingData($request, $listing, $albumPaths, $imagePath);
 
         $listing->update([
-            'user_id' => $request->user_id,
-            'category_id' => $request->category_id,
+            'user_id' => $userId,
+            'category_id' => $categoryId,
             'sub_category_id' => $request->sub_category_id,
             'child_category_id' => $request->child_category_id,
             'listing_type' => $request->listing_type,
@@ -317,12 +564,15 @@ class ListingController extends Controller
             'image' => $imagePath,
             'album' => $albumPaths,
             'listing_data' => $listingData,
-            'youtube_video_id' => $youtubeVideoId,
         ]);
 
         $listing->pendingEdit()?->delete();
 
-        return redirect()->route('admin.listings.index')->with('success', 'Listing updated successfully');
+        $redirectRoute = $request->input('return_to') === 'live_auctions' || $request->listing_type === 'live_auction'
+            ? 'admin.live-auctions.index'
+            : 'admin.listings.index';
+
+        return redirect()->route($redirectRoute)->with('success', 'Listing updated successfully');
     }
 
     public function approveEdit($id)

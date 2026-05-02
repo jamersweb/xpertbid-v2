@@ -42,6 +42,7 @@ use App\Http\Controllers\ListingLiveChatController;
 
 Route::get('/', [AuctionController::class, 'home'])->name('home'); // Replaces Welcome
 Route::get('/product/{slug}', [AuctionController::class, 'show'])->name('product.show');
+Route::get('/live-auctions', [AuctionController::class, 'liveAuctions'])->name('live-auctions.public');
 Route::get('/demo/live-auction-car-showcase', [LiveAuctionDemoController::class, 'show'])->name('demo.live_auction_car_showcase');
 
 Route::get('/live-chat/listings/{listing}/messages', [ListingLiveChatController::class, 'index'])
@@ -258,6 +259,15 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::patch('/payment-requests/{id}/status', [App\Http\Controllers\Admin\PaymentRequestController::class, 'updateStatus'])->name('payment-requests.update-status');
 
     // Unified List Management (Refactored)
+    Route::get('/live-auctions', [App\Http\Controllers\Admin\ListingController::class, 'liveAuctions'])->name('live-auctions.index');
+    Route::get('/live-auctions/create', [App\Http\Controllers\Admin\ListingController::class, 'createLiveAuction'])->name('live-auctions.create');
+    Route::get('/live-auctions/setup', [App\Http\Controllers\Admin\ListingController::class, 'setupLiveAuction'])->name('live-auctions.setup');
+    Route::post('/live-auctions/setup', [App\Http\Controllers\Admin\ListingController::class, 'launchLiveAuction'])->name('live-auctions.launch');
+    Route::get('/live-auctions/room', [App\Http\Controllers\Admin\ListingController::class, 'liveAuctionRoom'])->name('live-auctions.room');
+    Route::patch('/live-auctions/{id}/start', [App\Http\Controllers\Admin\ListingController::class, 'startLiveAuction'])->name('live-auctions.start');
+    Route::patch('/live-auctions/{id}/end', [App\Http\Controllers\Admin\ListingController::class, 'endLiveAuction'])->name('live-auctions.end');
+    Route::patch('/live-auctions/{id}/close', [App\Http\Controllers\Admin\ListingController::class, 'closeLiveAuction'])->name('live-auctions.close');
+    Route::patch('/live-auctions/{id}/award', [App\Http\Controllers\Admin\ListingController::class, 'awardLiveAuction'])->name('live-auctions.award');
     Route::get('/listings', [App\Http\Controllers\Admin\ListingController::class, 'index'])->name('listings.index');
     Route::resource('listings', App\Http\Controllers\Admin\ListingController::class)->except(['index'])->names('listings');
     Route::patch('/listings/{id}/status', [App\Http\Controllers\Admin\ListingController::class, 'updateStatus'])->name('listings.update-status');

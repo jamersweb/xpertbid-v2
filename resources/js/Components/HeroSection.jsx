@@ -20,7 +20,7 @@ const heroSlides = [
        {
               image: "/assets/images/WebsiteBanner2.png",
               mobileImage: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=900&q=80",
-              href: "/search",
+              href: "/marketplace?type=auction",
        },
        {
               image: "/assets/images/WebsiteBanner3.png",

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Link, useForm, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import axios from "axios";
@@ -12,6 +12,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
        const [otpSent, setOtpSent] = useState(false);
        const [resendTimer, setResendTimer] = useState(60);
        const [isResendDisabled, setIsResendDisabled] = useState(false);
+       const otpInputRefs = useRef([]);
 
        // Reset state on open
        useEffect(() => {
@@ -34,6 +35,31 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
 
        const handleStepChange = (step) => {
               setActiveStep(step);
+       };
+
+       const updateOtpDigit = (index, value) => {
+              const digits = value.replace(/\D/g, "");
+              if (digits.length > 1) {
+                     const nextOtp = digits.slice(0, 6);
+                     setData('otp', nextOtp);
+                     otpInputRefs.current[Math.min(nextOtp.length, 5)]?.focus();
+                     return;
+              }
+
+              const otpDigits = (formData.otp || "").padEnd(6, " ").split("");
+              otpDigits[index] = digits;
+              const nextOtp = otpDigits.join("").replace(/\s/g, "");
+              setData('otp', nextOtp);
+
+              if (digits && index < 5) {
+                     otpInputRefs.current[index + 1]?.focus();
+              }
+       };
+
+       const handleOtpKeyDown = (index, e) => {
+              if (e.key === "Backspace" && !(formData.otp || "")[index] && index > 0) {
+                     otpInputRefs.current[index - 1]?.focus();
+              }
        };
 
        const handleEmailRegister = (e) => {
@@ -117,7 +143,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
 
        return (
               <div id="SignupModal" className="signupModal video-modal" style={{ display: isOpen ? "block" : "none", position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060, overflowY: 'auto' }}>
-                     <div className="signupmodal-content" style={{ position: 'relative', margin: '50px auto', backgroundColor: '#fff', padding: '20px', borderRadius: '10px', maxWidth: '600px' }}>
+                     <div className={`signupmodal-content ${activeStep === "otpVerification" ? "signupmodal-content--otp" : ""}`} style={{ position: 'relative', margin: '50px auto', backgroundColor: '#fff', padding: '20px', borderRadius: '10px', maxWidth: '600px' }}>
                             <span className="close-btn" style={{ position: 'absolute', right: '20px', top: '20px', cursor: 'pointer', zIndex: 10 }} onClick={onClose}>
                                    <i className="fa-solid fa-xmark" style={{ backgroundColor: '#EDEDED', color: '#23262F', padding: '6px 8px', fontSize: '12px', borderRadius: '100%' }}></i>
                             </span>
@@ -280,37 +306,45 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                             )}
 
                             {activeStep === "otpVerification" && (
-                                   <div id="emailOtp-container">
-                                          <div className="step-heading-and-back">
-                                                 <button className="backbuttonSignup" onClick={() => handleStepChange("phoneSignup")}>
+                                   <div id="emailOtp-container" className="signup-otp-panel">
+                                          <div className="step-heading-and-back signup-otp-header">
+                                                 <button className="backbuttonSignup signup-otp-back" onClick={() => handleStepChange("phoneSignup")} aria-label="Back">
                                                         <i className="fa-solid fa-chevron-left"></i>
                                                  </button>
                                                  <h3 className="mb-0 fw-bold">Verify OTP</h3>
                                           </div>
 
-                                          <p className="mb-4 small text-muted text-center">Enter the OTP sent to {formData.countryCode}{formData.phone}</p>
+                                          <p className="signup-otp-copy">Enter the OTP sent to <span>{formData.countryCode}{formData.phone}</span></p>
 
-                                          <div className="mb-4 d-flex justify-content-center gap-2">
-                                                 <input
-                                                        type="text"
-                                                        className="form-control text-center fs-4 tracking-widest fw-bold"
-                                                        placeholder="····"
-                                                        maxLength={4}
-                                                        value={formData.otp || ""}
-                                                        onChange={(e) => setData('otp', e.target.value.replace(/\D/g, ""))}
-                                                        style={{ width: '100%', height: '68px' }}
-                                                 />
+                                          <div className="signup-otp-input-wrap" onPaste={(e) => {
+                                                 e.preventDefault();
+                                                 updateOtpDigit(0, e.clipboardData.getData("text"));
+                                          }}>
+                                                 {Array.from({ length: 6 }).map((_, index) => (
+                                                        <input
+                                                               key={index}
+                                                               ref={(el) => (otpInputRefs.current[index] = el)}
+                                                               type="text"
+                                                               inputMode="numeric"
+                                                               className="form-control signup-otp-input"
+                                                               maxLength={1}
+                                                               value={(formData.otp || "")[index] || ""}
+                                                               onChange={(e) => updateOtpDigit(index, e.target.value)}
+                                                               onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                                                               aria-label={`OTP digit ${index + 1}`}
+                                                        />
+                                                 ))}
                                           </div>
 
                                           {errorMessage && <div className="alert-message">{errorMessage}</div>}
 
-                                          <button className="form-button-1" disabled={loading || !formData.otp || formData.otp.length < 4} onClick={handleVerifyPhoneOtp}>
+                                          <button className="form-button-1 signup-otp-submit" disabled={loading || !formData.otp || formData.otp.length < 6} onClick={handleVerifyPhoneOtp}>
                                                  {loading ? "Verifying..." : "Verify & Sign Up"}
                                           </button>
 
-                                          <div className="text-center mt-3">
+                                          <div className="signup-otp-resend">
                                                  <button
-                                                        className="btn btn-link text-decoration-none p-0 small text-dark fw-bold"
+                                                        className="btn btn-link text-decoration-none p-0 small fw-bold"
                                                         disabled={isResendDisabled}
                                                         onClick={registerWithPhone}
                                                  >

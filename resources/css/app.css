@@ -892,6 +892,97 @@ button.signUpContinueIcon {
   align-items: center;
 }
 
+#SignupModal .signupmodal-content--otp {
+  width: min(92vw, 520px) !important;
+  max-width: 520px !important;
+  padding: 30px 28px 28px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+}
+
+#SignupModal .signup-otp-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 2px;
+}
+
+#SignupModal .signup-otp-header {
+  padding: 0 34px 16px;
+  border-bottom: 1px solid #ededed;
+}
+
+#SignupModal .signup-otp-back {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  height: auto;
+  margin: 0;
+}
+
+#SignupModal .signup-otp-copy {
+  margin: -8px 0 8px;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+}
+
+#SignupModal .signup-otp-copy span {
+  color: #23262F;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+#SignupModal .signup-otp-input-wrap {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+#SignupModal .signup-otp-input {
+  width: 100%;
+  height: 50px;
+  border: 1px solid #FAFAFA;
+  border-radius: 10px;
+  background: #fff;
+  color: #23262F;
+  font-size: 18px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0;
+  box-shadow: 12px 19px 50px 0 #00000014;
+  padding: 0;
+}
+
+#SignupModal .signup-otp-input:focus {
+  border-color: #43ACE9;
+  box-shadow: 0 0 0 4px rgba(67, 172, 233, 0.14);
+  outline: none;
+}
+
+#SignupModal .signup-otp-submit {
+  height: 50px;
+  margin-top: 12px;
+  white-space: normal;
+}
+
+#SignupModal .signup-otp-resend {
+  display: flex;
+  justify-content: center;
+  margin-top: 0;
+}
+
+#SignupModal .signup-otp-resend button {
+  color: #23262F;
+}
+
+#SignupModal .signup-otp-resend button:disabled {
+  color: #717680;
+  opacity: 1;
+}
+
 /* Form Buttons */
 .form-button-1 {
   width: 100%;
@@ -945,6 +1036,47 @@ button.signUpContinueIcon {
   .loginContinueIcon img {
     height: 20px;
     width: 20px;
+  }
+
+  #SignupModal .signupmodal-content--otp {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-height: 100dvh !important;
+    margin: 0 !important;
+    padding: 24px 16px !important;
+    border-radius: 0 !important;
+    display: block;
+  }
+
+  #SignupModal .signup-otp-header {
+    padding: 0 34px 16px;
+  }
+
+  #SignupModal .signup-otp-header h3 {
+    font-size: 20px;
+    line-height: 28px;
+  }
+
+  #SignupModal .signup-otp-copy {
+    font-size: 13px;
+    margin-top: -6px;
+  }
+
+  #SignupModal .signup-otp-input {
+    height: 50px;
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 390px) {
+  #SignupModal .signup-otp-input-wrap {
+    gap: 7px;
+  }
+
+  #SignupModal .signup-otp-input {
+    height: 44px;
+    border-radius: 10px;
+    font-size: 16px;
   }
 }
 

@@ -14,6 +14,12 @@ export default function Auctions({ auctions }) {
        const hasPendingEdit = (auction) => Boolean(auction.pending_edit);
        const canApprove = (auction) => ['inactive', 'declined', 'resubmit'].includes(auction.status) || hasPendingEdit(auction);
        const canDecline = (auction) => ['inactive', 'resubmit'].includes(auction.status) || hasPendingEdit(auction);
+       const listingTypeMeta = (type) => {
+              if (type === 'auction') return { label: 'Auction', className: 'bg-violet-100 text-violet-700' };
+              if (type === 'business') return { label: 'Business', className: 'bg-blue-100 text-blue-700' };
+              if (type === 'live_auction') return { label: 'Live Auction', className: 'bg-red-100 text-red-700' };
+              return { label: 'Normal', className: 'bg-amber-100 text-amber-700' };
+       };
 
        const openDeclineModal = (auction) => {
               setSelectedAuction(auction);
@@ -91,14 +97,8 @@ export default function Auctions({ auctions }) {
                                                                                                   pending edit
                                                                                            </span>
                                                                                     )}
-                                                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold mt-0.5 inline-block ${
-                                                                                           auction.listing_type === 'auction'
-                                                                                                  ? 'bg-violet-100 text-violet-700'
-                                                                                                   : auction.listing_type === 'business'
-                                                                                                   ? 'bg-blue-100 text-blue-700'
-                                                                                                   : 'bg-amber-100 text-amber-700'
-                                                                                     }`}>
-                                                                                            {auction.listing_type === 'auction' ? 'Auction' : auction.listing_type === 'business' ? 'Business' : 'Normal'}
+                                                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold mt-0.5 inline-block ${listingTypeMeta(auction.listing_type).className}`}>
+                                                                                            {listingTypeMeta(auction.listing_type).label}
                                                                                      </span>
                                                                               </div>
                                                                       </div>

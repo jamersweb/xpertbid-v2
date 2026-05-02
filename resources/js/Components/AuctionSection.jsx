@@ -9,6 +9,10 @@ const getProductImageSrc = (product) => {
        const directImage = product?.image_url;
        if (directImage) return directImage;
 
+       if (product?.listing_type === "live_auction" && product?.youtube_video_id) {
+              return `https://img.youtube.com/vi/${product.youtube_video_id}/hqdefault.jpg`;
+       }
+
        let albumData = product?.album;
        if (typeof albumData === "string") {
               try {
@@ -24,7 +28,7 @@ const getProductImageSrc = (product) => {
        return `/${String(rawPath).replace(/^\/+/, "")}`;
 };
 
-export default function AuctionSection({ products }) {
+export default function AuctionSection({ products, title = 'Latest Auctions', viewAllHref = '/marketplace?type=auction' }) {
        const { t } = useTranslate();
        const displayProducts = (products || []).slice(0, 3);
 
@@ -35,13 +39,15 @@ export default function AuctionSection({ products }) {
                      <div className="container">
                             <div className="home-section-header">
                                    <div className="featured-heading mb-0">
-                                          <h2>{t('Latest Auctions')}</h2>
+                                          <h2>{t(title)}</h2>
                                    </div>
-                                   <Link href="/search" className="section-view-all-btn">{t('View All')}</Link>
+                                   <Link href={viewAllHref} className="section-view-all-btn">{t('View All')}</Link>
                             </div>
 
                             <div className="row g-4 home-mobile-scroll-row">
                                    {displayProducts.map((product, index) => {
+                                          const listingKind = product?.list_type || product?.listing_type;
+                                          const isLiveAuction = listingKind === "live_auction";
                                           const maxBid = Number(product?.bids_max_bid_amount ?? 0);
                                           const minBid = Number(product?.minimum_bid ?? 0);
                                           const hasMaxBid = Number.isFinite(maxBid) && maxBid > 0;
@@ -53,6 +59,15 @@ export default function AuctionSection({ products }) {
                                                         <div className="product-card-wrapper h-100">
                                                                <div className="pro-image" style={{ position: "relative" }}>
                                                                       <FavoriteToggleButton listingId={product.id} />
+                                                                      {isLiveAuction && (
+                                                                             <span
+                                                                                    className="badge rounded-pill bg-danger text-white"
+                                                                                    style={{ position: "absolute", top: 12, left: 12, zIndex: 3, fontSize: 12, padding: "7px 11px" }}
+                                                                             >
+                                                                                    <i className="fa-solid fa-circle me-1" style={{ fontSize: 8 }}></i>
+                                                                                    Live Auction
+                                                                             </span>
+                                                                      )}
                                                                       <Link href={`/product/${product.slug}`} className="product-box">
                                                                              <div className="relative aspect-[4/3] w-full overflow-hidden">
                                                                                     <img
@@ -64,7 +79,7 @@ export default function AuctionSection({ products }) {
                                                                                     />
                                                                              </div>
                                                                       </Link>
-                                                                      <CountdownTimer startDate={product.start_date} endDate={product.end_date} />
+                                                                      {!isLiveAuction && <CountdownTimer startDate={product.start_date} endDate={product.end_date} />}
                                                                </div>
 
                                                                <OwnerInfoRow
@@ -84,7 +99,7 @@ export default function AuctionSection({ products }) {
 
                                                                <div className="pro-meta">
                                                                       <div className="pro-price">
-                                                                             <span>{hasMaxBid ? t('Current Bid') : t('Minimum Bid')}</span>
+                                                                             <span>{isLiveAuction ? (hasMaxBid ? t('Live Bid') : t('Start Price')) : (hasMaxBid ? t('Current Bid') : t('Minimum Bid'))}</span>
                                                                              <div className="price">
                                                                                     <span className="price" style={{ color: "#23262F" }}>
                                                                                            <Price amountAED={displayAmount} />
@@ -94,7 +109,7 @@ export default function AuctionSection({ products }) {
 
                                                                       <div className="pro-buy-btn">
                                                                              <div className="pro-bid-btn">
-                                                                                    <Link href={`/product/${product.slug}`}>{t('Place Bid')}</Link>
+                                                                                    <Link href={`/product/${product.slug}`}>{isLiveAuction ? t('Join Live') : t('Place Bid')}</Link>
                                                                              </div>
                                                                       </div>
                                                                </div>

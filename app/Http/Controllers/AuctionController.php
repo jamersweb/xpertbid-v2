@@ -31,11 +31,62 @@ use App\Models\ProductVariation;
 use App\Models\PropertyVerification;
 use App\Models\VehicleVerification;
 use App\Models\DynamicField;
+use App\Models\LiveAuctionSession;
 use App\Mail\FeaturedListingNotification;
 use Inertia\Inertia;
 
 class AuctionController extends Controller
 {
+    public function liveAuctions()
+    {
+        $session = LiveAuctionSession::query()
+            ->where('status', 'active')
+            ->latest()
+            ->first();
+
+        $ids = collect($session?->selected_listing_ids ?: [])
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $liveAuctions = collect();
+
+        if (!empty($ids)) {
+            $liveAuctions = \App\Models\Listing::query()
+                ->where('listing_type', 'live_auction')
+                ->whereIn('id', $ids)
+                ->with($this->listingUserRelations())
+                ->with(['category:id,name'])
+                ->withMax('bids', 'bid_amount')
+                ->withCount('bids')
+                ->orderByRaw('FIELD(id, ' . implode(',', array_map('intval', $ids)) . ')')
+                ->get();
+        }
+
+        if ($liveAuctions->isEmpty()) {
+            $liveAuctions = \App\Models\Listing::query()
+                ->where('listing_type', 'live_auction')
+                ->whereIn('status', ['active', 'inactive', 'ended'])
+                ->with($this->listingUserRelations())
+                ->with(['category:id,name'])
+                ->withMax('bids', 'bid_amount')
+                ->withCount('bids')
+                ->latest()
+                ->take(12)
+                ->get();
+        }
+
+        $activeAuction = $liveAuctions->firstWhere('status', 'active') ?: $liveAuctions->first();
+
+        return Inertia::render('LiveAuctions/Index', [
+            'session' => $session,
+            'liveAuctions' => $liveAuctions,
+            'activeAuction' => $activeAuction,
+        ]);
+    }
+
     protected function resolveSource(Request $request, string $fieldName): ?string
     {
         return $request->input($fieldName)
@@ -101,6 +152,14 @@ class AuctionController extends Controller
             ->take(8)
             ->get();
 
+        $latestLiveAuctions = \App\Models\Listing::where('status', 'active')
+            ->where('listing_type', 'live_auction')
+            ->with($this->listingUserRelations())
+            ->withMax('bids', 'bid_amount')
+            ->latest()
+            ->take(8)
+            ->get();
+
         // Latest Normal Lists
         $latestNormalLists = \App\Models\Listing::whereIn('listing_type', ['normal_list', 'normal', 'business_list', 'business'])
             ->where('status', 'active')
@@ -116,6 +175,7 @@ class AuctionController extends Controller
             'latestVehicles' => $latestVehicles,
             'latestProperties' => $latestProperties,
             'latestAuctions' => $latestAuctions,
+            'latestLiveAuctions' => $latestLiveAuctions,
             'latestNormalLists' => $latestNormalLists,
             'favoriteListingIds' => $favoriteListingIds,
             'canLogin' => \Illuminate\Support\Facades\Route::has('login'),
@@ -657,7 +717,7 @@ class AuctionController extends Controller
     // Latest Auctions API - list_type = 'auction' or null, latest 12
     public function get_latest_auctions()
     {
-        $products = \App\Models\Listing::where('listing_type', 'auction')
+        $products = \App\Models\Listing::whereIn('listing_type', ['auction', 'live_auction'])
             ->where('status', 'active')
             ->withMax('bids', 'bid_amount')
             ->latest()

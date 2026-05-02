@@ -1,7 +1,8 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import Header from '@/Components/Header';
 import Footer from '@/Components/Footer';
 import MobileBottomNav from '@/Components/MobileBottomNav';
+import CurrencyPicker from '@/Components/CurrencyPicker';
 import { CartProvider } from '@/Contexts/CartContext';
 import { AuthModalProvider } from '@/Contexts/AuthModalContext';
 import { useState, useEffect } from 'react';
@@ -14,6 +15,7 @@ export default function AppLayout({ children, title }) {
        const [isHiding, setIsHiding] = useState(false);
        const currentLocale = locale?.current || 'en';
        const currentDirection = locale?.supported?.[currentLocale]?.direction || (currentLocale === 'ur' ? 'rtl' : 'ltr');
+       const supportedLocales = Object.entries(locale?.supported || {});
 
        const individualVerificationStatus =
               auth?.user?.individual_verification?.status || auth?.user?.individualVerification?.status;
@@ -27,6 +29,12 @@ export default function AppLayout({ children, title }) {
               Boolean(auth?.user) &&
               verificationStatus !== 'verified' &&
               (auth?.user ? currentPath !== route('verification.identity', {}, false) : false);
+
+       const handleLocaleChange = (nextLocale) => {
+              if (nextLocale === currentLocale) return;
+
+              router.post(route('locale.update'), { locale: nextLocale }, { preserveScroll: true });
+       };
 
        useEffect(() => {
               if (flash?.success || flash?.error) {
@@ -77,6 +85,32 @@ export default function AppLayout({ children, title }) {
                                                  </div>
                                           </div>
                                    )}
+
+                                   <section className="xp-brand-top-banner" aria-label="XpertBid brand banner">
+                                          <div className="xp-brand-links">
+                                                 <Link className="xp-brand-link" href="/marketplace/real-estate-property-auction?type=auction" aria-label="View property marketplace">
+                                                        <img className="xp-brand-logo xp-brand-logo-prop" src="/assets/images/xp-prop-logo-clean.png" alt="XpertBid Property" />
+                                                 </Link>
+                                                 <Link className="xp-brand-link" href="/marketplace/vehicles?type=auction" aria-label="View vehicle marketplace">
+                                                        <img className="xp-brand-logo xp-brand-logo-vehicle" src="/assets/images/xp-vehicle-logo-clean.png" alt="XpertBid Vehicle" />
+                                                 </Link>
+                                          </div>
+                                          <div className="xp-brand-controls d-none d-lg-flex">
+                                                 <select
+                                                        className="xp-brand-language-select"
+                                                        value={currentLocale}
+                                                        onChange={(e) => handleLocaleChange(e.target.value)}
+                                                        aria-label={t('Select Language')}
+                                                 >
+                                                        {supportedLocales.map(([code, details]) => (
+                                                               <option key={code} value={code}>
+                                                                      {details.native || details.name || code.toUpperCase()}
+                                                               </option>
+                                                        ))}
+                                                 </select>
+                                                 <CurrencyPicker />
+                                          </div>
+                                   </section>
 
                                    <Header />
 
@@ -136,6 +170,62 @@ export default function AppLayout({ children, title }) {
                                           justify-content: center;
                                           flex-shrink: 0;
                                    }
+                                   .xp-brand-top-banner {
+                                          width: 100%;
+                                          background: #ffffff;
+                                          display: flex;
+                                          align-items: center;
+                                          justify-content: space-between;
+                                          gap: 16px;
+                                          overflow: hidden;
+                                          padding: 8px 48px;
+                                   }
+                                   .xp-brand-links {
+                                          display: inline-flex;
+                                          align-items: center;
+                                          gap: 10px;
+                                          min-width: 0;
+                                   }
+                                   .xp-brand-controls {
+                                          align-items: center;
+                                          gap: 10px;
+                                          flex: 0 0 auto;
+                                   }
+                                   .xp-brand-language-select {
+                                          height: 38px;
+                                          border: 1px solid #D8E0EA;
+                                          border-radius: 10px;
+                                          padding: 0 12px;
+                                          background: #F8FBFF;
+                                          color: #23262F;
+                                          font-size: 14px;
+                                          font-weight: 600;
+                                          outline: none;
+                                   }
+                                   .xp-brand-logo {
+                                          height: auto;
+                                          object-fit: contain;
+                                          display: block;
+                                          flex: 0 1 auto;
+                                   }
+                                   .xp-brand-link {
+                                          display: inline-flex;
+                                          align-items: center;
+                                          line-height: 0;
+                                          text-decoration: none;
+                                          transition: opacity 0.2s ease;
+                                   }
+                                   .xp-brand-link:hover {
+                                          opacity: 0.82;
+                                   }
+                                   .xp-brand-logo-prop {
+                                          width: 180px;
+                                          max-height: 54px;
+                                   }
+                                   .xp-brand-logo-vehicle {
+                                          width: 180px;
+                                          max-height: 46px;
+                                   }
                                    @keyframes slideInRight {
                                           from { transform: translateX(120%); opacity: 0; }
                                           to { transform: translateX(0); opacity: 1; }
@@ -171,6 +261,24 @@ export default function AppLayout({ children, title }) {
                                           box-shadow: 0 14px 32px rgba(0,0,0,0.18);
                                    }
                                    @media (max-width: 768px) {
+                                          .xp-brand-top-banner {
+                                                 justify-content: center;
+                                                 gap: 8px;
+                                                 padding: 8px 10px;
+                                          }
+                                          .xp-brand-links {
+                                                 justify-content: center;
+                                                 gap: 8px;
+                                                 width: 100%;
+                                          }
+                                          .xp-brand-logo-prop {
+                                                 width: min(45vw, 170px);
+                                                 max-height: 42px;
+                                          }
+                                          .xp-brand-logo-vehicle {
+                                                 width: min(45vw, 170px);
+                                                 max-height: 36px;
+                                          }
                                           .global-verify-account-btn {
                                                  left: 12px;
                                                  bottom: 86px;

@@ -5,13 +5,46 @@ import Price from '@/Components/Price';
 import Pagination from '@/Components/Pagination';
 import Swal from 'sweetalert2';
 
-export default function Index({ listings, filters = {} }) {
+function LiveAuctionPreview({ videoId, title }) {
+       if (!videoId || typeof videoId !== 'string' || videoId.length !== 11) {
+              return (
+                     <div className="w-24 h-14 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400">
+                            <i className="fa-brands fa-youtube text-lg"></i>
+                     </div>
+              );
+       }
+
+       return (
+              <div className="w-24 h-14 rounded-lg overflow-hidden bg-black border border-gray-200 shadow-sm shrink-0">
+                     <iframe
+                            title={title || 'Live auction preview'}
+                            src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?rel=0&mute=1`}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="strict-origin-when-cross-origin"
+                            className="w-full h-full border-0"
+                     />
+              </div>
+       );
+}
+
+export default function Index({
+       listings,
+       filters = {},
+       pageTitle = 'Listings Management',
+       pageDescription = 'Manage listings from here.',
+       filterRouteName = 'admin.listings.index',
+       createRouteName = 'admin.listings.create',
+       createButtonLabel = 'Create Listing',
+       isLiveAuctionPage = false,
+}) {
        const [search, setSearch] = useState(filters.search || '');
        const [status, setStatus] = useState(filters.status || '');
 
        const handleSearch = (e) => {
               e.preventDefault();
-              router.get(route('admin.listings.index'), { search, status }, { preserveState: true });
+              router.get(route(filterRouteName), { search, status }, { preserveState: true });
        };
 
        const handleDelete = async (listingId) => {
@@ -31,6 +64,40 @@ export default function Index({ listings, filters = {} }) {
               }
        };
 
+       const handleStartLiveAuction = async (listing) => {
+              const result = await Swal.fire({
+                     title: 'Start live auction?',
+                     text: `"${listing.title}" will become active.`,
+                     icon: 'question',
+                     showCancelButton: true,
+                     confirmButtonColor: '#059669',
+                     cancelButtonColor: '#d1d5db',
+                     confirmButtonText: 'Start',
+                     cancelButtonText: 'Cancel',
+              });
+
+              if (result.isConfirmed) {
+                     router.patch(route('admin.live-auctions.start', listing.id), {}, { preserveScroll: true });
+              }
+       };
+
+       const handleEndLiveAuction = async (listing) => {
+              const result = await Swal.fire({
+                     title: 'End live auction?',
+                     text: 'If bids exist, this auction will be awarded to the highest bidder.',
+                     icon: 'warning',
+                     showCancelButton: true,
+                     confirmButtonColor: '#ea580c',
+                     cancelButtonColor: '#d1d5db',
+                     confirmButtonText: 'End',
+                     cancelButtonText: 'Cancel',
+              });
+
+              if (result.isConfirmed) {
+                     router.patch(route('admin.live-auctions.end', listing.id), {}, { preserveScroll: true });
+              }
+       };
+
        const statusBadges = {
               active: 'bg-emerald-100 text-emerald-700',
               pending: 'bg-amber-100 text-amber-700',
@@ -43,13 +110,39 @@ export default function Index({ listings, filters = {} }) {
        };
 
        const statusOptions = ['', 'pending', 'active', 'declined', 'inactive', 'resubmit', 'ended', 'closed', 'awarded'];
+       const formatListingType = (type) => type === 'live_auction' ? 'Live Auction' : String(type || '').replace('_', ' ');
 
        return (
-              <AdminLayout title="Listings Management (Dynamic)">
-                     <Head title="Listings Management" />
+              <AdminLayout title={pageTitle}>
+                     <Head title={pageTitle} />
 
                      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="p-6 border-bottom border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="p-6 border-bottom border-gray-100 space-y-4">
+                                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                          <div>
+                                                 <h1 className="text-2xl font-black text-gray-900">{pageTitle}</h1>
+                                                 <p className="text-sm text-gray-500 mt-1">{pageDescription}</p>
+                                          </div>
+                                          <div className="flex flex-wrap items-center gap-2">
+                                                 {isLiveAuctionPage && (
+                                                        <button
+                                                               type="button"
+                                                               onClick={() => router.get(route('admin.live-auctions.setup'))}
+                                                               className="px-5 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-colors whitespace-nowrap"
+                                                        >
+                                                               <i className="fa-solid fa-tower-broadcast mr-2"></i>
+                                                               Setup Live
+                                                        </button>
+                                                 )}
+                                                 <button
+                                                        type="button"
+                                                        onClick={() => router.get(route(createRouteName))}
+                                                        className="px-5 py-2.5 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors whitespace-nowrap"
+                                                 >
+                                                        {createButtonLabel}
+                                                 </button>
+                                          </div>
+                                   </div>
                                    <form onSubmit={handleSearch} className="flex flex-1 gap-4 max-w-2xl">
                                           <div className="relative flex-1">
                                                  <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
@@ -74,13 +167,6 @@ export default function Index({ listings, filters = {} }) {
                                           </select>
                                           <button type="submit" className="px-6 py-2 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors">Filter</button>
                                    </form>
-                                   <button
-                                          type="button"
-                                          onClick={() => router.get(route('admin.listings.create'))}
-                                          className="px-5 py-2.5 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors whitespace-nowrap"
-                                   >
-                                          Create Listing
-                                   </button>
                             </div>
 
                             <div className="overflow-x-auto">
@@ -98,13 +184,17 @@ export default function Index({ listings, filters = {} }) {
                                           <tbody className="divide-y divide-gray-100">
                                                  {listings.data.map((listing) => (
                                                         <tr key={listing.id} className="hover:bg-gray-50/50 transition-colors">
-                                                               <td className="px-6 py-4">
+                                                                <td className="px-6 py-4">
                                                                        <div className="flex items-center gap-3">
-                                                                              <img src={listing.image_url || '/assets/images/placeholder.png'} className="w-10 h-10 rounded-lg object-cover" alt="" />
+                                                                              {listing.listing_type === 'live_auction' ? (
+                                                                                     <LiveAuctionPreview videoId={listing.youtube_video_id} title={listing.title} />
+                                                                              ) : (
+                                                                                     <img src={listing.image_url || '/assets/images/placeholder.png'} className="w-10 h-10 rounded-lg object-cover shrink-0" alt="" />
+                                                                              )}
                                                                               <div>
                                                                                      <p className="text-sm font-bold text-gray-800 line-clamp-1">{listing.title}</p>
                                                                                      <p className="text-[10px] text-gray-400 mt-1 mb-0">
-                                                                                            ID: {listing.id} | Type: <span className="uppercase">{listing.listing_type}</span>
+                                                                                            ID: {listing.id} | Type: <span className="uppercase">{formatListingType(listing.listing_type)}</span>
                                                                                      </p>
                                                                                      {listing.pending_edit && (
                                                                                             <p className="text-[10px] font-bold text-amber-600 mt-1 mb-0 uppercase tracking-wider">
@@ -120,19 +210,30 @@ export default function Index({ listings, filters = {} }) {
                                                                </td>
                                                                <td className="px-6 py-4">
                                                                       <span className="text-[11px] text-gray-600 bg-gray-100 px-2 py-0.5 rounded">{listing.category?.name}</span>
-                                                               </td>
+                                                                </td>
                                                                 <td className="px-6 py-4">
-                                                                       <Price 
-                                                                              amountPKR={listing.listing_type === 'auction' ? listing.minimum_bid : (listing.buy_now_price || listing.minimum_bid)} 
-                                                                              className="text-sm font-bold text-black" 
-                                                                       />
+                                                                       {listing.listing_type === 'live_auction' ? (
+                                                                              listing.listing_data?.start_price ? (
+                                                                                     <Price
+                                                                                            amountPKR={listing.listing_data.start_price}
+                                                                                            className="text-sm font-bold text-black"
+                                                                                     />
+                                                                              ) : (
+                                                                                     <span className="text-sm font-bold text-gray-500">N/A</span>
+                                                                              )
+                                                                       ) : (
+                                                                              <Price
+                                                                                     amountPKR={listing.listing_type === 'auction' ? listing.minimum_bid : (listing.buy_now_price || listing.minimum_bid)}
+                                                                                     className="text-sm font-bold text-black"
+                                                                              />
+                                                                       )}
                                                                 </td>
                                                                <td className="px-6 py-4">
                                                                       <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBadges[listing.status] || 'bg-gray-100 text-gray-700'}`}>
                                                                              {listing.status}
                                                                       </span>
                                                                </td>
-                                                               <td className="px-6 py-4 text-right">
+                                                                       <td className="px-6 py-4 text-right">
                                                                       <div className="flex items-center justify-end gap-2">
                                                                              {listing.pending_edit && (
                                                                                     <button
@@ -141,6 +242,24 @@ export default function Index({ listings, filters = {} }) {
                                                                                            title="Approve Pending Edits"
                                                                                     >
                                                                                            Approve Edits
+                                                                                    </button>
+                                                                             )}
+                                                                             {isLiveAuctionPage && listing.status !== 'active' && !['awarded', 'closed'].includes(listing.status) && (
+                                                                                    <button
+                                                                                           onClick={() => handleStartLiveAuction(listing)}
+                                                                                           className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors"
+                                                                                           title="Start Live Auction"
+                                                                                    >
+                                                                                           Start
+                                                                                    </button>
+                                                                             )}
+                                                                             {isLiveAuctionPage && listing.status === 'active' && (
+                                                                                    <button
+                                                                                           onClick={() => handleEndLiveAuction(listing)}
+                                                                                           className="px-3 py-2 rounded-lg bg-orange-600 text-white text-xs font-bold hover:bg-orange-700 transition-colors"
+                                                                                           title="End Live Auction"
+                                                                                    >
+                                                                                           End
                                                                                     </button>
                                                                              )}
                                                                              <button onClick={() => router.get(route('admin.listings.edit', listing.id))} className="p-2 hover:bg-blue-50 rounded-lg text-blue-600 transition-colors" title="Edit"><i className="fa-solid fa-pen"></i></button>
@@ -155,7 +274,13 @@ export default function Index({ listings, filters = {} }) {
                              </div>
 
                              <div className="p-6 border-top border-gray-100">
-                                   <Pagination links={listings.links} />
+                                   {listings.data.length ? (
+                                          <Pagination links={listings.links} />
+                                   ) : (
+                                          <div className="text-center py-8 text-sm text-gray-500">
+                                                 {isLiveAuctionPage ? 'No live auctions found yet.' : 'No listings found.'}
+                                          </div>
+                                   )}
                              </div>
                       </div>
               </AdminLayout>

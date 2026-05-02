@@ -10,7 +10,7 @@ import WhyChooseXpertBid from '@/Components/WhyChooseXpertBid'; // Imported
 import SeoContentSection from '@/Components/SeoContentSection'; // Imported
 import useTranslate from '@/hooks/useTranslate';
 
-export default function Home({ auth, sliders, categories, featuredAuctions, latestAuctions, latestVehicles, latestProperties, latestNormalLists, favoriteListingIds }) {
+export default function Home({ auth, sliders, categories, featuredAuctions, latestAuctions, latestLiveAuctions, latestVehicles, latestProperties, latestNormalLists, favoriteListingIds }) {
        const { t } = useTranslate();
 
        return (
@@ -22,6 +22,11 @@ export default function Home({ auth, sliders, categories, featuredAuctions, late
                             <VehicleSection products={latestVehicles} />
                             <PropertySection products={latestProperties} />
                             <AuctionSection products={latestAuctions} />
+                            <AuctionSection
+                                   products={latestLiveAuctions}
+                                   title="Live Auctions"
+                                   viewAllHref="/live-auctions"
+                            />
                             <NormalListSection products={latestNormalLists} />
                             <WhyChooseXpertBid />
                             <SeoContentSection />

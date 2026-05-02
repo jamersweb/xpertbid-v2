@@ -17,7 +17,27 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
        const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
 
        const normalizedListType = String(product?.list_type || product?.listing_type || '').toLowerCase();
+       const isAuctionSale = normalizedListType === 'auction' || normalizedListType === 'live_auction';
        const isDirectSale = normalizedListType === 'normal' || normalizedListType === 'normal_list' || normalizedListType === 'business' || normalizedListType === 'business_list';
+       const auctionStartPrice = product.minimum_bid || product.listing_data?.start_price || 0;
+       const auctionReservePrice = product.reserve_price || product.listing_data?.reserve_price || 0;
+       const categoryIds = [
+              product?.category_id,
+              product?.category?.id,
+              product?.sub_category_id,
+              product?.subCategory?.id,
+              product?.child_category_id,
+              product?.childCategory?.id,
+       ].map((value) => String(value || ''));
+       const categoryNames = [
+              product?.category?.name,
+              product?.category_name,
+              product?.subCategory?.name,
+              product?.childCategory?.name,
+       ].map((value) => String(value || '').toLowerCase());
+       const isPropertyOrVehicle = categoryIds.some((id) => id === '222' || id === '311')
+              || categoryNames.some((name) => name.includes('property') || name.includes('vehicle'));
+       const shouldContactSupport = isDirectSale && isPropertyOrVehicle;
        const baseSalePrice = Number(product.buy_now_price || product.minimum_bid || 0);
        const discountValue = Number(product.discount_value || 0);
        const hasDiscount = isDirectSale && discountValue > 0;
@@ -152,6 +172,11 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
               }
        };
 
+       const handleContactSupport = () => {
+              const message = encodeURIComponent(`Hello XpertBid Support, I need help with this listing: ${product?.title || ''}`);
+              window.open(`https://wa.me/923022113202?text=${message}`, '_blank', 'noopener,noreferrer');
+       };
+
        const handleChat = async () => {
               if (!auth.user) {
                      showNotification('Please login to chat with the seller', 'error');
@@ -243,7 +268,7 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                             </div>
                      </div>
 
-                     {product.list_type === 'auction' ? (
+                     {isAuctionSale ? (
                             <>
                                    <div className="bid-rank-and-time detail-auction-strip mb-3">
                                           <div className="detail-auction-meta">
@@ -289,10 +314,10 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
 
                                    <div className="min-bid-and-estimate d-flex justify-content-between mt-2">
                                           <div className="minimum-bid text-muted small">
-                                                 Starting bid price: <span className="text-dark fw-semibold"><Price amountAED={product.minimum_bid} /></span>
+                                                 Starting bid price: <span className="text-dark fw-semibold"><Price amountAED={auctionStartPrice} /></span>
                                           </div>
                                           <div className="estimate-bid text-muted small">
-                                                 Market Value: <span className="text-dark fw-semibold"><Price amountAED={product.reserve_price} /></span>
+                                                 Market Value: <span className="text-dark fw-semibold"><Price amountAED={auctionReservePrice} /></span>
                                           </div>
                                    </div>
 
@@ -346,22 +371,35 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                                           </div>
 
                                           <div className="action-buttons d-grid gap-2 mb-3">
-                                                 <button
-                                                        className="btn w-100 fw-bold"
-                                                        style={{ height: '50px', fontSize: '16px', borderRadius: '10px', backgroundColor: '#23262F', color: '#fff', border: 'none' }}
-                                                        onClick={handleAddToCart}
-                                                        disabled={isOwner || isAddingToCart}
-                                                 >
-                                                        {isAddingToCart ? 'Adding...' : 'Add to Cart'}
-                                                 </button>
-                                                 <button
-                                                        className="btn w-100 fw-bold"
-                                                        style={{ height: '50px', fontSize: '16px', borderRadius: '10px', backgroundColor: '#43ACE9', color: '#fff', border: 'none' }}
-                                                        onClick={handleBuyNow}
-                                                        disabled={isOwner || isAddingToCart}
-                                                 >
-                                                        Buy Now
-                                                 </button>
+                                                 {shouldContactSupport ? (
+                                                        <button
+                                                               className="btn w-100 fw-bold"
+                                                               style={{ height: '50px', fontSize: '16px', borderRadius: '10px', backgroundColor: '#25D366', color: '#fff', border: 'none' }}
+                                                               onClick={handleContactSupport}
+                                                        >
+                                                               <i className="fa-brands fa-whatsapp me-2"></i>
+                                                               Contact to Support
+                                                        </button>
+                                                 ) : (
+                                                        <>
+                                                               <button
+                                                                      className="btn w-100 fw-bold"
+                                                                      style={{ height: '50px', fontSize: '16px', borderRadius: '10px', backgroundColor: '#23262F', color: '#fff', border: 'none' }}
+                                                                      onClick={handleAddToCart}
+                                                                      disabled={isOwner || isAddingToCart}
+                                                               >
+                                                                      {isAddingToCart ? 'Adding...' : 'Add to Cart'}
+                                                               </button>
+                                                               <button
+                                                                      className="btn w-100 fw-bold"
+                                                                      style={{ height: '50px', fontSize: '16px', borderRadius: '10px', backgroundColor: '#43ACE9', color: '#fff', border: 'none' }}
+                                                                      onClick={handleBuyNow}
+                                                                      disabled={isOwner || isAddingToCart}
+                                                               >
+                                                                      Buy Now
+                                                               </button>
+                                                        </>
+                                                 )}
                                           </div>
                                    </div>
                             </>

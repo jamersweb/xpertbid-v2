@@ -147,6 +147,7 @@ export default function Index({
 
        const tabs = [
               { key: 'auction', label: 'Auction', mobileLabel: 'Auction' },
+              { key: 'live_auction', label: 'Live Auction', mobileLabel: 'Live' },
               { key: 'normal', label: 'Normal Products', mobileLabel: 'Normal' },
               { key: 'business', label: 'Business Products', mobileLabel: 'Business' },
        ];
@@ -475,8 +476,9 @@ export default function Index({
 
                                                  <div className="marketplace-top-tabs">
                                                         {tabs.map((tab) => {
-                                                               const isActive =
+                                                              const isActive =
                                                                       (tab.key === 'auction' && currentType === 'auction') ||
+                                                                      (tab.key === 'live_auction' && currentType === 'live_auction') ||
                                                                       (tab.key === 'normal' && ['normal', 'normal_list'].includes(currentType)) ||
                                                                       (tab.key === 'business' && ['business', 'business_list'].includes(currentType));
 
@@ -485,7 +487,7 @@ export default function Index({
                                                                              ? 'normal'
                                                                              : tab.key === 'business'
                                                                                    ? 'business'
-                                                                                   : 'auction';
+                                                                                   : tab.key;
 
                                                                return (
                                                                       <button

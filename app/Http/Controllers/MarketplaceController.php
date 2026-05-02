@@ -23,7 +23,9 @@ class MarketplaceController extends Controller
 
         $applyTypeFilter = function ($query) use ($type) {
             if ($type === 'auction') {
-                $query->where('listing_type', 'auction');
+                $query->whereIn('listing_type', ['auction', 'live_auction']);
+            } elseif ($type === 'live_auction') {
+                $query->where('listing_type', 'live_auction');
             } elseif ($type === 'normal_list' || $type === 'normal') {
                 $query->whereIn('listing_type', ['normal', 'normal_list']);
             } elseif ($type === 'business_list' || $type === 'business') {
@@ -221,6 +223,7 @@ class MarketplaceController extends Controller
             $query->whereRaw(
                 "CAST(COALESCE(
                     NULLIF(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.reserve_price')), 'null'),
+                    NULLIF(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.start_price')), 'null'),
                     NULLIF(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.minimum_bid')), 'null'),
                     NULLIF(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.price')), 'null'),
                     '0'
@@ -344,7 +347,9 @@ class MarketplaceController extends Controller
             ->get();
 
         $listingTypeForFields = $type;
-        if (in_array($listingTypeForFields, ['normal', 'normal_list'], true)) {
+        if ($listingTypeForFields === 'live_auction') {
+            $listingTypeForFields = 'auction';
+        } elseif (in_array($listingTypeForFields, ['normal', 'normal_list'], true)) {
             $listingTypeForFields = 'normal';
         } elseif (in_array($listingTypeForFields, ['business', 'business_list'], true)) {
             $listingTypeForFields = 'business';

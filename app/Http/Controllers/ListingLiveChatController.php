@@ -16,7 +16,7 @@ class ListingLiveChatController extends Controller
      */
     public function index(Listing $listing)
     {
-        if ($listing->listing_type !== 'auction') {
+        if (!in_array($listing->listing_type, ['auction', 'live_auction'], true)) {
             return response()->json(['messages' => []]);
         }
 
@@ -38,7 +38,7 @@ class ListingLiveChatController extends Controller
      */
     public function store(Request $request, Listing $listing)
     {
-        if ($listing->listing_type !== 'auction') {
+        if (!in_array($listing->listing_type, ['auction', 'live_auction'], true)) {
             abort(403, 'Live chat is only available for auctions.');
         }
 
@@ -46,7 +46,7 @@ class ListingLiveChatController extends Controller
             abort(403, 'Live chat is not available for this listing.');
         }
 
-        $end = $listing->end_date ? Carbon::parse($listing->end_date) : null;
+        $end = $listing->listing_type === 'auction' && $listing->end_date ? Carbon::parse($listing->end_date) : null;
         if ($end && now()->greaterThan($end)) {
             abort(403, 'This auction has ended.');
         }

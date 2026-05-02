@@ -7,7 +7,7 @@ import 'swiper/css/thumbs';
 import { FreeMode, Navigation, Thumbs } from 'swiper/modules';
 import CountdownTimer from "@/Components/CountdownTimer";
 
-export default function ProductImages({ albumImages, videos = null, status, mainImage, listType, startDate, endDate }) {
+export default function ProductImages({ albumImages, videos = null, status, mainImage, listType, startDate, endDate, youtubeVideoId = null }) {
        let parsedAlbum = [];
        if (Array.isArray(albumImages)) {
               parsedAlbum = albumImages;
@@ -47,7 +47,11 @@ export default function ProductImages({ albumImages, videos = null, status, main
               src: item
        }));
 
-       const allMedia = [...processedAlbum, ...processedVideos];
+       const youtubeMedia = youtubeVideoId && typeof youtubeVideoId === 'string' && youtubeVideoId.length === 11
+              ? [{ type: 'youtube', src: youtubeVideoId }]
+              : [];
+
+       const allMedia = [...youtubeMedia, ...processedAlbum, ...processedVideos];
 
        if (allMedia.length === 0 && mainImage) {
               allMedia.push({ type: 'image', src: mainImage });
@@ -176,7 +180,19 @@ export default function ProductImages({ albumImages, videos = null, status, main
                                    {allMedia.map((media, index) => (
                                           <SwiperSlide key={index} style={{ margin: "0px" }}>
                                                  <div className="pro-image-main" style={{ position: 'relative', width: '100%', minHeight: '500px' }}>
-                                                        {media.type === 'image' ? (
+                                                        {media.type === 'youtube' ? (
+                                                               <div style={{ position: 'relative', width: '100%', minHeight: '500px', background: '#000', borderRadius: '10px', overflow: 'hidden' }}>
+                                                                      <iframe
+                                                                             title="YouTube live stream"
+                                                                             src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(media.src)}?rel=0`}
+                                                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                                             allowFullScreen
+                                                                             loading="lazy"
+                                                                             referrerPolicy="strict-origin-when-cross-origin"
+                                                                             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+                                                                      />
+                                                               </div>
+                                                        ) : media.type === 'image' ? (
                                                                <img
                                                                       src={getUrl(media.src)}
                                                                       alt={`Product ${index}`}
@@ -287,7 +303,33 @@ export default function ProductImages({ albumImages, videos = null, status, main
                                    {allMedia.map((media, index) => (
                                           <SwiperSlide key={index}>
                                                  <div className="pro-image" style={{ height: "100%", position: "relative", minHeight: "80px" }}>
-                                                        {media.type === 'image' ? (
+                                                        {media.type === 'youtube' ? (
+                                                               <div style={{
+                                                                      position: "relative",
+                                                                      width: "100%",
+                                                                      height: "100%",
+                                                                      minHeight: "80px",
+                                                                      background: `url(https://img.youtube.com/vi/${media.src}/hqdefault.jpg) center/cover`,
+                                                                      borderRadius: "8px",
+                                                                      display: 'flex',
+                                                                      alignItems: 'center',
+                                                                      justifyContent: 'center'
+                                                               }}>
+                                                                      <span style={{
+                                                                             width: 34,
+                                                                             height: 34,
+                                                                             borderRadius: '50%',
+                                                                             background: 'rgba(220, 38, 38, 0.92)',
+                                                                             color: '#fff',
+                                                                             display: 'flex',
+                                                                             alignItems: 'center',
+                                                                             justifyContent: 'center',
+                                                                             boxShadow: '0 6px 16px rgba(0,0,0,0.25)'
+                                                                      }}>
+                                                                             <i className="fa-solid fa-play" style={{ fontSize: 13, marginLeft: 2 }}></i>
+                                                                      </span>
+                                                               </div>
+                                                        ) : media.type === 'image' ? (
                                                                <img
                                                                       src={getUrl(media.src)}
                                                                       alt={`Thumb ${index}`}

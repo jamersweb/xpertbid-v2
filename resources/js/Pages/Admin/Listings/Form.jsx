@@ -17,7 +17,15 @@ function Field({ label, error, children }) {
        );
 }
 
-export default function Form({ listing = null, users = [], categories = [], statuses = [] }) {
+export default function Form({
+       listing = null,
+       users = [],
+       categories = [],
+       statuses = [],
+       defaultListingType = 'normal',
+       backRouteName = 'admin.listings.index',
+       returnTo = '',
+}) {
        const isEditing = Boolean(listing?.id);
        const initialAlbum = useMemo(() => listing?.album_urls || [], [listing]);
        const rootCategories = categories.filter((item) => !item.parent_id && !item.sub_category_id);
@@ -28,7 +36,7 @@ export default function Form({ listing = null, users = [], categories = [], stat
               user_id: listing?.user_id || '',
               title: listing?.title || '',
               description: listing?.description || '',
-              listing_type: listing?.listing_type || 'normal',
+              listing_type: listing?.listing_type || defaultListingType,
               status: listing?.status || 'inactive',
               category_id: listing?.category_id || '',
               sub_category_id: listing?.sub_category_id || '',
@@ -41,12 +49,28 @@ export default function Form({ listing = null, users = [], categories = [], stat
               image: null,
               album: [],
               existing_album: initialAlbum,
-              youtube_video_id: listing?.youtube_video_id || '',
+              return_to: returnTo,
        });
 
        const [imagePreview, setImagePreview] = useState(listing?.image_url || '');
+       const isLiveAuction = data.listing_type === 'live_auction';
        const availableSubCategories = subCategories.filter((item) => String(item.parent_id) === String(data.category_id));
        const availableChildCategories = childCategories.filter((item) => String(item.sub_category_id) === String(data.sub_category_id));
+       const handleListingTypeChange = (value) => {
+              setData({
+                     ...data,
+                     listing_type: value,
+                     return_to: value === 'live_auction' ? 'live_auctions' : '',
+                     ...(value === 'live_auction'
+                            ? {
+                                   user_id: '',
+                                   start_date: '',
+                                   end_date: '',
+                                   stock: '',
+                            }
+                            : {}),
+              });
+       };
 
        const submit = (e) => {
               e.preventDefault();
@@ -73,29 +97,32 @@ export default function Form({ listing = null, users = [], categories = [], stat
                                    </div>
                                    <button
                                           type="button"
-                                          onClick={() => router.get(route('admin.listings.index'))}
+                                          onClick={() => router.get(route(backRouteName))}
                                           className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50"
                                    >
-                                          Back to Listings
+                                          {backRouteName === 'admin.live-auctions.index' ? 'Back to Live Auctions' : 'Back to Listings'}
                                    </button>
                             </div>
 
                             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                                    <div className="xl:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
-                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                 <Field label="Seller" error={errors.user_id}>
-                                                        <select className={inputClass} value={data.user_id} onChange={(e) => setData('user_id', e.target.value)}>
-                                                               <option value="">Select seller</option>
-                                                               {users.map((user) => (
-                                                                      <option key={user.id} value={user.id}>{user.name} ({user.email})</option>
-                                                               ))}
-                                                        </select>
-                                                 </Field>
+                                          <div className={`grid grid-cols-1 ${isLiveAuction ? '' : 'md:grid-cols-2'} gap-4`}>
+                                                 {!isLiveAuction && (
+                                                        <Field label="Seller" error={errors.user_id}>
+                                                               <select className={inputClass} value={data.user_id} onChange={(e) => setData('user_id', e.target.value)}>
+                                                                      <option value="">Select seller</option>
+                                                                      {users.map((user) => (
+                                                                             <option key={user.id} value={user.id}>{user.name} ({user.email})</option>
+                                                                      ))}
+                                                               </select>
+                                                        </Field>
+                                                 )}
                                                  <Field label="Listing Type" error={errors.listing_type}>
-                                                        <select className={inputClass} value={data.listing_type} onChange={(e) => setData('listing_type', e.target.value)}>
+                                                        <select className={inputClass} value={data.listing_type} onChange={(e) => handleListingTypeChange(e.target.value)}>
                                                                <option value="normal">Normal</option>
                                                                <option value="auction">Auction</option>
                                                                <option value="business">Business</option>
+                                                               <option value="live_auction">Live Auction</option>
                                                         </select>
                                                  </Field>
                                           </div>
@@ -167,20 +194,27 @@ export default function Form({ listing = null, users = [], categories = [], stat
                                                  </div>
                                           </Field>
 
-                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                 <Field label={data.listing_type === 'auction' ? 'Start Price' : 'Price'} error={errors.price}>
-                                                        <input type="number" className={inputClass} value={data.price} onChange={(e) => setData('price', e.target.value)} />
-                                                 </Field>
-                                                 {data.listing_type === 'auction' ? (
+                                          {(data.listing_type === 'auction' || isLiveAuction) ? (
+                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <Field label="Start Price" error={errors.price}>
+                                                               <input type="number" className={inputClass} value={data.price} onChange={(e) => setData('price', e.target.value)} />
+                                                        </Field>
                                                         <Field label="Reserve Price" error={errors.reserve_price}>
                                                                <input type="number" className={inputClass} value={data.reserve_price} onChange={(e) => setData('reserve_price', e.target.value)} />
                                                         </Field>
-                                                 ) : (
-                                                        <Field label="Stock" error={errors.stock}>
-                                                               <input type="number" className={inputClass} value={data.stock} onChange={(e) => setData('stock', e.target.value)} />
+                                                 </div>
+                                          ) : (
+                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <Field label="Price" error={errors.price}>
+                                                               <input type="number" className={inputClass} value={data.price} onChange={(e) => setData('price', e.target.value)} />
                                                         </Field>
-                                                 )}
-                                          </div>
+                                                        {data.listing_type === 'business' && (
+                                                               <Field label="Stock" error={errors.stock}>
+                                                                      <input type="number" className={inputClass} value={data.stock} onChange={(e) => setData('stock', e.target.value)} />
+                                                               </Field>
+                                                        )}
+                                                 </div>
+                                          )}
 
                                           {data.listing_type === 'auction' && (
                                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -197,7 +231,7 @@ export default function Form({ listing = null, users = [], categories = [], stat
                                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
                                           <h2 className="text-lg font-bold text-gray-900">Media</h2>
 
-                                          <Field label="Primary Image" error={errors.image}>
+                                          <Field label={isLiveAuction ? 'Primary Image (optional)' : 'Primary Image'} error={errors.image}>
                                                  <input
                                                         type="file"
                                                         accept="image/*"
@@ -218,23 +252,7 @@ export default function Form({ listing = null, users = [], categories = [], stat
                                                  </div>
                                           )}
 
-                                          <Field
-                                                 label="YouTube Live / video"
-                                                 error={errors.youtube_video_id}
-                                          >
-                                                 <input
-                                                        type="text"
-                                                        className={inputClass}
-                                                        value={data.youtube_video_id}
-                                                        onChange={(e) => setData('youtube_video_id', e.target.value)}
-                                                        placeholder="Video ID or URL (watch, /live/, youtu.be)"
-                                                 />
-                                                 <p className="text-xs text-gray-500 mt-1">
-                                                        Optional. Paste the live or watch URL after you go live; the embed appears on the public listing. Bidding still runs on XpertBid.
-                                                 </p>
-                                          </Field>
-
-                                          <Field label="Album Images" error={errors.album}>
+                                          <Field label={isLiveAuction ? 'Images (optional)' : 'Album Images'} error={errors.album}>
                                                  <input
                                                         type="file"
                                                         accept="image/*"

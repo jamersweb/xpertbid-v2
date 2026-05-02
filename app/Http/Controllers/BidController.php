@@ -81,8 +81,9 @@ class BidController extends Controller
         ]);
 
         $listing = Listing::findOrFail($request->listing_id);
+        $isLiveAuction = $listing->listing_type === 'live_auction';
 
-        if ($listing->status !== 'active' || now()->greaterThan($listing->end_date)) {
+        if ($listing->status !== 'active' || (!$isLiveAuction && now()->greaterThan($listing->end_date))) {
             return redirect()->back()->with('error', 'Auction has ended or is inactive.');
         }
 
@@ -111,11 +112,13 @@ class BidController extends Controller
                 'bid_source' => $this->resolveSource($request, 'bid_source'),
             ]);
 
-            // Auto-extend auction logic (simplified)
-            $endDate = \Carbon\Carbon::parse($listing->end_date); // Assuming UTC in new app or handling consistently
-            if (now()->addMinutes(5)->greaterThanOrEqualTo($endDate)) {
-                 $listing->end_date = $endDate->addMinutes(15);
-                 $listing->save();
+            // Auto-extend timed auctions only.
+            if (!$isLiveAuction && $listing->end_date) {
+                $endDate = \Carbon\Carbon::parse($listing->end_date);
+                if (now()->addMinutes(5)->greaterThanOrEqualTo($endDate)) {
+                    $listing->end_date = $endDate->addMinutes(15);
+                    $listing->save();
+                }
             }
 
             // Notifications logic (simplified calls)
