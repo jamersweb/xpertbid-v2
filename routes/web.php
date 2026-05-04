@@ -259,11 +259,13 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::patch('/payment-requests/{id}/status', [App\Http\Controllers\Admin\PaymentRequestController::class, 'updateStatus'])->name('payment-requests.update-status');
 
     // Unified List Management (Refactored)
+    Route::get('/live', [App\Http\Controllers\Admin\ListingController::class, 'liveSessions'])->name('live.index');
     Route::get('/live-auctions', [App\Http\Controllers\Admin\ListingController::class, 'liveAuctions'])->name('live-auctions.index');
     Route::get('/live-auctions/create', [App\Http\Controllers\Admin\ListingController::class, 'createLiveAuction'])->name('live-auctions.create');
     Route::get('/live-auctions/setup', [App\Http\Controllers\Admin\ListingController::class, 'setupLiveAuction'])->name('live-auctions.setup');
     Route::post('/live-auctions/setup', [App\Http\Controllers\Admin\ListingController::class, 'launchLiveAuction'])->name('live-auctions.launch');
     Route::get('/live-auctions/room', [App\Http\Controllers\Admin\ListingController::class, 'liveAuctionRoom'])->name('live-auctions.room');
+    Route::patch('/live-auctions/session/{session}/close', [App\Http\Controllers\Admin\ListingController::class, 'closeLiveAuctionSession'])->name('live-auctions.session.close');
     Route::patch('/live-auctions/{id}/start', [App\Http\Controllers\Admin\ListingController::class, 'startLiveAuction'])->name('live-auctions.start');
     Route::patch('/live-auctions/{id}/end', [App\Http\Controllers\Admin\ListingController::class, 'endLiveAuction'])->name('live-auctions.end');
     Route::patch('/live-auctions/{id}/close', [App\Http\Controllers\Admin\ListingController::class, 'closeLiveAuction'])->name('live-auctions.close');

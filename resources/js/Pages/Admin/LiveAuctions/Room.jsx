@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import Price from '@/Components/Price';
 import ListingLiveChat from '@/Components/ProductDetails/ListingLiveChat';
@@ -40,7 +40,7 @@ function YoutubePlayer({ videoId, title }) {
        );
 }
 
-export default function Room({ liveAuctions = [], selectedIds = [], liveUrl = '', globalVideoId = null }) {
+export default function Room({ session = null, liveAuctions = [], selectedIds = [], liveUrl = '', globalVideoId = null }) {
        const [activeId, setActiveId] = useState(liveAuctions[0]?.id || null);
        const activeAuction = useMemo(
               () => liveAuctions.find((auction) => auction.id === activeId) || liveAuctions[0],
@@ -49,6 +49,20 @@ export default function Room({ liveAuctions = [], selectedIds = [], liveUrl = ''
        const activeVideoId = globalVideoId || activeAuction?.youtube_video_id;
        const startPrice = activeAuction?.listing_data?.start_price;
        const reservePrice = activeAuction?.listing_data?.reserve_price;
+
+       const refreshRoomState = () => {
+              router.reload({
+                     only: ['session', 'liveAuctions', 'selectedIds', 'liveUrl', 'globalVideoId'],
+                     preserveScroll: true,
+                     preserveState: true,
+                     showProgress: false,
+              });
+       };
+
+       useEffect(() => {
+              const timer = window.setInterval(refreshRoomState, 2500);
+              return () => window.clearInterval(timer);
+       }, []);
 
        const confirmPatch = async ({ title, text, routeName, confirmButtonText, confirmButtonColor = '#111827' }) => {
               const result = await Swal.fire({
@@ -65,6 +79,32 @@ export default function Room({ liveAuctions = [], selectedIds = [], liveUrl = ''
               if (result.isConfirmed) {
                      router.patch(route(routeName, activeAuction.id), {}, {
                             preserveScroll: true,
+                            preserveState: true,
+                            onSuccess: refreshRoomState,
+                     });
+              }
+       };
+
+       const closeSessionAndBack = async () => {
+              if (!session?.id) {
+                     router.get(route('admin.live-auctions.index'));
+                     return;
+              }
+
+              const result = await Swal.fire({
+                     title: 'Close live session?',
+                     text: 'This will close the live session, close selected products, and move viewers back to the live auctions page.',
+                     icon: 'question',
+                     showCancelButton: true,
+                     confirmButtonColor: '#475569',
+                     cancelButtonColor: '#d1d5db',
+                     confirmButtonText: 'Close & Back',
+                     cancelButtonText: 'Cancel',
+              });
+
+              if (result.isConfirmed) {
+                     router.patch(route('admin.live-auctions.session.close', session.id), {}, {
+                            preserveScroll: false,
                             preserveState: false,
                      });
               }
@@ -102,8 +142,27 @@ export default function Room({ liveAuctions = [], selectedIds = [], liveUrl = ''
                                                         <div className="min-w-0">
                                                                <h1 className="text-lg lg:text-xl font-black text-gray-900 leading-tight mb-0">Live Auction Room</h1>
                                                                <p className="text-xs text-gray-500 mt-0 mb-0 truncate">Control selected live products, stream, status and website chats.</p>
+                                                               {session ? (
+                                                                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                                                                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${session.status === 'active' ? 'bg-emerald-100 text-emerald-700' : session.status === 'soon' ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 text-slate-700'}`}>
+                                                                                    {session.status === 'active' ? 'Live' : session.status}
+                                                                             </span>
+                                                                             {session.scheduled_at ? (
+                                                                                    <span className="text-[11px] font-bold text-gray-500">
+                                                                                           Scheduled: {new Date(session.scheduled_at).toLocaleString()}
+                                                                                    </span>
+                                                                             ) : null}
+                                                                      </div>
+                                                               ) : null}
                                                         </div>
                                                         <div className="flex shrink-0 gap-2">
+                                                               <button
+                                                                      type="button"
+                                                                      onClick={closeSessionAndBack}
+                                                                      className="px-3 py-2 rounded-xl bg-slate-600 text-white text-xs font-bold hover:bg-slate-700"
+                                                               >
+                                                                      Back & Close Live
+                                                               </button>
                                                                <button
                                                                       type="button"
                                                                       onClick={() => router.get(route('admin.live-auctions.setup'))}

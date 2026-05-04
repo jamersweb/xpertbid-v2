@@ -184,10 +184,70 @@ class ListingController extends Controller
         ]);
     }
 
+    public function liveSessions(Request $request)
+    {
+        $query = LiveAuctionSession::query()
+            ->latest();
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->input('search'));
+            $query->where(function ($q) use ($search) {
+                $q->where('live_url', 'like', "%{$search}%")
+                    ->orWhere('youtube_video_id', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%");
+            });
+        }
+
+        $sessions = $query->paginate(12)->withQueryString();
+
+        $listingIds = collect($sessions->items())
+            ->flatMap(fn (LiveAuctionSession $session) => $session->selected_listing_ids ?: [])
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        $listings = Listing::query()
+            ->whereIn('id', $listingIds)
+            ->select('id', 'title', 'slug', 'status', 'youtube_video_id')
+            ->get()
+            ->keyBy('id');
+
+        $sessions->getCollection()->transform(function (LiveAuctionSession $session) use ($listings) {
+            $ids = collect($session->selected_listing_ids ?: [])
+                ->map(fn ($id) => (int) $id)
+                ->filter()
+                ->values();
+
+            $session->selected_count = $ids->count();
+            $session->selected_listings = $ids
+                ->map(fn ($id) => $listings->get($id))
+                ->filter()
+                ->values()
+                ->all();
+
+            return $session;
+        });
+
+        return Inertia::render('Admin/LiveAuctions/Sessions', [
+            'sessions' => $sessions,
+            'filters' => [
+                'search' => $request->input('search', ''),
+                'status' => $request->input('status', ''),
+            ],
+        ]);
+    }
+
     public function launchLiveAuction(Request $request)
     {
         $validated = $request->validate([
             'live_url' => ['required', 'string', 'max:500'],
+            'session_status' => ['required', 'in:live,closed,soon'],
+            'scheduled_at' => ['nullable', 'required_if:session_status,soon', 'date'],
             'auction_ids' => ['required', 'array', 'min:1'],
             'auction_ids.*' => ['integer', 'exists:listings,id'],
         ]);
@@ -202,13 +262,22 @@ class ListingController extends Controller
             return redirect()->back()->with('error', 'Please select at least one live auction.');
         }
 
-        LiveAuctionSession::query()->where('status', 'active')->update(['status' => 'inactive']);
+        $status = match ($validated['session_status']) {
+            'live' => 'active',
+            'soon' => 'soon',
+            default => 'closed',
+        };
+
+        if ($status === 'active') {
+            LiveAuctionSession::query()->where('status', 'active')->update(['status' => 'inactive']);
+        }
 
         $session = LiveAuctionSession::create([
             'live_url' => $validated['live_url'],
             'youtube_video_id' => YoutubeVideoId::normalize($validated['live_url']),
             'selected_listing_ids' => array_values($ids),
-            'status' => 'active',
+            'status' => $status,
+            'scheduled_at' => $status === 'soon' ? $validated['scheduled_at'] : null,
         ]);
 
         return redirect()->route('admin.live-auctions.room', [
@@ -249,6 +318,7 @@ class ListingController extends Controller
             ->get();
 
         return Inertia::render('Admin/LiveAuctions/Room', [
+            'session' => $session,
             'liveAuctions' => $liveAuctions,
             'selectedIds' => $ids,
             'liveUrl' => $liveUrl,
@@ -262,9 +332,61 @@ class ListingController extends Controller
             ->where('listing_type', 'live_auction')
             ->findOrFail($id);
 
-        $listing->update(['status' => 'active']);
+        $session = LiveAuctionSession::query()
+            ->where('status', 'active')
+            ->whereJsonContains('selected_listing_ids', $listing->id)
+            ->latest()
+            ->first();
+
+        DB::transaction(function () use ($listing, $session) {
+            $ids = collect($session?->selected_listing_ids ?: [])
+                ->map(fn ($id) => (int) $id)
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            if (!empty($ids)) {
+                Listing::query()
+                    ->where('listing_type', 'live_auction')
+                    ->whereIn('id', $ids)
+                    ->where('id', '!=', $listing->id)
+                    ->where('status', 'active')
+                    ->update(['status' => 'inactive']);
+            }
+
+            $listing->update(['status' => 'active']);
+        });
 
         return redirect()->back()->with('success', 'Live auction started successfully.');
+    }
+
+    public function closeLiveAuctionSession(LiveAuctionSession $session)
+    {
+        $ids = collect($session->selected_listing_ids ?: [])
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        DB::transaction(function () use ($session, $ids) {
+            $session->update([
+                'status' => 'closed',
+                'closed_at' => now(),
+            ]);
+
+            if (!empty($ids)) {
+                Listing::query()
+                    ->where('listing_type', 'live_auction')
+                    ->whereIn('id', $ids)
+                    ->update(['status' => 'closed']);
+            }
+        });
+
+        return redirect()
+            ->route('admin.live-auctions.index')
+            ->with('success', 'Live auction session closed successfully.');
     }
 
     public function endLiveAuction($id)

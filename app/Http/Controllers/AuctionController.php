@@ -40,11 +40,16 @@ class AuctionController extends Controller
     public function liveAuctions()
     {
         $session = LiveAuctionSession::query()
-            ->where('status', 'active')
+            ->whereIn('status', ['active', 'soon'])
             ->latest()
-            ->first();
+            ->first()
+            ?: LiveAuctionSession::query()
+                ->where('status', 'closed')
+                ->latest('closed_at')
+                ->latest()
+                ->first();
 
-        $ids = collect($session?->selected_listing_ids ?: [])
+        $ids = collect($session?->status === 'active' ? ($session?->selected_listing_ids ?: []) : [])
             ->map(fn ($id) => (int) $id)
             ->filter()
             ->unique()
@@ -62,19 +67,6 @@ class AuctionController extends Controller
                 ->withMax('bids', 'bid_amount')
                 ->withCount('bids')
                 ->orderByRaw('FIELD(id, ' . implode(',', array_map('intval', $ids)) . ')')
-                ->get();
-        }
-
-        if ($liveAuctions->isEmpty()) {
-            $liveAuctions = \App\Models\Listing::query()
-                ->where('listing_type', 'live_auction')
-                ->whereIn('status', ['active', 'inactive', 'ended'])
-                ->with($this->listingUserRelations())
-                ->with(['category:id,name'])
-                ->withMax('bids', 'bid_amount')
-                ->withCount('bids')
-                ->latest()
-                ->take(12)
                 ->get();
         }
 
@@ -444,6 +436,33 @@ class AuctionController extends Controller
                 ->exists();
         }
 
+        $liveSession = null;
+        $liveActiveAuction = null;
+        if ($listing->listing_type === 'live_auction') {
+            $liveSession = LiveAuctionSession::query()
+                ->where('status', 'active')
+                ->whereJsonContains('selected_listing_ids', $listing->id)
+                ->latest()
+                ->first();
+
+            $liveIds = collect($liveSession?->selected_listing_ids ?: [])
+                ->map(fn ($id) => (int) $id)
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            if (!empty($liveIds)) {
+                $liveActiveAuction = \App\Models\Listing::query()
+                    ->where('listing_type', 'live_auction')
+                    ->whereIn('id', $liveIds)
+                    ->where('status', 'active')
+                    ->select('id', 'slug', 'status', 'title')
+                    ->orderByRaw('FIELD(id, ' . implode(',', array_map('intval', $liveIds)) . ')')
+                    ->first();
+            }
+        }
+
         $categoryIds = [$listing->category_id];
         $category = AuctionCategory::find($listing->category_id);
         if ($category) {
@@ -476,6 +495,8 @@ class AuctionController extends Controller
             'files' => $listing->album ?: [], // album is already cast to array in Listing model
             'isFavorite' => $isFavorite,
             'dynamicFields' => $dynamicFields,
+            'liveVideoId' => $liveSession?->youtube_video_id,
+            'liveActiveAuction' => $liveActiveAuction,
         ]);
     }
     public function edit(\App\Models\Listing $auction)

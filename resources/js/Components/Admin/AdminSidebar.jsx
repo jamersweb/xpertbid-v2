@@ -5,6 +5,7 @@ import useTranslate from '@/hooks/useTranslate';
 const menuItems = [
        { name: 'Dashboard', icon: 'fa-gauge-high', route: 'admin.dashboard' },
        { name: 'Listings', icon: 'fa-gavel', route: 'admin.listings.index' },
+       { name: 'Live', icon: 'fa-satellite-dish', route: 'admin.live.index' },
        { name: 'Live Auctions', icon: 'fa-tower-broadcast', route: 'admin.live-auctions.index' },
        { name: 'Bids', icon: 'fa-hand-holding-dollar', route: 'admin.bids.index' },
        { name: 'Orders', icon: 'fa-cart-shopping', route: 'admin.orders.index' },

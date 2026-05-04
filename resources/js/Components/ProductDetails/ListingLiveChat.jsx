@@ -32,14 +32,16 @@ export default function ListingLiveChat({ listingId, listingSlug }) {
         });
     }, []);
 
-    const fetchMessages = useCallback(async () => {
+    const fetchMessages = useCallback(async ({ silent = false } = {}) => {
         try {
             const { data } = await axios.get(route('live-chat.listing.messages.index', listingSlug));
             const list = Array.isArray(data?.messages) ? data.messages : [];
             setMessages(list);
             setError('');
         } catch (e) {
-            setError('Could not load chat.');
+            if (!silent) {
+                setError('Could not load chat.');
+            }
         } finally {
             setLoading(false);
         }
@@ -69,14 +71,11 @@ export default function ListingLiveChat({ listingId, listingSlug }) {
     }, [auth?.user, listingId, mergeMessage]);
 
     useEffect(() => {
-        if (auth?.user) {
-            return undefined;
-        }
         const t = setInterval(() => {
-            fetchMessages();
-        }, 10000);
+            fetchMessages({ silent: true });
+        }, window.Echo ? 5000 : 2500);
         return () => clearInterval(t);
-    }, [auth?.user, fetchMessages]);
+    }, [fetchMessages]);
 
     const send = async (e) => {
         e.preventDefault();
@@ -140,7 +139,12 @@ export default function ListingLiveChat({ listingId, listingSlug }) {
                             disabled={sending}
                         />
                         <button type="submit" className="btn btn-sm btn-dark px-3" disabled={sending || !body.trim()}>
-                            {sending ? '…' : 'Send'}
+                            {sending ? (
+                                <i className="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                            ) : (
+                                <i className="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                            )}
+                            <span className="visually-hidden">{sending ? 'Sending' : 'Send'}</span>
                         </button>
                     </div>
                 ) : (

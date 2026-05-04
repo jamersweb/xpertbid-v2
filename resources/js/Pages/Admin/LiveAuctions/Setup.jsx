@@ -7,6 +7,8 @@ export default function Setup({ liveAuctions = [] }) {
        const [search, setSearch] = useState('');
        const { data, setData, post, processing, errors } = useForm({
               live_url: '',
+              session_status: 'live',
+              scheduled_at: '',
               auction_ids: [],
        });
 
@@ -65,6 +67,52 @@ export default function Setup({ liveAuctions = [] }) {
                                           />
                                           {errors.live_url && <p className="text-xs text-red-600 mt-2">{errors.live_url}</p>}
                                    </div>
+
+                                   <div className="mt-6">
+                                          <label className="block text-sm font-bold text-gray-800 mb-3">Live Status</label>
+                                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                 {[
+                                                        { value: 'live', label: 'Live', icon: 'fa-circle-play', copy: 'Show this room as currently live.' },
+                                                        { value: 'closed', label: 'Closed', icon: 'fa-circle-xmark', copy: 'Keep this setup closed on frontend.' },
+                                                        { value: 'soon', label: 'Soon', icon: 'fa-clock', copy: 'Schedule this live auction for later.' },
+                                                 ].map((option) => {
+                                                        const active = data.session_status === option.value;
+                                                        return (
+                                                               <button
+                                                                      key={option.value}
+                                                                      type="button"
+                                                                      onClick={() => setData({
+                                                                             ...data,
+                                                                             session_status: option.value,
+                                                                             scheduled_at: option.value === 'soon' ? data.scheduled_at : '',
+                                                                      })}
+                                                                      className={`text-left rounded-xl border px-4 py-3 transition-all ${active ? 'border-black bg-gray-950 text-white shadow-sm' : 'border-gray-200 bg-white text-gray-900 hover:bg-gray-50'}`}
+                                                               >
+                                                                      <div className="flex items-center gap-2 text-sm font-black">
+                                                                             <i className={`fa-solid ${option.icon}`}></i>
+                                                                             {option.label}
+                                                                      </div>
+                                                                      <p className={`text-xs mt-1 mb-0 ${active ? 'text-gray-200' : 'text-gray-500'}`}>{option.copy}</p>
+                                                               </button>
+                                                        );
+                                                 })}
+                                          </div>
+                                          {errors.session_status && <p className="text-xs text-red-600 mt-2">{errors.session_status}</p>}
+                                   </div>
+
+                                   {data.session_status === 'soon' && (
+                                          <div className="mt-5">
+                                                 <label className="block text-sm font-bold text-gray-800 mb-2">Live Date & Time</label>
+                                                 <input
+                                                        type="datetime-local"
+                                                        value={data.scheduled_at}
+                                                        onChange={(e) => setData('scheduled_at', e.target.value)}
+                                                        className="w-full rounded-xl bg-white border border-gray-200 px-4 py-3 text-sm text-gray-950 placeholder:text-gray-400 focus:ring-2 focus:ring-black focus:border-black"
+                                                        style={{ color: '#111827', WebkitTextFillColor: '#111827' }}
+                                                 />
+                                                 {errors.scheduled_at && <p className="text-xs text-red-600 mt-2">{errors.scheduled_at}</p>}
+                                          </div>
+                                   )}
                             </div>
 
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -137,7 +185,7 @@ export default function Setup({ liveAuctions = [] }) {
                                                  className="px-7 py-3 bg-red-600 text-white rounded-xl text-sm font-black hover:bg-red-700 disabled:opacity-60"
                                           >
                                                  <i className="fa-solid fa-circle-play mr-2"></i>
-                                                 {processing ? 'Opening...' : 'Live Now'}
+                                                 {processing ? 'Opening...' : data.session_status === 'live' ? 'Live Now' : data.session_status === 'soon' ? 'Schedule Soon' : 'Save Closed'}
                                           </button>
                                    </div>
                             </div>

@@ -8,6 +8,7 @@ use App\Models\ListingLiveChatMessage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ListingLiveChatController extends Controller
 {
@@ -68,7 +69,15 @@ class ListingLiveChatController extends Controller
 
         $message->load('user:id,name');
 
-        broadcast(new ListingLiveChatMessageSent($message))->toOthers();
+        try {
+            broadcast(new ListingLiveChatMessageSent($message))->toOthers();
+        } catch (\Throwable $e) {
+            Log::warning('Listing live chat broadcast failed.', [
+                'listing_id' => $listing->id,
+                'message_id' => $message->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return response()->json($this->messagePayload($message));
     }

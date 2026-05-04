@@ -52,28 +52,6 @@ class BidController extends Controller
         $userId = auth()->id();
         $user = auth()->user();
 
-        // ------------------------------------------------------------
-        // Verification Gates
-        // ------------------------------------------------------------
-        $individual = IndividualVerification::where('user_id', $userId)->first();
-        $corporate = CorporateVerification::where('user_id', $userId)->first();
-
-        // Helper to check status
-        $isApproved = fn($rec) => $rec && in_array(strtolower($rec->status), ['approved', 'verified'], true);
-        $isPending = fn($rec) => $rec && in_array(strtolower($rec->status), ['pending', 'not_verified', 'submitted'], true);
-        $isRejected = fn($rec) => $rec && in_array(strtolower($rec->status), ['rejected', 'declined'], true);
-
-        if (!$isApproved($individual) && !$isApproved($corporate)) {
-            $msg = 'You need to complete verification before placing a bid.';
-            if ($isPending($individual) || $isPending($corporate)) {
-                $msg = 'Your verification is pending review.';
-            } elseif ($isRejected($individual) || $isRejected($corporate)) {
-                $msg = 'Your verification was rejected.';
-            }
-            // For Inertia, we might redirect to verification page with authorized error
-             return redirect()->route('verification.identity')->with('error', $msg);
-        }
-
         // Validation
         $request->validate([
             'listing_id' => 'required|exists:listings,id',
@@ -82,6 +60,30 @@ class BidController extends Controller
 
         $listing = Listing::findOrFail($request->listing_id);
         $isLiveAuction = $listing->listing_type === 'live_auction';
+
+        // ------------------------------------------------------------
+        // Verification Gates. Live auctions can be bid on without verification.
+        // ------------------------------------------------------------
+        if (!$isLiveAuction) {
+            $individual = IndividualVerification::where('user_id', $userId)->first();
+            $corporate = CorporateVerification::where('user_id', $userId)->first();
+
+            // Helper to check status
+            $isApproved = fn($rec) => $rec && in_array(strtolower($rec->status), ['approved', 'verified'], true);
+            $isPending = fn($rec) => $rec && in_array(strtolower($rec->status), ['pending', 'not_verified', 'submitted'], true);
+            $isRejected = fn($rec) => $rec && in_array(strtolower($rec->status), ['rejected', 'declined'], true);
+
+            if (!$isApproved($individual) && !$isApproved($corporate)) {
+                $msg = 'You need to complete verification before placing a bid.';
+                if ($isPending($individual) || $isPending($corporate)) {
+                    $msg = 'Your verification is pending review.';
+                } elseif ($isRejected($individual) || $isRejected($corporate)) {
+                    $msg = 'Your verification was rejected.';
+                }
+                // For Inertia, we might redirect to verification page with authorized error
+                return redirect()->route('verification.identity')->with('error', $msg);
+            }
+        }
 
         if ($listing->status !== 'active' || (!$isLiveAuction && now()->greaterThan($listing->end_date))) {
             return redirect()->back()->with('error', 'Auction has ended or is inactive.');

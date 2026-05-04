@@ -216,11 +216,8 @@ export default function Header() {
                                                                       <CategoriesDropdown />
                                                                </div>
                                                         </li>
-                                                        <li className="nav-item d-none d-lg-block">
-                                                               <Link href={route('auctions.one_rupee')} className="nav-link" onClick={closeMobileMenu}>{t('1 Rupee Auction')}</Link>
-                                                        </li>
-                                                        <li className="nav-item d-block d-lg-none">
-                                                               <Link href="/live-auctions" className="nav-link" onClick={closeMobileMenu}>{t('Live Auction')}</Link>
+                                                        <li className="nav-item">
+                                                               <Link href="/live-auctions" className="nav-link" onClick={closeMobileMenu}>{t('Live Auctions')}</Link>
                                                         </li>
                                                         <li className="nav-item">
                                                                <Link href={route('about')} className="nav-link" onClick={closeMobileMenu}>{t('About')}</Link>

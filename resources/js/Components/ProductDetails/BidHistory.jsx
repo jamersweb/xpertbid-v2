@@ -23,10 +23,7 @@ export default function BidHistory({ bids }) {
                                           const img = getUrl(userImage);
 
                                           const amountAED = Number(bid.bid_amount || bid.amount) || 0;
-                                          const dateStr = new Date(bid.created_at).toLocaleString(undefined, {
-                                                 day: 'numeric',
-                                                 month: 'short',
-                                                 year: 'numeric',
+                                          const dateStr = new Date(bid.created_at).toLocaleTimeString(undefined, {
                                                  hour: '2-digit',
                                                  minute: '2-digit'
                                           });
