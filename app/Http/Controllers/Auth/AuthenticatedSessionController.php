@@ -15,16 +15,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(Request $request): RedirectResponse
     {
-        $previousUrl = url()->previous();
-        $appUrl = rtrim(config('app.url'), '/');
-
-        if (!$previousUrl || str_starts_with($previousUrl, $appUrl . '/login')) {
-            $previousUrl = url('/');
-        }
-
-        $separator = str_contains($previousUrl, '?') ? '&' : '?';
-
-        return redirect()->to($previousUrl . $separator . 'auth=login');
+        return redirect()->route('home', ['auth' => 'login']);
     }
 
     /**
