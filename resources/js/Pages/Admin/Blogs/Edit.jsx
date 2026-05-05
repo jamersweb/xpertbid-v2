@@ -8,10 +8,12 @@ export default function Edit({ blog }) {
         const { data, setData, post, processing, errors } = useForm({
                _method: 'PUT',
                title: blog.title || '',
+               slug: blog.slug || '',
                content: blog.content || '',
                image: null,
                meta_title: blog.meta_title || '',
                meta_description: blog.meta_description || '',
+               canonical_url: blog.canonical_url || '',
                schema_markup: blog.schema_markup || '',
         });
 
@@ -47,6 +49,18 @@ export default function Edit({ blog }) {
                                                                        onChange={e => setData('title', e.target.value)}
                                                                 />
                                                                 {errors.title && <p className="mt-2 text-xs text-rose-500 font-bold">{errors.title}</p>}
+                                                         </div>
+
+                                                         <div>
+                                                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Slug</label>
+                                                                <input
+                                                                       type="text"
+                                                                       className="w-full px-6 py-4 bg-gray-50 border-none focus:ring-4 focus:ring-black/5 focus:bg-white rounded-2xl transition-all text-gray-900 font-bold placeholder:text-gray-300"
+                                                                       placeholder="custom-blog-slug"
+                                                                       value={data.slug}
+                                                                       onChange={e => setData('slug', e.target.value)}
+                                                                />
+                                                                {errors.slug && <p className="mt-2 text-xs text-rose-500 font-bold">{errors.slug}</p>}
                                                          </div>
 
                                                          <div>
@@ -143,6 +157,18 @@ export default function Edit({ blog }) {
                                                                               onChange={e => setData('meta_description', e.target.value)}
                                                                        />
                                                                        {errors.meta_description && <p className="mt-2 text-xs text-rose-500 font-bold">{errors.meta_description}</p>}
+                                                                </div>
+
+                                                                <div className="md:col-span-2">
+                                                                       <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 ml-1">Canonical URL</label>
+                                                                       <input
+                                                                              type="url"
+                                                                              className="w-full px-5 py-4 bg-white border border-gray-100 focus:ring-4 focus:ring-black/5 rounded-2xl transition-all text-gray-900 font-bold placeholder:text-gray-200"
+                                                                              placeholder="https://xpertbid.com/blogs/custom-blog-slug"
+                                                                              value={data.canonical_url}
+                                                                              onChange={e => setData('canonical_url', e.target.value)}
+                                                                       />
+                                                                       {errors.canonical_url && <p className="mt-2 text-xs text-rose-500 font-bold">{errors.canonical_url}</p>}
                                                                 </div>
 
                                                                 <div className="md:col-span-2">

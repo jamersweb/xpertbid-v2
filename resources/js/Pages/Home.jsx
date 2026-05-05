@@ -22,11 +22,6 @@ export default function Home({ auth, sliders, categories, featuredAuctions, late
                             <VehicleSection products={latestVehicles} />
                             <PropertySection products={latestProperties} />
                             <AuctionSection products={latestAuctions} />
-                            <AuctionSection
-                                   products={latestLiveAuctions}
-                                   title="Live Auctions"
-                                   viewAllHref="/live-auctions"
-                            />
                             <NormalListSection products={latestNormalLists} />
                             <WhyChooseXpertBid />
                             <SeoContentSection />

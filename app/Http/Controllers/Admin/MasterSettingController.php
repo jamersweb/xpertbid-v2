@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\MasterSetting;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -16,7 +15,6 @@ class MasterSettingController extends Controller
         $settings = MasterSetting::all();
         return Inertia::render('Admin/Settings/Index', [
             'settings' => $settings,
-            'currencyLastSyncedAt' => Cache::get('currency_rates_last_synced_at'),
         ]);
     }
 

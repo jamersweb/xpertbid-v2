@@ -57,8 +57,7 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
        const { auth } = usePage().props;
        const listingType = String(auction?.listing_type || '').toLowerCase();
        const listingStatus = String(auction?.status || '').trim().toLowerCase();
-       const isAuctionLikeListing = ['auction', 'live_auction'].includes(listingType);
-       const showLiveChat = isAuctionLikeListing && listingStatus === 'active';
+       const showLiveChat = listingType === 'live_auction' && listingStatus === 'active';
        const [mobileBidAmount, setMobileBidAmount] = useState('');
        const [mobileBidSending, setMobileBidSending] = useState(false);
        const activeLiveVideoId = liveVideoId || auction?.youtube_video_id;

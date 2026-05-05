@@ -29,6 +29,10 @@ export default function Show({ blog }) {
               typeof window !== 'undefined'
                      ? window.location.href
                      : (typeof blog?.slug === 'string' && blog.slug ? route('blogs.show', blog.slug, false) : '');
+       const canonicalUrl =
+              typeof blog?.canonical_url === 'string' && blog.canonical_url.trim()
+                     ? blog.canonical_url.trim()
+                     : shareUrl;
        const shareText = blogTitle;
 
        const openShareTab = (url) => {
@@ -99,6 +103,7 @@ export default function Show({ blog }) {
                      <Head>
                             <title>{`${blogTitle} | XpertBid Blog`}</title>
                             <meta name="description" content={blogDescription} />
+                            {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
                             {blog.meta_keywords && <meta name="keywords" content={blog.meta_keywords} />}
                      </Head>
 

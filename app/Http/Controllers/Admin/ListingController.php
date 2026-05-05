@@ -184,6 +184,22 @@ class ListingController extends Controller
         ]);
     }
 
+    public function editLiveAuctionSession(LiveAuctionSession $session)
+    {
+        $liveAuctions = Listing::query()
+            ->where('listing_type', 'live_auction')
+            ->select('id', 'title', 'slug', 'status', 'youtube_video_id', 'listing_data', 'category_id')
+            ->with('category:id,name')
+            ->latest()
+            ->get();
+
+        return Inertia::render('Admin/LiveAuctions/Setup', [
+            'liveAuctions' => $liveAuctions,
+            'session' => $session,
+            'isEditing' => true,
+        ]);
+    }
+
     public function liveSessions(Request $request)
     {
         $query = LiveAuctionSession::query()
@@ -240,6 +256,79 @@ class ListingController extends Controller
                 'status' => $request->input('status', ''),
             ],
         ]);
+    }
+
+    public function updateLiveSessionStatus(Request $request, LiveAuctionSession $session)
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'in:active,soon,closed,inactive'],
+        ]);
+
+        DB::transaction(function () use ($session, $validated) {
+            if ($validated['status'] === 'active') {
+                LiveAuctionSession::query()
+                    ->where('id', '!=', $session->id)
+                    ->where('status', 'active')
+                    ->update(['status' => 'inactive']);
+            }
+
+            $session->update([
+                'status' => $validated['status'],
+                'closed_at' => $validated['status'] === 'closed' ? now() : null,
+            ]);
+        });
+
+        return redirect()->back()->with('success', 'Live session status updated successfully.');
+    }
+
+    public function updateLiveAuctionSession(Request $request, LiveAuctionSession $session)
+    {
+        $validated = $request->validate([
+            'live_url' => ['required', 'string', 'max:500'],
+            'session_status' => ['required', 'in:live,closed,soon,inactive'],
+            'scheduled_at' => ['nullable', 'required_if:session_status,soon', 'date'],
+            'auction_ids' => ['required', 'array', 'min:1'],
+            'auction_ids.*' => ['integer', 'exists:listings,id'],
+        ]);
+
+        $ids = Listing::query()
+            ->where('listing_type', 'live_auction')
+            ->whereIn('id', $validated['auction_ids'])
+            ->pluck('id')
+            ->all();
+
+        if (empty($ids)) {
+            return redirect()->back()->with('error', 'Please select at least one live auction.');
+        }
+
+        $status = match ($validated['session_status']) {
+            'live' => 'active',
+            'soon' => 'soon',
+            'inactive' => 'inactive',
+            default => 'closed',
+        };
+
+        DB::transaction(function () use ($session, $validated, $ids, $status) {
+            if ($status === 'active') {
+                LiveAuctionSession::query()
+                    ->where('id', '!=', $session->id)
+                    ->where('status', 'active')
+                    ->update(['status' => 'inactive']);
+            }
+
+            $session->update([
+                'live_url' => $validated['live_url'],
+                'youtube_video_id' => YoutubeVideoId::normalize($validated['live_url']),
+                'selected_listing_ids' => array_values($ids),
+                'status' => $status,
+                'scheduled_at' => $status === 'soon' ? $validated['scheduled_at'] : null,
+                'closed_at' => $status === 'closed' ? ($session->closed_at ?: now()) : null,
+            ]);
+        });
+
+        return redirect()
+            ->route('admin.live.index')
+            ->with('success', 'Live session updated successfully.');
     }
 
     public function launchLiveAuction(Request $request)

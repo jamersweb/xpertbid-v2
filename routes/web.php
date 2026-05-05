@@ -260,10 +260,13 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     // Unified List Management (Refactored)
     Route::get('/live', [App\Http\Controllers\Admin\ListingController::class, 'liveSessions'])->name('live.index');
+    Route::patch('/live/{session}/status', [App\Http\Controllers\Admin\ListingController::class, 'updateLiveSessionStatus'])->name('live.update-status');
     Route::get('/live-auctions', [App\Http\Controllers\Admin\ListingController::class, 'liveAuctions'])->name('live-auctions.index');
     Route::get('/live-auctions/create', [App\Http\Controllers\Admin\ListingController::class, 'createLiveAuction'])->name('live-auctions.create');
     Route::get('/live-auctions/setup', [App\Http\Controllers\Admin\ListingController::class, 'setupLiveAuction'])->name('live-auctions.setup');
     Route::post('/live-auctions/setup', [App\Http\Controllers\Admin\ListingController::class, 'launchLiveAuction'])->name('live-auctions.launch');
+    Route::get('/live-auctions/session/{session}/edit', [App\Http\Controllers\Admin\ListingController::class, 'editLiveAuctionSession'])->name('live-auctions.session.edit');
+    Route::match(['put', 'patch'], '/live-auctions/session/{session}', [App\Http\Controllers\Admin\ListingController::class, 'updateLiveAuctionSession'])->name('live-auctions.session.update');
     Route::get('/live-auctions/room', [App\Http\Controllers\Admin\ListingController::class, 'liveAuctionRoom'])->name('live-auctions.room');
     Route::patch('/live-auctions/session/{session}/close', [App\Http\Controllers\Admin\ListingController::class, 'closeLiveAuctionSession'])->name('live-auctions.session.close');
     Route::patch('/live-auctions/{id}/start', [App\Http\Controllers\Admin\ListingController::class, 'startLiveAuction'])->name('live-auctions.start');
@@ -286,6 +289,9 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     // System Settings
     Route::resource('master-settings', App\Http\Controllers\Admin\MasterSettingController::class)->names('master-settings');
+    Route::resource('currencies', App\Http\Controllers\Admin\CurrencyController::class)
+        ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
+        ->names('currencies');
     Route::resource('locations', App\Http\Controllers\Admin\LocationController::class)->names('locations');
     Route::get('/languages', [App\Http\Controllers\Admin\LanguageController::class, 'index'])->name('languages.index');
     Route::post('/languages', [App\Http\Controllers\Admin\LanguageController::class, 'store'])->name('languages.store');

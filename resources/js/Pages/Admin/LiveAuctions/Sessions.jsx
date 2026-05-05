@@ -41,7 +41,7 @@ export default function Sessions({ sessions, filters = {} }) {
               <AdminLayout title="Live">
                      <Head title="Live" />
 
-                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden max-w-full">
                             <div className="p-6 border-bottom border-gray-100 space-y-4">
                                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                                           <div>
@@ -95,15 +95,14 @@ export default function Sessions({ sessions, filters = {} }) {
                                    </form>
                             </div>
 
-                            <div className="overflow-x-auto">
-                                   <table className="w-full text-left border-collapse">
+                            <div className="max-w-full overflow-hidden">
+                                   <table className="w-full table-fixed text-left border-collapse">
                                           <thead>
                                                  <tr className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider">
-                                                        <th className="px-4 py-4">Stream</th>
-                                                        <th className="px-4 py-4">Selected Auctions</th>
-                                                        <th className="px-4 py-4">Schedule</th>
-                                                        <th className="px-4 py-4">Status</th>
-                                                        <th className="px-4 py-4 text-right">Actions</th>
+                                                        <th className="px-4 py-4 w-[38%]">Stream</th>
+                                                        <th className="px-4 py-4 w-[28%]">Selected Auctions</th>
+                                                        <th className="px-4 py-4 w-[14%]">Status</th>
+                                                        <th className="px-4 py-4 w-[20%] text-right">Actions</th>
                                                  </tr>
                                           </thead>
                                           <tbody className="divide-y divide-gray-100">
@@ -111,7 +110,7 @@ export default function Sessions({ sessions, filters = {} }) {
                                                         const thumb = thumbnailFor(session);
                                                         return (
                                                                <tr key={session.id} className="hover:bg-gray-50/60 transition-colors">
-                                                                      <td className="px-4 py-4">
+                                                                      <td className="px-4 py-4 min-w-0">
                                                                              <div className="flex items-center gap-3">
                                                                                     <div className="w-20 h-12 rounded-lg overflow-hidden bg-black border border-gray-200 shrink-0">
                                                                                            {thumb ? (
@@ -129,7 +128,7 @@ export default function Sessions({ sessions, filters = {} }) {
                                                                                     </div>
                                                                              </div>
                                                                       </td>
-                                                                      <td className="px-4 py-4">
+                                                                      <td className="px-4 py-4 min-w-0">
                                                                              <p className="text-sm font-black text-gray-900 mb-1 whitespace-nowrap">{session.selected_count || 0} auctions</p>
                                                                              <div className="flex flex-wrap gap-1 max-w-[240px]">
                                                                                     {(session.selected_listings || []).slice(0, 3).map((listing) => (
@@ -144,23 +143,24 @@ export default function Sessions({ sessions, filters = {} }) {
                                                                                     ) : null}
                                                                              </div>
                                                                       </td>
-                                                                      <td className="px-4 py-4 whitespace-nowrap">
-                                                                             <p className="text-sm font-bold text-gray-900 mb-0">
-                                                                                    {session.scheduled_at ? new Date(session.scheduled_at).toLocaleString() : 'N/A'}
-                                                                             </p>
-                                                                             <p className="text-[11px] text-gray-500 mb-0">Created: {new Date(session.created_at).toLocaleString()}</p>
-                                                                      </td>
-                                                                      <td className="px-4 py-4 whitespace-nowrap">
+                                                                      <td className="px-4 py-4">
                                                                              <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusClasses[session.status] || 'bg-gray-100 text-gray-700'}`}>
                                                                                     {statusLabel(session.status)}
                                                                              </span>
                                                                       </td>
                                                                       <td className="px-4 py-4 text-right">
-                                                                             <div className="flex items-center justify-end gap-2">
+                                                                             <div className="flex items-center justify-end gap-2 min-w-0">
+                                                                                    <button
+                                                                                           type="button"
+                                                                                           onClick={() => router.get(route('admin.live-auctions.session.edit', session.id))}
+                                                                                           className="px-2.5 py-2 rounded-lg bg-gray-100 text-gray-800 text-xs font-bold hover:bg-gray-200 whitespace-nowrap"
+                                                                                    >
+                                                                                           Edit
+                                                                                    </button>
                                                                                     <button
                                                                                            type="button"
                                                                                            onClick={() => router.get(route('admin.live-auctions.room'), { session: session.id })}
-                                                                                           className="px-3 py-2 rounded-lg bg-black text-white text-xs font-bold hover:bg-gray-800 whitespace-nowrap"
+                                                                                           className="px-2.5 py-2 rounded-lg bg-black text-white text-xs font-bold hover:bg-gray-800 whitespace-nowrap"
                                                                                     >
                                                                                            Open Room
                                                                                     </button>

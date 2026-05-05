@@ -64,6 +64,10 @@ export default function SliderBrowseCategories({ categories }) {
           padding: 0 6px;
         }
 
+        .categories-slider .swiper-wrapper {
+          align-items: flex-start;
+        }
+
         .category-item-wrapper {
           width: auto;
           display: flex;
@@ -79,11 +83,12 @@ export default function SliderBrowseCategories({ categories }) {
           align-items: center;
           cursor: pointer;
           width: 100%;
+          height: 148px;
         }
         
         .image-circle {
-          width: 100%;
-          max-width: 110px;
+          width: 110px;
+          height: 110px;
           aspect-ratio: 1 / 1;
           border-radius: 12px;
           display: flex;
@@ -104,7 +109,9 @@ export default function SliderBrowseCategories({ categories }) {
         .category-title-wrapper {
           width: 100%;
           max-width: 110px;
+          height: 34px;
           display: flex;
+          align-items: flex-start;
           justify-content: center;
         }
 
@@ -129,9 +136,16 @@ export default function SliderBrowseCategories({ categories }) {
 
         @media (min-width: 768px) {
           .categories-slider { padding: 0; }
-          .image-circle,
+          .category-link {
+            height: 190px;
+          }
+          .image-circle {
+            width: 150px;
+            height: 150px;
+          }
           .category-title-wrapper {
             max-width: 150px;
+            height: 36px;
           }
           .category-name {
             font-size: 14px;

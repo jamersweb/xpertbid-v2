@@ -3,13 +3,27 @@ import { Head, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import Price from '@/Components/Price';
 
-export default function Setup({ liveAuctions = [] }) {
+const toLocalDateTimeInput = (value) => {
+       if (!value) return '';
+       const date = new Date(value);
+       if (Number.isNaN(date.getTime())) return '';
+       const offsetMs = date.getTimezoneOffset() * 60000;
+       return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+};
+
+const formStatusFromSession = (status) => {
+       if (status === 'active') return 'live';
+       if (['soon', 'closed', 'inactive'].includes(status)) return status;
+       return 'live';
+};
+
+export default function Setup({ liveAuctions = [], session = null, isEditing = false }) {
        const [search, setSearch] = useState('');
-       const { data, setData, post, processing, errors } = useForm({
-              live_url: '',
-              session_status: 'live',
-              scheduled_at: '',
-              auction_ids: [],
+       const { data, setData, post, put, processing, errors } = useForm({
+              live_url: session?.live_url || '',
+              session_status: formStatusFromSession(session?.status),
+              scheduled_at: toLocalDateTimeInput(session?.scheduled_at),
+              auction_ids: (session?.selected_listing_ids || []).map((id) => Number(id)),
        });
 
        const filteredAuctions = useMemo(() => {
@@ -32,23 +46,28 @@ export default function Setup({ liveAuctions = [] }) {
 
        const submit = (e) => {
               e.preventDefault();
+              if (isEditing && session?.id) {
+                     put(route('admin.live-auctions.session.update', session.id));
+                     return;
+              }
+
               post(route('admin.live-auctions.launch'));
        };
 
        return (
-              <AdminLayout title="Setup Live Auction">
-                     <Head title="Setup Live Auction" />
+              <AdminLayout title={isEditing ? 'Edit Live Auction' : 'Setup Live Auction'}>
+                     <Head title={isEditing ? 'Edit Live Auction' : 'Setup Live Auction'} />
 
                      <form onSubmit={submit} className="space-y-6">
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                           <div>
-                                                 <h1 className="text-2xl font-black text-gray-900">Setup Live Auction</h1>
-                                                 <p className="text-sm text-gray-500 mt-1">Add YouTube live URL and select the products for the live control room.</p>
+                                                 <h1 className="text-2xl font-black text-gray-900">{isEditing ? `Edit Live Session #${session?.id}` : 'Setup Live Auction'}</h1>
+                                                 <p className="text-sm text-gray-500 mt-1">{isEditing ? 'Update YouTube URL, status, schedule, and selected products for this live room.' : 'Add YouTube live URL and select the products for the live control room.'}</p>
                                           </div>
                                           <button
                                                  type="button"
-                                                 onClick={() => router.get(route('admin.live-auctions.index'))}
+                                                 onClick={() => router.get(isEditing ? route('admin.live.index') : route('admin.live-auctions.index'))}
                                                  className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-bold hover:bg-gray-200"
                                           >
                                                  Back
@@ -185,7 +204,15 @@ export default function Setup({ liveAuctions = [] }) {
                                                  className="px-7 py-3 bg-red-600 text-white rounded-xl text-sm font-black hover:bg-red-700 disabled:opacity-60"
                                           >
                                                  <i className="fa-solid fa-circle-play mr-2"></i>
-                                                 {processing ? 'Opening...' : data.session_status === 'live' ? 'Live Now' : data.session_status === 'soon' ? 'Schedule Soon' : 'Save Closed'}
+                                                 {processing
+                                                        ? (isEditing ? 'Saving...' : 'Opening...')
+                                                        : isEditing
+                                                              ? 'Save Live Session'
+                                                              : data.session_status === 'live'
+                                                                    ? 'Live Now'
+                                                                    : data.session_status === 'soon'
+                                                                          ? 'Schedule Soon'
+                                                                          : 'Save Closed'}
                                           </button>
                                    </div>
                             </div>

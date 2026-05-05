@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Blog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class BlogController extends Controller
@@ -27,10 +28,12 @@ class BlogController extends Controller
     {
         $data = $request->validate([
             'title'             => 'required|string|max:255',
+            'slug'              => 'required|string|max:255|unique:blogs,slug',
             'content'           => 'required',
             'image'             => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'meta_title'        => 'nullable|string|max:255',
             'meta_description'  => 'nullable|string',
+            'canonical_url'     => 'nullable|url|max:255',
             'schema_markup'     => 'nullable|string',
         ]);
 
@@ -42,7 +45,7 @@ class BlogController extends Controller
             $data['image'] = 'assets/images/blogs/'.$filename;
         }
 
-        $data['slug']    = Str::slug($request->title);
+        $data['slug']    = Str::slug($request->slug);
         $data['user_id'] = auth()->id();
 
         Blog::create($data);
@@ -61,10 +64,12 @@ class BlogController extends Controller
     {
         $data = $request->validate([
             'title'             => 'required|string|max:255',
+            'slug'              => ['required', 'string', 'max:255', Rule::unique('blogs', 'slug')->ignore($blog->id)],
             'content'           => 'required',
             'image'             => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'meta_title'        => 'nullable|string|max:255',
             'meta_description'  => 'nullable|string',
+            'canonical_url'     => 'nullable|url|max:255',
             'schema_markup'     => 'nullable|string',
         ]);
 
@@ -81,7 +86,7 @@ class BlogController extends Controller
             $data['image'] = 'assets/images/blogs/'.$filename;
         }
 
-        $data['slug'] = Str::slug($request->title);
+        $data['slug'] = Str::slug($request->slug);
 
         $blog->update($data);
 

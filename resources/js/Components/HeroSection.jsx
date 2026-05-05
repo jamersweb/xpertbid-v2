@@ -72,6 +72,7 @@ export default function HeroSection() {
         .hero-slider .swiper-wrapper,
         .hero-slider .swiper-slide {
           border-radius: 32px;
+          height: 420px;
         }
 
         /* Override global swiper flex-centering so slide content can stretch full width */
@@ -82,13 +83,21 @@ export default function HeroSection() {
         .hero-banner-link {
           display: block;
           width: 100%;
+          height: 100%;
           border-radius: 32px;
           overflow: hidden;
         }
 
+        .hero-banner-link picture {
+          display: block;
+          width: 100%;
+          height: 100%;
+          line-height: 0;
+        }
+
         .hero-banner-image {
           width: 100%;
-       //    height: 520px;
+          height: 100%;
           object-fit: cover;
           display: block;
         }
@@ -106,7 +115,13 @@ export default function HeroSection() {
 
         @media (max-width: 991px) {
           .hero-banner-image {
-            height: 430px;
+            height: 100%;
+          }
+
+          .hero-slider,
+          .hero-slider .swiper-wrapper,
+          .hero-slider .swiper-slide {
+            height: 360px;
           }
 
           .hero-banner-content {
@@ -160,9 +175,15 @@ export default function HeroSection() {
           }
 
           .hero-banner-image {
-            height: 210px;
+            height: 100%;
             width: 100%;
             max-width: 100%;
+          }
+
+          .hero-slider,
+          .hero-slider .swiper-wrapper,
+          .hero-slider .swiper-slide {
+            height: 210px;
           }
         }
       `}</style>
