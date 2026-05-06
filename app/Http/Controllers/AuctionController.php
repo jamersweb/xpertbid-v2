@@ -387,8 +387,14 @@ class AuctionController extends Controller
     public function show($slug)
     {
         // 1. Fetch the listing with all necessary relationships
-        $listing = \App\Models\Listing::where('slug', $slug)
-            ->orWhere('id', $slug)
+        $listingQuery = \App\Models\Listing::query()
+            ->where('slug', $slug);
+
+        if (ctype_digit((string) $slug)) {
+            $listingQuery->orWhere('id', (int) $slug);
+        }
+
+        $listing = $listingQuery
             ->with(array_merge($this->listingUserRelations(), ['category', 'bids.user']))
             ->firstOrFail();
 
@@ -839,8 +845,14 @@ class AuctionController extends Controller
 
     public function products_details($slug)
     {
-        $listing = \App\Models\Listing::where('slug', $slug)
-            ->orWhere('id', $slug)
+        $listingQuery = \App\Models\Listing::query()
+            ->where('slug', $slug);
+
+        if (ctype_digit((string) $slug)) {
+            $listingQuery->orWhere('id', (int) $slug);
+        }
+
+        $listing = $listingQuery
             ->with(['user', 'category', 'bids.user'])
             ->firstOrFail();
 

@@ -107,7 +107,7 @@ export default function Search({ isOpen, onClose }) {
                                    z-index: 9999;
                                    display: flex;
                                    box-shadow: 0px 45px 89.4px 0px rgba(0, 0, 0, 0.20);
-                                   padding-top: 50px;
+                                   padding: 60px 10px 0;
                                    border: none;
                             }
                             .search-box {
@@ -126,6 +126,13 @@ export default function Search({ isOpen, onClose }) {
                                    font-size: 1rem;
                                    border: none;
                                    border-radius: 8px;
+                                   background: #ffffff;
+                                   color: #111827;
+                                   outline: none;
+                                   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+                            }
+                            .search-box input::placeholder {
+                                   color: #6b7280;
                             }
                             .search-submit-btn {
                                    background: #23262F;
@@ -141,23 +148,44 @@ export default function Search({ isOpen, onClose }) {
                                    background: #1a1c22;
                             }
                             .close-btn {
-                                   position: absolute; top: -2.5rem; right: 0;
-                                   background: none; border: none; font-size: 1.5rem;
+                                   position: absolute; top: -50px; right: 0;
+                                   width: 38px;
+                                   height: 38px;
+                                   display: inline-flex;
+                                   align-items: center;
+                                   justify-content: center;
+                                   background: #ffffff;
+                                   color: #111827;
+                                   border: 1px solid #e5e7eb;
+                                   border-radius: 999px;
+                                   font-size: 1.1rem;
                                    cursor: pointer;
-                                   padding-right: 10px;
+                                   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+                                   transition: background 0.2s, color 0.2s, transform 0.2s;
+                            }
+                            .close-btn:hover {
+                                   background: #111827;
+                                   color: #ffffff;
+                                   transform: translateY(-1px);
                             }
                             .status {
                                    margin-top: 0.5rem;
                                    font-style: italic;
+                                   color: #374151;
                             }
                             .results {
                                    margin-top: 0.5rem;
                                    list-style: none; padding: 0;
                                    max-height: 300px; overflow-y: auto;
+                                   background: #ffffff;
+                                   border-radius: 8px;
+                                   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
                             }
                             .results li {
-                                   padding: 0.5rem;
+                                   padding: 0.75rem 1rem;
                                    cursor: pointer;
+                                   color: #111827;
+                                   border-bottom: 1px solid #f3f4f6;
                             }
                             .results li:hover {
                                    background: #f0f0f0;
