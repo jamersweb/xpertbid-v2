@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import ExploreProducts from './Components/ExploreProducts';
-import Pagination from '@/Components/Pagination';
 import AuctionCard from '@/Components/AuctionCard';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
@@ -115,6 +113,66 @@ const CuratedMarketplaceSection = ({ title, items = [], slider = false }) => {
        );
 };
 
+const EmptyProductsState = () => (
+       <div className="text-center py-5 bg-white rounded-3 shadow-sm border mt-4">
+              <div className="mb-3 d-flex justify-content-center">
+                     <svg
+                            width="64"
+                            height="64"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true"
+                     >
+                            <path d="M3 8.5L12 3L21 8.5M3 8.5V15.5L12 21M3 8.5L12 14M21 8.5V15.5L12 21M21 8.5L12 14M12 14V21" stroke="#94A3B8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                     </svg>
+              </div>
+              <h3 className="h5 fw-bold text-dark">No Products Found</h3>
+              <p className="text-muted">We couldn't find any products matching your current filters.</p>
+              <button
+                     onClick={() => window.location.href = route('marketplace.index')}
+                     className="btn btn-dark rounded-3 px-4 py-2 mt-2"
+              >
+                     Clear All Filters
+              </button>
+       </div>
+);
+
+const LatestProductsGrid = ({ title, items = [], hasMore = false, loading = false, onLoadMore }) => (
+       <section className="marketplace-latest-grid-section">
+              <div className="marketplace-curated-header">
+                     <h3>{title}</h3>
+              </div>
+
+              {items.length === 0 ? (
+                     <EmptyProductsState />
+              ) : (
+                     <>
+                            <div className="row makt-parent w-100 mx-auto">
+                                   {items.map((product) => (
+                                          <div className="col-md-6 col-xl-4 mkt-child mb-4" key={product.id}>
+                                                 <AuctionCard auction={product} showPropertyMeta />
+                                          </div>
+                                   ))}
+                            </div>
+
+                            {hasMore && (
+                                   <div className="d-flex justify-content-center mt-2">
+                                          <button
+                                                 type="button"
+                                                 className="marketplace-load-more-btn"
+                                                 onClick={onLoadMore}
+                                                 disabled={loading}
+                                          >
+                                                 {loading ? 'Loading...' : 'Load More'}
+                                          </button>
+                                   </div>
+                            )}
+                     </>
+              )}
+       </section>
+);
+
 export default function Index({
        products = { data: [], links: [] },
        categories = [],
@@ -126,9 +184,9 @@ export default function Index({
        countries = [],
        dynamicFields = [],
        featuredProducts = [],
-       latestProducts = [],
        mostViewedProducts = [],
        filters = {},
+       currentType: serverCurrentType = 'auction',
 }) {
        const [searchTerm, setSearchTerm] = useState(filters?.search || '');
        const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
@@ -138,8 +196,11 @@ export default function Index({
        const [states, setStates] = useState([]);
        const [cities, setCities] = useState([]);
        const [dynamicFilterValues, setDynamicFilterValues] = useState(() => getInitialDynamicFilters(filters));
+       const [latestGridProducts, setLatestGridProducts] = useState(products?.data || []);
+       const [nextProductsPageUrl, setNextProductsPageUrl] = useState(products?.next_page_url || null);
+       const [isLoadingMoreProducts, setIsLoadingMoreProducts] = useState(false);
        const heroImage = currentTopCategory?.image_url || currentCategory?.image_url || null;
-       const currentType = filters?.type || 'auction';
+       const currentType = serverCurrentType || filters?.type || 'auction';
        const showChildTabs = Boolean(currentSubcategory);
        const sectionEntityName = currentTopCategory?.name || currentCategory?.name || 'Products';
        const seoShortContent = sanitizeSeoHtml(currentCategory?.seo_short_content);
@@ -151,13 +212,39 @@ export default function Index({
               { key: 'business', label: 'Business Products', mobileLabel: 'Business' },
        ];
 
+       const typeSlugMap = {
+              auction: 'auctions',
+              normal: 'normal-products',
+              normal_list: 'normal-products',
+              business: 'business-products',
+              business_list: 'business-products',
+       };
+
+       const marketplaceUrl = (type = currentType, slug = currentCategory?.slug) => {
+              if (slug) {
+                     return route('marketplace.type', {
+                            slug,
+                            typeSlug: typeSlugMap[type] || 'auctions',
+                     });
+              }
+
+              return route('marketplace.index');
+       };
+
+       const cleanFilters = (nextFilters = filters) => {
+              const cleaned = { ...nextFilters };
+              delete cleaned.type;
+              delete cleaned.category;
+              delete cleaned.page;
+
+              return cleaned;
+       };
+
        const handleTabChange = (type) => {
               router.get(
-                     route('marketplace.index', route().params),
+                     marketplaceUrl(type),
                      {
-                            ...filters,
-                            type,
-                            page: 1,
+                            ...cleanFilters(),
                      },
                      {
                             preserveState: true,
@@ -170,11 +257,10 @@ export default function Index({
               e.preventDefault();
 
               router.get(
-                     route('marketplace.index', route().params),
+                     marketplaceUrl(),
                      {
-                            ...filters,
+                            ...cleanFilters(),
                             search: searchTerm,
-                            page: 1,
                      },
                      {
                             preserveState: true,
@@ -185,10 +271,9 @@ export default function Index({
 
        const handleCategoryTabChange = (slug) => {
               router.get(
-                     route('marketplace.index', { slug }),
+                     marketplaceUrl(currentType, slug),
                      {
-                            ...filters,
-                            page: 1,
+                            ...cleanFilters(),
                      },
                      {
                             preserveState: true,
@@ -204,6 +289,23 @@ export default function Index({
               setSelectedCityId(filters?.city_id ? String(filters.city_id) : '');
               setDynamicFilterValues(getInitialDynamicFilters(filters));
        }, [filters]);
+
+       useEffect(() => {
+              const nextItems = products?.data || [];
+
+              if ((products?.current_page || 1) <= 1) {
+                     setLatestGridProducts(nextItems);
+              } else {
+                     setLatestGridProducts((previousItems) => {
+                            const seen = new Set(previousItems.map((item) => item.id));
+                            const appended = nextItems.filter((item) => !seen.has(item.id));
+                            return [...previousItems, ...appended];
+                     });
+              }
+
+              setNextProductsPageUrl(products?.next_page_url || null);
+              setIsLoadingMoreProducts(false);
+       }, [products]);
 
        useEffect(() => {
               let cancelled = false;
@@ -321,7 +423,7 @@ export default function Index({
                      }
               });
 
-              router.get(route('marketplace.index', route().params), nextFilters, {
+              router.get(marketplaceUrl(), cleanFilters(nextFilters), {
                      preserveState: true,
                      preserveScroll: true,
               });
@@ -352,7 +454,7 @@ export default function Index({
                      }
               });
 
-              router.get(route('marketplace.index', route().params), nextFilters, {
+              router.get(marketplaceUrl(), cleanFilters(nextFilters), {
                      preserveState: true,
                      preserveScroll: true,
               });
@@ -375,6 +477,20 @@ export default function Index({
                             ...prev,
                             [key]: nextValues,
                      };
+              });
+       };
+
+       const loadMoreProducts = () => {
+              if (!nextProductsPageUrl || isLoadingMoreProducts) {
+                     return;
+              }
+
+              setIsLoadingMoreProducts(true);
+              router.get(nextProductsPageUrl, {}, {
+                     preserveState: true,
+                     preserveScroll: true,
+                     only: ['products'],
+                     onFinish: () => setIsLoadingMoreProducts(false),
               });
        };
 
@@ -519,24 +635,18 @@ export default function Index({
                                           />
 
                                           <CuratedMarketplaceSection
-                                                 title={`Latest ${sectionEntityName}`}
-                                                 items={latestProducts}
-                                                 slider
-                                          />
-
-                                          <CuratedMarketplaceSection
                                                  title={`Most Viewed ${sectionEntityName}`}
                                                  items={mostViewedProducts}
                                                  slider
                                           />
 
-                                          <ExploreProducts products={products.data} />
-
-                                          {products.links && (
-                                                 <div className="mt-5 d-flex justify-content-center">
-                                                        <Pagination links={products.links} />
-                                                 </div>
-                                          )}
+                                          <LatestProductsGrid
+                                                 title={`Latest ${sectionEntityName}`}
+                                                 items={latestGridProducts}
+                                                 hasMore={Boolean(nextProductsPageUrl)}
+                                                 loading={isLoadingMoreProducts}
+                                                 onLoadMore={loadMoreProducts}
+                                          />
 
                                           {seoContent && (
                                                  <div className="content-wrapper content-wrapper-long mt-5 text-dark">
@@ -1102,6 +1212,10 @@ export default function Index({
                                    margin-bottom: 38px;
                                    overflow: hidden;
                             }
+                            .marketplace-latest-grid-section {
+                                   margin-top: 6px;
+                                   margin-bottom: 42px;
+                            }
                             .marketplace-curated-header {
                                    display: flex;
                                    align-items: center;
@@ -1161,6 +1275,28 @@ export default function Index({
                                    opacity: 1 !important;
                                    color: #cbd5e1 !important;
                                    background: #ffffff !important;
+                            }
+                            .marketplace-load-more-btn {
+                                   min-width: 168px;
+                                   min-height: 48px;
+                                   border: none;
+                                   border-radius: 12px;
+                                   background: #111827;
+                                   color: #ffffff;
+                                   font-size: 14px;
+                                   font-weight: 800;
+                                   padding: 0 28px;
+                                   box-shadow: 0 12px 26px rgba(15, 23, 42, 0.16);
+                                   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+                            }
+                            .marketplace-load-more-btn:hover:not(:disabled) {
+                                   transform: translateY(-2px);
+                                   background: #020617;
+                                   box-shadow: 0 16px 34px rgba(15, 23, 42, 0.2);
+                            }
+                            .marketplace-load-more-btn:disabled {
+                                   cursor: wait;
+                                   opacity: 0.7;
                             }
                             @media (max-width: 767px) {
                                    .content-wrapper-short {

@@ -37,11 +37,11 @@ export default function AppLayout({ children, title }) {
        };
 
        useEffect(() => {
-              if (flash?.success || flash?.error) {
+              if (flash?.success || flash?.error || flash?.info) {
                      setToast({
                             show: true,
-                            message: flash.success || flash.error,
-                            type: flash.success ? 'success' : 'error'
+                            message: flash.success || flash.error || flash.info,
+                            type: flash.success ? 'success' : flash.error ? 'error' : 'info'
                      });
                      setIsHiding(false);
                      const timer = setTimeout(() => {
@@ -74,12 +74,14 @@ export default function AppLayout({ children, title }) {
                                                         <div className="premium-toast-icon" style={{ backgroundColor: toast.type === 'error' ? '#FF4D4D' : '#43ACE9' }}>
                                                                {toast.type === 'error' ? (
                                                                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                                               ) : toast.type === 'info' ? (
+                                                                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="10" x2="12" y2="17"></line><line x1="12" y1="7" x2="12.01" y2="7"></line></svg>
                                                                ) : (
                                                                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                                                )}
                                                         </div>
                                                         <div className="premium-toast-content">
-                                                               <div style={{ fontWeight: '600', fontSize: '15px', color: '#fff' }}>{toast.type === 'error' ? t('Error') : t('Success')}</div>
+                                                               <div style={{ fontWeight: '600', fontSize: '15px', color: '#fff' }}>{toast.type === 'error' ? t('Error') : toast.type === 'info' ? t('Notice') : t('Success')}</div>
                                                                <div style={{ fontSize: '13px', opacity: 0.8, color: '#fff' }}>{toast.message}</div>
                                                         </div>
                                                  </div>
@@ -93,6 +95,9 @@ export default function AppLayout({ children, title }) {
                                                  </Link>
                                                  <Link className="xp-brand-link" href="/marketplace/vehicles?type=auction" aria-label="View vehicle marketplace">
                                                         <img className="xp-brand-logo xp-brand-logo-vehicle" src="/assets/images/xp-vehicle-logo-clean.png" alt="XpertBid Vehicle" />
+                                                 </Link>
+                                                 <Link className="xp-brand-link d-none" href="/marketplace" aria-label="View mandi marketplace">
+                                                        <img className="xp-brand-logo xp-brand-logo-mandi" src="/assets/images/xp-mandi-logo-clean.svg" alt="XpertBid Mandi" />
                                                  </Link>
                                           </div>
                                           <div className="xp-brand-controls d-none d-lg-flex">
@@ -226,6 +231,10 @@ export default function AppLayout({ children, title }) {
                                           width: 180px;
                                           max-height: 46px;
                                    }
+                                   .xp-brand-logo-mandi {
+                                          width: 180px;
+                                          max-height: 46px;
+                                   }
                                    @keyframes slideInRight {
                                           from { transform: translateX(120%); opacity: 0; }
                                           to { transform: translateX(0); opacity: 1; }
@@ -268,15 +277,19 @@ export default function AppLayout({ children, title }) {
                                           }
                                           .xp-brand-links {
                                                  justify-content: center;
-                                                 gap: 8px;
+                                                 gap: 6px;
                                                  width: 100%;
                                           }
                                           .xp-brand-logo-prop {
-                                                 width: min(45vw, 170px);
+                                                 width: min(32vw, 170px);
                                                  max-height: 42px;
                                           }
                                           .xp-brand-logo-vehicle {
-                                                 width: min(45vw, 170px);
+                                                 width: min(32vw, 170px);
+                                                 max-height: 36px;
+                                          }
+                                          .xp-brand-logo-mandi {
+                                                 width: min(32vw, 170px);
                                                  max-height: 36px;
                                           }
                                           .global-verify-account-btn {

@@ -162,19 +162,45 @@ class AuctionCategoryController extends Controller
     protected function activeRootCategories()
     {
         $priority = [222, 311];
+        $activeCategoryIds = \App\Models\Listing::query()
+            ->where('status', 'active')
+            ->where('listing_type', '!=', 'live_auction')
+            ->get(['category_id', 'sub_category_id', 'child_category_id'])
+            ->flatMap(fn ($listing) => [
+                $listing->category_id,
+                $listing->sub_category_id,
+                $listing->child_category_id,
+            ])
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
 
-        return AuctionCategory::query()
+        return AuctionCategory::with([
+                'subCategories:id,name,slug,image,icon,parent_id,sub_category_id',
+                'subCategories.childCategories:id,name,slug,image,icon,parent_id,sub_category_id',
+            ])
             ->whereNull('parent_id')
             ->whereNull('sub_category_id')
-            ->whereHas('listings', function ($q) {
-                $q->where('status', 'active');
-            })
-            ->orderByRaw("FIELD(id, 222, 311) DESC")
-            ->orderBy('id')
             ->get()
-            ->sortBy(function ($cat) use ($priority) {
-                $pos = array_search($cat->id, $priority, true);
-                return $pos === false ? PHP_INT_MAX : $pos;
+            ->filter(function ($category) use ($activeCategoryIds) {
+                if ($activeCategoryIds->contains((int) $category->id)) {
+                    return true;
+                }
+
+                return $category->subCategories->contains(function ($subCategory) use ($activeCategoryIds) {
+                    return $activeCategoryIds->contains((int) $subCategory->id)
+                        || $subCategory->childCategories->contains(fn ($childCategory) => $activeCategoryIds->contains((int) $childCategory->id));
+                });
+            })
+            ->sortBy(function ($category) use ($priority) {
+                $priorityIndex = array_search((int) $category->id, $priority, true);
+
+                return [
+                    $priorityIndex === false ? 1 : 0,
+                    $priorityIndex === false ? $category->name : $priorityIndex,
+                    $category->name,
+                ];
             })
             ->values();
     }

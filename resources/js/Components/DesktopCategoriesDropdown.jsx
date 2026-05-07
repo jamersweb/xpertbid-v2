@@ -84,7 +84,7 @@ export default function DesktopCategoriesDropdown() {
                             {categories.map(cat => (
                                    <li key={cat.slug}>
                                           <Link
-                                                 href={route('marketplace.index', cat.slug)}
+                                                 href={route('marketplace.type', { slug: cat.slug, typeSlug: 'auctions' })}
                                                  className="dropdown-item"
                                           >
                                                  {cat.name}

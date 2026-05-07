@@ -51,6 +51,9 @@ Route::get('/live-chat/listings/{listing}/messages', [ListingLiveChatController:
 Route::get('/1-rupee-auctions', [AuctionController::class, 'one_rupee_page'])->name('auctions.one_rupee');
 Route::get('/search-auctions', [AuctionController::class, 'search'])->name('auctions.search-api');
 Route::get('/search', [AuctionController::class, 'filterAuctions'])->name('auctions.index');
+Route::get('/marketplace/{slug}/{typeSlug}', [MarketplaceController::class, 'index'])
+    ->where('typeSlug', 'auctions|normal-products|business-products')
+    ->name('marketplace.type');
 Route::get('/marketplace/{slug?}', [MarketplaceController::class, 'index'])->name('marketplace.index');
 Route::get('/search-marketplace', [MarketplaceController::class, 'index'])->name('marketplace.search');
 Route::get('/categories', [AuctionController::class, 'categoriesPage'])->name('categories.page');

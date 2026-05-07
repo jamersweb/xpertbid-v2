@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 
-export default function ProductHeader({ views, productId, slug, link }) {
+export default function ProductHeader({ views, productId, slug, link, backHref = '/marketplace' }) {
        // Build a share URL using slug
        const shareUrl = typeof window !== "undefined"
               ? (link || `${window.location.origin}/product/${slug}`)
@@ -20,7 +20,7 @@ export default function ProductHeader({ views, productId, slug, link }) {
                             <div className="row">
                                    <div className="col-md-6">
                                           <div className="product-back-and-head">
-                                                 <Link href="/marketplace">
+                                                 <Link href={backHref || '/marketplace'}>
                                                         <i className="fa-solid fa-chevron-left"></i>
                                                  </Link>
                                                  <h3>Product Detail</h3>

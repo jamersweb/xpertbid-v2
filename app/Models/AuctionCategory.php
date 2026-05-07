@@ -18,6 +18,7 @@ class AuctionCategory extends Model
     protected $fillable = [
         'name',
         'image',
+        'icon',
         'parent_id',
         'sub_category_id',
         'meta_title',

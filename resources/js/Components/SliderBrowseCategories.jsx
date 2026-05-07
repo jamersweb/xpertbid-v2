@@ -6,6 +6,11 @@ import "swiper/css";
 export default function SliderBrowseCategories({ categories }) {
        const { t } = useTranslate();
        const displayCategories = (categories || []).slice(0, 12);
+       const assetSrc = (path) => {
+              if (!path) return "/images/placeholder.png";
+              if (path.startsWith("http")) return path;
+              return `${path.startsWith("/") ? "" : "/"}${path}`;
+       };
 
        if (!displayCategories.length) return null;
 
@@ -32,21 +37,27 @@ export default function SliderBrowseCategories({ categories }) {
                             >
                                    {displayCategories.map((cat, i) => (
                                           <SwiperSlide className="category-item-wrapper" key={cat.id || i}>
+                                                 {(() => {
+                                                        const media = cat.icon || cat.image;
+                                                        const hasIcon = Boolean(cat.icon);
+                                                        return (
                                                  <Link
-                                                        href={`/marketplace?category=${cat.slug}`}
+                                                        href={route('marketplace.type', { slug: cat.slug, typeSlug: 'auctions' })}
                                                         className="text-decoration-none category-link"
                                                  >
-                                                        <div className="image-circle">
+                                                        <div className={`image-circle ${hasIcon ? 'has-icon' : ''}`}>
                                                                <img
-                                                                      src={`${cat.image?.startsWith("/") ? "" : "/"}${cat.image ?? "images/placeholder.png"}`}
+                                                                      src={assetSrc(media)}
                                                                       alt={cat.name}
                                                                       className="category-icon"
                                                                />
                                                         </div>
                                                         <div className="category-title-wrapper">
-                                                               <h3 className="category-name">{cat.name}</h3>
+                                                              <h3 className="category-name">{cat.name}</h3>
                                                         </div>
                                                  </Link>
+                                                        );
+                                                 })()}
                                           </SwiperSlide>
                                    ))}
                             </Swiper>
@@ -61,7 +72,7 @@ export default function SliderBrowseCategories({ categories }) {
         }
 
         .categories-slider {
-          padding: 0 6px;
+          padding: 0 6px 4px;
         }
 
         .categories-slider .swiper-wrapper {
@@ -83,20 +94,24 @@ export default function SliderBrowseCategories({ categories }) {
           align-items: center;
           cursor: pointer;
           width: 100%;
-          height: 148px;
+          height: 136px;
+          padding: 4px 4px 0;
         }
         
         .image-circle {
-          width: 110px;
-          height: 110px;
+          width: 84px;
+          height: 84px;
           aspect-ratio: 1 / 1;
-          border-radius: 12px;
+          border-radius: 24px;
           display: flex;
           align-items: center;
           justify-content: center;
-          margin-bottom: 8px;
+          margin-bottom: 10px;
           overflow: hidden;
-          background-color: #f2f4f5;
+          background: #ffffff;
+          border: 1px solid rgba(67, 172, 233, 0.18);
+          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+          transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
         }
 
         .category-icon {
@@ -106,10 +121,22 @@ export default function SliderBrowseCategories({ categories }) {
           border-radius: 12px;
         }
 
+        .image-circle.has-icon {
+          background: #ffffff;
+          border-color: rgba(67, 172, 233, 0.28);
+          padding: 17px;
+        }
+
+        .image-circle.has-icon .category-icon {
+          object-fit: contain;
+          border-radius: 0;
+          mix-blend-mode: multiply;
+        }
+
         .category-title-wrapper {
           width: 100%;
-          max-width: 110px;
-          height: 34px;
+          max-width: 112px;
+          height: 38px;
           display: flex;
           align-items: flex-start;
           justify-content: center;
@@ -118,7 +145,7 @@ export default function SliderBrowseCategories({ categories }) {
         .category-name {
           font-weight: 700;
           font-size: 13px;
-          color: #002f34;
+          color: #092f36;
           margin: 0;
           line-height: 1.25;
           text-transform: capitalize;
@@ -131,21 +158,31 @@ export default function SliderBrowseCategories({ categories }) {
         }
 
         .category-item-wrapper:hover .category-name {
-            color: #3a77ff;
+            color: #1d9ed8;
+        }
+
+        .category-link:hover .image-circle {
+          transform: translateY(-3px) scale(1.02);
+          border-color: rgba(67, 172, 233, 0.55);
+          box-shadow: 0 14px 30px rgba(67, 172, 233, 0.18);
         }
 
         @media (min-width: 768px) {
           .categories-slider { padding: 0; }
           .category-link {
-            height: 190px;
+            height: 160px;
           }
           .image-circle {
-            width: 150px;
-            height: 150px;
+            width: 104px;
+            height: 104px;
+            border-radius: 28px;
+          }
+          .image-circle.has-icon {
+            padding: 22px;
           }
           .category-title-wrapper {
-            max-width: 150px;
-            height: 36px;
+            max-width: 132px;
+            height: 40px;
           }
           .category-name {
             font-size: 14px;

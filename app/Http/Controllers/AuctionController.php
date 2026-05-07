@@ -49,7 +49,7 @@ class AuctionController extends Controller
                 ->latest()
                 ->first();
 
-        $ids = collect($session?->status === 'active' ? ($session?->selected_listing_ids ?: []) : [])
+        $ids = collect($session?->selected_listing_ids ?: [])
             ->map(fn ($id) => (int) $id)
             ->filter()
             ->unique()
@@ -104,11 +104,49 @@ class AuctionController extends Controller
 
         // Data for Home Page
         $sliders = \App\Models\Slider::where('status', 'active')->get(); 
-        $categories = AuctionCategory::whereNull('parent_id')
-            ->whereHas('listings', function($q) {
-                $q->where('status', 'active');
+        $activeCategoryIds = \App\Models\Listing::query()
+            ->where('status', 'active')
+            ->where('listing_type', '!=', 'live_auction')
+            ->get(['category_id', 'sub_category_id', 'child_category_id'])
+            ->flatMap(fn ($listing) => [
+                $listing->category_id,
+                $listing->sub_category_id,
+                $listing->child_category_id,
+            ])
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+        $priorityCategoryIds = [222, 311];
+
+        $categories = AuctionCategory::with([
+                'subCategories:id,name,slug,image,icon,parent_id,sub_category_id',
+                'subCategories.childCategories:id,name,slug,image,icon,parent_id,sub_category_id',
+            ])
+            ->whereNull('parent_id')
+            ->whereNull('sub_category_id')
+            ->orderBy('name')
+            ->get()
+            ->filter(function ($category) use ($activeCategoryIds) {
+                if ($activeCategoryIds->contains((int) $category->id)) {
+                    return true;
+                }
+
+                return $category->subCategories->contains(function ($subCategory) use ($activeCategoryIds) {
+                    return $activeCategoryIds->contains((int) $subCategory->id)
+                        || $subCategory->childCategories->contains(fn ($childCategory) => $activeCategoryIds->contains((int) $childCategory->id));
+                });
             })
-            ->get();
+            ->sortBy(function ($category) use ($priorityCategoryIds) {
+                $priorityIndex = array_search((int) $category->id, $priorityCategoryIds, true);
+
+                return [
+                    $priorityIndex === false ? 1 : 0,
+                    $priorityIndex === false ? $category->name : $priorityIndex,
+                    $category->name,
+                ];
+            })
+            ->values();
         
         $featured = \App\Models\Listing::where('featured_name', 'home_featured')
             ->where("status", "active")
@@ -177,13 +215,49 @@ class AuctionController extends Controller
 
     public function categoriesPage()
     {
-        $categories = AuctionCategory::whereNull('parent_id')
+        $activeCategoryIds = \App\Models\Listing::query()
+            ->where('status', 'active')
+            ->where('listing_type', '!=', 'live_auction')
+            ->get(['category_id', 'sub_category_id', 'child_category_id'])
+            ->flatMap(fn ($listing) => [
+                $listing->category_id,
+                $listing->sub_category_id,
+                $listing->child_category_id,
+            ])
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+        $priorityCategoryIds = [222, 311];
+
+        $categories = AuctionCategory::with([
+                'subCategories:id,name,slug,image,icon,parent_id,sub_category_id',
+                'subCategories.childCategories:id,name,slug,image,icon,parent_id,sub_category_id',
+            ])
+            ->whereNull('parent_id')
             ->whereNull('sub_category_id')
-            ->whereHas('listings', function ($q) {
-                $q->where('status', 'active');
-            })
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->filter(function ($category) use ($activeCategoryIds) {
+                if ($activeCategoryIds->contains((int) $category->id)) {
+                    return true;
+                }
+
+                return $category->subCategories->contains(function ($subCategory) use ($activeCategoryIds) {
+                    return $activeCategoryIds->contains((int) $subCategory->id)
+                        || $subCategory->childCategories->contains(fn ($childCategory) => $activeCategoryIds->contains((int) $childCategory->id));
+                });
+            })
+            ->sortBy(function ($category) use ($priorityCategoryIds) {
+                $priorityIndex = array_search((int) $category->id, $priorityCategoryIds, true);
+
+                return [
+                    $priorityIndex === false ? 1 : 0,
+                    $priorityIndex === false ? $category->name : $priorityIndex,
+                    $category->name,
+                ];
+            })
+            ->values();
 
         return Inertia::render('Categories/Index', [
             'categories' => $categories,
@@ -442,6 +516,29 @@ class AuctionController extends Controller
                 ->exists();
         }
 
+        $marketplaceCategory = $listing->category;
+        if ($marketplaceCategory?->sub_category_id) {
+            $subCategory = AuctionCategory::find($marketplaceCategory->sub_category_id);
+            $marketplaceCategory = $subCategory?->parentCategory ?: $subCategory ?: $marketplaceCategory;
+        } elseif ($marketplaceCategory?->parent_id) {
+            $marketplaceCategory = $marketplaceCategory->parentCategory ?: $marketplaceCategory;
+        }
+
+        $marketplaceTypeSlug = match ($listing->listing_type) {
+            'normal', 'normal_list' => 'normal-products',
+            'business', 'business_list' => 'business-products',
+            default => 'auctions',
+        };
+
+        $marketplaceBackUrl = $listing->listing_type === 'live_auction'
+            ? route('live-auctions.public')
+            : ($marketplaceCategory?->slug
+                ? route('marketplace.type', [
+                    'slug' => $marketplaceCategory->slug,
+                    'typeSlug' => $marketplaceTypeSlug,
+                ])
+                : route('marketplace.index'));
+
         $liveSession = null;
         $liveActiveAuction = null;
         if ($listing->listing_type === 'live_auction') {
@@ -503,6 +600,7 @@ class AuctionController extends Controller
             'dynamicFields' => $dynamicFields,
             'liveVideoId' => $liveSession?->youtube_video_id,
             'liveActiveAuction' => $liveActiveAuction,
+            'marketplaceBackUrl' => $marketplaceBackUrl,
         ]);
     }
     public function edit(\App\Models\Listing $auction)

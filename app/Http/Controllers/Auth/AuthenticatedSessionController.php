@@ -7,6 +7,8 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+use Spatie\Permission\Models\Role;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -35,26 +37,39 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
+        $matchedRole = Role::query()
+            ->whereRaw('LOWER(name) = ?', [strtolower((string) $user->role)])
+            ->with('permissions:id,name')
+            ->first();
+
+        $rolePermissions = $matchedRole
+            ? $matchedRole->permissions->pluck('name')->all()
+            : [];
+
+        if (
+            strtolower((string) $user->role) === 'seo'
+            && Route::has('admin.seo.index')
+            && ($user->can('seo-list') || in_array('seo-list', $rolePermissions, true))
+        ) {
+            return redirect()->route('admin.seo.index');
+        }
+
         // Define permission-to-route mapping in order of priority
         $permissionRoutes = [
-            'dashboard-list' => 'dashboard',
-            'user-list' => 'users.index',
-            'role-list' => 'roles.index',
-            'auction-list' => 'auctions.index',
-            'category-list' => 'auction_categories.index',
-            'blog-list' => 'blogs.index',
-            'seo-list' => 'seo.index',
-            'scraper-list' => 'scraper.index',
-            'olx-scraper-list' => 'olx-scraper.index',
-            'slider-list' => 'sliders.index',
-            'order-list' => 'orders.index',
-            'wallet-list' => 'wallets.index',
-            'transaction-list' => 'transactions.index',
+            'dashboard-list' => 'admin.dashboard',
+            'user-list' => 'admin.users.index',
+            'role-list' => 'admin.roles.index',
+            'auction-list' => 'admin.listings.index',
+            'category-list' => 'admin.categories.index',
+            'blog-list' => 'admin.blogs.index',
+            'seo-list' => 'admin.seo.index',
+            'slider-list' => 'admin.sliders.index',
+            'order-list' => 'admin.orders.index',
         ];
 
         // Find the first route the user has permission to access
         foreach ($permissionRoutes as $permission => $route) {
-            if ($user->can($permission)) {
+            if (($user->can($permission) || in_array($permission, $rolePermissions, true)) && Route::has($route)) {
                 return redirect()->route($route);
             }
         }

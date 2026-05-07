@@ -12,20 +12,69 @@ use Inertia\Inertia;
 
 class MarketplaceController extends Controller
 {
-    public function index(Request $request, $slug = null)
+    protected function listingTypeFromSlug(?string $typeSlug): ?string
+    {
+        return match ($typeSlug) {
+            'auctions' => 'auction',
+            'normal-products' => 'normal',
+            'business-products' => 'business',
+            default => null,
+        };
+    }
+
+    protected function listingTypeSlug(string $type): string
+    {
+        return match ($type) {
+            'normal', 'normal_list' => 'normal-products',
+            'business', 'business_list' => 'business-products',
+            default => 'auctions',
+        };
+    }
+
+    protected function canonicalMarketplaceUrl(?string $slug, string $type, Request $request): string
+    {
+        $query = collect($request->query())
+            ->except(['category', 'type'])
+            ->filter(fn ($value, $key) => !($key === 'page' && (string) $value === '1'))
+            ->all();
+
+        if ($slug) {
+            return route('marketplace.type', [
+                'slug' => $slug,
+                'typeSlug' => $this->listingTypeSlug($type),
+            ]) . (empty($query) ? '' : '?' . http_build_query($query));
+        }
+
+        return route('marketplace.index') . (empty($query) ? '' : '?' . http_build_query($query));
+    }
+
+    public function index(Request $request, $slug = null, $typeSlug = null)
     {
         $favoriteListingIds = auth()->check()
             ? Favorite::where('user_id', auth()->id())->pluck('listing_id')->all()
             : [];
 
-        $type = $request->input('type', 'auction');
+        $type = $this->listingTypeFromSlug($typeSlug) ?? $request->input('type', 'auction');
         $featured = $request->input('featured');
+        $queryCategorySlug = $request->input('category');
+
+        if (!$slug && $queryCategorySlug) {
+            return redirect()->to($this->canonicalMarketplaceUrl($queryCategorySlug, $type, $request), 301);
+        }
+
+        if ($slug && !$typeSlug) {
+            return redirect()->to($this->canonicalMarketplaceUrl($slug, $type, $request), 301);
+        }
+
+        if ($slug && ($request->has('category') || $request->has('type') || (string) $request->input('page') === '1')) {
+            return redirect()->to($this->canonicalMarketplaceUrl($slug, $type, $request), 301);
+        }
 
         $applyTypeFilter = function ($query) use ($type) {
             if ($type === 'auction') {
-                $query->whereIn('listing_type', ['auction', 'live_auction']);
+                $query->where('listing_type', 'auction');
             } elseif ($type === 'live_auction') {
-                $query->where('listing_type', 'live_auction');
+                $query->whereRaw('1 = 0');
             } elseif ($type === 'normal_list' || $type === 'normal') {
                 $query->whereIn('listing_type', ['normal', 'normal_list']);
             } elseif ($type === 'business_list' || $type === 'business') {
@@ -33,16 +82,15 @@ class MarketplaceController extends Controller
             }
         };
 
-        $categoryHasListings = function ($categoryId) use ($applyTypeFilter) {
-            $query = Listing::where('status', 'active')->where(function ($q) use ($categoryId) {
+        $categoryHasListings = function ($categoryId) {
+            return Listing::where('status', 'active')
+                ->where('listing_type', '!=', 'live_auction')
+                ->where(function ($q) use ($categoryId) {
                 $q->where('category_id', $categoryId)
                     ->orWhere('sub_category_id', $categoryId)
                     ->orWhere('child_category_id', $categoryId);
-            });
-
-            $applyTypeFilter($query);
-
-            return $query->exists();
+                })
+                ->exists();
         };
 
         // Fetch root categories and keep only those branches that actually have listings.
@@ -104,7 +152,12 @@ class MarketplaceController extends Controller
         $childCategoryTabs = collect();
 
         if ($activeSlug && $activeSlug !== 'all') {
-            $currentCategory = AuctionCategory::where('slug', $activeSlug)->first();
+            $currentCategory = $categories->firstWhere('slug', $activeSlug)
+                ?: AuctionCategory::where('slug', $activeSlug)
+                    ->orderByRaw('CASE WHEN parent_id IS NULL AND sub_category_id IS NULL THEN 0 ELSE 1 END')
+                    ->orderBy('id')
+                    ->first();
+
             if ($currentCategory) {
                 $categoryIds = collect([$currentCategory->id]);
                 $subCategoryIds = collect([$currentCategory->id]);
@@ -185,6 +238,50 @@ class MarketplaceController extends Controller
                         ->filter(fn ($category) => $categoryHasListings($category->id))
                         ->values();
                 }
+            }
+        }
+
+        $availabilityQuery = Listing::where('status', 'active')
+            ->where('listing_type', '!=', 'live_auction');
+
+        if ($categoryScopeIds) {
+            $categoryIds = $categoryScopeIds['category'];
+            $subCategoryIds = $categoryScopeIds['subcategory'];
+            $childCategoryIds = $categoryScopeIds['child'];
+
+            $availabilityQuery->where(function ($q) use ($categoryIds, $subCategoryIds, $childCategoryIds) {
+                $q->whereIn('category_id', $categoryIds)
+                    ->orWhereIn('sub_category_id', $subCategoryIds)
+                    ->orWhereIn('child_category_id', $childCategoryIds);
+            });
+        }
+
+        $availableTypeCounts = [
+            'auction' => (clone $availabilityQuery)->where('listing_type', 'auction')->count(),
+            'normal' => (clone $availabilityQuery)->whereIn('listing_type', ['normal', 'normal_list'])->count(),
+            'business' => (clone $availabilityQuery)->whereIn('listing_type', ['business', 'business_list'])->count(),
+        ];
+
+        $normalizedCurrentType = match ($type) {
+            'normal', 'normal_list' => 'normal',
+            'business', 'business_list' => 'business',
+            default => 'auction',
+        };
+
+        if (($availableTypeCounts[$normalizedCurrentType] ?? 0) === 0) {
+            $fallbackType = collect(['auction', 'normal', 'business'])
+                ->first(fn ($listingType) => ($availableTypeCounts[$listingType] ?? 0) > 0);
+
+            if ($fallbackType && $fallbackType !== $normalizedCurrentType) {
+                $typeLabels = [
+                    'auction' => 'Auction',
+                    'normal' => 'Normal Products',
+                    'business' => 'Business Products',
+                ];
+
+                return redirect()
+                    ->to($this->canonicalMarketplaceUrl($currentCategory?->slug ?? $slug, $fallbackType, $request))
+                    ->with('info', 'No products are available in ' . ($typeLabels[$normalizedCurrentType] ?? 'the selected tab') . ', so we are showing ' . ($typeLabels[$fallbackType] ?? 'the available tab') . ' instead.');
             }
         }
 
@@ -335,11 +432,6 @@ class MarketplaceController extends Controller
             ->limit(12)
             ->get();
 
-        $latestProducts = (clone $curatedBaseQuery)
-            ->latest('id')
-            ->limit(12)
-            ->get();
-
         $mostViewedProducts = (clone $curatedBaseQuery)
             ->orderByDesc('views')
             ->latest('id')
@@ -380,7 +472,10 @@ class MarketplaceController extends Controller
 
         $countries = Country::query()->select('id', 'name')->orderBy('name')->get();
 
-        $products = $query->paginate(12)->withQueryString();
+        $products = $query
+            ->latest('id')
+            ->paginate(6)
+            ->withQueryString();
 
         return Inertia::render('Marketplace/Index', [
             'products' => $products,
@@ -394,9 +489,9 @@ class MarketplaceController extends Controller
             'countries' => $countries,
             'dynamicFields' => $dynamicFields,
             'featuredProducts' => $featuredProducts,
-            'latestProducts' => $latestProducts,
             'mostViewedProducts' => $mostViewedProducts,
             'filters' => $request->all(),
+            'currentType' => $type,
         ]);
     }
 }

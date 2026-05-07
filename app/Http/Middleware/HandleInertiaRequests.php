@@ -6,6 +6,7 @@ use App\Models\Favorite;
 use App\Support\TranslationManager;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Spatie\Permission\Models\Role;
 use Tighten\Ziggy\Ziggy;
 
 class HandleInertiaRequests extends Middleware
@@ -33,6 +34,22 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $authUser = $request->user()?->loadMissing(['individualVerification', 'corporateVerification']);
+        $authPermissions = [];
+
+        if ($authUser && method_exists($authUser, 'getAllPermissions')) {
+            $authPermissions = $authUser->getAllPermissions()->pluck('name')->values()->all();
+
+            $matchedRole = Role::query()
+                ->whereRaw('LOWER(name) = ?', [strtolower((string) $authUser->role)])
+                ->with('permissions:id,name')
+                ->first();
+
+            $rolePermissions = $matchedRole
+                ? $matchedRole->permissions->pluck('name')->all()
+                : [];
+
+            $authPermissions = array_values(array_unique([...$authPermissions, ...$rolePermissions]));
+        }
         $currentLocale = app()->getLocale();
         $supportedLocales = TranslationManager::getSupportedLanguages();
         $translations = TranslationManager::getTranslations($currentLocale);
@@ -41,6 +58,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $authUser,
+                'permissions' => $authPermissions,
             ],
             'cart' => $request->user() ? \App\Models\Cart::where('user_id', $request->user()->id)
                 ->with(['listing' => function ($query) {
@@ -70,6 +88,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
+                'info' => $request->session()->get('info'),
             ],
             'locale' => [
                 'current' => $currentLocale,

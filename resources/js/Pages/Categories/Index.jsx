@@ -21,7 +21,7 @@ export default function Index({ categories = [] }) {
                                           {categories.map((cat, i) => (
                                                  <Link
                                                         key={cat.id || i}
-                                                        href={`/marketplace?category=${cat.slug}`}
+                                                        href={route('marketplace.type', { slug: cat.slug, typeSlug: 'auctions' })}
                                                         className="text-decoration-none all-category-card"
                                                  >
                                                         <div className="all-category-image">
@@ -97,4 +97,3 @@ export default function Index({ categories = [] }) {
               </AppLayout>
        );
 }
-

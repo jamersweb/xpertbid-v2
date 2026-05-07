@@ -27,12 +27,19 @@ export default function Index({ categories, filters }) {
               }));
        };
 
+       const assetUrl = (path) => {
+              if (!path) return null;
+              if (path.startsWith('http')) return path;
+              return `${window.location.origin}/${path.replace(/^\/+/, '')}`;
+       };
+
        const { data, setData, post, put, processing, errors, reset } = useForm({
               name: '',
               parent_id: '',
               sub_category_id: '',
               slug: '',
               image: null,
+              icon: null,
               meta_title: '',
               meta_description: '',
               seo_content: '',
@@ -49,6 +56,7 @@ export default function Index({ categories, filters }) {
                             sub_category_id: category.sub_category_id || '',
                             slug: category.slug || '',
                             image: null,
+                            icon: null,
                             meta_title: category.meta_title || '',
                             meta_description: category.meta_description || '',
                             seo_content: category.seo_content || '',
@@ -113,12 +121,7 @@ export default function Index({ categories, filters }) {
               const children = cat.sub_categories || cat.subCategories || cat.child_categories || cat.childCategories || [];
               const hasChildren = children.length > 0;
 
-              // Proper image formatting
-              const imageUrl = cat.image 
-                     ? (cat.image.startsWith('http') 
-                            ? cat.image 
-                            : `${window.location.origin}/${cat.image.replace(/^\/+/, '')}`) 
-                     : null;
+              const imageUrl = assetUrl(cat.image);
 
               const rows = [
                      <tr key={cat.id} className={`${currentStyle.bg} hover:bg-gray-50/80 transition-all border-b border-gray-100/50`}>
@@ -254,8 +257,8 @@ export default function Index({ categories, filters }) {
 
                      {/* Modal for Add/Edit */}
                      <Modal show={isModalOpen} onClose={closeModal} maxWidth="2xl">
-                            <form onSubmit={submit} className="p-8">
-                                   <div className="flex items-center justify-between mb-8">
+                            <form onSubmit={submit} className="flex max-h-[calc(100vh-3rem)] flex-col">
+                                   <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-8 py-5">
                                           <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">
                                                  {editingCategory ? 'Modify Category' : 'New Category'}
                                           </h2>
@@ -264,7 +267,7 @@ export default function Index({ categories, filters }) {
                                           </button>
                                    </div>
 
-                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                   <div className="grid flex-1 min-h-0 grid-cols-1 md:grid-cols-2 gap-8 overflow-y-auto px-8 py-6">
                                           <div className="space-y-6">
                                                  <div>
                                                         <InputLabel value="Category Name" required className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
@@ -319,27 +322,74 @@ export default function Index({ categories, filters }) {
                                                  </div>
                                           </div>
 
-                                          <div className="md:col-span-2">
-                                                 <InputLabel value="Upload Category Image" className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
-                                                 <div className="mt-2 flex items-center gap-4 p-8 border-2 border-dashed border-gray-100 rounded-3xl bg-gray-50/30 hover:bg-gray-50 transition-colors group cursor-pointer relative">
-                                                        <input
-                                                               type="file"
-                                                               className="absolute inset-0 opacity-0 cursor-pointer"
-                                                               onChange={e => setData('image', e.target.files[0])}
-                                                        />
-                                                        <div className="w-12 h-12 bg-white shadow-sm rounded-xl flex items-center justify-center text-gray-400 group-hover:text-black transition-colors">
-                                                               <i className="fa-solid fa-cloud-arrow-up text-xl"></i>
+                                          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
+                                                 <div>
+                                                        <InputLabel value="Upload Category Image" className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
+                                                        {editingCategory?.image && (
+                                                               <div className="mb-3 flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50/60 p-3">
+                                                                      <div className="h-12 w-12 overflow-hidden rounded-xl border border-gray-200 bg-white flex items-center justify-center">
+                                                                             <img src={assetUrl(editingCategory.image)} className="h-full w-full object-cover" alt="Current category" referrerPolicy="no-referrer" />
+                                                                      </div>
+                                                                      <div>
+                                                                             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Current Image</p>
+                                                                             <p className="text-xs font-bold text-gray-900">Uploaded category image</p>
+                                                                      </div>
+                                                               </div>
+                                                        )}
+                                                        <div className="mt-2 flex items-center gap-3 p-5 min-h-[110px] border-2 border-dashed border-gray-100 rounded-3xl bg-gray-50/30 hover:bg-gray-50 transition-colors group cursor-pointer relative">
+                                                               <input
+                                                                      type="file"
+                                                                      accept=".jpeg,.jpg,.png,.gif,image/jpeg,image/png,image/gif"
+                                                                      className="absolute inset-0 opacity-0 cursor-pointer"
+                                                                      onChange={e => setData('image', e.target.files[0])}
+                                                               />
+                                                               <div className="w-11 h-11 bg-white shadow-sm rounded-xl flex items-center justify-center text-gray-400 group-hover:text-black transition-colors">
+                                                                      <i className="fa-solid fa-cloud-arrow-up text-lg"></i>
+                                                               </div>
+                                                               <div className="min-w-0">
+                                                                      <p className="text-sm font-bold text-gray-900">Click to upload image</p>
+                                                                      <p className="text-xs text-gray-400">PNG, JPG or GIF up to 2MB</p>
+                                                                      {data.image && <p className="mt-1 text-xs font-bold text-emerald-600 truncate">{data.image.name}</p>}
+                                                               </div>
                                                         </div>
-                                                        <div>
-                                                               <p className="text-sm font-bold text-gray-900">Click to upload image</p>
-                                                               <p className="text-xs text-gray-400">PNG, JPG or GIF up to 2MB</p>
-                                                        </div>
+                                                        <InputError message={errors.image} className="mt-2" />
                                                  </div>
-                                                 <InputError message={errors.image} className="mt-2" />
+
+                                                 <div>
+                                                        <InputLabel value="Upload Category Icon (Optional)" className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
+                                                        {editingCategory?.icon && (
+                                                               <div className="mb-3 flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50/60 p-3">
+                                                                      <div className="h-12 w-12 overflow-hidden rounded-xl border border-gray-200 bg-white p-2 flex items-center justify-center">
+                                                                             <img src={assetUrl(editingCategory.icon)} className="h-full w-full object-contain" alt="Current category icon" referrerPolicy="no-referrer" />
+                                                                      </div>
+                                                                      <div>
+                                                                             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Current Icon</p>
+                                                                             <p className="text-xs font-bold text-gray-900">Uploaded category icon</p>
+                                                                      </div>
+                                                               </div>
+                                                        )}
+                                                        <div className="mt-2 flex items-center gap-3 p-5 min-h-[110px] border-2 border-dashed border-gray-100 rounded-3xl bg-gray-50/30 hover:bg-gray-50 transition-colors group cursor-pointer relative">
+                                                               <input
+                                                                      type="file"
+                                                                      accept=".jpeg,.jpg,.png,.svg,image/jpeg,image/png,image/svg+xml"
+                                                                      className="absolute inset-0 opacity-0 cursor-pointer"
+                                                                      onChange={e => setData('icon', e.target.files[0])}
+                                                               />
+                                                               <div className="w-11 h-11 bg-white shadow-sm rounded-xl flex items-center justify-center text-gray-400 group-hover:text-black transition-colors">
+                                                                      <i className="fa-solid fa-icons text-lg"></i>
+                                                               </div>
+                                                               <div className="min-w-0">
+                                                                      <p className="text-sm font-bold text-gray-900">Click to upload icon</p>
+                                                                      <p className="text-xs text-gray-400">PNG, JPG, JPEG or SVG up to 2MB</p>
+                                                                      {data.icon && <p className="mt-1 text-xs font-bold text-emerald-600 truncate">{data.icon.name}</p>}
+                                                               </div>
+                                                        </div>
+                                                        <InputError message={errors.icon} className="mt-2" />
+                                                 </div>
                                           </div>
                                    </div>
 
-                                   <div className="mt-12 flex justify-end gap-4">
+                                   <div className="sticky bottom-0 z-10 flex justify-end gap-4 border-t border-gray-100 bg-white px-8 py-5">
                                           <SecondaryButton onClick={closeModal} className="px-8 py-3 rounded-2xl">Dismiss</SecondaryButton>
                                           <button 
                                                  type="submit" 

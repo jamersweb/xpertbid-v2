@@ -53,7 +53,7 @@ const listingImageUrl = (path) => {
        return `/${String(path).replace(/^\/+/, '')}`;
 };
 
-export default function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, dynamicFields = [], liveVideoId = null, liveActiveAuction = null }) {
+export default function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, dynamicFields = [], liveVideoId = null, liveActiveAuction = null, marketplaceBackUrl = null }) {
        const { auth } = usePage().props;
        const listingType = String(auction?.listing_type || '').toLowerCase();
        const listingStatus = String(auction?.status || '').trim().toLowerCase();
@@ -969,6 +969,7 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
                             views={auction.views}
                             productId={auction.id}
                             slug={auction.slug}
+                            backHref={marketplaceBackUrl}
                      />
 
                      {auction.slug === 'car-showcase-4-vkxgiyxw' && (
