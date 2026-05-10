@@ -936,6 +936,7 @@ class AuctionController extends Controller
     {
         $products = \App\Models\Listing::where('is_1_rupee', 1)
             ->whereIn('status', ['active', 'awarded'])
+            ->with('user')
             ->withMax('bids', 'bid_amount')
             ->latest()
             ->take(12)
@@ -949,8 +950,10 @@ class AuctionController extends Controller
                 "profile" => $user->profile_pic ?? ''
             ];
 
-            if ($product->status == 'awarded' && $product->listing_data['winner_id'] ?? null) {
-                $winner = \App\Models\User::find($product->listing_data['winner_id']);
+            $winnerId = $product->listing_data['winner_id'] ?? null;
+
+            if ($product->status == 'awarded' && $winnerId) {
+                $winner = \App\Models\User::find($winnerId);
                 $product->winner_details = [
                     "name" => $winner->name ?? 'Unknown',
                     "profile" => $winner->profile_pic ?? ''

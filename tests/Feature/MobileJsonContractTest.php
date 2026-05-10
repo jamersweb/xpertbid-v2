@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\AuctionCategory;
+use App\Models\Listing;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -66,5 +68,29 @@ class MobileJsonContractTest extends TestCase
             'application/json',
             (string) $cartResponse->headers->get('content-type')
         );
+    }
+
+    public function test_one_rupee_feed_handles_awarded_listing_without_winner_id(): void
+    {
+        $user = User::factory()->create();
+        $category = AuctionCategory::withoutEvents(
+            fn () => AuctionCategory::create(['name' => 'Test Category'])
+        );
+
+        Listing::create([
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'listing_type' => 'auction',
+            'title' => 'One Rupee Auction',
+            'status' => 'awarded',
+            'is_1_rupee' => true,
+            'listing_data' => [
+                'minimum_bid' => 1,
+            ],
+        ]);
+
+        $response = $this->getJson('/get-one-rupee-auctions')->assertOk();
+
+        $response->assertJsonPath('product.0.title', 'One Rupee Auction');
     }
 }
