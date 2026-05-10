@@ -378,7 +378,7 @@ class UserController extends Controller
         return response()->json($user, 200);
     }
 
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         $user = Auth::user();
 
@@ -396,15 +396,19 @@ class UserController extends Controller
                 return $l;
             });
 
-        return Inertia::render('Dashboard', [
+        $payload = [
             'listingsCount' => $listingsCount,
             'biddingsCount' => $bidsCount,
             'listings' => $latestListings,
-        ]);
+        ];
+
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json($payload);
+        }
+
+        return Inertia::render('Dashboard', $payload);
     }
 }
-
-
 
 
 

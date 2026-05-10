@@ -131,6 +131,14 @@ class CorporateVerificationController extends Controller
             $updateData
         );
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Corporate verification submitted successfully.',
+                'verification' => $cv,
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Corporate verification submitted successfully.');
     }
 

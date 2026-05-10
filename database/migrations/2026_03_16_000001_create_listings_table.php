@@ -15,7 +15,7 @@ return new class extends Migration
             $col->id();
             $col->foreignId('user_id')->constrained()->onDelete('cascade');
             $col->foreignId('category_id')->constrained('categories')->onDelete('cascade');
-            $col->enum('listing_type', ['normal', 'auction', 'business']);
+            $col->string('listing_type');
             $col->string('title');
             $col->text('description')->nullable();
             $col->string('status')->default('active');

@@ -99,12 +99,19 @@ class UserNotificationController extends Controller
     /**
      * Mark all notifications as read.
      */
-    public function markAllAsRead()
+    public function markAllAsRead(Request $request)
     {
         $user = Auth::user();
 
         // Update all unread notifications for the user.
         $user->NewNotification()->whereNull('read_at')->update(['read_at' => now()]);
+
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'All notifications marked as read',
+            ]);
+        }
 
         return redirect()->back();
     }

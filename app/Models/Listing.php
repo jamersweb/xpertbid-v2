@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Country;
 use App\Models\State;
 use App\Models\City;
+use App\Support\ListingMedia;
 
 class Listing extends Model
 {
@@ -161,20 +162,20 @@ class Listing extends Model
 
     public function getImageAttribute($value)
     {
-        if ($value) return $value;
-        
-        $fromData = $this->listing_data['image'] ?? null;
-        if ($fromData) return $fromData;
-
-        // Fallback to first image in album
-        $album = $this->album; // Uses the album accessor
-        return (is_array($album) && count($album) > 0) ? $album[0] : null;
+        return ListingMedia::firstDisplayableImage([
+            $value,
+            $this->listing_data['image'] ?? null,
+            ...$this->album,
+        ]);
     }
 
     public function getAlbumAttribute($value)
     {
-        if ($value) return is_string($value) ? json_decode($value, true) : $value;
-        return $this->listing_data['album'] ?? [];
+        if ($value) {
+            return ListingMedia::decodeList($value);
+        }
+
+        return ListingMedia::decodeList($this->listing_data['album'] ?? []);
     }
 
     public function getListTypeAttribute()
@@ -204,53 +205,12 @@ class Listing extends Model
 
     public function getImageUrlAttribute()
     {
-        $image = $this->image;
-        
-        // If direct image column is empty, check listing_data
-        if (!$image && isset($this->listing_data['image'])) {
-            $image = $this->listing_data['image'];
-        }
-        
-        // If still empty, check album (direct column or listing_data)
-        if (!$image) {
-            $album = $this->album ?: ($this->listing_data['album'] ?? null);
-            if (!empty($album) && is_array($album)) {
-                $image = $album[0];
-            } elseif (!empty($album) && is_string($album)) {
-                // Handle JSON string if not cast
-                $decoded = json_decode($album, true);
-                if (is_array($decoded) && !empty($decoded)) {
-                    $image = $decoded[0];
-                } else {
-                    $image = $album;
-                }
-            }
-        }
-
-        if (!$image) return null;
-
-        if (str_starts_with($image, 'http')) {
-            return $image;
-        }
-
-        $image = str_replace('\\', '/', $image);
-        return asset($image);
+        return ListingMedia::buildAssetUrl($this->image);
     }
 
     public function getAlbumUrlsAttribute()
     {
-        $album = $this->album;
-        if (empty($album) || !is_array($album)) {
-            return [];
-        }
-
-        return array_map(function ($path) {
-            if (str_starts_with($path, 'http')) {
-                return $path;
-            }
-            $path = str_replace('\\', '/', $path);
-            return asset($path);
-        }, $album);
+        return ListingMedia::buildAssetUrls($this->album);
     }
 
     public function getVehicleVerificationAttribute()

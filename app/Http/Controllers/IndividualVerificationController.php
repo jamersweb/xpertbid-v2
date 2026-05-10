@@ -165,6 +165,14 @@ class IndividualVerificationController extends Controller
             // swallow — API still returns success
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Individual verification submitted successfully.',
+                'verification' => $iv,
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Individual verification submitted successfully.');
     }
 

@@ -25,6 +25,11 @@ use App\Models\City;
 
 class CheckoutController extends Controller
 {
+    protected function wantsMobileJson(Request $request): bool
+    {
+        return $request->wantsJson() || $request->expectsJson();
+    }
+
     /**
      * Display Checkout Page
      */
@@ -137,7 +142,7 @@ class CheckoutController extends Controller
         ]);
 
         if ($validator->fails()) {
-            if ($request->expectsJson()) {
+            if ($this->wantsMobileJson($request)) {
                 return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
             }
             return redirect()->back()->withErrors($validator)->withInput();
@@ -228,7 +233,7 @@ class CheckoutController extends Controller
             // 5. Notifications & Mails
             Mail::to($order->billing_email)->send(new OrderPlacedMail($order));
 
-            if ($request->expectsJson()) {
+            if ($this->wantsMobileJson($request)) {
                 return response()->json([
                     'success' => true,
                     'order_number' => $order->order_number,
@@ -242,7 +247,7 @@ class CheckoutController extends Controller
             DB::rollBack();
             Log::error('Checkout Failed: ' . $e->getMessage());
             
-            if ($request->expectsJson()) {
+            if ($this->wantsMobileJson($request)) {
                 return response()->json(['success' => false, 'message' => 'Checkout failed: ' . $e->getMessage()], 500);
             }
             return redirect()->back()->with('error', 'Checkout failed. Please try again.')->withInput();
@@ -259,6 +264,13 @@ class CheckoutController extends Controller
             ->latest()
             ->paginate(10);
 
+        if ($this->wantsMobileJson($request)) {
+            return response()->json([
+                'orders' => $orders,
+                'data' => $orders,
+            ]);
+        }
+
         return Inertia::render('Orders/Index', [
             'orders' => $orders
         ]);
@@ -273,6 +285,13 @@ class CheckoutController extends Controller
             ->where('user_id', $request->user()->id)
             ->with(['items.listing'])
             ->firstOrFail();
+
+        if ($this->wantsMobileJson($request)) {
+            return response()->json([
+                'order' => $order,
+                'data' => $order,
+            ]);
+        }
 
         return Inertia::render('Orders/Show', [
             'order' => $order

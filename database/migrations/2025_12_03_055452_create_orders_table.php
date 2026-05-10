@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->string('order_number')->unique();
             
             // Billing Details
@@ -24,7 +24,7 @@ return new class extends Migration
             $table->text('billing_address_line2')->nullable();
             $table->string('billing_city');
             $table->string('billing_state');
-            $table->string('billing_postal_code');
+            $table->string('billing_postal_code')->nullable();
             $table->string('billing_country');
             
             // Shipping Details
@@ -35,7 +35,7 @@ return new class extends Migration
             $table->text('shipping_address_line2')->nullable();
             $table->string('shipping_city');
             $table->string('shipping_state');
-            $table->string('shipping_postal_code');
+            $table->string('shipping_postal_code')->nullable();
             $table->string('shipping_country');
             
             // Order Details
@@ -45,12 +45,13 @@ return new class extends Migration
             $table->decimal('total', 15, 2);
             
             // Payment Details
-            $table->enum('payment_method', ['stripe', 'cod'])->default('cod');
-            $table->enum('payment_status', ['pending', 'paid', 'failed'])->default('pending');
+            $table->enum('payment_method', ['stripe', 'cod', 'bank_transfer'])->default('cod');
+            $table->enum('payment_status', ['pending', 'paid', 'failed', 'approved', 'declined'])->default('pending');
             $table->string('transaction_id')->nullable();
+            $table->string('receipt_image')->nullable();
             
             // Order Status
-            $table->enum('status', ['pending', 'processing', 'shipped', 'delivered', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'processing', 'completed', 'cancelled'])->default('pending');
             
             $table->text('notes')->nullable();
             $table->timestamps();

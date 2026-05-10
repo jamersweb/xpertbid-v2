@@ -351,7 +351,7 @@ class ListingController extends Controller
     /**
      * Display a listing of the user's listings.
      */
-    public function index()
+    public function index(Request $request)
     {
         $listings = Listing::where('user_id', auth()->id())
             ->with(['user', 'category'])
@@ -373,6 +373,13 @@ class ListingController extends Controller
             ->map(fn ($draft) => $this->transformSellerDraft($draft));
 
         $auctions = $listings->concat($drafts)->sortByDesc('created_at')->values();
+
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'auctions' => $auctions,
+                'data' => $auctions,
+            ]);
+        }
 
         return \Inertia\Inertia::render('Auctions/MyListings', [
             'auctions' => $auctions

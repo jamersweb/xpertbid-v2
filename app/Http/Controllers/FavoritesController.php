@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Auth;
 
 class FavoritesController extends Controller
 {
+    protected function wantsMobileJson(Request $request): bool
+    {
+        return $request->wantsJson() || $request->expectsJson();
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -37,8 +42,17 @@ class FavoritesController extends Controller
             })
             ->filter();
 
+        $items = $favorites->values();
+
+        if ($this->wantsMobileJson($request)) {
+            return response()->json([
+                'favorites' => $items,
+                'data' => $items,
+            ]);
+        }
+
         return Inertia::render('Favorites/Index', [
-            'favorites' => $favorites->values()
+            'favorites' => $items
         ]);
     }
 
@@ -57,12 +71,26 @@ class FavoritesController extends Controller
 
         if ($favorite) {
             $favorite->delete();
+            if ($this->wantsMobileJson($request)) {
+                return response()->json([
+                    'success' => true,
+                    'favorited' => false,
+                    'message' => 'Removed from favorites.',
+                ]);
+            }
             return redirect()->back(303)->with('success', 'Removed from favorites.');
         } else {
             Favorite::create([
                 'user_id' => $user->id,
                 'listing_id' => $listingId,
             ]);
+            if ($this->wantsMobileJson($request)) {
+                return response()->json([
+                    'success' => true,
+                    'favorited' => true,
+                    'message' => 'Added to favorites.',
+                ]);
+            }
             return redirect()->back(303)->with('success', 'Added to favorites.');
         }
     }

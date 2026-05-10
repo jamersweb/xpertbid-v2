@@ -37,9 +37,9 @@ use Inertia\Inertia;
 
 class AuctionController extends Controller
 {
-    public function liveAuctions()
+    protected function resolveLiveAuctionSession(): ?LiveAuctionSession
     {
-        $session = LiveAuctionSession::query()
+        return LiveAuctionSession::query()
             ->whereIn('status', ['active', 'soon'])
             ->latest()
             ->first()
@@ -48,34 +48,105 @@ class AuctionController extends Controller
                 ->latest('closed_at')
                 ->latest()
                 ->first();
+    }
 
+    protected function resolveLiveAuctionListings(?LiveAuctionSession $session)
+    {
         $ids = collect($session?->selected_listing_ids ?: [])
             ->map(fn ($id) => (int) $id)
             ->filter()
             ->unique()
-            ->values()
-            ->all();
+            ->values();
 
-        $liveAuctions = collect();
-
-        if (!empty($ids)) {
-            $liveAuctions = \App\Models\Listing::query()
-                ->where('listing_type', 'live_auction')
-                ->whereIn('id', $ids)
-                ->with($this->listingUserRelations())
-                ->with(['category:id,name'])
-                ->withMax('bids', 'bid_amount')
-                ->withCount('bids')
-                ->orderByRaw('FIELD(id, ' . implode(',', array_map('intval', $ids)) . ')')
-                ->get();
+        if ($ids->isEmpty()) {
+            return collect();
         }
 
-        $activeAuction = $liveAuctions->firstWhere('status', 'active') ?: $liveAuctions->first();
+        $listings = \App\Models\Listing::query()
+            ->where('listing_type', 'live_auction')
+            ->whereIn('id', $ids->all())
+            ->with($this->listingUserRelations())
+            ->with(['category:id,name'])
+            ->withMax('bids', 'bid_amount')
+            ->withCount('bids')
+            ->get()
+            ->keyBy('id');
+
+        return $ids
+            ->map(fn ($id) => $listings->get($id))
+            ->filter()
+            ->values();
+    }
+
+    protected function resolveActiveLiveAuction($liveAuctions)
+    {
+        return $liveAuctions->firstWhere('status', 'active') ?: $liveAuctions->first();
+    }
+
+    protected function serializeLiveAuctionListing(\App\Models\Listing $listing, ?int $activeListingId = null): array
+    {
+        return [
+            'id' => $listing->id,
+            'slug' => $listing->slug,
+            'title' => $listing->title,
+            'status' => $listing->status,
+            'listing_type' => $listing->listing_type,
+            'image' => $listing->image,
+            'image_url' => $listing->image_url,
+            'youtube_video_id' => $listing->youtube_video_id,
+            'minimum_bid' => $listing->minimum_bid,
+            'reserve_price' => $listing->reserve_price,
+            'current_bid' => $listing->bids_max_bid_amount ?? 0,
+            'bids_count' => $listing->bids_count ?? 0,
+            'category_name' => $listing->category?->name,
+            'end_date' => $listing->end_date,
+            'is_active' => $activeListingId !== null && $listing->id === $activeListingId,
+            'owner' => [
+                'name' => $listing->user?->name,
+                'profile_pic' => $listing->user?->profile_pic,
+            ],
+        ];
+    }
+
+    public function liveAuctions()
+    {
+        $session = $this->resolveLiveAuctionSession();
+        $liveAuctions = $this->resolveLiveAuctionListings($session);
+        $activeAuction = $this->resolveActiveLiveAuction($liveAuctions);
 
         return Inertia::render('LiveAuctions/Index', [
             'session' => $session,
             'liveAuctions' => $liveAuctions,
             'activeAuction' => $activeAuction,
+        ]);
+    }
+
+    public function liveAuctionsFeed()
+    {
+        $session = $this->resolveLiveAuctionSession();
+        $liveAuctions = $this->resolveLiveAuctionListings($session);
+        $activeAuction = $this->resolveActiveLiveAuction($liveAuctions);
+        $activeListingId = $activeAuction?->id;
+
+        return response()->json([
+            'session' => $session ? [
+                'id' => $session->id,
+                'status' => $session->status,
+                'scheduled_at' => optional($session->scheduled_at)?->toIso8601String(),
+                'closed_at' => optional($session->closed_at)?->toIso8601String(),
+                'live_url' => $session->live_url,
+                'youtube_video_id' => $session->youtube_video_id,
+                'selected_listing_ids' => $session->selected_listing_ids ?: [],
+            ] : null,
+            'active_auction' => $activeAuction
+                ? $this->serializeLiveAuctionListing($activeAuction, $activeListingId)
+                : null,
+            'live_auctions' => $liveAuctions
+                ->map(fn (\App\Models\Listing $listing) => $this->serializeLiveAuctionListing($listing, $activeListingId))
+                ->values(),
+            'has_active_live' => $activeAuction !== null
+                && strtolower(trim((string) $session?->status)) === 'active'
+                && strtolower(trim((string) $activeAuction->status)) === 'active',
         ]);
     }
 

@@ -13,7 +13,7 @@ class CreateIndividualVerificationsTable extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('full_legal_name');
             $table->date('dob');
-            $table->string('nationality');
+            $table->string('nationality')->nullable();
             $table->string('residential_address');
             $table->string('id_front_path');
             $table->string('id_back_path');

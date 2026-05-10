@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('orders') || Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         Schema::table('orders', function (Blueprint $table) {
             $table->string('billing_postal_code')->nullable()->change();
             $table->string('shipping_postal_code')->nullable()->change();
@@ -22,6 +26,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('orders') || Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         Schema::table('orders', function (Blueprint $table) {
             $table->string('billing_postal_code')->nullable(false)->change();
             $table->string('shipping_postal_code')->nullable(false)->change();

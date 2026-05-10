@@ -80,12 +80,20 @@ class BidController extends Controller
                 } elseif ($isRejected($individual) || $isRejected($corporate)) {
                     $msg = 'Your verification was rejected.';
                 }
+                if ($request->wantsJson() || $request->expectsJson()) {
+                    return response()->json(['message' => $msg], 403);
+                }
                 // For Inertia, we might redirect to verification page with authorized error
                 return redirect()->route('verification.identity')->with('error', $msg);
             }
         }
 
         if ($listing->status !== 'active' || (!$isLiveAuction && now()->greaterThan($listing->end_date))) {
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Auction has ended or is inactive.',
+                ], 422);
+            }
             return redirect()->back()->with('error', 'Auction has ended or is inactive.');
         }
 
@@ -94,12 +102,22 @@ class BidController extends Controller
         $newAmount = (float) $request->bid_amount;
         
         if ($newAmount < $minBid) {
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'message' => "Bid must be at least {$minBid}.",
+                ], 422);
+            }
              return redirect()->back()->with('error', "Bid must be at least {$minBid}.");
         }
 
         // Highest Bid Check
         $currentHighest = Bid::where('listing_id', $listing->id)->max('bid_amount');
         if ($currentHighest && $newAmount <= $currentHighest) {
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'message' => "Bid must be higher than {$currentHighest}.",
+                ], 422);
+            }
             return redirect()->back()->with('error', "Bid must be higher than {$currentHighest}.");
         }
 
@@ -129,10 +147,23 @@ class BidController extends Controller
 
             DB::commit();
 
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Bid placed successfully!',
+                    'bid' => $bid,
+                ]);
+            }
+
             return redirect()->back()->with('success', 'Bid placed successfully!');
 
         } catch (\Exception $e) {
             DB::rollBack();
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Bid failed: ' . $e->getMessage(),
+                ], 500);
+            }
             return redirect()->back()->with('error', 'Bid failed: ' . $e->getMessage());
         }
     }
@@ -149,19 +180,33 @@ class BidController extends Controller
         }, 'category']);
 
         if ($activeTab === 'active') {
-            $query->where('status', 'active')
-                  ->where('end_date', '>', now());
+            $query->where('status', 'active');
         } elseif ($activeTab === 'won') {
-            $query->where('winner_id', $userId);
+            $query->where('status', 'awarded')
+                ->whereRaw(
+                    "CAST(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.winner_id')) AS UNSIGNED) = ?",
+                    [$userId]
+                );
         } elseif ($activeTab === 'lost') {
-            $query->where('end_date', '<', now())
-                  ->where(function ($q) use ($userId) {
-                      $q->whereNull('winner_id')
-                        ->orWhere('winner_id', '!=', $userId);
-                  });
+            $query->whereIn('status', ['closed', 'awarded'])
+                ->where(function ($q) use ($userId) {
+                    $q->whereRaw("JSON_EXTRACT(listing_data, '$.winner_id') IS NULL")
+                        ->orWhereRaw(
+                            "CAST(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.winner_id')) AS UNSIGNED) != ?",
+                            [$userId]
+                        );
+                });
         }
 
         $auctions = $query->latest()->paginate(12);
+
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'auctions' => $auctions,
+                'data' => $auctions,
+                'activeTab' => $activeTab,
+            ]);
+        }
 
         return Inertia::render('Bids/Index', [
             'auctions' => $auctions,

@@ -9,10 +9,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
-use Inertia\Response;
 use App\Models\User;
 use App\Models\Address;
 use App\Models\Country;
+use App\Models\State;
+use App\Models\City;
 use App\Models\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
@@ -23,6 +24,96 @@ use Intervention\Image\Encoders\WebpEncoder;
 
 class ProfileController extends Controller
 {
+    protected function booleanValue(mixed $value): bool
+    {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
+    }
+
+    protected function resolveLocationDisplayName(mixed $value, string $modelClass): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            return $modelClass::query()->whereKey((int) $value)->value('name');
+        }
+
+        return (string) $value;
+    }
+
+    protected function serializeAddress(?Address $address): ?array
+    {
+        if (!$address) {
+            return null;
+        }
+
+        $data = $address->toArray();
+        $countryValue = $data['country'] ?? null;
+        $stateValue = $data['state'] ?? null;
+        $cityValue = $data['city'] ?? null;
+
+        $data['country_id'] = is_numeric($countryValue) ? (int) $countryValue : null;
+        $data['state_id'] = is_numeric($stateValue) ? (int) $stateValue : null;
+        $data['city_id'] = is_numeric($cityValue) ? (int) $cityValue : null;
+        $data['country_name'] = $this->resolveLocationDisplayName($countryValue, Country::class);
+        $data['state_name'] = $this->resolveLocationDisplayName($stateValue, State::class);
+        $data['city_name'] = $this->resolveLocationDisplayName($cityValue, City::class);
+
+        return $data;
+    }
+
+    protected function serializeNotificationSettings(?Notification $notification): array
+    {
+        $settings = $notification?->toArray() ?? [];
+
+        $outbid = $this->booleanValue($settings['outbid'] ?? false);
+        $republished = $this->booleanValue($settings['republished'] ?? false);
+        $oneDayReminder = $this->booleanValue($settings['oneDayReminder'] ?? false);
+        $oneHourReminder = $this->booleanValue($settings['oneHourReminder'] ?? false);
+        $fifteenMinutesReminder = $this->booleanValue($settings['fifteenMinutesReminder'] ?? false);
+        $inspiration = $this->booleanValue($settings['inspiration'] ?? false);
+        $newsletter = $this->booleanValue($settings['newsletter'] ?? false);
+
+        return [
+            'id' => $settings['id'] ?? null,
+            'user_id' => $settings['user_id'] ?? null,
+            'inspiration' => $inspiration,
+            'newsletter' => $newsletter,
+            'other_newsletters' => $newsletter,
+            'outbid' => $outbid,
+            'republished' => $republished,
+            'oneDayReminder' => $oneDayReminder,
+            'oneHourReminder' => $oneHourReminder,
+            'fifteenMinutesReminder' => $fifteenMinutesReminder,
+            'remind_1_day' => $oneDayReminder,
+            'remind_1_hour' => $oneHourReminder,
+            'remind_15_min' => $fifteenMinutesReminder,
+            'biddingConditions' => [
+                'outbid' => $outbid,
+                'republished' => $republished,
+                'oneDayReminder' => $oneDayReminder,
+                'oneHourReminder' => $oneHourReminder,
+                'fifteenMinutesReminder' => $fifteenMinutesReminder,
+            ],
+        ];
+    }
+
+    protected function extractNotificationPayload(Request $request): array
+    {
+        $biddingConditions = $request->input('biddingConditions', []);
+
+        return [
+            'inspiration' => $this->booleanValue($request->input('inspiration', false)),
+            'newsletter' => $this->booleanValue($request->input('newsletter', $request->input('other_newsletters', false))),
+            'outbid' => $this->booleanValue($request->input('outbid', data_get($biddingConditions, 'outbid', false))),
+            'republished' => $this->booleanValue($request->input('republished', data_get($biddingConditions, 'republished', false))),
+            'oneDayReminder' => $this->booleanValue($request->input('oneDayReminder', data_get($biddingConditions, 'oneDayReminder', $request->input('remind_1_day', false)))),
+            'oneHourReminder' => $this->booleanValue($request->input('oneHourReminder', data_get($biddingConditions, 'oneHourReminder', $request->input('remind_1_hour', false)))),
+            'fifteenMinutesReminder' => $this->booleanValue($request->input('fifteenMinutesReminder', data_get($biddingConditions, 'fifteenMinutesReminder', $request->input('remind_15_min', false)))),
+        ];
+    }
+
     protected function storeOptimizedProfileImage($file): string
     {
         $directory = public_path('assets/images/profile');
@@ -42,18 +133,37 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): Response
+    public function edit(Request $request)
     {
         $user = $request->user();
+        $address = $user->shippingAddress;
+        $identity = $user->identity_verification;
+        $individualVerification = $user->individualVerification;
+        $corporateVerification = $user->corporateVerification;
+        $notificationSettings = Notification::where("user_id", $user->id)->first();
+
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'user' => $user,
+                'profile' => $user,
+                'address' => $this->serializeAddress($address),
+                'identity' => $identity,
+                'individualVerification' => $individualVerification,
+                'corporateVerification' => $corporateVerification,
+                'notificationSettings' => $this->serializeNotificationSettings($notificationSettings),
+                'mustVerifyEmail' => $user instanceof MustVerifyEmail,
+                'status' => session('status'),
+            ]);
+        }
 
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
-            'address' => $user->shippingAddress,
-            'identity' => $user->identity_verification,
-            'individualVerification' => $user->individualVerification,
-            'corporateVerification' => $user->corporateVerification,
-            'notificationSettings' => Notification::where("user_id", $user->id)->first(),
+            'address' => $address,
+            'identity' => $identity,
+            'individualVerification' => $individualVerification,
+            'corporateVerification' => $corporateVerification,
+            'notificationSettings' => $notificationSettings,
         ]);
     }
 
@@ -119,13 +229,21 @@ class ProfileController extends Controller
             \Log::error('Account change notification email failed: ' . $e->getMessage());
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile details updated.',
+                'user' => $user->fresh(),
+            ]);
+        }
+
         return Redirect::route('profile.edit')->with('success', 'Profile details updated.');
     }
 
     /**
      * Delete the user's account.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request)
     {
         $request->validate([
             'password' => ['required', 'current_password'],
@@ -139,6 +257,13 @@ class ProfileController extends Controller
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Account closed successfully.',
+            ]);
+        }
 
         return Redirect::to('/');
     }
@@ -169,7 +294,7 @@ class ProfileController extends Controller
             'otherNumber' => $request->otherNumber ?? null,
         ];
 
-        Address::updateOrCreate(['user_id' => $user->id], $data);
+        $address = Address::updateOrCreate(['user_id' => $user->id], $data);
 
         try {
             \Mail::to($user->email)->send(new \App\Mail\AccountChangeNotification($user->name, 'Address Updated', now()->toDayDateTimeString()));
@@ -177,7 +302,21 @@ class ProfileController extends Controller
             \Log::error('Account change notification email failed: ' . $e->getMessage());
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'address' => $this->serializeAddress($address),
+            ]);
+        }
+
         return Redirect::route('profile.edit')->with('success', 'Address updated successfully.');
+    }
+
+    public function showAddress(Request $request)
+    {
+        return response()->json([
+            'address' => $this->serializeAddress($request->user()?->shippingAddress),
+        ]);
     }
 
     /**
@@ -193,6 +332,12 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         if (!Hash::check($request->oldPassword, $user->password)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Old password is incorrect.',
+                ], 422);
+            }
             return back()->withErrors(['oldPassword' => 'Old password is incorrect.']);
         }
 
@@ -203,6 +348,13 @@ class ProfileController extends Controller
             \Mail::to($user->email)->send(new \App\Mail\AccountChangeNotification($user->name, 'Password Changed', now()->toDayDateTimeString()));
         } catch (\Exception $e) {
             \Log::error('Account change notification email failed: ' . $e->getMessage());
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Password updated successfully.',
+            ]);
         }
 
         return Redirect::route('profile.edit')->with('success', 'Password updated successfully.');
@@ -243,17 +395,9 @@ class ProfileController extends Controller
     public function updateNotifications(Request $request)
     {
         $user = Auth::user();
-        Notification::updateOrCreate(
+        $notification = Notification::updateOrCreate(
             ['user_id' => $user->id],
-            $request->only([
-                'inspiration',
-                'newsletter',
-                'outbid',
-                'republished',
-                'oneDayReminder',
-                'oneHourReminder',
-                'fifteenMinutesReminder'
-            ])
+            $this->extractNotificationPayload($request)
         );
 
         try {
@@ -262,6 +406,19 @@ class ProfileController extends Controller
             \Log::error('Account change notification email failed: ' . $e->getMessage());
         }
 
+        if ($request->expectsJson()) {
+            return response()->json($this->serializeNotificationSettings($notification));
+        }
+
         return Redirect::route('profile.edit')->with('success', 'Notification preferences updated.');
+    }
+
+    public function showNotifications(Request $request)
+    {
+        return response()->json(
+            $this->serializeNotificationSettings(
+                Notification::where('user_id', $request->user()->id)->first()
+            )
+        );
     }
 }

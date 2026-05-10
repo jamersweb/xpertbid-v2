@@ -11,6 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (
+            !Schema::hasTable('favorites') ||
+            !Schema::hasColumn('favorites', 'auctions_id') ||
+            Schema::getConnection()->getDriverName() === 'sqlite'
+        ) {
+            return;
+        }
+
         Schema::table('favorites', function (Blueprint $table) {
             $table->unsignedBigInteger('auctions_id')->nullable()->change();
         });
@@ -21,6 +29,14 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (
+            !Schema::hasTable('favorites') ||
+            !Schema::hasColumn('favorites', 'auctions_id') ||
+            Schema::getConnection()->getDriverName() === 'sqlite'
+        ) {
+            return;
+        }
+
         Schema::table('favorites', function (Blueprint $table) {
             $table->unsignedBigInteger('auctions_id')->nullable(false)->change();
         });

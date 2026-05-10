@@ -9,6 +9,7 @@ use App\Models\Bid;
 use App\Models\User;
 use App\Models\AuctionCategory;
 use Illuminate\Support\Facades\DB;
+use App\Support\ListingMedia;
 
 class MigrateAuctionsToListings extends Command
 {
@@ -39,6 +40,11 @@ class MigrateAuctionsToListings extends Command
             }
 
             $this->info("Migrating: {$auction->title} (ID: {$auction->id})");
+
+            $searchDirectories = ListingMedia::defaultSearchDirectories($auction->image);
+            $album = ListingMedia::repairMediaList($auction->album, $searchDirectories);
+            $image = ListingMedia::repairImagePath($auction->image, $searchDirectories)
+                ?? ListingMedia::firstDisplayableImage($album);
 
             // Prepare listing data
             $listingData = [
@@ -91,8 +97,8 @@ class MigrateAuctionsToListings extends Command
                     'child_category_id' => $auction->child_category_id,
                     'listing_type' => $auction->list_type ?: 'auction',
                     'title' => $auction->title,
-                    'image' => $auction->image,
-                    'album' => $auction->album,
+                    'image' => $image,
+                    'album' => $album,
                     'description' => $auction->description,
                     'status' => $auction->status ?: 'active',
                     'featured_name' => $auction->featured_name,

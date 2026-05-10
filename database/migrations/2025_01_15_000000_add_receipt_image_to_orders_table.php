@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('orders') || Schema::hasColumn('orders', 'receipt_image')) {
+            return;
+        }
+
         Schema::table('orders', function (Blueprint $table) {
             $table->string('receipt_image')->nullable()->after('transaction_id');
         });
@@ -21,9 +25,12 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('orders') || !Schema::hasColumn('orders', 'receipt_image')) {
+            return;
+        }
+
         Schema::table('orders', function (Blueprint $table) {
             $table->dropColumn('receipt_image');
         });
     }
 };
-

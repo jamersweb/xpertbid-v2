@@ -12,6 +12,11 @@ use Inertia\Inertia;
 
 class CartController extends Controller
 {
+    protected function wantsMobileJson(Request $request): bool
+    {
+        return $request->wantsJson() || $request->expectsJson();
+    }
+
     /**
      * Get user's cart items and render View
      */
@@ -20,6 +25,10 @@ class CartController extends Controller
         $user = $request->user();
 
         if (!$user) {
+            if ($this->wantsMobileJson($request)) {
+                return response()->json(['cart' => [], 'items' => []]);
+            }
+
             return Inertia::render('Cart/Index', [
                 'cart' => []
             ]);
@@ -51,6 +60,14 @@ class CartController extends Controller
                 ];
             });
 
+        if ($this->wantsMobileJson($request)) {
+            return response()->json([
+                'cart' => $cartItems,
+                'items' => $cartItems,
+                'count' => $cartItems->count(),
+            ]);
+        }
+
         return Inertia::render('Cart/Index', [
             'cart' => $cartItems
         ]);
@@ -68,6 +85,13 @@ class CartController extends Controller
         ]);
 
         if ($validator->fails()) {
+            if ($this->wantsMobileJson($request)) {
+                return response()->json([
+                    'message' => 'Validation failed.',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
             return redirect()->back()->withErrors($validator);
         }
 
@@ -82,6 +106,14 @@ class CartController extends Controller
             ->first();
 
         if ($existingCartItem) {
+            if ($this->wantsMobileJson($request)) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Product already in cart',
+                    'cart_item' => $existingCartItem,
+                ]);
+            }
+
             return redirect()->back()->with('error', 'Product already in cart');
         }
 
@@ -96,6 +128,13 @@ class CartController extends Controller
                     $discountType = $variation->discount_type;
                     $discountValue = $variation->discount_value;
                 } else {
+                    if ($this->wantsMobileJson($request)) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Invalid variation selected',
+                        ], 422);
+                    }
+
                     return redirect()->back()->with('error', 'Invalid variation selected');
                 }
             } else {
@@ -116,7 +155,7 @@ class CartController extends Controller
             if ($price < 0) $price = 0;
         }
 
-        Cart::create([
+        $cartItem = Cart::create([
             'user_id' => $user->id,
             'listing_id' => $listing->id,
             'variation_id' => $request->variation_id,
@@ -124,6 +163,14 @@ class CartController extends Controller
             'quantity' => 1,
             'price' => $price,
         ]);
+
+        if ($this->wantsMobileJson($request)) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Product added to cart',
+                'cart_item' => $cartItem,
+            ], 201);
+        }
 
         return redirect()->route('cart.index')->with('success', 'Product added to cart');
     }
@@ -136,6 +183,13 @@ class CartController extends Controller
         $user = $request->user();
 
         Cart::where('id', $id)->where('user_id', $user->id)->delete();
+
+        if ($this->wantsMobileJson($request)) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Item removed from cart',
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Item removed from cart');
     }

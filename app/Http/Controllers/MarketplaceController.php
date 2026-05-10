@@ -12,6 +12,97 @@ use Inertia\Inertia;
 
 class MarketplaceController extends Controller
 {
+    protected function resolveMobileCategoryScopeIds(?string $category): ?array
+    {
+        if (!$category || $category === 'all') {
+            return null;
+        }
+
+        $currentCategory = AuctionCategory::query()
+            ->where('slug', $category)
+            ->orWhere('id', $category)
+            ->first();
+
+        if (!$currentCategory) {
+            return null;
+        }
+
+        $categoryIds = collect([$currentCategory->id]);
+        $subCategoryIds = collect([$currentCategory->id]);
+        $childCategoryIds = collect([$currentCategory->id]);
+
+        if (is_null($currentCategory->parent_id) && is_null($currentCategory->sub_category_id)) {
+            $subIds = AuctionCategory::where('parent_id', $currentCategory->id)
+                ->whereNull('sub_category_id')
+                ->pluck('id');
+
+            $childIds = AuctionCategory::where('parent_id', $currentCategory->id)
+                ->whereNotNull('sub_category_id')
+                ->pluck('id');
+
+            $subCategoryIds = $subCategoryIds->merge($subIds);
+            $childCategoryIds = $childCategoryIds->merge($childIds);
+        } elseif (!is_null($currentCategory->parent_id) && is_null($currentCategory->sub_category_id)) {
+            $childIds = AuctionCategory::where('sub_category_id', $currentCategory->id)
+                ->pluck('id');
+
+            $childCategoryIds = $childCategoryIds->merge($childIds);
+        }
+
+        return [
+            'category' => $categoryIds->unique()->values(),
+            'subcategory' => $subCategoryIds->unique()->values(),
+            'child' => $childCategoryIds->unique()->values(),
+        ];
+    }
+
+    protected function applyMobileTypeFilter($query, ?string $type): void
+    {
+        if ($type === 'auction') {
+            $query->where('listing_type', 'auction');
+            return;
+        }
+
+        if (in_array($type, ['normal', 'normal_list'], true)) {
+            $query->whereIn('listing_type', ['normal', 'normal_list']);
+            return;
+        }
+
+        if (in_array($type, ['business', 'business_list'], true)) {
+            $query->whereIn('listing_type', ['business', 'business_list']);
+        }
+    }
+
+    protected function applyMobilePriceFilter($query, Request $request): void
+    {
+        $minPriceInput = $request->input('priceMin');
+        $maxPriceInput = $request->input('priceMax');
+        $hasMinPrice = is_numeric($minPriceInput);
+        $hasMaxPrice = is_numeric($maxPriceInput);
+
+        if (!$hasMinPrice && !$hasMaxPrice) {
+            return;
+        }
+
+        $minPrice = $hasMinPrice ? (float) $minPriceInput : 0;
+        $maxPrice = $hasMaxPrice ? (float) $maxPriceInput : 999999999999;
+
+        if ($maxPrice < $minPrice) {
+            [$minPrice, $maxPrice] = [$maxPrice, $minPrice];
+        }
+
+        $query->whereRaw(
+            "CAST(COALESCE(
+                NULLIF(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.reserve_price')), 'null'),
+                NULLIF(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.start_price')), 'null'),
+                NULLIF(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.minimum_bid')), 'null'),
+                NULLIF(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.price')), 'null'),
+                '0'
+            ) AS DECIMAL(15,2)) BETWEEN ? AND ?",
+            [$minPrice, $maxPrice]
+        );
+    }
+
     protected function listingTypeFromSlug(?string $typeSlug): ?string
     {
         return match ($typeSlug) {
@@ -492,6 +583,81 @@ class MarketplaceController extends Controller
             'mostViewedProducts' => $mostViewedProducts,
             'filters' => $request->all(),
             'currentType' => $type,
+        ]);
+    }
+
+    public function mobileIndex(Request $request)
+    {
+        $query = Listing::query()
+            ->where('status', 'active')
+            ->where('listing_type', '!=', 'live_auction')
+            ->with(['category', 'user'])
+            ->withMax('bids', 'bid_amount');
+
+        $categoryScopeIds = $this->resolveMobileCategoryScopeIds($request->input('category'));
+
+        if ($categoryScopeIds) {
+            $categoryIds = $categoryScopeIds['category'];
+            $subCategoryIds = $categoryScopeIds['subcategory'];
+            $childCategoryIds = $categoryScopeIds['child'];
+
+            $query->where(function ($q) use ($categoryIds, $subCategoryIds, $childCategoryIds) {
+                $q->whereIn('category_id', $categoryIds)
+                    ->orWhereIn('sub_category_id', $subCategoryIds)
+                    ->orWhereIn('child_category_id', $childCategoryIds);
+            });
+        }
+
+        $this->applyMobileTypeFilter($query, $request->input('list_type'));
+        $this->applyMobilePriceFilter($query, $request);
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->input('search'));
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('country_id')) {
+            $query->where('country_id', $request->input('country_id'));
+        }
+
+        if ($request->filled('state_id')) {
+            $query->where('state_id', $request->input('state_id'));
+        }
+
+        if ($request->filled('city_id')) {
+            $query->where('city_id', $request->input('city_id'));
+        }
+
+        $rawStatuses = $request->input('status', $request->input('status[]', []));
+        $statuses = collect(is_array($rawStatuses) ? $rawStatuses : [$rawStatuses])
+            ->map(fn ($value) => strtolower(trim((string) $value)))
+            ->filter()
+            ->values();
+
+        if ($statuses->contains('ending soon')) {
+            $query->orderByRaw(
+                "COALESCE(
+                    NULLIF(JSON_UNQUOTE(JSON_EXTRACT(listing_data, '$.end_date')), 'null'),
+                    created_at
+                ) asc"
+            );
+        } else {
+            $query->latest('id');
+        }
+
+        $perPage = max(1, min((int) $request->input('perPage', 12), 48));
+        $products = $query->paginate($perPage)->withQueryString();
+
+        return response()->json([
+            'items' => $products->items(),
+            'data' => $products->items(),
+            'current_page' => $products->currentPage(),
+            'last_page' => $products->lastPage(),
+            'per_page' => $products->perPage(),
+            'total' => $products->total(),
         ]);
     }
 }

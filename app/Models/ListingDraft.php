@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Support\ListingMedia;
 
 class ListingDraft extends Model
 {
@@ -127,41 +128,20 @@ class ListingDraft extends Model
 
     public function getImageUrlAttribute()
     {
-        $image = $this->image ?: ($this->listing_data['image'] ?? null);
-
-        if (!$image) {
-            $album = $this->album ?: ($this->listing_data['album'] ?? null);
-            if (is_array($album) && !empty($album)) {
-                $image = $album[0];
-            }
-        }
-
-        if (!$image) {
-            return null;
-        }
-
-        if (str_starts_with($image, 'http')) {
-            return $image;
-        }
-
-        return asset(str_replace('\\', '/', $image));
+        return ListingMedia::buildAssetUrl(
+            ListingMedia::firstDisplayableImage([
+                $this->image,
+                $this->listing_data['image'] ?? null,
+                ...ListingMedia::decodeList($this->album ?: ($this->listing_data['album'] ?? [])),
+            ])
+        );
     }
 
     public function getAlbumUrlsAttribute()
     {
-        $album = $this->album ?: ($this->listing_data['album'] ?? []);
-
-        if (!is_array($album) || empty($album)) {
-            return [];
-        }
-
-        return array_map(function ($path) {
-            if (str_starts_with($path, 'http')) {
-                return $path;
-            }
-
-            return asset(str_replace('\\', '/', $path));
-        }, $album);
+        return ListingMedia::buildAssetUrls(
+            ListingMedia::decodeList($this->album ?: ($this->listing_data['album'] ?? []))
+        );
     }
 
     public function getVehicleVerificationAttribute()

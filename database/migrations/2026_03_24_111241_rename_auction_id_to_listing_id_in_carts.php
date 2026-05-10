@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('carts') || !Schema::hasColumn('carts', 'auction_id')) {
+            return;
+        }
+
         Schema::table('carts', function (Blueprint $table) {
             $table->renameColumn('auction_id', 'listing_id');
         });
@@ -21,6 +25,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('carts') || !Schema::hasColumn('carts', 'listing_id')) {
+            return;
+        }
+
         Schema::table('carts', function (Blueprint $table) {
             $table->renameColumn('listing_id', 'auction_id');
         });

@@ -12,6 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('orders')) {
+            return;
+        }
+
         // Alter payment_method enum to include bank_transfer
         DB::statement("ALTER TABLE orders MODIFY COLUMN payment_method ENUM('stripe', 'cod', 'bank_transfer') DEFAULT 'cod'");
     }
@@ -21,8 +25,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('orders')) {
+            return;
+        }
+
         // Revert back to original enum
         DB::statement("ALTER TABLE orders MODIFY COLUMN payment_method ENUM('stripe', 'cod') DEFAULT 'cod'");
     }
 };
-

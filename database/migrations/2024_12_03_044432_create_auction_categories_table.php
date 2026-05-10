@@ -13,6 +13,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('parent_id')->nullable();
             $table->foreign('parent_id')->references('id')->on('auction_categories')->onDelete('cascade');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -15,6 +15,8 @@ return new class extends Migration {
             $table->foreignId('auction_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->decimal('price', 15, 2);
+            $table->string('discount_type')->nullable();
+            $table->decimal('discount_value', 10, 2)->nullable();
             $table->timestamps();
         });
     }

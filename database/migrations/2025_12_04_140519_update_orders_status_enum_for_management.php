@@ -12,6 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('orders') || Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         // Alter status enum to include: pending, processing, completed, cancelled
         DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM('pending', 'processing', 'completed', 'cancelled') DEFAULT 'pending'");
     }
@@ -21,6 +25,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('orders') || Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         // Revert back to original enum
         DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending'");
     }

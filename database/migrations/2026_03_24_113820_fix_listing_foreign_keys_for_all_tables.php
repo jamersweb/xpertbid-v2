@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,6 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         $this->fixTable('order_items', 'order_items_auction_id_foreign');
         $this->fixTable('carts', 'carts_auction_id_foreign');
         $this->fixTable('vehicle_verifications', 'vehicle_verifications_auction_id_foreign');
@@ -19,6 +24,10 @@ return new class extends Migration
 
     protected function fixTable($tableName, $foreignKeyName)
     {
+        if (!Schema::hasTable($tableName) || !Schema::hasColumn($tableName, 'listing_id')) {
+            return;
+        }
+
         // 1. Drop FK if exists
         $exists = DB::select("
             SELECT CONSTRAINT_NAME 
@@ -58,5 +67,4 @@ return new class extends Migration
     {
         //
     }
-}
-;
+};

@@ -42,6 +42,7 @@ use App\Http\Controllers\ListingLiveChatController;
 
 Route::get('/', [AuctionController::class, 'home'])->name('home'); // Replaces Welcome
 Route::get('/product/{slug}', [AuctionController::class, 'show'])->name('product.show');
+Route::get('/live-auctions/feed', [AuctionController::class, 'liveAuctionsFeed'])->name('live-auctions.feed');
 Route::get('/live-auctions', [AuctionController::class, 'liveAuctions'])->name('live-auctions.public');
 Route::get('/demo/live-auction-car-showcase', [LiveAuctionDemoController::class, 'show'])->name('demo.live_auction_car_showcase');
 
@@ -56,6 +57,7 @@ Route::get('/marketplace/{slug}/{typeSlug}', [MarketplaceController::class, 'ind
     ->name('marketplace.type');
 Route::get('/marketplace/{slug?}', [MarketplaceController::class, 'index'])->name('marketplace.index');
 Route::get('/search-marketplace', [MarketplaceController::class, 'index'])->name('marketplace.search');
+Route::get('/products/filter', [MarketplaceController::class, 'mobileIndex'])->name('marketplace.mobile_filter');
 Route::get('/categories', [AuctionController::class, 'categoriesPage'])->name('categories.page');
 
 // Static/Info Pages
@@ -131,8 +133,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/user/update', [ProfileController::class, 'updateProfile'])->name('user.update');
+    Route::get('/user/address', [ProfileController::class, 'showAddress'])->name('user.address.show');
     Route::post('/user/address', [ProfileController::class, 'updateAddress'])->name('user.address.update');
     Route::post('/user/change-password', [ProfileController::class, 'updatePassword'])->name('user.password.update');
+    Route::get('/user/notifications', [ProfileController::class, 'showNotifications'])->name('user.notifications.show');
     Route::post('/user/notifications', [ProfileController::class, 'updateNotifications'])->name('user.notifications.update');
 
     // Verification
@@ -171,7 +175,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Wallet & Payments
     Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
     Route::post('/wallet/add', [WalletController::class, 'addMoney'])->name('wallet.add');
+    Route::get('/payment-methods', [PaymentController::class, 'index'])->name('payment_methods.index');
     Route::post('/payment-methods', [PaymentController::class, 'savePaymentMethod'])->name('payment_methods.store');
+    Route::post('/make-payment', [PaymentController::class, 'makePayment'])->name('payment.make');
     Route::get('/payment-requests', [\App\Http\Controllers\PaymentRequestController::class, 'index'])->name('payment_requests.index');
     // Notifications
     Route::get('/notifications-page', [App\Http\Controllers\UserNotificationController::class, 'index'])->name('notifications.index');
