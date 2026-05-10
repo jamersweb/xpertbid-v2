@@ -18,6 +18,7 @@ use App\Models\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\Encoders\WebpEncoder;
@@ -208,10 +209,13 @@ class ProfileController extends Controller
         $data = [
             'name' => $request->name,
             'phone' => $request->phone,
-            'username' => $request->username,
-            'vat_number' => $request->vat_number,
-            'company_name' => $request->company_name,
         ];
+
+        foreach (['username', 'vat_number', 'company_name'] as $optionalField) {
+            if ($request->has($optionalField) && Schema::hasColumn('users', $optionalField)) {
+                $data[$optionalField] = $request->input($optionalField);
+            }
+        }
 
         if ($country) {
             $data['country_id'] = $country->id;

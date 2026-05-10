@@ -98,8 +98,18 @@ class ListingController extends Controller
         return collect($statuses)->contains(fn ($status) => in_array($status, ['verified', 'approved'], true));
     }
 
-    protected function publishVerificationErrorResponse()
+    protected function publishVerificationErrorResponse(Request $request)
     {
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please complete individual or corporate verification before publishing a listing. You can still save it as a draft.',
+                'errors' => [
+                    'verification' => ['Please complete individual or corporate verification before publishing a listing. You can still save it as a draft.'],
+                ],
+            ], 403);
+        }
+
         return back()
             ->withErrors([
                 'verification' => 'Please complete individual or corporate verification before publishing a listing. You can still save it as a draft.',
@@ -414,13 +424,22 @@ class ListingController extends Controller
         if ($request->input('status') === 'draft') {
             $draft = $this->saveDraft($request);
 
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Listing saved as draft successfully.',
+                    'draft' => $this->transformSellerDraft($draft),
+                    'listing' => $this->transformSellerDraft($draft),
+                ], 201);
+            }
+
             return redirect()
                 ->route('auctions.mylistings')
                 ->with('success', "Listing saved as draft successfully (Draft #{$draft->id}).");
         }
 
         if (!$this->sellerCanPublish()) {
-            return $this->publishVerificationErrorResponse();
+            return $this->publishVerificationErrorResponse($request);
         }
  
         // 1. Base Validation
@@ -458,6 +477,14 @@ class ListingController extends Controller
         ]);
  
         if ($validator->fails()) {
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed.',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
             return back()->withErrors($validator)->withInput();
         }
  
@@ -507,6 +534,14 @@ class ListingController extends Controller
             'listing_data' => $listingData,
             'category_features' => $categoryFeatures,
         ]);
+
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Listing created successfully.',
+                'listing' => $listing->fresh(['user', 'category']),
+            ], 201);
+        }
  
         return redirect()->route('auctions.mylistings')->with('success', 'Listing created successfully');
     }
@@ -521,6 +556,15 @@ class ListingController extends Controller
             ->get();
         $countries = Country::query()->select('id', 'name')->orderBy('name')->get();
         $profileLocation = $this->resolveProfileLocation();
+
+        if (request()->wantsJson() || request()->expectsJson()) {
+            return response()->json([
+                'listing' => $listing->loadMissing(['user', 'category']),
+                'categories' => $categories,
+                'countries' => $countries,
+                'profileLocation' => $profileLocation,
+            ]);
+        }
  
         return \Inertia\Inertia::render('Auctions/Create', [
             'listing' => $listing,
@@ -543,6 +587,16 @@ class ListingController extends Controller
         $draft->setAttribute('status', 'draft');
         $draft->setAttribute('is_draft', true);
 
+        if (request()->wantsJson() || request()->expectsJson()) {
+            return response()->json([
+                'listing' => $this->transformSellerDraft($draft),
+                'draft' => $this->transformSellerDraft($draft),
+                'categories' => $categories,
+                'countries' => $countries,
+                'profileLocation' => $profileLocation,
+            ]);
+        }
+
         return \Inertia\Inertia::render('Auctions/Create', [
             'listing' => $draft,
             'categories' => $categories,
@@ -563,13 +617,22 @@ class ListingController extends Controller
         if ($request->input('status') === 'draft') {
             $draft = $this->saveDraft($request, null, $listing->id);
 
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Listing saved as draft successfully.',
+                    'draft' => $this->transformSellerDraft($draft),
+                    'listing' => $this->transformSellerDraft($draft),
+                ], 201);
+            }
+
             return redirect()
                 ->route('auctions.mylistings')
                 ->with('success', "Listing saved as draft successfully (Draft #{$draft->id}).");
         }
 
         if (!$this->sellerCanPublish()) {
-            return $this->publishVerificationErrorResponse();
+            return $this->publishVerificationErrorResponse($request);
         }
 
         $listingData = is_array($request->listing_data) ? $request->listing_data : ($listing->listing_data ?? []);
@@ -611,6 +674,14 @@ class ListingController extends Controller
                 ]
             );
 
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Your changes have been submitted for admin approval. The current live listing will remain visible until approved.',
+                    'listing' => $listing->fresh(['user', 'category']),
+                ]);
+            }
+
             return redirect()
                 ->route('auctions.mylistings')
                 ->with('success', 'Your changes have been submitted for admin approval. The current live listing will remain visible until approved.');
@@ -635,6 +706,14 @@ class ListingController extends Controller
         ]);
 
         $listing->pendingEdit()?->delete();
+
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Listing updated successfully.',
+                'listing' => $listing->fresh(['user', 'category']),
+            ]);
+        }
  
         return redirect()->route('auctions.mylistings')->with('success', 'Listing updated successfully');
     }
@@ -646,16 +725,33 @@ class ListingController extends Controller
         $this->parseIncomingPayload($request);
 
         if ($request->input('status') === 'draft') {
-            $this->saveDraft($request, $draft);
+            $draft = $this->saveDraft($request, $draft);
+
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Draft updated successfully.',
+                    'draft' => $this->transformSellerDraft($draft),
+                    'listing' => $this->transformSellerDraft($draft),
+                ]);
+            }
 
             return redirect()->route('auctions.mylistings')->with('success', 'Draft updated successfully');
         }
 
         if (!$this->sellerCanPublish()) {
-            return $this->publishVerificationErrorResponse();
+            return $this->publishVerificationErrorResponse($request);
         }
 
-        $this->publishDraft($this->saveDraft($request, $draft));
+        $listing = $this->publishDraft($this->saveDraft($request, $draft));
+
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Draft published successfully and moved to listings.',
+                'listing' => $listing->fresh(['user', 'category']),
+            ], 201);
+        }
 
         return redirect()->route('auctions.mylistings')->with('success', 'Draft published successfully and moved to listings');
     }

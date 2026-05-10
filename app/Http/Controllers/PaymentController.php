@@ -11,6 +11,7 @@ use App\Models\Wallet;
 use App\Models\Transactions as Transaction; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
@@ -20,32 +21,36 @@ class PaymentController extends Controller
 {
     protected function normalizeStoredPaymentMethod(PaymentMethod $paymentMethod): string
     {
-        return match (strtolower((string) $paymentMethod->paymentMethod)) {
+        $rawType = $paymentMethod->paymentMethod ?? $paymentMethod->type ?? '';
+
+        return match (strtolower((string) $rawType)) {
             'paypal' => 'paypal',
             'bank transfer', 'bank_transfer', 'bank account' => 'bank_transfer',
             'stripe', 'card', 'credit card' => 'stripe',
-            default => Str::slug((string) $paymentMethod->paymentMethod, '_'),
+            default => Str::slug((string) $rawType, '_'),
         };
     }
 
     protected function serializePaymentMethod(PaymentMethod $paymentMethod): array
     {
         $type = $this->normalizeStoredPaymentMethod($paymentMethod);
+        $storedMethod = $paymentMethod->paymentMethod ?? $paymentMethod->type ?? $type;
+        $storedDetails = $paymentMethod->details ?? null;
 
         $label = match ($type) {
-            'paypal' => $paymentMethod->paypal_id ?: 'PayPal',
-            'bank_transfer' => $paymentMethod->bank_name ?: 'Bank Transfer',
+            'paypal' => $paymentMethod->paypal_id ?: ($storedDetails ?: 'PayPal'),
+            'bank_transfer' => $paymentMethod->bank_name ?: ($storedDetails ?: 'Bank Transfer'),
             'stripe' => 'Saved Card',
-            default => $paymentMethod->paymentMethod ?: 'Payment Method',
+            default => $storedMethod ?: 'Payment Method',
         };
 
         $details = match ($type) {
-            'paypal' => $paymentMethod->paypal_id ?: '',
+            'paypal' => $paymentMethod->paypal_id ?: ($storedDetails ?: ''),
             'bank_transfer' => collect([
                 $paymentMethod->account_title,
                 $paymentMethod->iban_number,
-            ])->filter()->implode(' | '),
-            default => '',
+            ])->filter()->implode(' | ') ?: ($storedDetails ?: ''),
+            default => $storedDetails ?: '',
         };
 
         return [
@@ -54,11 +59,11 @@ class PaymentController extends Controller
             'title' => $label,
             'label' => $label,
             'type' => $type,
-            'payment_method' => $paymentMethod->paymentMethod,
+            'payment_method' => $storedMethod,
             'details' => $details,
             'description' => $details,
-            'email' => $paymentMethod->paypal_id,
-            'paypal_id' => $paymentMethod->paypal_id,
+            'email' => $paymentMethod->paypal_id ?? ($type === 'paypal' ? $storedDetails : null),
+            'paypal_id' => $paymentMethod->paypal_id ?? ($type === 'paypal' ? $storedDetails : null),
             'bank_name' => $paymentMethod->bank_name,
             'account_title' => $paymentMethod->account_title,
             'iban_number' => $paymentMethod->iban_number,
@@ -66,6 +71,59 @@ class PaymentController extends Controller
             'branch_address' => $paymentMethod->branch_address,
             'is_default' => (bool) $paymentMethod->is_default,
         ];
+    }
+
+    protected function paymentMethodCreatePayload(Request $request, int $userId): array
+    {
+        $method = (string) $request->paymentMethod;
+        $type = $this->normalizePaymentMethodInput($method);
+        $details = $type === 'paypal'
+            ? (string) $request->paypal_id
+            : collect([
+                $request->account_title,
+                $request->iban_number,
+            ])->filter()->implode(' | ');
+
+        $payload = [
+            'user_id' => $userId,
+            'token' => $request->token,
+            'is_default' => PaymentMethod::where('user_id', $userId)->count() === 0,
+        ];
+
+        if (Schema::hasColumn('payment_methods', 'type')) {
+            $payload['type'] = $type;
+        }
+
+        if (Schema::hasColumn('payment_methods', 'details')) {
+            $payload['details'] = $details ?: $method;
+        }
+
+        foreach ([
+            'paymentMethod' => $method,
+            'bank_name' => $request->bank_name,
+            'iban_number' => $request->iban_number,
+            'swift_code' => $request->swift_code,
+            'account_title' => $request->account_title,
+            'country_id' => $request->country_id,
+            'paypal_id' => $request->paypal_id,
+            'branch_address' => $request->branch_address,
+        ] as $column => $value) {
+            if (Schema::hasColumn('payment_methods', $column)) {
+                $payload[$column] = $value;
+            }
+        }
+
+        return $payload;
+    }
+
+    protected function normalizePaymentMethodInput(string $method): string
+    {
+        return match (strtolower(trim($method))) {
+            'paypal' => 'paypal',
+            'bank transfer', 'bank_transfer', 'bank account' => 'bank_transfer',
+            'stripe', 'card', 'credit card' => 'stripe',
+            default => Str::slug($method, '_'),
+        };
     }
 
     protected function promotionAmount(string $package): float
@@ -115,19 +173,7 @@ class PaymentController extends Controller
 
         $user = Auth::user();
 
-        PaymentMethod::create([
-            'user_id'        => $user->id,
-            'paymentMethod'  => $request->paymentMethod,
-            'token'          => $request->token,
-            'bank_name'      => $request->bank_name,
-            'iban_number'    => $request->iban_number,
-            'swift_code'     => $request->swift_code,
-            'account_title'  => $request->account_title,
-            'country_id'     => $request->country_id,
-            'paypal_id'      => $request->paypal_id,
-            'branch_address' => $request->branch_address,
-            'is_default'     => PaymentMethod::where('user_id', $user->id)->count() === 0,
-        ]);
+        PaymentMethod::create($this->paymentMethodCreatePayload($request, $user->id));
 
         if ($request->expectsJson()) {
             $paymentMethod = PaymentMethod::query()
@@ -225,7 +271,7 @@ class PaymentController extends Controller
                 'notes' => sprintf(
                     'Mobile promotion package: %s. Saved method: %s.',
                     $request->input('package'),
-                    $paymentMethod->paymentMethod
+                    $paymentMethod->paymentMethod ?? $paymentMethod->type
                 ),
             ]);
 

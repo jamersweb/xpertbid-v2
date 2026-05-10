@@ -9,7 +9,19 @@ class PaymentMethod extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'paymentMethod', 'token', 'is_default','bank_name','iban_number','swift_code','account_title','country_id','paypal_id','branch_address'
+        'user_id',
+        'type',
+        'details',
+        'paymentMethod',
+        'token',
+        'is_default',
+        'bank_name',
+        'iban_number',
+        'swift_code',
+        'account_title',
+        'country_id',
+        'paypal_id',
+        'branch_address'
     ];
 
     public function user()
