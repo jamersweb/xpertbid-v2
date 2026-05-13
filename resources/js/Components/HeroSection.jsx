@@ -8,25 +8,25 @@ import "swiper/css/autoplay";
 
 const heroSlides = [
        {
-              image: "/assets/images/1_rupee.png",
-              mobileImage: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80",
+              image: "/assets/images/newwban1.png",
+              mobileImage: "/assets/images/mob1.png",
               href: "/1-rupee-auctions",
        },
        {
-              image: "/assets/images/WebsiteBanner1.png",
-              mobileImage: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=900&q=80",
+              image: "/assets/images/newwban2.png",
+              mobileImage: "/assets/images/mob2.png",
               href: "/marketplace",
        },
        {
-              image: "/assets/images/WebsiteBanner2.png",
-              mobileImage: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=900&q=80",
+              image: "/assets/images/newwban3.png",
+              mobileImage: "/assets/images/mob3.png",
               href: "/marketplace?type=auction",
        },
-       {
-              image: "/assets/images/WebsiteBanner3.png",
-              mobileImage: "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=900&q=80",
-              href: "/marketplace",
-       },
+      //  {
+      //         image: "/assets/images/WebsiteBanner3.png",
+      //         mobileImage: "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=900&q=80",
+      //         href: "/marketplace",
+      //  },
 ];
 
 export default function HeroSection() {
@@ -39,7 +39,7 @@ export default function HeroSection() {
                                                  modules={[Autoplay, EffectFade]}
                                                  effect="fade"
                                                  autoplay={{
-                                                        delay: 300000000,
+                                                        delay: 3000,
                                                         disableOnInteraction: false,
                                                  }}
                                                  loop={true}
