@@ -65,6 +65,7 @@ Route::get('/about', [App\Http\Controllers\StaticPageController::class, 'about']
 Route::get('/contact', [App\Http\Controllers\StaticPageController::class, 'contact'])->name('contact');
 Route::get('/faq', [App\Http\Controllers\StaticPageController::class, 'faq'])->name('faq');
 Route::get('/privacy-policy', [App\Http\Controllers\StaticPageController::class, 'privacy'])->name('privacy.policy');
+Route::view('/data-deletion', 'data-deletion')->name('data.deletion');
 Route::get('/refund-policy', [App\Http\Controllers\StaticPageController::class, 'refund'])->name('refund.policy');
 Route::get('/shipping-policy', [App\Http\Controllers\StaticPageController::class, 'shipping'])->name('shipping.policy');
 Route::get('/terms', [App\Http\Controllers\StaticPageController::class, 'terms'])->name('terms');
