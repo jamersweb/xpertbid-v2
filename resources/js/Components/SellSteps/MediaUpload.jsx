@@ -15,12 +15,12 @@ export default function MediaUpload({ files, setFiles, existingFiles = [], setEx
 
               selectedFiles.forEach(file => {
                      const isVideo = file.type === "video/mp4";
-                     const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024; // 50MB video, 10MB image
+                     const maxSize = isVideo ? 15 * 1024 * 1024 : 10 * 1024 * 1024; // 15MB video, 10MB image
 
                      if (!["image/png", "image/jpeg", "image/webp", "video/mp4"].includes(file.type)) {
                             err = "Only PNG, JPG, WEBP, and MP4 files are allowed.";
                      } else if (file.size > maxSize) {
-                            err = isVideo ? "Video file size must be less than 50MB." : "Image file size must be less than 10MB.";
+                            err = isVideo ? "Video file size must be less than 15MB." : "Image file size must be less than 10MB.";
                      } else {
                             validFiles.push(file);
                      }
@@ -151,7 +151,7 @@ export default function MediaUpload({ files, setFiles, existingFiles = [], setEx
                                    <div className="upload-dropzone-content">
                                           <i className="fa-solid fa-cloud-arrow-up fa-3x mb-3 text-muted"></i>
                                           <h5 className="fw-bold text-dark">Click to upload or drag and drop</h5>
-                                          <p className="text-dark small mb-0">SVG, PNG, JPG or GIF (max. 10MB) / MP4 (max. 50MB)</p>
+                                          <p className="text-dark small mb-0">SVG, PNG, JPG or GIF (max. 10MB) / MP4 (max. 15MB)</p>
                                    </div>
                             </div>
 

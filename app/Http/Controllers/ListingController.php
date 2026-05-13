@@ -187,6 +187,63 @@ class ListingController extends Controller
         return 'assets/images/listing_images/' . $filename;
     }
 
+    protected function storeListingVideo($file): string
+    {
+        $directory = public_path('assets/videos/listing_videos');
+        File::ensureDirectoryExists($directory);
+
+        $filename = time() . '_' . Str::random(12) . '.' . $file->getClientOriginalExtension();
+        $file->move($directory, $filename);
+
+        return 'assets/videos/listing_videos/' . $filename;
+    }
+
+    protected function storeListingMedia($file): string
+    {
+        return $file->getMimeType() === 'video/mp4'
+            ? $this->storeListingVideo($file)
+            : $this->storeOptimizedListingImage($file);
+    }
+
+    protected function listingMediaRules(): array
+    {
+        return [
+            'file',
+            function (string $attribute, $value, \Closure $fail): void {
+                $mimeType = $value?->getMimeType();
+                $sizeInKilobytes = (int) ceil(($value?->getSize() ?? 0) / 1024);
+
+                $allowedImages = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+                if (in_array($mimeType, $allowedImages, true)) {
+                    if ($sizeInKilobytes > 10240) {
+                        $fail('Image file size must be less than 10MB.');
+                    }
+
+                    return;
+                }
+
+                if ($mimeType === 'video/mp4') {
+                    if ($sizeInKilobytes > 15360) {
+                        $fail('Video file size must be less than 15MB.');
+                    }
+
+                    return;
+                }
+
+                $fail('Only PNG, JPG, WEBP, GIF, and MP4 files are allowed.');
+            },
+        ];
+    }
+
+    protected function listingMediaValidationRules(): array
+    {
+        return [
+            'album' => 'nullable|array',
+            'album.*' => $this->listingMediaRules(),
+        ];
+    }
+
     protected function normalizeExistingAlbum(array $paths): array
     {
         return collect($paths)
@@ -277,7 +334,7 @@ class ListingController extends Controller
 
         if ($request->hasFile('album')) {
             foreach ($request->file('album') as $file) {
-                $album[] = $this->storeOptimizedListingImage($file);
+                $album[] = $this->storeListingMedia($file);
             }
         }
 
@@ -472,8 +529,7 @@ class ListingController extends Controller
             
             // Category features (Category-specific dynamic data)
             'category_features' => 'nullable|array',
-            'album' => 'nullable|array',
-            'album.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            ...$this->listingMediaValidationRules(),
         ]);
  
         if ($validator->fails()) {
@@ -497,7 +553,7 @@ class ListingController extends Controller
         $albumPaths = [];
         if ($request->hasFile('album')) {
             foreach ($request->file('album') as $file) {
-                $albumPaths[] = $this->storeOptimizedListingImage($file);
+                $albumPaths[] = $this->storeListingMedia($file);
             }
         }
  
@@ -612,6 +668,7 @@ class ListingController extends Controller
             'country_id' => 'nullable|exists:countries,id',
             'state_id' => 'nullable|exists:states,id',
             'city_id' => 'nullable|exists:cities,id',
+            ...$this->listingMediaValidationRules(),
         ]);
 
         if ($request->input('status') === 'draft') {
@@ -645,7 +702,7 @@ class ListingController extends Controller
         if ($request->hasFile('album')) {
             $albumPaths = [];
             foreach ($request->file('album') as $file) {
-                $albumPaths[] = $this->storeOptimizedListingImage($file);
+                $albumPaths[] = $this->storeListingMedia($file);
             }
             $listingData['album'] = array_merge($listingData['album'] ?? [], $albumPaths);
         }
@@ -723,6 +780,7 @@ class ListingController extends Controller
         abort_unless($draft->user_id === auth()->id(), 403);
 
         $this->parseIncomingPayload($request);
+        $request->validate($this->listingMediaValidationRules());
 
         if ($request->input('status') === 'draft') {
             $draft = $this->saveDraft($request, $draft);
