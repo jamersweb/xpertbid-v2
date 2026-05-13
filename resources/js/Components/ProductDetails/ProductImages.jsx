@@ -294,21 +294,20 @@ export default function ProductImages({ albumImages, videos = null, status, main
                                    onSwiper={setThumbsSwiper}
                                    loop={allMedia.length > 4}
                                    spaceBetween={10}
-                                   slidesPerView={4}
+                                   slidesPerView="auto"
                                    freeMode={true}
                                    watchSlidesProgress={true}
                                    modules={[FreeMode, Navigation, Thumbs]}
-                                   className="mySwiper"
+                                   className="mySwiper product-thumb-swiper"
                             >
                                    {allMedia.map((media, index) => (
-                                          <SwiperSlide key={index}>
-                                                 <div className="pro-image" style={{ height: "100%", position: "relative", minHeight: "80px" }}>
+                                          <SwiperSlide key={index} className="product-thumb-slide">
+                                                 <div className="pro-image product-thumb-frame">
                                                         {media.type === 'youtube' ? (
                                                                <div style={{
                                                                       position: "relative",
                                                                       width: "100%",
                                                                       height: "100%",
-                                                                      minHeight: "80px",
                                                                       background: `url(https://img.youtube.com/vi/${media.src}/hqdefault.jpg) center/cover`,
                                                                       borderRadius: "8px",
                                                                       display: 'flex',
@@ -333,7 +332,7 @@ export default function ProductImages({ albumImages, videos = null, status, main
                                                                <img
                                                                       src={getUrl(media.src)}
                                                                       alt={`Thumb ${index}`}
-                                                                      style={{ width: '100%', height: '100%', minHeight: '80px', objectFit: 'cover', borderRadius: '8px' }}
+                                                                      style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
                                                                       onError={(e) => { e.target.src = '/assets/images/hero-prodcut1.jpg'; }}
                                                                />
                                                         ) : (
@@ -341,7 +340,6 @@ export default function ProductImages({ albumImages, videos = null, status, main
                                                                       position: "relative",
                                                                       width: "100%",
                                                                       height: "100%",
-                                                                      minHeight: "80px",
                                                                       background: "#000",
                                                                       borderRadius: "8px",
                                                                       display: 'flex',
@@ -356,6 +354,54 @@ export default function ProductImages({ albumImages, videos = null, status, main
                                    ))}
                             </Swiper>
                      </div>
+                     <style>{`
+                            .product-thumb-swiper {
+                                   width: 100%;
+                                   padding: 2px 0 8px;
+                            }
+                            .product-thumb-swiper .swiper-wrapper {
+                                   align-items: flex-start;
+                            }
+                            .product-thumb-slide {
+                                   width: 76px !important;
+                                   height: 88px !important;
+                                   flex: 0 0 76px;
+                            }
+                            .product-thumb-frame {
+                                   width: 76px;
+                                   height: 88px;
+                                   min-width: 76px;
+                                   max-width: 76px;
+                                   min-height: 88px;
+                                   max-height: 88px;
+                                   position: relative;
+                                   overflow: hidden;
+                                   border-radius: 8px;
+                                   background: #f1f5f9;
+                            }
+                            .product-thumb-frame img,
+                            .product-thumb-frame video {
+                                   width: 100%;
+                                   height: 100%;
+                                   object-fit: cover;
+                                   display: block;
+                            }
+                            @media (max-width: 575px) {
+                                   .product-thumb-slide {
+                                          width: 64px !important;
+                                          height: 76px !important;
+                                          flex-basis: 64px;
+                                   }
+                                   .product-thumb-frame {
+                                          width: 64px;
+                                          height: 76px;
+                                          min-width: 64px;
+                                          max-width: 64px;
+                                          min-height: 76px;
+                                          max-height: 76px;
+                                   }
+                            }
+                     `}</style>
               </div>
        );
 }

@@ -39,7 +39,7 @@ export default function HeroSection() {
                                                  modules={[Autoplay, EffectFade]}
                                                  effect="fade"
                                                  autoplay={{
-                                                        delay: 3000,
+                                                        delay: 300000000,
                                                         disableOnInteraction: false,
                                                  }}
                                                  loop={true}
