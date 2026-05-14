@@ -9,12 +9,11 @@ export default function Register() {
         name: '',
         email: '',
         password: '',
-        password_confirmation: '',
     });
 
     useEffect(() => {
         return () => {
-            reset('password', 'password_confirmation');
+            reset('password');
         };
     }, []);
 
@@ -74,20 +73,6 @@ export default function Register() {
                                 required
                             />
                             {errors.password && <div className="text-danger small mt-1">{errors.password}</div>}
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="form-label small fw-bold text-muted">{t('auth.confirm_password')}</label>
-                            <input
-                                id="password_confirmation"
-                                type="password"
-                                name="password_confirmation"
-                                value={data.password_confirmation}
-                                placeholder={t('auth.confirm_password_placeholder')}
-                                onChange={(e) => setData('password_confirmation', e.target.value)}
-                                required
-                            />
-                            {errors.password_confirmation && <div className="text-danger small mt-1">{errors.password_confirmation}</div>}
                         </div>
 
                         <button className="form-button-1" disabled={processing}>
