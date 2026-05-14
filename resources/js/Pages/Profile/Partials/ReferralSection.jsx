@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const money = (amount) => `PKR ${Number(amount || 0).toLocaleString()}`;
+const colors = {
+    dark: '#151927',
+    body: '#596579',
+    muted: '#6F7A8F',
+    border: '#DCE5F2',
+    soft: '#F4F7FE',
+};
 
 export default function ReferralSection() {
     const [data, setData] = useState(null);
@@ -71,15 +78,15 @@ export default function ReferralSection() {
     return (
         <div className="profile-settings-section">
             <h3 style={{ fontSize: '24px', fontWeight: '700', color: '#23262F', marginBottom: '10px' }}>Referral Program</h3>
-            <p className="text-muted mb-4">Share your code. When a referred user completes an approved sale or purchase, XpertBid can approve a 1% reward.</p>
+            <p className="mb-4" style={{ color: colors.body, fontWeight: 500 }}>Share your code. When a referred user completes an approved sale or purchase, XpertBid can approve a 1% reward.</p>
 
             {error && <div className="alert alert-danger py-2">{error}</div>}
             {message && <div className="alert alert-success py-2">{message}</div>}
 
-            <div className="p-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4" style={{ backgroundColor: '#F4F7FE', borderRadius: '18px', border: '1px dashed #D2D9EE' }}>
+            <div className="p-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4" style={{ backgroundColor: colors.soft, borderRadius: '18px', border: `1px dashed ${colors.border}` }}>
                 <div>
-                    <p className="text-muted mb-1 small fw-bold text-uppercase">Your referral code</p>
-                    <span style={{ fontSize: '26px', fontWeight: '800', color: '#23262F', letterSpacing: '2px' }}>
+                    <p className="mb-1 small fw-bold text-uppercase" style={{ color: colors.body }}>Your referral code</p>
+                    <span style={{ fontSize: '26px', fontWeight: '800', color: colors.dark, letterSpacing: '2px' }}>
                         {data?.referral_code || 'Not Generated'}
                     </span>
                 </div>
@@ -101,22 +108,23 @@ export default function ReferralSection() {
                     ['Total referrals', summary.total_referrals],
                 ].map(([label, value]) => (
                     <div className="col-6 col-lg-3" key={label}>
-                        <div className="p-3 rounded-4 border bg-white h-100">
-                            <p className="text-muted small mb-1">{label}</p>
-                            <h5 className="mb-0 fw-bold">{label === 'Total referrals' ? value || 0 : money(value)}</h5>
+                        <div className="p-3 rounded-4 bg-white h-100" style={{ border: `1px solid ${colors.border}` }}>
+                            <p className="small mb-1" style={{ color: colors.body, fontWeight: 600 }}>{label}</p>
+                            <h5 className="mb-0 fw-bold" style={{ color: colors.dark }}>{label === 'Total referrals' ? value || 0 : money(value)}</h5>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div className="p-4 rounded-4 border mb-4">
-                <h5 className="fw-bold mb-2">Code used on your account</h5>
+            <div className="p-4 rounded-4 mb-4" style={{ border: `1px solid ${colors.border}`, backgroundColor: '#FFFFFF' }}>
+                <h5 className="fw-bold mb-2" style={{ color: colors.dark }}>Code used on your account</h5>
                 {data?.referred_by ? (
-                    <p className="mb-0 text-muted">Linked to {data.referred_by.name || data.referred_by.email}.</p>
+                    <p className="mb-0" style={{ color: colors.body }}>Linked to {data.referred_by.name || data.referred_by.email}.</p>
                 ) : (
                     <form onSubmit={applyCode} className="d-flex flex-column flex-md-row gap-3">
                         <input
                             className="form-control"
+                            style={{ color: colors.dark, borderColor: colors.border }}
                             value={code}
                             onChange={(event) => setCode(event.target.value.toUpperCase())}
                             placeholder="Enter referral code once"
@@ -129,30 +137,30 @@ export default function ReferralSection() {
                 )}
             </div>
 
-            <h5 className="fw-bold mb-3">Reward History</h5>
+            <h5 className="fw-bold mb-3" style={{ color: colors.dark }}>Reward History</h5>
             <div className="table-responsive rounded-4 border">
                 <table className="table mb-0 align-middle">
                     <thead className="table-light">
                         <tr>
-                            <th>Source</th>
-                            <th>Base</th>
-                            <th>Reward</th>
-                            <th>Status</th>
+                            <th style={{ color: colors.dark }}>Source</th>
+                            <th style={{ color: colors.dark }}>Base</th>
+                            <th style={{ color: colors.dark }}>Reward</th>
+                            <th style={{ color: colors.dark }}>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         {rewards.length === 0 ? (
                             <tr>
-                                <td colSpan="4" className="text-center text-muted py-4">No referral rewards yet.</td>
+                                <td colSpan="4" className="text-center py-4" style={{ color: colors.body }}>No referral rewards yet.</td>
                             </tr>
                         ) : rewards.map((reward) => (
                             <tr key={reward.id}>
-                                <td>
+                                <td style={{ color: colors.dark }}>
                                     <strong>{reward.listing?.title || reward.order?.order_number || reward.trigger_type}</strong>
-                                    <div className="text-muted small text-capitalize">{reward.trigger_type}</div>
+                                    <div className="small text-capitalize" style={{ color: colors.muted }}>{reward.trigger_type}</div>
                                 </td>
-                                <td>{money(reward.amount_base)}</td>
-                                <td>{money(reward.reward_amount)}</td>
+                                <td style={{ color: colors.dark }}>{money(reward.amount_base)}</td>
+                                <td style={{ color: colors.dark }}>{money(reward.reward_amount)}</td>
                                 <td><span className="badge rounded-pill bg-secondary text-capitalize">{reward.status}</span></td>
                             </tr>
                         ))}
