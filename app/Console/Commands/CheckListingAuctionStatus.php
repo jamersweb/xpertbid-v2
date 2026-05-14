@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use App\Services\ReferralService;
 
 class CheckListingAuctionStatus extends Command
 {
@@ -18,7 +19,7 @@ class CheckListingAuctionStatus extends Command
 
     protected $description = 'Check expired listing auctions and update them to awarded or closed';
 
-    public function handle(): int
+    public function handle(ReferralService $referrals): int
     {
         $now = Carbon::now();
 
@@ -106,6 +107,8 @@ class CheckListingAuctionStatus extends Command
                 }
 
                 if ($listing->user_id) {
+                    $referrals->createPendingReward($listing->user, 'sale', (float) $highestBid->bid_amount, $listing);
+
                     NewNotification::create([
                         'user_id' => $listing->user_id,
                         'title' => 'Your auction has a winner',
@@ -127,6 +130,10 @@ class CheckListingAuctionStatus extends Command
                             ]);
                         }
                     }
+                }
+
+                if ($highestBid->user) {
+                    $referrals->createPendingReward($highestBid->user, 'purchase', (float) $highestBid->bid_amount, $listing);
                 }
 
                 $awardedCount++;

@@ -139,6 +139,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/user/change-password', [ProfileController::class, 'updatePassword'])->name('user.password.update');
     Route::get('/user/notifications', [ProfileController::class, 'showNotifications'])->name('user.notifications.show');
     Route::post('/user/notifications', [ProfileController::class, 'updateNotifications'])->name('user.notifications.update');
+    Route::get('/referrals/me', [App\Http\Controllers\ReferralProgramController::class, 'show'])->name('referrals.me');
+    Route::post('/referrals/apply', [App\Http\Controllers\ReferralProgramController::class, 'apply'])->name('referrals.apply');
 
     // Verification
     Route::get('/identity-verification', [ProfileController::class, 'getIdentityVerification'])->name('verification.identity');
@@ -263,6 +265,11 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/orders', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{id}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{id}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('orders.update-status');
+
+    // Referral Rewards
+    Route::get('/referral-rewards', [App\Http\Controllers\Admin\ReferralRewardController::class, 'index'])->name('referral-rewards.index');
+    Route::post('/referral-rewards/{reward}/approve', [App\Http\Controllers\Admin\ReferralRewardController::class, 'approve'])->name('referral-rewards.approve');
+    Route::post('/referral-rewards/{reward}/reject', [App\Http\Controllers\Admin\ReferralRewardController::class, 'reject'])->name('referral-rewards.reject');
 
     // Payment Requests (Wallet Top-ups)
     Route::get('/payment-requests', [App\Http\Controllers\Admin\PaymentRequestController::class, 'index'])->name('payment-requests.index');

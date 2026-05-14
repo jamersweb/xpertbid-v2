@@ -9,6 +9,7 @@ const menuItems = [
        { name: 'Live Auctions', icon: 'fa-tower-broadcast', route: 'admin.live-auctions.index', permission: 'auction-list' },
        { name: 'Bids', icon: 'fa-hand-holding-dollar', route: 'admin.bids.index', permission: 'auction-list' },
        { name: 'Orders', icon: 'fa-cart-shopping', route: 'admin.orders.index', permission: 'order-list' },
+       { name: 'Referral Rewards', icon: 'fa-share-nodes', route: 'admin.referral-rewards.index', permission: 'referral-list' },
        { type: 'divider', label: 'Verifications' },
        { name: 'Listings Approval', icon: 'fa-clipboard-check', route: 'admin.verifications.auctions.index', permission: 'auction-verification-list' },
        { name: 'Individual', icon: 'fa-user-check', route: 'admin.verifications.individual.index', permission: 'individual-verification-list' },

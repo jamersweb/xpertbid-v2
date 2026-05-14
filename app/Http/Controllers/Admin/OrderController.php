@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\ReferralService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -42,15 +43,28 @@ class OrderController extends Controller
         ]);
     }
 
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, $id, ReferralService $referrals)
     {
         $request->validate([
             'status' => 'required|in:pending,processing,completed,cancelled',
         ]);
 
-        $order = Order::findOrFail($id);
+        $order = Order::with(['user', 'items.listing.user'])->findOrFail($id);
         $order->status = $request->status;
         $order->save();
+
+        if ($order->status === 'completed' && $order->user) {
+            $referrals->createPendingReward($order->user, 'purchase', (float) $order->total, $order);
+
+            $order->items
+                ->filter(fn ($item) => $item->listing?->user)
+                ->groupBy(fn ($item) => $item->listing->user_id)
+                ->each(function ($items) use ($referrals, $order) {
+                    $seller = $items->first()->listing->user;
+                    $sellerTotal = $items->sum(fn ($item) => (float) $item->subtotal);
+                    $referrals->createPendingReward($seller, 'sale', $sellerTotal, $order);
+                });
+        }
 
         return redirect()->back()->with('success', 'Order status updated successfully.');
     }

@@ -19,6 +19,8 @@ use App\Models\NewNotification;
 use App\Models\CustomerOutreach;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -45,6 +47,7 @@ class User extends Authenticatable
         'vat_number',    // add karein
         'company_name',
         'referral_code',
+        'referred_by',
         'api_token',  // add karein
         'utm_source',
         'utm_medium',
@@ -92,6 +95,19 @@ class User extends Authenticatable
     }
     protected static function booted()
     {
+        static::creating(function ($user) {
+            if (Schema::hasColumn('users', 'referral_code') && empty($user->referral_code)) {
+                $base = Str::upper(Str::slug($user->name ?: 'USER', ''));
+                $base = Str::limit($base !== '' ? $base : 'USER', 8, '');
+
+                do {
+                    $code = $base . random_int(1000, 9999);
+                } while (static::query()->where('referral_code', $code)->exists());
+
+                $user->referral_code = $code;
+            }
+        });
+
         // wallet create on user creation
         static::created(function ($user) {
             $user->wallet()->create(['balance' => 0]);
@@ -175,6 +191,16 @@ class User extends Authenticatable
     public function referrals()
     {
         return $this->hasMany(User::class, 'referred_by');
+    }
+
+    public function referralRewards()
+    {
+        return $this->hasMany(ReferralReward::class, 'referrer_id');
+    }
+
+    public function earnedReferralRewards()
+    {
+        return $this->hasMany(ReferralReward::class, 'referred_user_id');
     }
 
     public function customerOutreach()
