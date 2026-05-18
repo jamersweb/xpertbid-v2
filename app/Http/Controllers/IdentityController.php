@@ -7,7 +7,7 @@ use App\Models\Identity;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
+use App\Support\LoggedMail as Mail;
 use App\Mail\IdentityDeclineNotification;
 use Validator;
 use App\Mail\IdentityStatusUpdated;

@@ -7,7 +7,8 @@ use App\Models\Country;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Mail;
+use App\Support\LoggedMail as Mail;
+use Illuminate\Support\Facades\Log;
 use App\Mail\UserSignupConfirmation;
 use App\Mail\AdminNewUserRegistration;
 use Laravel\Socialite\Facades\Socialite;
@@ -24,6 +25,38 @@ class AuthController extends Controller
         return $request->input('signup_source')
             ?? $request->header('X-Client-Source')
             ?? $default;
+    }
+
+    protected function adminEmail(): ?string
+    {
+        return env('ADMIN_EMAIL') ?: config('mail.from.address');
+    }
+
+    protected function sendRegistrationEmails(User $user, string $context = 'signup'): void
+    {
+        if (!empty($user->email)) {
+            try {
+                Mail::to($user->email)->send(new UserSignupConfirmation($user));
+            } catch (\Throwable $e) {
+                Log::warning("{$context} user email failed", [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $adminEmail = $this->adminEmail();
+        if (!empty($adminEmail)) {
+            try {
+                Mail::to($adminEmail)->send(new AdminNewUserRegistration($user));
+            } catch (\Throwable $e) {
+                Log::warning("{$context} admin email failed", [
+                    'user_id' => $user->id,
+                    'admin_email' => $adminEmail,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 
     public function register(Request $request)
@@ -68,9 +101,7 @@ class AuthController extends Controller
         // Generate token
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // Optional confirmation mail
-        // Mail::to($user->email)->send(new UserSignupConfirmation());
-        Mail::to(env('ADMIN_EMAIL'))->send(new AdminNewUserRegistration($user));
+        $this->sendRegistrationEmails($user, 'api register');
 
         return response()->json([
             'user' => $user,
@@ -166,10 +197,9 @@ class AuthController extends Controller
                     'signup_source' => $this->resolveSignupSource($request),
                 ]);
 
-                if ($email) {
-                    Mail::to($user->email)->send(new UserSignupConfirmation());
-                }
-                Mail::to(env('ADMIN_EMAIL'))->send(new AdminNewUserRegistration($user));
+                $this->sendRegistrationEmails($user, 'apple login new user');
+
+                $token = $user->createToken('AuthToken')->plainTextToken;
 
                 return response()->json([
                     'user' => $user,
@@ -302,8 +332,7 @@ class AuthController extends Controller
             Auth::login($user);
             $token = $user->createToken('GoogleRegister')->plainTextToken;
 
-            Mail::to($user->email)->send(new UserSignupConfirmation());
-            Mail::to(env('ADMIN_EMAIL'))->send(new AdminNewUserRegistration($user));
+            $this->sendRegistrationEmails($user, 'google login new user');
 
             return response()->json([
                 'user' => $user,
@@ -384,8 +413,7 @@ class AuthController extends Controller
             // ✅ Generate Sanctum token
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            Mail::to($user->email)->send(new UserSignupConfirmation());
-            Mail::to(env('ADMIN_EMAIL'))->send(new AdminNewUserRegistration($user));
+            $this->sendRegistrationEmails($user, 'google register');
 
             return response()->json([
                 'user' => [

@@ -8,7 +8,7 @@ use App\Mail\BuyNowInquiryMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+use App\Support\LoggedMail as Mail;
 
 class BuyNowInquiryController extends Controller
 {

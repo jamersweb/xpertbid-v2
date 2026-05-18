@@ -3,7 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\VerificationCode;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
+use App\Support\LoggedMail as Mail;
 use Illuminate\Support\Facades\Auth;
 use App\Mail\VerificationCodeMail;
 use App\Mail\UserSignupConfirmation; 

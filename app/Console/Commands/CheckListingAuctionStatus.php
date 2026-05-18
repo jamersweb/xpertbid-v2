@@ -10,7 +10,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+use App\Support\LoggedMail as Mail;
 use App\Services\ReferralService;
 
 class CheckListingAuctionStatus extends Command

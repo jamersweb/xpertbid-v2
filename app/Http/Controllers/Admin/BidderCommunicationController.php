@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Listing;
 use App\Models\User;
 use App\Models\Bid;
-use Illuminate\Support\Facades\Mail;
+use App\Support\LoggedMail as Mail;
 use App\Mail\CustomBidderMessage;
 use App\Services\MsgpkService;
 use Inertia\Inertia;

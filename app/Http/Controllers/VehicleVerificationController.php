@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\VehicleVerification;
 use Illuminate\Http\Request;
 use App\Mail\VehicleVerificationDeclinedMail;
-use Illuminate\Support\Facades\Mail;
+use App\Support\LoggedMail as Mail;
 use App\Models\NewNotification;
 use App\Models\User;
 

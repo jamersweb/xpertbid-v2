@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+use App\Support\LoggedMail as Mail;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -22,6 +22,11 @@ class SocialAuthController extends Controller
             ?? $request->header('X-Client-Source')
             ?? session('signup_source')
             ?? $default;
+    }
+
+    protected function adminEmail(): ?string
+    {
+        return env('ADMIN_EMAIL') ?: config('mail.from.address');
     }
 
     public function redirectToGoogle()
@@ -69,7 +74,7 @@ class SocialAuthController extends Controller
                     ]);
                 }
 
-                $adminEmail = env('ADMIN_EMAIL');
+                $adminEmail = $this->adminEmail();
                 if (!empty($adminEmail)) {
                     try {
                         Mail::to($adminEmail)->send(new AdminNewUserRegistration($user));
@@ -136,7 +141,7 @@ class SocialAuthController extends Controller
                     }
                 }
 
-                $adminEmail = env('ADMIN_EMAIL');
+                $adminEmail = $this->adminEmail();
                 if (!empty($adminEmail)) {
                     try {
                         Mail::to($adminEmail)->send(new AdminNewUserRegistration($user));

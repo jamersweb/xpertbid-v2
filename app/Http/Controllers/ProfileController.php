@@ -228,7 +228,7 @@ class ProfileController extends Controller
         $user->update($data);
 
         try {
-            \Mail::to($user->email)->send(new \App\Mail\AccountChangeNotification($user->name, 'Profile Updated', now()->toDayDateTimeString()));
+            \App\Support\LoggedMail::to($user->email)->send(new \App\Mail\AccountChangeNotification($user->name, 'Profile Updated', now()->toDayDateTimeString()));
         } catch (\Exception $e) {
             \Log::error('Account change notification email failed: ' . $e->getMessage());
         }
@@ -301,7 +301,7 @@ class ProfileController extends Controller
         $address = Address::updateOrCreate(['user_id' => $user->id], $data);
 
         try {
-            \Mail::to($user->email)->send(new \App\Mail\AccountChangeNotification($user->name, 'Address Updated', now()->toDayDateTimeString()));
+            \App\Support\LoggedMail::to($user->email)->send(new \App\Mail\AccountChangeNotification($user->name, 'Address Updated', now()->toDayDateTimeString()));
         } catch (\Exception $e) {
             \Log::error('Account change notification email failed: ' . $e->getMessage());
         }
@@ -349,7 +349,7 @@ class ProfileController extends Controller
         $user->save();
 
         try {
-            \Mail::to($user->email)->send(new \App\Mail\AccountChangeNotification($user->name, 'Password Changed', now()->toDayDateTimeString()));
+            \App\Support\LoggedMail::to($user->email)->send(new \App\Mail\AccountChangeNotification($user->name, 'Password Changed', now()->toDayDateTimeString()));
         } catch (\Exception $e) {
             \Log::error('Account change notification email failed: ' . $e->getMessage());
         }
@@ -405,7 +405,7 @@ class ProfileController extends Controller
         );
 
         try {
-            \Mail::to($user->email)->send(new \App\Mail\AccountChangeNotification($user->name, 'Notification Settings Updated', now()->toDayDateTimeString()));
+            \App\Support\LoggedMail::to($user->email)->send(new \App\Mail\AccountChangeNotification($user->name, 'Notification Settings Updated', now()->toDayDateTimeString()));
         } catch (\Exception $e) {
             \Log::error('Account change notification email failed: ' . $e->getMessage());
         }

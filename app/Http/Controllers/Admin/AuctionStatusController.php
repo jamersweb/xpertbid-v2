@@ -7,7 +7,7 @@ use App\Models\Listing;
 use App\Models\User;
 use App\Mail\AuctionStatusUpdated;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
+use App\Support\LoggedMail as Mail;
 use Inertia\Inertia;
 
 class AuctionStatusController extends Controller

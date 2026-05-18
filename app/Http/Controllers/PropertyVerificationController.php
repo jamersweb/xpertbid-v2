@@ -5,7 +5,7 @@ use App\Models\PropertyVerification;
 use Illuminate\Http\Request;
 use App\Mail\PropertyVerificationDeclinedMail;
 use App\Models\NewNotification;
-use Illuminate\Support\Facades\Mail;
+use App\Support\LoggedMail as Mail;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;
 

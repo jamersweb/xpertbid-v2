@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Mail;
+use App\Support\LoggedMail as Mail;
 use App\Models\CorporateVerification;
 use App\Models\NewNotification;
 use App\Mail\CorporateVerificationAcceptedMail;

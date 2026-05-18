@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\NewNotification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
+use App\Support\LoggedMail as Mail;
 use Illuminate\Support\Facades\Storage;
 use App\Mail\PaymentApprovedMail;
 use App\Mail\PaymentDeclinedMail;

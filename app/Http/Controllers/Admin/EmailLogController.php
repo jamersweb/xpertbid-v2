@@ -19,6 +19,8 @@ class EmailLogController extends Controller
                 $q->where('recipient_email', 'like', "%{$search}%")
                   ->orWhere('subject', 'like', "%{$search}%")
                   ->orWhere('type', 'like', "%{$search}%")
+                  ->orWhere('status', 'like', "%{$search}%")
+                  ->orWhere('failure_reason', 'like', "%{$search}%")
                   ->orWhereHas('user', function($u) use ($search) {
                       $u->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");

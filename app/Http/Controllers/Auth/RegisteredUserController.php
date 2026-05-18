@@ -8,7 +8,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
+use App\Support\LoggedMail as Mail;
 use Illuminate\Support\Facades\Log;
 use App\Mail\UserSignupConfirmation;
 use App\Mail\AdminNewUserRegistration;
@@ -23,6 +23,11 @@ class RegisteredUserController extends Controller
         return $request->input('signup_source')
             ?? $request->header('X-Client-Source')
             ?? $default;
+    }
+
+    protected function adminEmail(): ?string
+    {
+        return env('ADMIN_EMAIL') ?: config('mail.from.address');
     }
 
     /**
@@ -65,7 +70,7 @@ class RegisteredUserController extends Controller
             ]);
         }
 
-        $adminEmail = env('ADMIN_EMAIL');
+        $adminEmail = $this->adminEmail();
         if (!empty($adminEmail)) {
             try {
                 Mail::to($adminEmail)->send(new AdminNewUserRegistration($user));

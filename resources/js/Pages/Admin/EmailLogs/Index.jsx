@@ -33,7 +33,8 @@ export default function Index({ emailLogs, filters }) {
                                                                <th className="px-6 py-4">Recipient</th>
                                                                <th className="px-6 py-4">Subject</th>
                                                                <th className="px-6 py-4">Type</th>
-                                                               <th className="px-6 py-4">Sent At</th>
+                                                               <th className="px-6 py-4">Time</th>
+                                                               <th className="px-6 py-4">Reason</th>
                                                                <th className="px-6 py-4 text-right">Status</th>
                                                         </tr>
                                                  </thead>
@@ -47,28 +48,37 @@ export default function Index({ emailLogs, filters }) {
                                                                              </div>
                                                                       </td>
                                                                       <td className="px-6 py-4">
-                                                                             <span className="text-xs text-gray-600 line-clamp-1">{log.subject}</span>
+                                                                             <span className="text-xs text-gray-600 line-clamp-1">{log.subject || 'Email Notification'}</span>
                                                                       </td>
                                                                       <td className="px-6 py-4">
                                                                              <span className="px-2 py-1 bg-gray-100 text-gray-500 text-[10px] font-bold rounded-md uppercase">
-                                                                                    {log.type}
+                                                                                    {log.type || 'Email'}
                                                                              </span>
                                                                       </td>
                                                                       <td className="px-6 py-4">
-                                                                             <span className="text-[11px] text-gray-400 font-medium">
+                                                                             <span className="text-[11px] text-gray-400 font-medium whitespace-nowrap">
                                                                                     {new Date(log.sent_at).toLocaleString()}
                                                                              </span>
                                                                       </td>
+                                                                      <td className="px-6 py-4 max-w-sm">
+                                                                             <span className="text-[11px] text-gray-500 line-clamp-2" title={log.failure_reason || ''}>
+                                                                                    {log.failure_reason || '-'}
+                                                                             </span>
+                                                                      </td>
                                                                       <td className="px-6 py-4 text-right">
-                                                                             <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full uppercase tracking-wider">
-                                                                                    Sent
+                                                                             <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${
+                                                                                    log.status === 'failed'
+                                                                                           ? 'bg-red-50 text-red-600'
+                                                                                           : 'bg-emerald-50 text-emerald-600'
+                                                                             }`}>
+                                                                                    {log.status || 'sent'}
                                                                              </span>
                                                                       </td>
                                                                </tr>
                                                         ))}
                                                         {emailLogs.data.length === 0 && (
                                                                <tr>
-                                                                      <td colSpan="5" className="px-6 py-12 text-center text-gray-400 italic text-sm">
+                                                                      <td colSpan="6" className="px-6 py-12 text-center text-gray-400 italic text-sm">
                                                                              No email logs found.
                                                                       </td>
                                                                </tr>

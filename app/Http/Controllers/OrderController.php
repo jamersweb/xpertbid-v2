@@ -124,7 +124,7 @@ class OrderController extends Controller
             $sentCount = 0;
             foreach ($sellerItems as $sellerId => $data) {
                 if (!empty($data['email'])) {
-                    \Illuminate\Support\Facades\Mail::to($data['email'])->send(new \App\Mail\SellerOrderNotification($order, $data['items']));
+                    \App\Support\LoggedMail::to($data['email'])->send(new \App\Mail\SellerOrderNotification($order, $data['items']));
                     $sentCount++;
                 }
             }

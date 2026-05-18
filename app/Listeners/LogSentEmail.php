@@ -2,8 +2,7 @@
 
 namespace App\Listeners;
 
-use App\Models\EmailLog;
-use App\Models\User;
+use App\Support\EmailLogRecorder;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Log;
@@ -24,29 +23,10 @@ class LogSentEmail
                 return;
             }
 
-            $recipientEmail = implode(', ', $to);
             $subject = (string) $message->getSubject();
-            $firstEmail = $to[0] ?? null;
-            $user = $firstEmail ? User::where('email', $firstEmail)->first() : null;
             $type = $this->resolveType($event, $subject);
 
-            $exists = EmailLog::where('recipient_email', $recipientEmail)
-                ->where('subject', $subject)
-                ->where('created_at', '>=', now()->subSeconds(5))
-                ->exists();
-
-            if ($exists) {
-                return;
-            }
-
-            EmailLog::create([
-                'user_id' => $user?->id,
-                'recipient_email' => $recipientEmail,
-                'subject' => $subject,
-                'type' => $type,
-                'sent_at' => now(),
-                'status' => 'sent',
-            ]);
+            EmailLogRecorder::sent($to, $subject, $type);
         } catch (\Throwable $e) {
             Log::error('Failed to log sent email: ' . $e->getMessage());
         }

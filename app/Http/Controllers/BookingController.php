@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Mail\InvoiceMail;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Mail;
+use App\Support\LoggedMail as Mail;
 class BookingController extends Controller
 {
     public function index()
