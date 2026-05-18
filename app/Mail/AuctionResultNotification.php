@@ -38,7 +38,7 @@ class AuctionResultNotification extends Mailable
             ->with([
                 'subjectLine' => $emailData['subject'],
                 'heading' => $emailData['heading'],
-                'message' => $emailData['message'],
+                'bodyMessage' => $emailData['message'],
                 'listing' => $this->listing,
                 'winningBid' => $this->winningBid,
                 'result' => $this->result,

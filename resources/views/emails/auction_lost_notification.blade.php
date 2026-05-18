@@ -1,11 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Auction Ended – Your Bid Was Not the Highest</title>
-</head>
-<body>
-    <p>Dear {{ $firstName }},</p>
+@extends('emails.layouts.master')
+
+@section('content')
+<p>Dear {{ $firstName }},</p>
 
     <p>
         The auction for <strong>{{ $listingTitle }}</strong> has ended. Unfortunately, your bid of <strong>{{ $yourBidAmount }}</strong> was outbid by another participant.
@@ -26,5 +22,4 @@
 
     <p>Sincerely,</p>
     <p>XpertBid Team</p>
-</body>
-</html>
+@endsection

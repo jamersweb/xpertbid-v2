@@ -1,16 +1,27 @@
-@component('mail::message')
-# Hello {{ $name }},
+@extends('emails.layouts.master')
 
-We’re sorry, but your identity verification request was **declined** for the following reason:
+@section('content')
+<h1>Identity Verification Declined</h1>
 
-> {{ $reason }}
+<p>Dear <strong>{{ $name }}</strong>,</p>
 
-Please correct that issue and resubmit your documents.
+<p>
+    Your identity verification request has been
+    <span class="status-badge">Declined</span>.
+</p>
 
-@component('mail::button', ['url' => $resubmitUrl])
-Verify Now
-@endcomponent
+<table class="info-table" role="presentation">
+    <tr>
+        <th>Reason</th>
+        <td>{{ $reason }}</td>
+    </tr>
+</table>
 
-Thanks,<br>
-**XpertBid Team**
-@endcomponent
+<p>Please correct this issue and submit your documents again.</p>
+
+<p>
+    <a class="btn-primary" href="{{ $resubmitUrl }}" target="_blank" rel="noopener noreferrer">Verify Now</a>
+</p>
+
+<p>Thank you,<br><strong>XpertBid Team</strong></p>
+@endsection

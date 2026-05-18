@@ -69,6 +69,7 @@ Route::view('/data-deletion', 'data-deletion')->name('data.deletion');
 Route::get('/refund-policy', [App\Http\Controllers\StaticPageController::class, 'refund'])->name('refund.policy');
 Route::get('/shipping-policy', [App\Http\Controllers\StaticPageController::class, 'shipping'])->name('shipping.policy');
 Route::get('/terms', [App\Http\Controllers\StaticPageController::class, 'terms'])->name('terms');
+Route::view('/email-template-preview', 'emails.template_preview')->name('email-template.preview');
 
 // Blog (Public)
 Route::get('/blogs', [App\Http\Controllers\BlogController::class, 'index'])->name('blogs.index');

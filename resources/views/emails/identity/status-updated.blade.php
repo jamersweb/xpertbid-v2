@@ -1,26 +1,29 @@
-@component('mail::message')
-# Identity Verification Update
+@extends('emails.layouts.master')
 
-Hello {{ $identity->full_legal_name ?? 'there' }},
+@section('content')
+<h1>Identity Verification Update</h1>
 
-Your identity verification status has changed from **{{ ucfirst($oldStatus) ?: '—' }}**
-to **{{ ucfirst($newStatus) }}**.
+<p>Dear <strong>{{ $user->name ?? 'User' }}</strong>,</p>
 
-@component('mail::panel')
-**Summary**
-- **User type:** {{ ucfirst($identity->user_type) }}
-- **Country:** {{ $identity->country ?? '—' }}
-- **Email:** {{ $identity->email_address ?? '—' }}
+<p>
+    Your identity verification status is now:
+    <span class="status-badge">{{ ucfirst($status) }}</span>
+</p>
 
-@if ($newStatus === 'verified')
-✅ **You’re verified.** You can now submit or update listings without verification holds.
-@elseif ($newStatus === 'not_verified')
-ℹ️ **Action may be required.** Please review your details and resubmit if needed.
+@if (!empty($note))
+    <table class="info-table" role="presentation">
+        <tr>
+            <th>Note</th>
+            <td>{{ $note }}</td>
+        </tr>
+    </table>
 @endif
-@endcomponent
 
-If you have questions, just reply to this email.
+@if (!empty($resubmitUrl))
+    <p>
+        <a class="btn-primary" href="{{ $resubmitUrl }}" target="_blank" rel="noopener noreferrer">Verify Now</a>
+    </p>
+@endif
 
-Thanks,  
-**{{ config('app.name') }}**
-@endcomponent
+<p>Thank you for using XpertBid.</p>
+@endsection

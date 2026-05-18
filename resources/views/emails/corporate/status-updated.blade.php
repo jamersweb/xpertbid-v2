@@ -1,19 +1,29 @@
-@component('mail::message')
-# Corporate Verification Status Updated
+@extends('emails.layouts.master')
 
-Hello {{ $verification->user->name ?? 'there' }},
+@section('content')
+<h1>Corporate Verification Update</h1>
 
-Your corporate verification status changed from **{{ ucfirst($oldStatus) ?: '—' }}** to **{{ ucfirst($newStatus) }}**.
+<p>Dear <strong>{{ $user->name ?? 'User' }}</strong>,</p>
 
-@component('mail::panel')
-**Company:** {{ $verification->legal_entity_name }}  
-**Country:** {{ $verification->country }}
-@endcomponent
+<p>
+    Your corporate verification status is now:
+    <span class="status-badge">{{ ucfirst($status) }}</span>
+</p>
 
-@if ($newStatus === 'resubmit')
-Please review and re-submit the required documents to complete verification.
+@if (!empty($note))
+    <table class="info-table" role="presentation">
+        <tr>
+            <th>Note</th>
+            <td>{{ $note }}</td>
+        </tr>
+    </table>
 @endif
 
-Thanks,  
-**{{ config('app.name') }}**
-@endcomponent
+@if (!empty($resubmitUrl))
+    <p>
+        <a class="btn-primary" href="{{ $resubmitUrl }}" target="_blank" rel="noopener noreferrer">Verify Now</a>
+    </p>
+@endif
+
+<p>Thank you for using XpertBid.</p>
+@endsection

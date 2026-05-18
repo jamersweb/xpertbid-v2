@@ -1,7 +1,7 @@
-<!DOCTYPE html>
-<html>
-<body>
-    <p>Dear {{ $auction->user->name }},</p>
+@extends('emails.layouts.master')
+
+@section('content')
+<p>Dear {{ $auction->user->name }},</p>
     <p>Your auction titled <strong>{{ $auction->title }}</strong> has been <b>declined</b> for the following reason:</p>
     <blockquote>{{ $auction->decline_reason }}</blockquote>
     <p>Please review and update your auction using the link below:</p>
@@ -9,5 +9,4 @@
         Edit Auction
     </a>
     <p>Thank you,<br/>XpertBid Team</p>
-</body>
-</html>
+@endsection

@@ -1,12 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Declined</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-    <div style="background-color: #f4f4f4; padding: 20px; border-radius: 10px;">
+@extends('emails.layouts.master')
+
+@section('content')
+<div style="background-color: #f4f4f4; padding: 20px; border-radius: 10px;">
         <h2 style="color: #dc3545; margin-top: 0;">Payment Declined</h2>
         
         <p>Dear {{ $order->billing_name }},</p>
@@ -34,5 +29,4 @@
             <strong>XpertBid Team</strong>
         </p>
     </div>
-</body>
-</html>
+@endsection

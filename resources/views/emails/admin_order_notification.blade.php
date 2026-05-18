@@ -1,12 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-       <meta charset="utf-8">
-       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-       <title>New Order Notification</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 700px; margin: 0 auto;">
-       <div style="background-color: #f8f9fa; padding: 20px;">
+@extends('emails.layouts.master')
+
+@section('content')
+<div style="background-color: #f8f9fa; padding: 20px;">
               <h2 style="color: #23262F; text-align: center; margin-bottom: 30px;">New Order Notification</h2>
 
               <div style="background-color: #fff; padding: 15px; border-radius: 5px; margin: 20px 0;">
@@ -92,6 +87,4 @@
                      <small>This is an automated notification from XpertBid Admin System.</small>
               </p>
        </div>
-</body>
-
-</html>
+@endsection

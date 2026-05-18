@@ -1,23 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Congratulations – You Have Won the Auction!</title>
-    <style>
-        /* Simple inline styles for the button */
-        .payment-button {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: #ffffff;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-top: 20px;
-        }
-    </style>
-</head>
-<body>
-    <p>Dear {{ $firstName }},</p>
+@extends('emails.layouts.master')
+
+@section('content')
+<p>Dear {{ $firstName }},</p>
 
     <p>
         Congratulations! You have successfully won the auction for the following item on XpertBid:
@@ -47,5 +31,4 @@
 
     <p>Kind regards,</p>
     <p>XpertBid Customer Success Team</p>
-</body>
-</html>
+@endsection

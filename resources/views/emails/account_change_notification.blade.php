@@ -1,13 +1,7 @@
-<!DOCTYPE html>
-<html>
+@extends('emails.layouts.master')
 
-<head>
-    <meta charset="utf-8">
-    <title>Notice of Account Changes on XpertBid</title>
-</head>
-
-<body>
-    <p>Dear {{ $firstName }},</p>
+@section('content')
+<p>Dear {{ $firstName }},</p>
 
     <p>
         We would like to inform you that the following change(s) were recently made to your XpertBid account:
@@ -33,6 +27,4 @@
     </p>
     <p>Sincerely,</p>
     <p>XpertBid Security & Compliance Team</p>
-</body>
-
-</html>
+@endsection
