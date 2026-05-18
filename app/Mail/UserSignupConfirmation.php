@@ -11,9 +11,9 @@ class UserSignupConfirmation extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public User $user;
+    public ?User $user;
 
-    public function __construct(User $user)
+    public function __construct(?User $user = null)
     {
         $this->user = $user;
     }
@@ -28,4 +28,3 @@ class UserSignupConfirmation extends Mailable
             ]);
     }
 }
-

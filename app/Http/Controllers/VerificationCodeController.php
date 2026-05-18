@@ -75,7 +75,7 @@ public function sendVerificationCode(Request $request)
         $user->email_verified_at = now();
         $user->save();
 		// Send the confirmation email
-        Mail::to($request->email)->send(new UserSignupConfirmation());
+        Mail::to($request->email)->send(new UserSignupConfirmation($user));
 
         // Code is valid, delete the code record
         $verificationCode->delete();
