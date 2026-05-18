@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Support\EmailLogRecorder;
 use App\Support\LoggedMail as Mail;
 use Illuminate\Support\Facades\Log;
 use App\Mail\UserSignupConfirmation;
@@ -28,6 +28,25 @@ class RegisteredUserController extends Controller
     protected function adminEmail(): ?string
     {
         return env('ADMIN_EMAIL') ?: config('mail.from.address');
+    }
+
+    protected function sendEmailVerificationLink(User $user): void
+    {
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Throwable $e) {
+            EmailLogRecorder::failed(
+                $user->email,
+                'Verify Email Address',
+                'VerifyEmailNotification',
+                $e
+            );
+
+            Log::warning('Email verification notification failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -59,7 +78,7 @@ class RegisteredUserController extends Controller
             'signup_source' => $this->resolveSignupSource($request),
         ]);
 
-        event(new Registered($user));
+        $this->sendEmailVerificationLink($user);
 
         try {
             Mail::to($user->email)->send(new UserSignupConfirmation($user));
@@ -84,6 +103,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route('verification.notice', absolute: false));
     }
 }

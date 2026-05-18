@@ -29,6 +29,13 @@ export default function VerifyEmail({ status }) {
                 </div>
             )}
 
+            {status === 'verification-link-failed' && (
+                <div className="mb-4 text-sm font-medium text-red-600">
+                    We could not send the verification email right now. Please
+                    try again later.
+                </div>
+            )}
+
             <form onSubmit={submit}>
                 <div className="mt-4 flex items-center justify-between">
                     <PrimaryButton disabled={processing}>
