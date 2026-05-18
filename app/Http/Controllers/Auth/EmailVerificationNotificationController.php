@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\EmailVerificationCodeSender;
 use App\Support\EmailLogRecorder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,23 +21,23 @@ class EmailVerificationNotificationController extends Controller
         }
 
         try {
-            $request->user()->sendEmailVerificationNotification();
+            EmailVerificationCodeSender::send($request->user());
         } catch (\Throwable $e) {
             EmailLogRecorder::failed(
                 $request->user()->email,
-                'Verify Email Address',
-                'VerifyEmailNotification',
+                'Your Verification Code',
+                'VerificationCodeMail',
                 $e
             );
 
-            Log::warning('Email verification notification resend failed', [
+            Log::warning('Email verification code resend failed', [
                 'user_id' => $request->user()->id,
                 'error' => $e->getMessage(),
             ]);
 
-            return back()->with('status', 'verification-link-failed');
+            return back()->with('status', 'verification-code-failed');
         }
 
-        return back()->with('status', 'verification-link-sent');
+        return back()->with('status', 'verification-code-sent');
     }
 }

@@ -7,10 +7,10 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Support\EmailVerificationCodeSender;
 use App\Support\EmailLogRecorder;
 use App\Support\LoggedMail as Mail;
 use Illuminate\Support\Facades\Log;
-use App\Mail\UserSignupConfirmation;
 use App\Mail\AdminNewUserRegistration;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
@@ -30,19 +30,19 @@ class RegisteredUserController extends Controller
         return env('ADMIN_EMAIL') ?: config('mail.from.address');
     }
 
-    protected function sendEmailVerificationLink(User $user): void
+    protected function sendEmailVerificationCode(User $user): void
     {
         try {
-            $user->sendEmailVerificationNotification();
+            EmailVerificationCodeSender::send($user);
         } catch (\Throwable $e) {
             EmailLogRecorder::failed(
                 $user->email,
-                'Verify Email Address',
-                'VerifyEmailNotification',
+                'Your Verification Code',
+                'VerificationCodeMail',
                 $e
             );
 
-            Log::warning('Email verification notification failed', [
+            Log::warning('Email verification code failed', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
             ]);
@@ -78,16 +78,7 @@ class RegisteredUserController extends Controller
             'signup_source' => $this->resolveSignupSource($request),
         ]);
 
-        $this->sendEmailVerificationLink($user);
-
-        try {
-            Mail::to($user->email)->send(new UserSignupConfirmation($user));
-        } catch (\Throwable $e) {
-            Log::warning('User signup confirmation email failed', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        $this->sendEmailVerificationCode($user);
 
         $adminEmail = $this->adminEmail();
         if (!empty($adminEmail)) {
