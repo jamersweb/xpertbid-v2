@@ -66,13 +66,33 @@ export default function VerifyEmail({ status }) {
                 <div className="verify-email-shell__inner" />
             </div>
 
-            <Modal show={true} closeable={false} maxWidth="md">
+            <Modal show={true} closeable={false} maxWidth="2xl">
                 <div className="verify-email-modal">
-                    <div className="verify-email-modal__icon">
-                        <i className="fa-regular fa-envelope"></i>
+                    <div className="verify-email-modal__header">
+                        <Link
+                            href={route('logout')}
+                            method="post"
+                            as="button"
+                            className="verify-email-modal__circle-btn"
+                            aria-label="Go back"
+                        >
+                            <i className="fa-solid fa-chevron-left"></i>
+                        </Link>
+
+                        <h2>Verify Email</h2>
+
+                        <Link
+                            href={route('logout')}
+                            method="post"
+                            as="button"
+                            className="verify-email-modal__circle-btn"
+                            aria-label="Close"
+                        >
+                            <i className="fa-solid fa-xmark"></i>
+                        </Link>
                     </div>
 
-                    <h2>Verify your email</h2>
+                    <div className="verify-email-modal__divider" />
 
                     <p>
                         Enter the 6-digit verification code sent to{' '}
@@ -136,21 +156,16 @@ export default function VerifyEmail({ status }) {
                             {resendForm.processing ? 'Sending...' : 'Resend Code'}
                         </button>
 
-                        <Link
-                            href={route('logout')}
-                            method="post"
-                            as="button"
-                            className="verify-email-modal__link"
-                        >
-                            Log Out
-                        </Link>
+                        <span className="verify-email-modal__muted">
+                            Check spam folder if you do not see the email.
+                        </span>
                     </div>
                 </div>
             </Modal>
 
             <style>{`
                 .verify-email-shell {
-                    min-height: 54vh;
+                    min-height: 62vh;
                     background: #f6f8fb;
                     display: flex;
                     align-items: center;
@@ -164,40 +179,72 @@ export default function VerifyEmail({ status }) {
                     background: #ffffff;
                     opacity: 0.45;
                 }
+                #modal .verify-email-modal {
+                    max-width: 600px;
+                    margin: 0 auto;
+                }
                 .verify-email-modal {
-                    padding: 30px;
+                    padding: 20px 20px 28px;
                     text-align: center;
                     color: #23262f;
                 }
-                .verify-email-modal__icon {
-                    width: 64px;
-                    height: 64px;
-                    margin: 0 auto 16px;
+                .verify-email-modal__header {
+                    display: grid;
+                    grid-template-columns: 34px 1fr 34px;
+                    align-items: center;
+                    gap: 12px;
+                    margin-bottom: 16px;
+                }
+                .verify-email-modal__circle-btn {
+                    width: 26px;
+                    height: 26px;
                     border-radius: 50%;
-                    background: #eef8fe;
-                    color: #43ace9;
+                    border: 0;
+                    background: #f3f4f6;
+                    color: #23262f;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 26px;
+                    font-size: 12px;
+                    text-decoration: none;
+                    cursor: pointer;
+                    justify-self: center;
+                    transition: background 0.2s ease, color 0.2s ease;
+                }
+                .verify-email-modal__circle-btn:hover {
+                    background: #e5e7eb;
+                    color: #111827;
                 }
                 .verify-email-modal h2 {
-                    margin: 0 0 10px;
-                    font-size: 24px;
+                    margin: 0;
+                    font-size: 25px;
                     line-height: 1.25;
                     font-weight: 800;
                     letter-spacing: 0;
                 }
+                .verify-email-modal__divider {
+                    height: 1px;
+                    background: #eceef2;
+                    margin: 0 0 40px;
+                }
                 .verify-email-modal p {
-                    margin: 0 auto 18px;
-                    max-width: 390px;
-                    color: #6b7280;
-                    font-size: 14px;
+                    margin: 0 0 28px;
+                    color: #5f6472;
+                    font-size: 18px;
+                    font-weight: 700;
                     line-height: 1.6;
+                    text-align: left;
                 }
                 .verify-email-modal p span {
                     color: #23262f;
-                    font-weight: 700;
+                    display: block;
+                    margin-top: 12px;
+                    border-radius: 10px;
+                    background: #eaf1ff;
+                    border: 1px solid #dce7ff;
+                    padding: 18px 20px;
+                    font-size: 16px;
+                    font-weight: 800;
                     overflow-wrap: anywhere;
                 }
                 .verify-email-code-form {
@@ -205,32 +252,38 @@ export default function VerifyEmail({ status }) {
                 }
                 .verify-email-code-inputs {
                     display: grid;
-                    grid-template-columns: repeat(6, 46px);
-                    justify-content: center;
-                    gap: 8px;
-                    margin: 18px 0;
+                    grid-template-columns: repeat(6, minmax(0, 1fr));
+                    gap: 10px;
+                    margin: 0 0 34px;
                 }
                 .verify-email-code-inputs input {
-                    width: 46px;
-                    height: 52px;
-                    border: 1px solid #d8e0ea;
-                    border-radius: 8px;
+                    width: 100%;
+                    height: 66px;
+                    border: 1px solid #eef2f7;
+                    border-radius: 10px;
                     background: #ffffff;
                     color: #23262f;
-                    font-size: 22px;
+                    font-size: 26px;
                     font-weight: 800;
                     text-align: center;
                     outline: none;
+                    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.08);
                     transition: border-color 0.2s ease, box-shadow 0.2s ease;
                 }
                 .verify-email-code-inputs input:focus {
-                    border-color: #43ace9;
-                    box-shadow: 0 0 0 3px rgba(67, 172, 233, 0.16);
+                    border-color: #dce7ff;
+                    background: #eaf1ff;
+                    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.08), 0 0 0 3px rgba(67, 172, 233, 0.12);
                 }
                 .verify-email-code-form > button {
-                    min-height: 44px;
-                    width: min(280px, 100%);
+                    min-height: 66px;
+                    width: 100%;
                     justify-content: center;
+                    border-radius: 10px;
+                    background: #23262f;
+                    font-size: 17px;
+                    font-weight: 800;
+                    text-transform: none;
                 }
                 .verify-email-alert {
                     margin: 0 0 16px;
@@ -251,7 +304,7 @@ export default function VerifyEmail({ status }) {
                 .verify-email-modal__actions {
                     display: flex;
                     align-items: center;
-                    justify-content: center;
+                    justify-content: space-between;
                     gap: 18px;
                     flex-wrap: wrap;
                     margin-top: 18px;
@@ -274,23 +327,36 @@ export default function VerifyEmail({ status }) {
                     cursor: not-allowed;
                     opacity: 0.65;
                 }
+                .verify-email-modal__muted {
+                    color: #8a90a0;
+                    font-size: 13px;
+                    font-weight: 600;
+                }
                 @media (max-width: 640px) {
                     .verify-email-shell {
                         min-height: 46vh;
                     }
                     .verify-email-modal {
-                        padding: 24px 18px;
+                        padding: 18px 16px 24px;
+                    }
+                    .verify-email-modal h2 {
+                        font-size: 22px;
+                    }
+                    .verify-email-modal__divider {
+                        margin-bottom: 28px;
+                    }
+                    .verify-email-modal p {
+                        font-size: 15px;
                     }
                     .verify-email-code-inputs {
-                        grid-template-columns: repeat(6, minmax(36px, 44px));
                         gap: 6px;
                     }
                     .verify-email-code-inputs input {
-                        width: 100%;
-                        height: 48px;
+                        height: 54px;
+                        font-size: 21px;
                     }
                     .verify-email-code-form > button {
-                        width: 100%;
+                        min-height: 54px;
                     }
                 }
             `}</style>
