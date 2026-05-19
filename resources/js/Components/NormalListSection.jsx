@@ -36,7 +36,7 @@ export default function NormalListSection({ products }) {
                                    <div className="featured-heading mb-0">
                                           <h2>{t('Latest Listings')}</h2>
                                    </div>
-                                   <Link href="/marketplace" className="section-view-all-btn">{t('View All')}</Link>
+                                   <Link href="/marketplace?type=normal&section=latest_listings" className="section-view-all-btn">{t('View All')}</Link>
                             </div>
 
                             <div className="row g-4 home-mobile-scroll-row">

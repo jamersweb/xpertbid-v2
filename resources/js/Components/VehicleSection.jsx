@@ -37,7 +37,7 @@ export default function VehicleSection({ products }) {
                                    <div className="featured-heading mb-0">
                                           <h2>{t('Latest Vehicles')}</h2>
                                    </div>
-                                   <Link href="/marketplace/vehicles?type=auction" className="section-view-all-btn">{t('View All')}</Link>
+                                   <Link href="/marketplace/vehicles?type=auction&section=latest_vehicles" className="section-view-all-btn">{t('View All')}</Link>
                             </div>
 
                             <div className="row g-4 home-mobile-scroll-row">

@@ -199,10 +199,22 @@ export default function Index({
        const [latestGridProducts, setLatestGridProducts] = useState(products?.data || []);
        const [nextProductsPageUrl, setNextProductsPageUrl] = useState(products?.next_page_url || null);
        const [isLoadingMoreProducts, setIsLoadingMoreProducts] = useState(false);
-       const heroImage = currentTopCategory?.image_url || currentCategory?.image_url || null;
+       const fallbackHeroImage = 'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1600&q=80';
+       const heroImage = currentTopCategory?.image_url || currentCategory?.image_url || fallbackHeroImage;
        const currentType = serverCurrentType || filters?.type || 'auction';
        const showChildTabs = Boolean(currentSubcategory);
+       const showMainCategoryTabs = !currentTopCategory && !currentCategory && categories.length > 0;
        const sectionEntityName = currentTopCategory?.name || currentCategory?.name || 'Products';
+       const sectionMode = String(filters?.section || '').toLowerCase();
+       const isSectionOnlyView = ['featured', 'latest_auctions', 'latest_vehicles', 'latest_properties', 'latest_listings'].includes(sectionMode);
+       const sectionTitleMap = {
+              featured: 'Featured Products',
+              latest_auctions: 'Latest Auctions',
+              latest_vehicles: 'Latest Vehicles',
+              latest_properties: 'Latest Properties',
+              latest_listings: 'Latest Listings',
+       };
+       const latestGridTitle = sectionTitleMap[sectionMode] || `Latest ${sectionEntityName}`;
        const seoShortContent = sanitizeSeoHtml(currentCategory?.seo_short_content);
        const seoContent = sanitizeSeoHtml(currentCategory?.seo_content);
 
@@ -236,6 +248,7 @@ export default function Index({
               delete cleaned.type;
               delete cleaned.category;
               delete cleaned.page;
+              delete cleaned.section;
 
               return cleaned;
        };
@@ -272,6 +285,19 @@ export default function Index({
        const handleCategoryTabChange = (slug) => {
               router.get(
                      marketplaceUrl(currentType, slug),
+                     {
+                            ...cleanFilters(),
+                     },
+                     {
+                            preserveState: true,
+                            preserveScroll: true,
+                     }
+              );
+       };
+
+       const handleMainCategoriesBack = () => {
+              router.get(
+                     route('marketplace.index'),
                      {
                             ...cleanFilters(),
                      },
@@ -510,7 +536,7 @@ export default function Index({
                                    style={
                                           heroImage
                                                  ? {
-                                                          backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.38)), url(${heroImage})`,
+                                                          backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.38)), url("${heroImage}")`,
                                                    }
                                                  : undefined
                                    }
@@ -521,8 +547,32 @@ export default function Index({
                                                         {currentCategory?.name || currentTopCategory?.name || 'Marketplace'}
                                                  </div>
 
+                                                 {showMainCategoryTabs && (
+                                                        <div className="marketplace-subcategory-tabs mb-3">
+                                                               {categories.map((mainCategory) => (
+                                                                      <button
+                                                                             key={mainCategory.id}
+                                                                             type="button"
+                                                                             onClick={() => handleCategoryTabChange(mainCategory.slug)}
+                                                                             className="marketplace-subcategory-tab"
+                                                                      >
+                                                                             {mainCategory.name}
+                                                                      </button>
+                                                               ))}
+                                                        </div>
+                                                 )}
+
                                                  {currentTopCategory && !showChildTabs && (
                                                         <div className="marketplace-subcategory-tabs mb-3">
+                                                               <button
+                                                                      type="button"
+                                                                      onClick={handleMainCategoriesBack}
+                                                                      className="marketplace-subcategory-back"
+                                                                      aria-label="Back to main categories"
+                                                               >
+                                                                      <span aria-hidden="true">&larr;</span>
+                                                               </button>
+
                                                                <button
                                                                       type="button"
                                                                       onClick={() => handleCategoryTabChange(currentTopCategory.slug)}
@@ -621,34 +671,38 @@ export default function Index({
                             </div>
 
                             <div className="container-fluid px-lg-5 pt-4">
-                                   {seoShortContent && (
+                                   {!isSectionOnlyView && seoShortContent && (
                                           <div className="content-wrapper content-wrapper-short mb-4 text-dark">
                                                  <div dangerouslySetInnerHTML={{ __html: seoShortContent }} />
                                           </div>
                                    )}
 
                                    <div className="mkt-right">
-                                          <CuratedMarketplaceSection
-                                                 title={`Featured ${sectionEntityName}`}
-                                                 items={featuredProducts}
-                                                 slider
-                                          />
+                                          {!isSectionOnlyView && (
+                                                 <CuratedMarketplaceSection
+                                                        title={`Featured ${sectionEntityName}`}
+                                                        items={featuredProducts}
+                                                        slider
+                                                 />
+                                          )}
 
-                                          <CuratedMarketplaceSection
-                                                 title={`Most Viewed ${sectionEntityName}`}
-                                                 items={mostViewedProducts}
-                                                 slider
-                                          />
+                                          {!isSectionOnlyView && (
+                                                 <CuratedMarketplaceSection
+                                                        title={`Most Viewed ${sectionEntityName}`}
+                                                        items={mostViewedProducts}
+                                                        slider
+                                                 />
+                                          )}
 
                                           <LatestProductsGrid
-                                                 title={`Latest ${sectionEntityName}`}
+                                                 title={latestGridTitle}
                                                  items={latestGridProducts}
                                                  hasMore={Boolean(nextProductsPageUrl)}
                                                  loading={isLoadingMoreProducts}
                                                  onLoadMore={loadMoreProducts}
                                           />
 
-                                          {seoContent && (
+                                          {!isSectionOnlyView && seoContent && (
                                                  <div className="content-wrapper content-wrapper-long mt-5 text-dark">
                                                         <div dangerouslySetInnerHTML={{ __html: seoContent }} />
                                                  </div>

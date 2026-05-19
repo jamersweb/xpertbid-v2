@@ -37,7 +37,7 @@ export default function PropertySection({ products }) {
                                    <div className="featured-heading mb-0">
                                           <h2>{t('Latest Properties')}</h2>
                                    </div>
-                                   <Link href="/marketplace/real-estate-property-auction?type=auction" className="section-view-all-btn">{t('View All')}</Link>
+                                   <Link href="/marketplace/real-estate-property-auction?type=auction&section=latest_properties" className="section-view-all-btn">{t('View All')}</Link>
                             </div>
 
                             <div className="row g-4 home-mobile-scroll-row">

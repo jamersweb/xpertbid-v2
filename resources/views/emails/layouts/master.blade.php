@@ -31,6 +31,7 @@
                      margin: 0;
                      padding: 0;
                      background-color: #f4f7fb;
+                     overflow-x: hidden;
               }
 
               a {
@@ -41,6 +42,7 @@
                      width: 100%;
                      background-color: #f4f7fb;
                      padding: 28px 12px;
+                     box-sizing: border-box;
               }
 
               .email-container {

@@ -147,7 +147,16 @@ class MarketplaceController extends Controller
 
         $type = $this->listingTypeFromSlug($typeSlug) ?? $request->input('type', 'auction');
         $featured = $request->input('featured');
+        $section = strtolower((string) $request->input('section', ''));
         $queryCategorySlug = $request->input('category');
+        $allowedSections = ['featured', 'latest_auctions', 'latest_vehicles', 'latest_properties', 'latest_listings'];
+        if (!in_array($section, $allowedSections, true)) {
+            $section = '';
+        }
+
+        if ($section === 'featured' && !$featured) {
+            $featured = 'home_featured';
+        }
 
         if (!$slug && $queryCategorySlug) {
             return redirect()->to($this->canonicalMarketplaceUrl($queryCategorySlug, $type, $request), 301);
@@ -221,12 +230,6 @@ class MarketplaceController extends Controller
         ->values();
 
         $activeSlug = $slug ?? $request->input('category');
-
-        if (!$activeSlug && !$featured && $categories->isNotEmpty()) {
-            return redirect()->route('marketplace.index', [
-                'slug' => $categories->first()->slug,
-            ] + $request->except('category'));
-        }
 
         $query = Listing::where('status', 'active')->with([
             'user.individualVerification',
@@ -494,6 +497,10 @@ class MarketplaceController extends Controller
 
         // Type filtering (Marketplace Tabs)
         $applyTypeFilter($query);
+
+        if ($section === 'featured') {
+            $query->where('featured_name', 'home_featured');
+        }
 
         $curatedBaseQuery = Listing::where('status', 'active')->with([
             'user.individualVerification',

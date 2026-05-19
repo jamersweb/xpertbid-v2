@@ -35,7 +35,7 @@ export default function FeaturedProducts({ products }) {
                                    <div className="featured-heading mb-0">
                                           <h2>{t('Featured Listings')}</h2>
                                    </div>
-                                   <Link href="/marketplace?featured=home_featured" className="section-view-all-btn">{t('View All')}</Link>
+                                   <Link href="/marketplace?featured=home_featured&section=featured" className="section-view-all-btn">{t('View All')}</Link>
                             </div>
 
                             {displayProducts.length > 0 ? (

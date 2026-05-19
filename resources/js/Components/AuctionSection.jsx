@@ -28,7 +28,7 @@ const getProductImageSrc = (product) => {
        return `/${String(rawPath).replace(/^\/+/, "")}`;
 };
 
-export default function AuctionSection({ products, title = 'Latest Auctions', viewAllHref = '/marketplace?type=auction' }) {
+export default function AuctionSection({ products, title = 'Latest Auctions', viewAllHref = '/marketplace?type=auction&section=latest_auctions' }) {
        const { t } = useTranslate();
        const displayProducts = (products || []).slice(0, 3);
 
