@@ -670,7 +670,7 @@ export default function Index({
                                    </div>
                             </div>
 
-                            <div className="container-fluid px-lg-5 pt-4">
+                            <div className="container-fluid px-3 px-lg-5 pt-4">
                                    {!isSectionOnlyView && seoShortContent && (
                                           <div className="content-wrapper content-wrapper-short mb-4 text-dark">
                                                  <div dangerouslySetInnerHTML={{ __html: seoShortContent }} />
@@ -1353,6 +1353,9 @@ export default function Index({
                                    opacity: 0.7;
                             }
                             @media (max-width: 767px) {
+                                   .mkt-right {
+                                          padding-inline: 4px;
+                                   }
                                    .content-wrapper-short {
                                           padding: 22px 18px;
                                           border-radius: 22px;
