@@ -25,10 +25,12 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
               return "";
        };
 
-       const beds = getFeatureValue("field_5", "5");
-       const baths = getFeatureValue("field_6", "6__6", "6");
-       const areaSize = getFeatureValue("field_3", "3");
-       const areaUnit = getFeatureValue("field_4", "4");
+       // Property dynamic-field mapping:
+       // 1=Bedrooms, 2=Bathrooms, 5=Area unit, 6=Area
+       const beds = getFeatureValue("field_1", "1");
+       const baths = getFeatureValue("field_2", "2");
+       const areaSize = getFeatureValue("field_6", "6");
+       const areaUnit = getFeatureValue("field_5", "5");
        const area = [areaSize, areaUnit].filter(Boolean).join(" ");
        const shouldRenderPropertyMeta = showPropertyMeta && isPropertyListing && (beds || baths || area);
 
