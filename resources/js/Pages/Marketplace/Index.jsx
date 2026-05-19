@@ -1407,10 +1407,11 @@ export default function Index({
                                    .marketplace-subcategory-tabs {
                                           display: flex;
                                           flex-wrap: nowrap;
-                                          justify-content: center;
+                                          justify-content: flex-start;
                                           align-items: center;
                                           gap: 10px;
                                           overflow-x: auto;
+                                          padding-inline: 8px;
                                           padding-bottom: 4px;
                                           scrollbar-width: none;
                                    }
