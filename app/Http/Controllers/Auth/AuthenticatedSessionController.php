@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Role;
+use App\Support\EmailVerificationCodeSender;
+use App\Support\EmailLogRecorder;
+use Illuminate\Support\Facades\Log;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -31,6 +34,27 @@ class AuthenticatedSessionController extends Controller
 
         // Get the authenticated user
         $user = Auth::user();
+
+        // If email is not verified, send fresh verification code right after login.
+        if (!$user->hasVerifiedEmail()) {
+            try {
+                EmailVerificationCodeSender::send($user);
+            } catch (\Throwable $e) {
+                EmailLogRecorder::failed(
+                    $user->email,
+                    'Your Verification Code',
+                    'VerificationCodeMail',
+                    $e
+                );
+
+                Log::warning('Email verification code failed on login', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            return redirect()->route('verification.notice');
+        }
 
         // Check for admin role first
         if ($user->role === 'admin') {
