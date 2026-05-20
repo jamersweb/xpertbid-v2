@@ -448,6 +448,8 @@ class ListingController extends Controller
 
         $this->sendListingSubmittedEmails($listing);
 
+        $this->sendListingSubmittedEmails($listing);
+
         $draft->delete();
 
         return $listing;
@@ -811,6 +813,8 @@ class ListingController extends Controller
             'status' => $listing->status,
         ]);
 
+        $this->sendListingSubmittedEmails($listing);
+
         $listing->pendingEdit()?->delete();
 
         if ($request->wantsJson() || $request->expectsJson()) {
@@ -851,7 +855,6 @@ class ListingController extends Controller
         }
 
         $listing = $this->publishDraft($this->saveDraft($request, $draft));
-        $this->sendListingSubmittedEmails($listing);
 
         if ($request->wantsJson() || $request->expectsJson()) {
             return response()->json([
