@@ -1,7 +1,7 @@
 import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import AppLayout from '@/Layouts/AppLayout';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { useRef } from 'react';
 
 export default function VerifyEmail({ status }) {
@@ -69,27 +69,7 @@ export default function VerifyEmail({ status }) {
             <Modal show={true} closeable={false} maxWidth="2xl">
                 <div className="verify-email-modal">
                     <div className="verify-email-modal__header">
-                        <Link
-                            href={route('logout')}
-                            method="post"
-                            as="button"
-                            className="verify-email-modal__circle-btn"
-                            aria-label="Go back"
-                        >
-                            <i className="fa-solid fa-chevron-left"></i>
-                        </Link>
-
                         <h2>Verify Email</h2>
-
-                        <Link
-                            href={route('logout')}
-                            method="post"
-                            as="button"
-                            className="verify-email-modal__circle-btn"
-                            aria-label="Close"
-                        >
-                            <i className="fa-solid fa-xmark"></i>
-                        </Link>
                     </div>
 
                     <div className="verify-email-modal__divider" />
@@ -189,31 +169,11 @@ export default function VerifyEmail({ status }) {
                     color: #23262f;
                 }
                 .verify-email-modal__header {
-                    display: grid;
-                    grid-template-columns: 34px 1fr 34px;
+                    display: flex;
+                    justify-content: center;
                     align-items: center;
                     gap: 12px;
                     margin-bottom: 16px;
-                }
-                .verify-email-modal__circle-btn {
-                    width: 26px;
-                    height: 26px;
-                    border-radius: 50%;
-                    border: 0;
-                    background: #f3f4f6;
-                    color: #23262f;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 12px;
-                    text-decoration: none;
-                    cursor: pointer;
-                    justify-self: center;
-                    transition: background 0.2s ease, color 0.2s ease;
-                }
-                .verify-email-modal__circle-btn:hover {
-                    background: #e5e7eb;
-                    color: #111827;
                 }
                 .verify-email-modal h2 {
                     margin: 0;

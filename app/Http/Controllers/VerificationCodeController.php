@@ -10,6 +10,7 @@ use App\Mail\UserSignupConfirmation;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Log;
+use App\Support\SignupWelcomeMessageSender;
 
 
 class VerificationCodeController extends Controller
@@ -98,19 +99,26 @@ public function sendVerificationCode(Request $request)
             return response()->json(['message' => 'User account was not found.', 'success' => false], 200);
         }
 
-        if (!$user->hasVerifiedEmail()) {
+        $wasUnverified = !$user->hasVerifiedEmail();
+
+        if ($wasUnverified) {
             $user->markEmailAsVerified();
             event(new Verified($user));
         }
 
-		// Send the confirmation email
-        try {
-            Mail::to($email)->send(new UserSignupConfirmation($user));
-        } catch (\Throwable $e) {
-            Log::warning('User signup confirmation email failed after verification', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
+        if ($wasUnverified) {
+            // Send welcome email only after successful verification.
+            try {
+                Mail::to($email)->send(new UserSignupConfirmation($user));
+            } catch (\Throwable $e) {
+                Log::warning('User signup confirmation email failed after verification', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            // Send welcome message on verified signup when phone is available.
+            SignupWelcomeMessageSender::send($user);
         }
 
         // Code is valid, delete the code record
