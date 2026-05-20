@@ -108,12 +108,12 @@ export default function MobileBottomNav() {
                             </button>
 
                             <Link
-                                   href="/live-auctions"
+                                   href={route('auctions.one_rupee')}
                                    className={`mobile-bottom-nav__item mobile-bottom-nav__item--highlight`}
-                                   aria-label="Live Auction"
+                                   aria-label="1 Rupee Auctions"
                             >
-                                   <i className="fa-solid fa-tower-broadcast mobile-bottom-nav__icon" />
-                                   <span className="mobile-bottom-nav__label" style={{ fontSize: '10px', lineHeight: '1.1', textAlign: 'center' }}>{t('Live')}</span>
+                                   <i className="fa-solid fa-gavel mobile-bottom-nav__icon" />
+                                   <span className="mobile-bottom-nav__label" style={{ fontSize: '10px', lineHeight: '1.1', textAlign: 'center' }}>{t('1 Rupee')}</span>
                             </Link>
 
                             {isAuthenticated ? (

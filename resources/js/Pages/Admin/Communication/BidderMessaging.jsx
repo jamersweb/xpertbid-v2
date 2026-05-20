@@ -78,7 +78,7 @@ export default function BidderMessaging() {
               <AdminLayout title="Bidder Communication">
                      <Head title="Bidder Messaging" />
 
-                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 bidder-messaging-page">
                             {/* Left Column: Recipient Selection */}
                             <div className="lg:col-span-1 space-y-6">
                                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -217,6 +217,38 @@ export default function BidderMessaging() {
 
                      <style dangerouslySetInnerHTML={{
                             __html: `
+                .bidder-messaging-page input,
+                .bidder-messaging-page select,
+                .bidder-messaging-page textarea {
+                    color: #1f2937 !important;
+                    background: #ffffff !important;
+                    border-color: #d1d5db !important;
+                }
+
+                .bidder-messaging-page input::placeholder,
+                .bidder-messaging-page textarea::placeholder {
+                    color: #6b7280 !important;
+                    opacity: 1 !important;
+                }
+
+                .bidder-messaging-page select {
+                    appearance: auto;
+                    -webkit-appearance: auto;
+                    -moz-appearance: auto;
+                }
+
+                .bidder-messaging-page select option {
+                    color: #1f2937 !important;
+                    background: #ffffff !important;
+                }
+
+                .bidder-messaging-page label,
+                .bidder-messaging-page .text-gray-800,
+                .bidder-messaging-page .text-gray-500,
+                .bidder-messaging-page .text-gray-400 {
+                    opacity: 1 !important;
+                }
+
                 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: #eee; border-radius: 10px; }
             `}} />

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from '@inertiajs/react';
 
-const ChatList = ({ onSelectConversation, selectedConversationId, currentUser }) => {
+const ChatList = ({ onSelectConversation, selectedConversationId, currentUser, isAdminView = false, participantId = null }) => {
     const [conversations, setConversations] = useState([]);
     const [filter, setFilter] = useState('All'); 
     const [activeDropdown, setActiveDropdown] = useState(null);
@@ -17,7 +17,7 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser })
             clearInterval(interval);
             window.removeEventListener('focus', handleFocus);
         };
-    }, []);
+    }, [isAdminView, participantId]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -31,7 +31,9 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser })
 
     const fetchConversations = async () => {
         try {
-            const response = await axios.get(route('chat.conversations.index'));
+            const response = await axios.get(route('chat.conversations.index'), {
+                params: isAdminView ? { admin_view: 1, participant_id: participantId || undefined } : {},
+            });
             setConversations(response.data);
         } catch (error) {
             console.error("Error fetching conversations:", error);
@@ -77,7 +79,7 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser })
     };
 
     const renderMessageStatus = (message) => {
-        if (!message || message.sender_id !== currentUser.id) return null;
+        if (isAdminView || !message || message.sender_id !== currentUser.id) return null;
 
         return message.is_read ? (
             <span className="flex items-center gap-1">
@@ -165,7 +167,9 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser })
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-baseline mb-0.5">
                                         <h4 className="text-sm font-bold text-gray-900 truncate">
-                                            {conv.other_user?.name || 'Unknown User'}
+                                            {isAdminView
+                                                ? `${conv.user_one?.name || 'Unknown'} -> ${conv.user_two?.name || 'Unknown'}`
+                                                : (conv.other_user?.name || 'Unknown User')}
                                         </h4>
                                         <span className="text-[10px] text-gray-500 flex-shrink-0 ml-2">
                                             {new Date(conv.updated_at).toLocaleDateString() === new Date().toLocaleDateString()
@@ -176,10 +180,10 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser })
 
                                     {/* Last Seen Status */}
                                     <div className="text-[10px] text-gray-400 mb-1">
-                                        {getLastSeen(conv.other_user?.last_active_at) === 'Online' ? (
+                                        {getLastSeen((isAdminView ? conv.user_two?.last_active_at : conv.other_user?.last_active_at)) === 'Online' ? (
                                             <span className="text-green-500 font-medium">Online</span>
                                         ) : (
-                                            <span>{getLastSeen(conv.other_user?.last_active_at)}</span>
+                                            <span>{getLastSeen((isAdminView ? conv.user_two?.last_active_at : conv.other_user?.last_active_at))}</span>
                                         )}
                                     </div>
 
@@ -206,7 +210,7 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser })
                                             )}
                                         </p>
                                         
-                                        <div className="relative dropdown-trigger">
+                                        {!isAdminView && <div className="relative dropdown-trigger">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === conv.id ? null : conv.id); }}
                                                 className="text-gray-300 hover:text-gray-600 p-1"
@@ -231,7 +235,7 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser })
                                                     </button>
                                                 </div>
                                             )}
-                                        </div>
+                                        </div>}
                                     </div>
                                 </div>
                             </div>

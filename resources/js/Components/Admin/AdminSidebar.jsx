@@ -31,6 +31,7 @@ const menuItems = [
        { name: 'Currencies', icon: 'fa-money-bill-wave', route: 'admin.currencies.index' },
        { name: 'Locations', icon: 'fa-location-dot', route: 'admin.locations.index' },
        { type: 'divider', label: 'Tools' },
+       { name: 'Chat', icon: 'fa-comments', route: 'admin.chat.index' },
        { name: 'SEO', icon: 'fa-magnifying-glass-chart', route: 'admin.seo.index', permission: 'seo-list' },
        { name: 'Bidder Messaging', icon: 'fa-message', route: 'admin.bidder-communication.index' },
        { name: 'CRM (Outreach)', icon: 'fa-people-arrows', route: 'admin.crm.index' },

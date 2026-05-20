@@ -323,6 +323,9 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/bidder-communication/bidders', [App\Http\Controllers\Admin\BidderCommunicationController::class, 'getBidders'])->name('bidder-communication.get-bidders');
     Route::get('/bidder-communication/search-users', [App\Http\Controllers\Admin\BidderCommunicationController::class, 'searchUsers'])->name('bidder-communication.search-users');
     Route::post('/bidder-communication/send', [App\Http\Controllers\Admin\BidderCommunicationController::class, 'send'])->name('bidder-communication.send');
+    Route::get('/chat', function () {
+        return Inertia::render('Admin/Chat/Index');
+    })->name('chat.index');
 
     // CRM & Secondary Tools
     Route::get('/crm', [App\Http\Controllers\Admin\CustomerOutreachController::class, 'index'])->name('crm.index');

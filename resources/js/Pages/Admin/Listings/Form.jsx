@@ -50,6 +50,7 @@ export default function Form({
               album: [],
               existing_album: initialAlbum,
               return_to: returnTo,
+              is_1_rupee: Boolean(listing?.is_1_rupee),
        });
 
        const [imagePreview, setImagePreview] = useState(listing?.image_url || '');
@@ -151,6 +152,19 @@ export default function Form({
                                                                ))}
                                                         </select>
                                                  </Field>
+                                          </div>
+
+                                          <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                                                 <label className="inline-flex items-center gap-3 cursor-pointer">
+                                                        <input
+                                                               type="checkbox"
+                                                               className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                                                               checked={Boolean(data.is_1_rupee)}
+                                                               onChange={(e) => setData('is_1_rupee', e.target.checked)}
+                                                        />
+                                                        <span className="text-sm font-semibold text-gray-800">Is 1 Rupee Listing</span>
+                                                 </label>
+                                                 {errors.is_1_rupee && <p className="text-xs text-rose-600 mt-2">{errors.is_1_rupee}</p>}
                                           </div>
 
                                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

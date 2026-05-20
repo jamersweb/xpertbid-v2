@@ -1,7 +1,8 @@
 import React from "react";
 
 const formatName = (name = "") => {
-       const formatted = name
+       const safeName = String(name ?? "").trim();
+       const formatted = safeName
               .split(" ")
               .filter(Boolean)
               .slice(0, 5)

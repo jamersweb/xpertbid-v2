@@ -22,6 +22,17 @@ use Intervention\Image\Encoders\WebpEncoder;
 
 class ChatController extends Controller
 {
+    protected function isAdminUser(): bool
+    {
+        $role = strtolower((string) (Auth::user()?->role ?? ''));
+        return in_array($role, ['admin', 'superadmin'], true);
+    }
+
+    protected function isAdminView(Request $request): bool
+    {
+        return $this->isAdminUser() && $request->boolean('admin_view');
+    }
+
     protected function storeOptimizedAttachment($file): array
     {
         $mimeType = $file->getMimeType() ?: '';
@@ -84,31 +95,48 @@ class ChatController extends Controller
         try {
             $this->touchPresence();
             $userId = Auth::id();
+            $adminView = $this->isAdminView($request);
 
-            $conversations = Conversation::with(['userOne', 'userTwo'])
-                ->where(function ($query) use ($userId) {
-                    $query->where('user_one_id', $userId)
-                        ->where('user_one_deleted', false);
-                })
-                ->orWhere(function ($query) use ($userId) {
-                    $query->where('user_two_id', $userId)
-                        ->where('user_two_deleted', false);
-                })
-                ->orderByDesc('updated_at')
-                ->get()
-                ->map(function ($conversation) use ($userId) {
-                    // Determine the other user
-                    $otherUser = $conversation->user_one_id == $userId ? $conversation->userTwo : $conversation->userOne;
-                    $conversation->other_user = $otherUser;
+            if ($adminView) {
+                $participantId = (int) $request->input('participant_id');
+                $query = Conversation::with(['userOne', 'userTwo'])->orderByDesc('updated_at');
 
-                    // Determine is_important
-                    $conversation->is_important = ($conversation->user_one_id == $userId)
-                        ? $conversation->user_one_important
-                        : $conversation->user_two_important;
+                if ($participantId > 0) {
+                    $query->where(function ($q) use ($participantId) {
+                        $q->where('user_one_id', $participantId)
+                            ->orWhere('user_two_id', $participantId);
+                    });
+                }
 
-                    $conversation->last_message = $conversation->messages()->latest()->first();
-                    return $conversation;
-                });
+                $conversations = $query->get()
+                    ->map(function ($conversation) {
+                        $conversation->other_user = $conversation->userOne;
+                        $conversation->is_important = false;
+                        $conversation->last_message = $conversation->messages()->latest()->first();
+                        return $conversation;
+                    });
+            } else {
+                $conversations = Conversation::with(['userOne', 'userTwo'])
+                    ->where(function ($query) use ($userId) {
+                        $query->where('user_one_id', $userId)
+                            ->where('user_one_deleted', false);
+                    })
+                    ->orWhere(function ($query) use ($userId) {
+                        $query->where('user_two_id', $userId)
+                            ->where('user_two_deleted', false);
+                    })
+                    ->orderByDesc('updated_at')
+                    ->get()
+                    ->map(function ($conversation) use ($userId) {
+                        $otherUser = $conversation->user_one_id == $userId ? $conversation->userTwo : $conversation->userOne;
+                        $conversation->other_user = $otherUser;
+                        $conversation->is_important = ($conversation->user_one_id == $userId)
+                            ? $conversation->user_one_important
+                            : $conversation->user_two_important;
+                        $conversation->last_message = $conversation->messages()->latest()->first();
+                        return $conversation;
+                    });
+            }
 
             return response()->json($conversations);
         } catch (\Throwable $e) {
@@ -117,32 +145,37 @@ class ChatController extends Controller
     }
 
     // Get messages for a specific conversation
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $this->touchPresence();
         $userId = Auth::id();
+        $adminView = $this->isAdminView($request);
         $conversation = Conversation::with(['messages.sender', 'product', 'userOne', 'userTwo'])->findOrFail($id);
 
-        if ($conversation->user_one_id != $userId && $conversation->user_two_id != $userId) {
+        if (!$adminView && $conversation->user_one_id != $userId && $conversation->user_two_id != $userId) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $conversation->messages()
-            ->where('sender_id', '!=', $userId)
-            ->where(function ($query) {
-                $query->whereNull('is_read')
-                    ->orWhere('is_read', false);
-            })
-            ->update(['is_read' => true]);
+        if (!$adminView) {
+            $conversation->messages()
+                ->where('sender_id', '!=', $userId)
+                ->where(function ($query) {
+                    $query->whereNull('is_read')
+                        ->orWhere('is_read', false);
+                })
+                ->update(['is_read' => true]);
+        }
 
         $conversation->load(['messages.sender']);
 
-        $otherUser = $conversation->user_one_id == $userId ? $conversation->userTwo : $conversation->userOne;
+        $otherUser = $adminView
+            ? $conversation->userOne
+            : ($conversation->user_one_id == $userId ? $conversation->userTwo : $conversation->userOne);
         $conversation->other_user = $otherUser;
 
-        $conversation->is_important = ($conversation->user_one_id == $userId)
-            ? $conversation->user_one_important
-            : $conversation->user_two_important;
+        $conversation->is_important = $adminView
+            ? false
+            : (($conversation->user_one_id == $userId) ? $conversation->user_one_important : $conversation->user_two_important);
 
         return response()->json($conversation);
     }
@@ -190,6 +223,7 @@ class ChatController extends Controller
     public function store(Request $request)
     {
         $this->touchPresence();
+        $adminView = $this->isAdminView($request);
         $request->validate([
             'conversation_id' => 'required|exists:conversations,id',
             'body' => 'nullable|string',
@@ -202,7 +236,7 @@ class ChatController extends Controller
 
         $conversation = Conversation::findOrFail($request->conversation_id);
 
-        if ($conversation->user_one_id != Auth::id() && $conversation->user_two_id != Auth::id()) {
+        if (!$adminView && $conversation->user_one_id != Auth::id() && $conversation->user_two_id != Auth::id()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Link } from '@inertiajs/react';
 import Price from '../../../Components/Price';
 
-const ChatWindow = ({ conversationId, currentUser, onBack }) => {
+const ChatWindow = ({ conversationId, currentUser, onBack, isAdminView = false }) => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [attachment, setAttachment] = useState(null);
@@ -17,11 +17,15 @@ const ChatWindow = ({ conversationId, currentUser, onBack }) => {
     const fetchData = async () => {
         if (conversationId) {
             try {
-                const response = await axios.get(route('chat.conversations.show', conversationId));
+                const response = await axios.get(route('chat.conversations.show', conversationId), {
+                    params: isAdminView ? { admin_view: 1 } : {},
+                });
                 const data = response.data;
                 setConversation(data);
                 setMessages(data.messages || []);
-                const other = data.user_one_id === currentUser.id ? data.user_two : data.user_one;
+                const other = isAdminView
+                    ? data.user_two
+                    : (data.user_one_id === currentUser.id ? data.user_two : data.user_one);
                 setOtherUser(other);
                 setProduct(data.product);
             } catch (error) {
@@ -85,6 +89,9 @@ const ChatWindow = ({ conversationId, currentUser, onBack }) => {
         if (file) formData.append('attachment', file);
 
         try {
+            if (isAdminView) {
+                formData.append('admin_view', '1');
+            }
             const response = await axios.post(route('chat.messages.store'), formData);
             setMessages(prev => [...prev, response.data]);
             setNewMessage('');
@@ -197,7 +204,7 @@ const ChatWindow = ({ conversationId, currentUser, onBack }) => {
                         </div>
                     </div>
 
-                    <div className="relative">
+                    {!isAdminView && <div className="relative">
                         <button
                             onClick={() => setShowOptions(!showOptions)}
                             className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
@@ -222,7 +229,7 @@ const ChatWindow = ({ conversationId, currentUser, onBack }) => {
                                 </button>
                             </div>
                         )}
-                    </div>
+                    </div>}
                 </div>
 
                 {/* Product Bar */}

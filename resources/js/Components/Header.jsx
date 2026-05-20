@@ -223,7 +223,7 @@ export default function Header() {
                                                                <Link href={route('about')} className="nav-link" onClick={closeMobileMenu}>{t('About')}</Link>
                                                         </li>
                                                         <li className="nav-item">
-                                                               <Link href={route('contact')} className="nav-link" onClick={closeMobileMenu}>{t('Contact Us')}</Link>
+                                                               <Link href={route('auctions.one_rupee')} className="nav-link" onClick={closeMobileMenu}>{t('1 Rupee Auctions')}</Link>
                                                         </li>
                                                  </ul>
 
