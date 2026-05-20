@@ -30,6 +30,10 @@ class ListingController extends Controller
 
     protected function sendListingSubmittedEmails(Listing $listing): void
     {
+        Log::error('LISTING_MAIL_DEBUG: entered sendListingSubmittedEmails', [
+            'listing_id' => $listing->id,
+        ]);
+
         $listing->loadMissing('user');
         $seller = $listing->user;
         $adminEmail = $this->adminEmail();
@@ -45,7 +49,7 @@ class ListingController extends Controller
         $sellerEmail = (string) ($seller->email ?? '');
         $hasValidSellerEmail = filter_var($sellerEmail, FILTER_VALIDATE_EMAIL) !== false;
 
-        Log::info('Listing submission email flow triggered', [
+        Log::error('LISTING_MAIL_DEBUG: flow triggered', [
             'listing_id' => $listing->id,
             'user_id' => $seller->id,
             'seller_email' => $sellerEmail ?: null,
@@ -56,6 +60,10 @@ class ListingController extends Controller
         if ($hasValidSellerEmail) {
             try {
                 Mail::to($sellerEmail)->send(new ListingSubmittedSellerMail($listing, $sellerName));
+                Log::error('LISTING_MAIL_DEBUG: seller mail send attempted', [
+                    'listing_id' => $listing->id,
+                    'seller_email' => $sellerEmail,
+                ]);
             } catch (\Throwable $e) {
                 Log::warning('Failed to send seller listing submitted email', [
                     'listing_id' => $listing->id,
@@ -86,6 +94,10 @@ class ListingController extends Controller
                 : ('No valid email (phone: ' . ($seller->phone ?? 'N/A') . ')');
 
             Mail::to($adminEmail)->send(new ListingSubmittedAdminMail($listing, $sellerName, $adminSellerEmail));
+            Log::error('LISTING_MAIL_DEBUG: admin mail send attempted', [
+                'listing_id' => $listing->id,
+                'admin_email' => $adminEmail,
+            ]);
         } catch (\Throwable $e) {
             Log::warning('Failed to send admin listing submitted email', [
                 'listing_id' => $listing->id,
@@ -474,8 +486,6 @@ class ListingController extends Controller
             'listing_data' => $listingData,
             'category_features' => $categoryFeatures,
         ]);
-
-        $this->sendListingSubmittedEmails($listing);
 
         $this->sendListingSubmittedEmails($listing);
 
