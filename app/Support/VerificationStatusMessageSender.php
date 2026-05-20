@@ -28,6 +28,36 @@ class VerificationStatusMessageSender
         self::sendToUser($user, self::declinedMessage($user->name, 'Corporate', $reason));
     }
 
+    public static function sendListingApproved(User $user, string $listingTitle): void
+    {
+        $firstName = trim((string) explode(' ', (string) ($user->name ?: 'there'))[0]);
+        $title = trim($listingTitle) !== '' ? $listingTitle : 'your listing';
+
+        $message = "Hi {$firstName},\n\n"
+            . "Great news! Your listing has been approved and is now live on XpertBid.\n\n"
+            . "Listing: {$title}\n\n"
+            . "Manage your listings here:\n"
+            . "https://xpertbid.com/my-listings";
+
+        self::sendToUser($user, $message);
+    }
+
+    public static function sendListingDeclined(User $user, string $listingTitle, string $reason): void
+    {
+        $firstName = trim((string) explode(' ', (string) ($user->name ?: 'there'))[0]);
+        $title = trim($listingTitle) !== '' ? $listingTitle : 'your listing';
+        $cleanReason = trim($reason) !== '' ? trim($reason) : 'Additional details were required.';
+
+        $message = "Hi {$firstName},\n\n"
+            . "Your listing was declined.\n"
+            . "Listing: {$title}\n"
+            . "Reason: {$cleanReason}\n\n"
+            . "Please review and update your listing here:\n"
+            . "https://xpertbid.com/my-listings";
+
+        self::sendToUser($user, $message);
+    }
+
     protected static function approvedMessage(?string $name, string $type): string
     {
         $firstName = trim((string) explode(' ', (string) ($name ?: 'there'))[0]);
@@ -75,4 +105,3 @@ class VerificationStatusMessageSender
         }
     }
 }
-

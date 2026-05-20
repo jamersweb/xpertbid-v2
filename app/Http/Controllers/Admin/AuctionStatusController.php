@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Mail\AuctionStatusUpdated;
 use Illuminate\Http\Request;
 use App\Support\LoggedMail as Mail;
+use App\Support\VerificationStatusMessageSender;
 use Inertia\Inertia;
 
 class AuctionStatusController extends Controller
@@ -30,7 +31,7 @@ class AuctionStatusController extends Controller
 
     public function accept($id)
     {
-        $auction = Listing::with('pendingEdit')->findOrFail($id);
+        $auction = Listing::with(['pendingEdit', 'user'])->findOrFail($id);
 
         if ($auction->pendingEdit) {
             $payload = $auction->pendingEdit->data ?? [];
@@ -51,11 +52,19 @@ class AuctionStatusController extends Controller
 
             $auction->pendingEdit->delete();
 
+            if ($auction->user) {
+                VerificationStatusMessageSender::sendListingApproved($auction->user, (string) $auction->title);
+            }
+
             return redirect()->back()->with('success', 'Pending edits approved and merged into the live listing.');
         }
 
         $auction->status = 'active';
         $auction->save();
+
+        if ($auction->user) {
+            VerificationStatusMessageSender::sendListingApproved($auction->user, (string) $auction->title);
+        }
 
         // Optionally send email
         // Mail::to($auction->user->email)->send(new AuctionStatusUpdated($auction, 'accepted'));
@@ -65,7 +74,7 @@ class AuctionStatusController extends Controller
 
     public function decline(Request $request, $id)
     {
-        $auction = Listing::with('pendingEdit')->findOrFail($id);
+        $auction = Listing::with(['pendingEdit', 'user'])->findOrFail($id);
 
         if ($auction->pendingEdit && $auction->status === 'active') {
             $auction->pendingEdit->delete();
@@ -76,6 +85,14 @@ class AuctionStatusController extends Controller
         $auction->status = 'declined';
         $auction->decline_reason = $request->reason;
         $auction->save();
+
+        if ($auction->user) {
+            VerificationStatusMessageSender::sendListingDeclined(
+                $auction->user,
+                (string) $auction->title,
+                (string) $request->reason
+            );
+        }
 
         // Optionally send email
         // Mail::to($auction->user->email)->send(new AuctionStatusUpdated($auction, 'declined', $request->reason));
