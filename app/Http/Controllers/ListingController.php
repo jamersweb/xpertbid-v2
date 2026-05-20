@@ -32,31 +32,60 @@ class ListingController extends Controller
     {
         $listing->loadMissing('user');
         $seller = $listing->user;
+        $adminEmail = $this->adminEmail();
 
-        if (!$seller || empty($seller->email)) {
+        if (!$seller) {
+            Log::warning('Listing submitted email skipped: seller relation missing', [
+                'listing_id' => $listing->id,
+            ]);
             return;
         }
 
         $sellerName = (string) ($seller->name ?: 'Seller');
-        $sellerEmail = (string) $seller->email;
+        $sellerEmail = (string) ($seller->email ?? '');
+        $hasValidSellerEmail = filter_var($sellerEmail, FILTER_VALIDATE_EMAIL) !== false;
 
-        try {
-            Mail::to($sellerEmail)->send(new ListingSubmittedSellerMail($listing, $sellerName));
-        } catch (\Throwable $e) {
-            Log::warning('Failed to send seller listing submitted email', [
+        Log::info('Listing submission email flow triggered', [
+            'listing_id' => $listing->id,
+            'user_id' => $seller->id,
+            'seller_email' => $sellerEmail ?: null,
+            'has_valid_seller_email' => $hasValidSellerEmail,
+            'admin_email' => $adminEmail,
+        ]);
+
+        if ($hasValidSellerEmail) {
+            try {
+                Mail::to($sellerEmail)->send(new ListingSubmittedSellerMail($listing, $sellerName));
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send seller listing submitted email', [
+                    'listing_id' => $listing->id,
+                    'user_id' => $seller->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        } else {
+            Log::warning('Seller listing email skipped: missing/invalid seller email', [
                 'listing_id' => $listing->id,
                 'user_id' => $seller->id,
-                'error' => $e->getMessage(),
+                'seller_email' => $sellerEmail ?: null,
+                'seller_phone' => $seller->phone ?? null,
             ]);
         }
 
-        $adminEmail = $this->adminEmail();
         if (!$adminEmail) {
+            Log::warning('Admin listing email skipped: admin email is not configured', [
+                'listing_id' => $listing->id,
+                'user_id' => $seller->id,
+            ]);
             return;
         }
 
         try {
-            Mail::to($adminEmail)->send(new ListingSubmittedAdminMail($listing, $sellerName, $sellerEmail));
+            $adminSellerEmail = $hasValidSellerEmail
+                ? $sellerEmail
+                : ('No valid email (phone: ' . ($seller->phone ?? 'N/A') . ')');
+
+            Mail::to($adminEmail)->send(new ListingSubmittedAdminMail($listing, $sellerName, $adminSellerEmail));
         } catch (\Throwable $e) {
             Log::warning('Failed to send admin listing submitted email', [
                 'listing_id' => $listing->id,
