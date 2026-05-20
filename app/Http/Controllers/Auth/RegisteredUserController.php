@@ -15,6 +15,7 @@ use App\Mail\AdminNewUserRegistration;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use App\Support\SignupWelcomeMessageSender;
 
 class RegisteredUserController extends Controller
 {
@@ -77,6 +78,8 @@ class RegisteredUserController extends Controller
             'role' => 'User',
             'signup_source' => $this->resolveSignupSource($request),
         ]);
+
+        SignupWelcomeMessageSender::send($user);
 
         $this->sendEmailVerificationCode($user);
 

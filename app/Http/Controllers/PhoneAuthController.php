@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use App\Support\LoggedMail as Mail;
 use Illuminate\Support\Str;
+use App\Support\SignupWelcomeMessageSender;
 
 class PhoneAuthController extends Controller
 {
@@ -116,6 +117,8 @@ class PhoneAuthController extends Controller
                         'is_phone_verified' => true,
                         'phone_verified_at' => now(),
                     ]);
+
+                    SignupWelcomeMessageSender::send($user);
 
                     if (!empty($user->email)) {
                         try {

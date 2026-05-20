@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use App\Support\LoggedMail as Mail;
 use Illuminate\Support\Str;
+use App\Support\SignupWelcomeMessageSender;
 use Laravel\Socialite\Facades\Socialite;
 
 class SocialAuthController extends Controller
@@ -64,6 +65,8 @@ class SocialAuthController extends Controller
                     'signup_source' => $this->resolveSignupSource(request()),
                     'email_verified_at' => now(), // Auto-verify email
                 ]);
+
+                SignupWelcomeMessageSender::send($user);
 
                 try {
                     Mail::to($user->email)->send(new UserSignupConfirmation($user));
@@ -129,6 +132,8 @@ class SocialAuthController extends Controller
                     'signup_source' => $this->resolveSignupSource(request()),
                     'email_verified_at' => now(),
                 ]);
+
+                SignupWelcomeMessageSender::send($user);
 
                 if (!empty($user->email)) {
                     try {
