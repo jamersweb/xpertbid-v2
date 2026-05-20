@@ -9,6 +9,7 @@ use App\Models\CorporateVerification;
 use App\Models\Notification as NewNotification;
 use App\Mail\CorporateVerificationAcceptedMail;
 use App\Mail\CorporateVerificationDeclinedMail;
+use App\Support\VerificationStatusMessageSender;
 use Inertia\Inertia;
 
 class CorporateVerificationController extends Controller
@@ -54,6 +55,10 @@ class CorporateVerificationController extends Controller
             'type'    => 'wallet',
         ]);
 
+        if ($cv->user) {
+            VerificationStatusMessageSender::sendCorporateApproved($cv->user);
+        }
+
         return redirect()->back()->with('success', 'Corporate verification accepted!');
     }
 
@@ -75,6 +80,10 @@ class CorporateVerificationController extends Controller
             'message' => "Your corporate verification was declined: {$request->decline_reason}",
             'type'    => 'bid',
         ]);
+
+        if ($cv->user) {
+            VerificationStatusMessageSender::sendCorporateDeclined($cv->user, (string) $request->decline_reason);
+        }
 
         return redirect()->back()->with('success', 'Corporate verification declined!');
     }

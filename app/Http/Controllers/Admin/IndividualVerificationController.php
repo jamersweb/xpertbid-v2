@@ -10,6 +10,7 @@ use App\Models\Notification as NewNotification;
 use App\Mail\VerificationAcceptedMail;
 use App\Mail\VerificationDeclinedMail;
 use App\Mail\IndividualVerificationStatusUpdated;
+use App\Support\VerificationStatusMessageSender;
 use Inertia\Inertia;
 
 class IndividualVerificationController extends Controller
@@ -67,6 +68,10 @@ class IndividualVerificationController extends Controller
             'read_at'   => null,
         ]);
 
+        if ($verification->user) {
+            VerificationStatusMessageSender::sendIndividualApproved($verification->user);
+        }
+
         return redirect()->back()->with('success', 'Verification accepted and user notified!');
     }
 
@@ -95,6 +100,10 @@ class IndividualVerificationController extends Controller
             'type'      => 'wallet',
             'read_at'   => null,
         ]);
+
+        if ($verification->user) {
+            VerificationStatusMessageSender::sendIndividualDeclined($verification->user, (string) $verification->decline_reason);
+        }
 
         return redirect()->back()->with('success', 'Verification declined and user notified!');
     }
