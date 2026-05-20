@@ -16,9 +16,56 @@ use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\Encoders\WebpEncoder;
+use App\Support\LoggedMail as Mail;
+use Illuminate\Support\Facades\Log;
+use App\Mail\ListingSubmittedSellerMail;
+use App\Mail\ListingSubmittedAdminMail;
 
 class ListingController extends Controller
 {
+    protected function adminEmail(): ?string
+    {
+        return env('ADMIN_EMAIL') ?: config('mail.from.address');
+    }
+
+    protected function sendListingSubmittedEmails(Listing $listing): void
+    {
+        $listing->loadMissing('user');
+        $seller = $listing->user;
+
+        if (!$seller || empty($seller->email)) {
+            return;
+        }
+
+        $sellerName = (string) ($seller->name ?: 'Seller');
+        $sellerEmail = (string) $seller->email;
+
+        try {
+            Mail::to($sellerEmail)->send(new ListingSubmittedSellerMail($listing, $sellerName));
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send seller listing submitted email', [
+                'listing_id' => $listing->id,
+                'user_id' => $seller->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        $adminEmail = $this->adminEmail();
+        if (!$adminEmail) {
+            return;
+        }
+
+        try {
+            Mail::to($adminEmail)->send(new ListingSubmittedAdminMail($listing, $sellerName, $sellerEmail));
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send admin listing submitted email', [
+                'listing_id' => $listing->id,
+                'user_id' => $seller->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
     protected function normalizeLocationName(?string $value): ?string
     {
         if (!$value) {
@@ -398,6 +445,8 @@ class ListingController extends Controller
             'listing_data' => $listingData,
             'category_features' => $categoryFeatures,
         ]);
+
+        $this->sendListingSubmittedEmails($listing);
 
         $draft->delete();
 
@@ -802,6 +851,7 @@ class ListingController extends Controller
         }
 
         $listing = $this->publishDraft($this->saveDraft($request, $draft));
+        $this->sendListingSubmittedEmails($listing);
 
         if ($request->wantsJson() || $request->expectsJson()) {
             return response()->json([
