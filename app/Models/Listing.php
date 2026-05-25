@@ -19,6 +19,7 @@ class Listing extends Model
         'category_id',
         'sub_category_id',
         'child_category_id',
+        'brand_id',
         'country_id',
         'state_id',
         'city_id',
@@ -92,6 +93,11 @@ class Listing extends Model
     public function childCategory()
     {
         return $this->belongsTo(AuctionCategory::class, 'child_category_id');
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class, 'brand_id');
     }
 
     public function bids()

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import ReactQuill from 'react-quill';
@@ -17,10 +17,98 @@ function Field({ label, error, children }) {
        );
 }
 
+function SearchableSelect({
+       value,
+       options = [],
+       placeholder = 'Search...',
+       onChange,
+       disabled = false,
+}) {
+       const wrapperRef = useRef(null);
+       const [open, setOpen] = useState(false);
+       const [query, setQuery] = useState('');
+
+       const selectedOption = useMemo(
+              () => options.find((option) => String(option.value) === String(value)),
+              [options, value]
+       );
+
+       useEffect(() => {
+              setQuery(selectedOption?.label || '');
+       }, [selectedOption]);
+
+       useEffect(() => {
+              const onClickOutside = (event) => {
+                     if (!wrapperRef.current?.contains(event.target)) {
+                            setOpen(false);
+                            setQuery(selectedOption?.label || '');
+                     }
+              };
+
+              document.addEventListener('mousedown', onClickOutside);
+              return () => document.removeEventListener('mousedown', onClickOutside);
+       }, [selectedOption]);
+
+       const filteredOptions = useMemo(() => {
+              const keyword = query.trim().toLowerCase();
+              if (!keyword) return options;
+              return options.filter((option) => option.label.toLowerCase().includes(keyword));
+       }, [options, query]);
+
+       return (
+              <div ref={wrapperRef} className="relative">
+                     <input
+                            type="text"
+                            value={query}
+                            onChange={(e) => {
+                                   setQuery(e.target.value);
+                                   setOpen(true);
+                            }}
+                            onFocus={() => setOpen(true)}
+                            placeholder={placeholder}
+                            disabled={disabled}
+                            className={`${inputClass} pr-10 ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                     />
+                     <button
+                            type="button"
+                            tabIndex={-1}
+                            onClick={() => !disabled && setOpen((prev) => !prev)}
+                            className="absolute inset-y-0 right-3 flex items-center text-gray-400"
+                     >
+                            <i className={`fa-solid ${open ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                     </button>
+
+                     {open && !disabled && (
+                            <div className="absolute z-30 mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-lg max-h-60 overflow-auto">
+                                   {filteredOptions.length > 0 ? (
+                                          filteredOptions.map((option) => (
+                                                 <button
+                                                        key={option.value}
+                                                        type="button"
+                                                        onClick={() => {
+                                                               onChange(option.value);
+                                                               setQuery(option.label);
+                                                               setOpen(false);
+                                                        }}
+                                                        className="w-full text-left px-4 py-2.5 text-sm text-gray-800 hover:bg-gray-50"
+                                                 >
+                                                        {option.label}
+                                                 </button>
+                                          ))
+                                   ) : (
+                                          <div className="px-4 py-3 text-sm text-gray-400">No results found</div>
+                                   )}
+                            </div>
+                     )}
+              </div>
+       );
+}
+
 export default function Form({
        listing = null,
        users = [],
        categories = [],
+       brands = [],
        statuses = [],
        defaultListingType = 'normal',
        backRouteName = 'admin.listings.index',
@@ -31,6 +119,14 @@ export default function Form({
        const rootCategories = categories.filter((item) => !item.parent_id && !item.sub_category_id);
        const subCategories = categories.filter((item) => item.parent_id && !item.sub_category_id);
        const childCategories = categories.filter((item) => item.sub_category_id);
+       const sellerOptions = useMemo(
+              () => users.map((user) => ({ value: user.id, label: `${user.name} (${user.email})` })),
+              [users]
+       );
+       const categoryOptions = useMemo(
+              () => rootCategories.map((category) => ({ value: category.id, label: category.name })),
+              [rootCategories]
+       );
 
        const { data, setData, processing, errors } = useForm({
               user_id: listing?.user_id || '',
@@ -41,6 +137,7 @@ export default function Form({
               category_id: listing?.category_id || '',
               sub_category_id: listing?.sub_category_id || '',
               child_category_id: listing?.child_category_id || '',
+              brand_id: listing?.brand_id || '',
               price: listing?.listing_data?.price ?? listing?.listing_data?.start_price ?? '',
               reserve_price: listing?.listing_data?.reserve_price ?? '',
               start_date: listing?.listing_data?.start_date ?? '',
@@ -110,12 +207,12 @@ export default function Form({
                                           <div className={`grid grid-cols-1 ${isLiveAuction ? '' : 'md:grid-cols-2'} gap-4`}>
                                                  {!isLiveAuction && (
                                                         <Field label="Seller" error={errors.user_id}>
-                                                               <select className={inputClass} value={data.user_id} onChange={(e) => setData('user_id', e.target.value)}>
-                                                                      <option value="">Select seller</option>
-                                                                      {users.map((user) => (
-                                                                             <option key={user.id} value={user.id}>{user.name} ({user.email})</option>
-                                                                      ))}
-                                                               </select>
+                                                               <SearchableSelect
+                                                                      value={data.user_id}
+                                                                      options={sellerOptions}
+                                                                      placeholder="Search seller..."
+                                                                      onChange={(selectedValue) => setData('user_id', selectedValue)}
+                                                               />
                                                         </Field>
                                                  )}
                                                  <Field label="Listing Type" error={errors.listing_type}>
@@ -137,20 +234,16 @@ export default function Form({
                                                         </select>
                                                  </Field>
                                                  <Field label="Category" error={errors.category_id}>
-                                                        <select
-                                                               className={inputClass}
+                                                        <SearchableSelect
                                                                value={data.category_id}
-                                                               onChange={(e) => {
-                                                                      setData('category_id', e.target.value);
+                                                               options={categoryOptions}
+                                                               placeholder="Search category..."
+                                                               onChange={(selectedValue) => {
+                                                                      setData('category_id', selectedValue);
                                                                       setData('sub_category_id', '');
                                                                       setData('child_category_id', '');
                                                                }}
-                                                        >
-                                                               <option value="">Select category</option>
-                                                               {rootCategories.map((category) => (
-                                                                      <option key={category.id} value={category.id}>{category.name}</option>
-                                                               ))}
-                                                        </select>
+                                                        />
                                                  </Field>
                                           </div>
 
@@ -188,6 +281,17 @@ export default function Form({
                                                                <option value="">Select child category</option>
                                                                {availableChildCategories.map((category) => (
                                                                       <option key={category.id} value={category.id}>{category.name}</option>
+                                                               ))}
+                                                        </select>
+                                                 </Field>
+                                          </div>
+
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                 <Field label="Brand" error={errors.brand_id}>
+                                                        <select className={inputClass} value={data.brand_id} onChange={(e) => setData('brand_id', e.target.value)}>
+                                                               <option value="">Select brand (optional)</option>
+                                                               {brands.map((brand) => (
+                                                                      <option key={brand.id} value={brand.id}>{brand.name}</option>
                                                                ))}
                                                         </select>
                                                  </Field>

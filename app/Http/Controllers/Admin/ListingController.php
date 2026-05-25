@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Support\YoutubeVideoId;
 use App\Models\AuctionCategory;
 use App\Models\Bid;
+use App\Models\Brand;
 use App\Models\City;
 use App\Models\Listing;
 use App\Models\LiveAuctionSession;
@@ -101,6 +102,10 @@ class ListingController extends Controller
             'users' => User::query()->select('id', 'name', 'email')->orderBy('name')->get(),
             'categories' => AuctionCategory::query()
                 ->select('id', 'name', 'parent_id', 'sub_category_id')
+                ->orderBy('name')
+                ->get(),
+            'brands' => Brand::query()
+                ->select('id', 'name')
                 ->orderBy('name')
                 ->get(),
             'statuses' => ['inactive', 'active', 'pending', 'declined', 'resubmit', 'closed', 'ended', 'awarded'],
@@ -617,6 +622,7 @@ class ListingController extends Controller
             'category_id' => 'required|exists:auction_categories,id',
             'sub_category_id' => 'nullable|exists:auction_categories,id',
             'child_category_id' => 'nullable|exists:auction_categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
             'price' => 'nullable|numeric|min:0',
             'reserve_price' => 'nullable|numeric|min:0',
             'start_date' => 'nullable|date',
@@ -663,6 +669,7 @@ class ListingController extends Controller
             'category_id' => $categoryId,
             'sub_category_id' => $request->sub_category_id,
             'child_category_id' => $request->child_category_id,
+            'brand_id' => $request->brand_id,
             'listing_type' => $request->listing_type,
             'title' => $request->title,
             'description' => $request->description,
@@ -694,6 +701,7 @@ class ListingController extends Controller
             'category_id' => 'required|exists:auction_categories,id',
             'sub_category_id' => 'nullable|exists:auction_categories,id',
             'child_category_id' => 'nullable|exists:auction_categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
             'price' => 'nullable|numeric|min:0',
             'reserve_price' => 'nullable|numeric|min:0',
             'start_date' => 'nullable|date',
@@ -771,6 +779,7 @@ class ListingController extends Controller
             'category_id' => $categoryId,
             'sub_category_id' => $request->sub_category_id,
             'child_category_id' => $request->child_category_id,
+            'brand_id' => $request->brand_id,
             'listing_type' => $request->listing_type,
             'title' => $request->title,
             'description' => $request->description,
@@ -806,6 +815,7 @@ class ListingController extends Controller
                 'category_id' => $payload['category_id'] ?? $listing->category_id,
                 'sub_category_id' => $payload['sub_category_id'] ?? $listing->sub_category_id,
                 'child_category_id' => $payload['child_category_id'] ?? $listing->child_category_id,
+                'brand_id' => $payload['brand_id'] ?? $listing->brand_id,
                 'country_id' => $payload['country_id'] ?? $listing->country_id,
                 'state_id' => $payload['state_id'] ?? $listing->state_id,
                 'city_id' => $payload['city_id'] ?? $listing->city_id,

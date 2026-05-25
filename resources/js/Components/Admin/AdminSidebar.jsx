@@ -20,6 +20,7 @@ const menuItems = [
        { name: 'Users', icon: 'fa-users', route: 'admin.users.index', permission: 'user-list' },
        // { name: 'Payments', icon: 'fa-money-bill-transfer', route: 'admin.payment-requests.index' },
        { name: 'Categories', icon: 'fa-layer-group', route: 'admin.categories.index', permission: 'category-list' },
+       { name: 'Brands', icon: 'fa-tags', route: 'admin.brands.index', permission: 'category-list' },
        { name: 'Dynamic Fields', icon: 'fa-wand-magic-sparkles', route: 'admin.dynamic-fields.index', permission: 'category-list' },
        { name: 'Blogs', icon: 'fa-newspaper', route: 'admin.blogs.index', permission: 'blog-list' },
        { type: 'divider', label: 'Site Content' },

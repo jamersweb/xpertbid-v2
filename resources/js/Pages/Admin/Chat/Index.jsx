@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Head, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import ChatList from '@/Pages/Chat/Partials/ChatList';
 import ChatWindow from '@/Pages/Chat/Partials/ChatWindow';
-import axios from 'axios';
 
 export default function AdminChatIndex() {
     const { auth } = usePage().props;
@@ -12,73 +11,12 @@ export default function AdminChatIndex() {
     const [selectedConversationId, setSelectedConversationId] = useState(
         initialConversationId ? parseInt(initialConversationId, 10) : null
     );
-    const [searchTerm, setSearchTerm] = useState('');
-    const [searchResults, setSearchResults] = useState([]);
-    const [selectedParticipantId, setSelectedParticipantId] = useState(null);
-
-    useEffect(() => {
-        const loadUsers = async () => {
-            if (searchTerm.trim().length < 2) {
-                setSearchResults([]);
-                return;
-            }
-            try {
-                const response = await axios.get(route('admin.bidder-communication.search-users', { q: searchTerm }));
-                setSearchResults(response.data || []);
-            } catch (error) {
-                setSearchResults([]);
-            }
-        };
-
-        const timer = setTimeout(loadUsers, 250);
-        return () => clearTimeout(timer);
-    }, [searchTerm]);
-
     return (
         <AdminLayout title="Chat">
             <Head title="Admin Chat" />
             <div className="bg-gray-50 min-h-[calc(100vh-110px)]">
                 <div className="mx-auto w-full">
                     <h1 className="text-2xl font-bold mb-6 text-gray-800">Chat Inbox</h1>
-                    <div className="mb-4 bg-white rounded-xl border border-gray-200 p-3">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
-                            <input
-                                type="text"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Search user (name, email, phone)"
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                            />
-                            <select
-                                value={selectedParticipantId || ''}
-                                onChange={(e) => {
-                                    const next = e.target.value ? Number(e.target.value) : null;
-                                    setSelectedParticipantId(next);
-                                    setSelectedConversationId(null);
-                                }}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                            >
-                                <option value="">All Users Conversations</option>
-                                {searchResults.map((user) => (
-                                    <option key={user.id} value={user.id}>
-                                        {user.name} ({user.email || user.phone || `ID ${user.id}`})
-                                    </option>
-                                ))}
-                            </select>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setSelectedParticipantId(null);
-                                    setSearchTerm('');
-                                    setSearchResults([]);
-                                    setSelectedConversationId(null);
-                                }}
-                                className="w-full md:w-auto border border-gray-300 rounded-lg px-3 py-2 text-sm font-semibold"
-                            >
-                                Reset Filter
-                            </button>
-                        </div>
-                    </div>
                     <div className="flex flex-col xl:flex-row gap-6 h-[calc(100vh-220px)] min-h-[620px]">
                         <div className={`w-full xl:w-[360px] ${selectedConversationId ? 'hidden xl:block' : 'block'}`}>
                             <ChatList
@@ -86,7 +24,6 @@ export default function AdminChatIndex() {
                                 selectedConversationId={selectedConversationId}
                                 currentUser={auth.user}
                                 isAdminView
-                                participantId={selectedParticipantId}
                             />
                         </div>
 

@@ -26,6 +26,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\LiveAuctionDemoController;
 use App\Http\Controllers\ListingLiveChatController;
+use App\Http\Controllers\BrandPageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,6 +60,7 @@ Route::get('/marketplace/{slug?}', [MarketplaceController::class, 'index'])->nam
 Route::get('/search-marketplace', [MarketplaceController::class, 'index'])->name('marketplace.search');
 Route::get('/products/filter', [MarketplaceController::class, 'mobileIndex'])->name('marketplace.mobile_filter');
 Route::get('/categories', [AuctionController::class, 'categoriesPage'])->name('categories.page');
+Route::get('/properties-brand/{brand:slug}', [BrandPageController::class, 'propertiesBrand'])->name('properties.brand');
 
 // Static/Info Pages
 Route::get('/about', [App\Http\Controllers\StaticPageController::class, 'about'])->name('about');
@@ -298,6 +300,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     // Unified Category Management (Refactored to legacy system)
     Route::resource('categories', App\Http\Controllers\Admin\AuctionCategoryController::class)->names('categories');
+    Route::resource('brands', App\Http\Controllers\Admin\BrandController::class)->names('brands')->except(['create', 'edit']);
     Route::resource('dynamic-fields', App\Http\Controllers\Admin\DynamicFieldController::class)->names('dynamic-fields');
 
     // Content Management
