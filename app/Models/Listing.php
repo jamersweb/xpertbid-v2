@@ -32,6 +32,7 @@ class Listing extends Model
         'status',
         'featured_name',
         'is_1_rupee',
+        'is_autobidder_on',
         'listing_source',
         'youtube_video_id',
         'views',
@@ -45,7 +46,8 @@ class Listing extends Model
         'category_features' => 'array',
         'album' => 'array',
         'listing_type' => 'string',
-        'is_1_rupee' => 'boolean'
+        'is_1_rupee' => 'boolean',
+        'is_autobidder_on' => 'boolean',
     ];
 
     protected $appends = [
