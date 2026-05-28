@@ -619,6 +619,7 @@ class ListingController extends Controller
             'listing_type' => 'required|in:normal,auction,business,live_auction',
             'status' => 'required|string',
             'is_1_rupee' => 'nullable|boolean',
+            'is_autobidder_on' => 'nullable|boolean',
             'category_id' => 'required|exists:auction_categories,id',
             'sub_category_id' => 'nullable|exists:auction_categories,id',
             'child_category_id' => 'nullable|exists:auction_categories,id',
@@ -675,6 +676,9 @@ class ListingController extends Controller
             'description' => $request->description,
             'status' => $request->status,
             'is_1_rupee' => $request->boolean('is_1_rupee'),
+            'is_autobidder_on' => $request->listing_type === 'auction'
+                ? $request->boolean('is_autobidder_on')
+                : false,
             'image' => $imagePath,
             'album' => $albumPaths,
             'listing_data' => $listingData,
@@ -698,6 +702,7 @@ class ListingController extends Controller
             'listing_type' => 'required|in:normal,auction,business,live_auction',
             'status' => 'required|string',
             'is_1_rupee' => 'nullable|boolean',
+            'is_autobidder_on' => 'nullable|boolean',
             'category_id' => 'required|exists:auction_categories,id',
             'sub_category_id' => 'nullable|exists:auction_categories,id',
             'child_category_id' => 'nullable|exists:auction_categories,id',
@@ -785,6 +790,9 @@ class ListingController extends Controller
             'description' => $request->description,
             'status' => $request->status,
             'is_1_rupee' => $request->boolean('is_1_rupee'),
+            'is_autobidder_on' => $request->listing_type === 'auction'
+                ? $request->boolean('is_autobidder_on')
+                : false,
             'image' => $imagePath,
             'album' => $albumPaths,
             'listing_data' => $listingData,
@@ -826,6 +834,9 @@ class ListingController extends Controller
                 'album' => $payload['album'] ?? $listing->getRawOriginal('album'),
                 'listing_data' => $payload['listing_data'] ?? $listing->listing_data,
                 'category_features' => $payload['category_features'] ?? $listing->category_features,
+                'is_autobidder_on' => ($payload['listing_type'] ?? $listing->listing_type) === 'auction'
+                    ? (bool) ($payload['is_autobidder_on'] ?? $listing->is_autobidder_on)
+                    : false,
                 'status' => 'active',
             ]);
 

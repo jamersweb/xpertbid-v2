@@ -7,11 +7,12 @@ import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 
-const TOP_BANNER = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1800&q=80';
+const TOP_BANNER_DESKTOP = '/assets/images/desk_b_ban.png';
+const TOP_BANNER_MOBILE = '/assets/images/mob_b_ban.png';
 const SMALL_BANNERS = [
-  'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80',
-  'https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=900&q=80',
-  'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80',
+  '/assets/images/shotban1.webp',
+  '/assets/images/shotban2.webp',
+  '/assets/images/shotban3.webp',
 ];
 
 export default function PropertiesBrand({ brand, listings }) {
@@ -55,7 +56,10 @@ export default function PropertiesBrand({ brand, listings }) {
 
       <div className="container py-4 py-lg-5 text-dark">
         <div className="mb-4 overflow-hidden" style={{ height: '600px', borderRadius: '28px' }}>
-          <img src={TOP_BANNER} alt="Properties banner" className="w-100 h-100 object-fit-cover" style={{ borderRadius: '28px' }} />
+          <picture>
+            <source media="(max-width: 767px)" srcSet={TOP_BANNER_MOBILE} />
+            <img src={TOP_BANNER_DESKTOP} alt="Properties banner" className="w-100 h-100 object-fit-cover" style={{ borderRadius: '28px' }} />
+          </picture>
         </div>
 
         <div className="row g-3 mb-4">
