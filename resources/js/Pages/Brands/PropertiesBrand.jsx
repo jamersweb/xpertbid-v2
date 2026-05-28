@@ -20,11 +20,13 @@ export default function PropertiesBrand({ brand, listings }) {
   const brandName = brand?.name || 'Brand';
 
   const detectBedrooms = (listing) => {
-    const listingData = listing?.listing_data || {};
-    const directKeys = ['bedrooms', 'bedroom', 'beds', 'bed'];
+    const categoryFeatures = listing?.category_features && typeof listing.category_features === 'object'
+      ? listing.category_features
+      : {};
+    const directKeys = ['field_1', '1', 'bedrooms', 'bedroom', 'beds', 'bed'];
 
     for (const key of directKeys) {
-      const raw = listingData[key];
+      const raw = categoryFeatures[key];
       const value = Number.parseInt(raw, 10);
       if (!Number.isNaN(value) && value > 0) {
         return value;
