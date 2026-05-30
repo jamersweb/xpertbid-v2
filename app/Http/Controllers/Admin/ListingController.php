@@ -629,9 +629,9 @@ class ListingController extends Controller
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'stock' => 'nullable|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
             'album' => 'nullable|array',
-            'album.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:4096',
+            'album.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10240',
         ]);
 
         if ($validator->fails()) {
@@ -712,9 +712,9 @@ class ListingController extends Controller
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'stock' => 'nullable|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
             'album' => 'nullable|array',
-            'album.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:4096',
+            'album.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10240',
             'existing_album' => 'nullable|array',
         ]);
 
