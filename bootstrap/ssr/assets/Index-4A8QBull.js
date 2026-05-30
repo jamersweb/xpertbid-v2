@@ -412,13 +412,9 @@ function LandingAuctionCard({ item }) {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "/assets/images/product-fallback.png";
     if (imagePath.startsWith("http")) return imagePath;
-    try {
-      return `https://admin.xpertbid.com/${imagePath.replace(/^\/+/, "")}`;
-    } catch (e) {
-      return imagePath;
-    }
+    return imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
   };
-  const imageUrl = getImageUrl(item.image);
+  const imageUrl = getImageUrl(item.image_url || item.image);
   return /* @__PURE__ */ jsx(Link, { href: route("product.show", item.slug), style: { textDecoration: "none", color: "inherit", display: "block", height: "100%" }, children: /* @__PURE__ */ jsxs("div", { className: "marketCard", children: [
     /* @__PURE__ */ jsxs("div", { className: "mktImg", children: [
       /* @__PURE__ */ jsx(

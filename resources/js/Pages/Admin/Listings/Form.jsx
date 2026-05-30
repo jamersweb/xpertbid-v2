@@ -152,6 +152,9 @@ export default function Form({
        });
 
        const [imagePreview, setImagePreview] = useState(listing?.image_url || '');
+       const [imagePreviewIsVideo, setImagePreviewIsVideo] = useState(
+              Boolean(listing?.image_url && /\.(mp4|webm|mov)$/i.test(listing.image_url))
+       );
        const isLiveAuction = data.listing_type === 'live_auction';
        const availableSubCategories = subCategories.filter((item) => String(item.parent_id) === String(data.category_id));
        const availableChildCategories = childCategories.filter((item) => String(item.sub_category_id) === String(data.sub_category_id));
@@ -366,20 +369,29 @@ export default function Form({
                                           <h2 className="text-lg font-bold text-gray-900">Media</h2>
 
                                           <Field label={isLiveAuction ? 'Primary Image (optional)' : 'Primary Image'} error={errors.image}>
-                                                 <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        className={fileInputClass}
-                                                        onChange={(e) => {
-                                                               const file = e.target.files?.[0] || null;
-                                                               setData('image', file);
-                                                               setImagePreview(file ? URL.createObjectURL(file) : (listing?.image_url || ''));
-                                                        }}
-                                                 />
+                                                        <input
+                                                               type="file"
+                                                               accept="image/png, image/jpeg, image/jpg, image/gif, image/webp, video/mp4, video/webm, video/quicktime"
+                                                               className={fileInputClass}
+                                                               onChange={(e) => {
+                                                                      const file = e.target.files?.[0] || null;
+                                                                      setData('image', file);
+                                                                      setImagePreview(file ? URL.createObjectURL(file) : (listing?.image_url || ''));
+                                                                      setImagePreviewIsVideo(
+                                                                             file
+                                                                                    ? Boolean(file.type?.startsWith('video/'))
+                                                                                    : Boolean(listing?.image_url && /\.(mp4|webm|mov)$/i.test(listing.image_url))
+                                                                      );
+                                                               }}
+                                                        />
                                           </Field>
 
                                           {imagePreview ? (
-                                                 <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover rounded-xl border border-gray-100" />
+                                                 imagePreviewIsVideo ? (
+                                                        <video src={imagePreview} controls className="w-full h-48 object-cover rounded-xl border border-gray-100" />
+                                                 ) : (
+                                                        <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover rounded-xl border border-gray-100" />
+                                                 )
                                           ) : (
                                                  <div className="w-full h-48 rounded-xl border border-dashed border-gray-200 flex items-center justify-center text-sm text-gray-400">
                                                         No image selected
@@ -389,7 +401,7 @@ export default function Form({
                                           <Field label={isLiveAuction ? 'Images (optional)' : 'Album Images'} error={errors.album}>
                                                  <input
                                                         type="file"
-                                                        accept="image/*"
+                                                        accept="image/png, image/jpeg, image/jpg, image/gif, image/webp, video/mp4, video/webm, video/quicktime"
                                                         multiple
                                                         className={fileInputClass}
                                                         onChange={(e) => setData('album', e.target.files)}
@@ -402,7 +414,11 @@ export default function Form({
                                                         <div className="grid grid-cols-3 gap-3">
                                                                {data.existing_album.map((url) => (
                                                                       <div key={url} className="relative">
-                                                                             <img src={url} alt="" className="w-full h-20 object-cover rounded-lg border border-gray-100" />
+                                                                             {/\.(mp4|webm|mov)$/i.test(url) ? (
+                                                                                    <video src={url} className="w-full h-20 object-cover rounded-lg border border-gray-100" />
+                                                                             ) : (
+                                                                                    <img src={url} alt="" className="w-full h-20 object-cover rounded-lg border border-gray-100" />
+                                                                             )}
                                                                              <button
                                                                                     type="button"
                                                                                     onClick={() => setData('existing_album', data.existing_album.filter((item) => item !== url))}

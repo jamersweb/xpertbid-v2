@@ -18,7 +18,7 @@ Schedule::command('verification:send-post-verify-inactivity-reminders')->hourly(
 Artisan::command('msgpk:send-ali-karim', function () {
     $mobile = '+923198212626';
     $message = <<<'MSG'
-Hi Ali Karim,👋
+Hi Abdulrehman,👋
 
 You're just one step away from accessing live property auctions on Boli.ae 🚀
 

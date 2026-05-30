@@ -17,20 +17,21 @@ import "sweetalert2";
 import "./CurrencyPicker-KgG9a2BI.js";
 import "./OwnerInfoRow-DJ1W7dqV.js";
 import "./FavoriteToggleButton-1jmbejDw.js";
-const TOP_BANNER = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1800&q=80";
+const TOP_BANNER_DESKTOP = "/assets/images/desk_b_ban.png";
+const TOP_BANNER_MOBILE = "/assets/images/mob_b_ban.png";
 const SMALL_BANNERS = [
-  "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80"
+  "/assets/images/shotban1.webp",
+  "/assets/images/shotban2.webp",
+  "/assets/images/shotban3.webp"
 ];
 function PropertiesBrand({ brand, listings }) {
   const items = Array.isArray(listings) ? listings : listings?.data || [];
   const brandName = brand?.name || "Brand";
   const detectBedrooms = (listing) => {
-    const listingData = listing?.listing_data || {};
-    const directKeys = ["bedrooms", "bedroom", "beds", "bed"];
+    const categoryFeatures = listing?.category_features && typeof listing.category_features === "object" ? listing.category_features : {};
+    const directKeys = ["field_1", "1", "bedrooms", "bedroom", "beds", "bed"];
     for (const key of directKeys) {
-      const raw = listingData[key];
+      const raw = categoryFeatures[key];
       const value = Number.parseInt(raw, 10);
       if (!Number.isNaN(value) && value > 0) {
         return value;
@@ -55,7 +56,10 @@ function PropertiesBrand({ brand, listings }) {
   return /* @__PURE__ */ jsxs(AppLayout, { children: [
     /* @__PURE__ */ jsx(Head, { title: `${brand?.name || "Brand"} Properties` }),
     /* @__PURE__ */ jsxs("div", { className: "container py-4 py-lg-5 text-dark", children: [
-      /* @__PURE__ */ jsx("div", { className: "mb-4 overflow-hidden", style: { height: "600px", borderRadius: "28px" }, children: /* @__PURE__ */ jsx("img", { src: TOP_BANNER, alt: "Properties banner", className: "w-100 h-100 object-fit-cover", style: { borderRadius: "28px" } }) }),
+      /* @__PURE__ */ jsx("div", { className: "mb-4 overflow-hidden", style: { height: "600px", borderRadius: "28px" }, children: /* @__PURE__ */ jsxs("picture", { children: [
+        /* @__PURE__ */ jsx("source", { media: "(max-width: 767px)", srcSet: TOP_BANNER_MOBILE }),
+        /* @__PURE__ */ jsx("img", { src: TOP_BANNER_DESKTOP, alt: "Properties banner", className: "w-100 h-100 object-fit-cover", style: { borderRadius: "28px" } })
+      ] }) }),
       /* @__PURE__ */ jsx("div", { className: "row g-3 mb-4", children: SMALL_BANNERS.map((src, index) => /* @__PURE__ */ jsx("div", { className: "col-12 col-md-4", children: /* @__PURE__ */ jsx("div", { className: "overflow-hidden position-relative", style: { minHeight: "140px", borderRadius: "22px" }, children: /* @__PURE__ */ jsx("img", { src, alt: `Promo ${index + 1}`, className: "w-100 h-100 object-fit-cover", style: { minHeight: "140px", borderRadius: "22px" } }) }) }, src)) }),
       items.length === 0 ? /* @__PURE__ */ jsxs("div", { className: "text-center py-5 bg-white rounded-4 border", children: [
         /* @__PURE__ */ jsx("h3", { className: "h5 fw-bold", children: "No listings found" }),

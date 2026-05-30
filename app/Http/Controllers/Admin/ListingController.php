@@ -41,6 +41,56 @@ class ListingController extends Controller
         return 'assets/images/listing_images/' . $filename;
     }
 
+    protected function storeListingVideo($file): string
+    {
+        $directory = public_path('assets/videos/listing_videos');
+        File::ensureDirectoryExists($directory);
+
+        $filename = time() . '_' . Str::random(12) . '.' . $file->getClientOriginalExtension();
+        $file->move($directory, $filename);
+
+        return 'assets/videos/listing_videos/' . $filename;
+    }
+
+    protected function storeListingMedia($file): string
+    {
+        return str_starts_with((string) $file->getMimeType(), 'video/')
+            ? $this->storeListingVideo($file)
+            : $this->storeOptimizedListingImage($file);
+    }
+
+    protected function listingMediaRules(): array
+    {
+        return [
+            'file',
+            function (string $attribute, $value, \Closure $fail): void {
+                $mimeType = $value?->getMimeType();
+                $sizeInKilobytes = (int) ceil(($value?->getSize() ?? 0) / 1024);
+
+                $allowedImages = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+                $allowedVideos = ['video/mp4', 'video/webm', 'video/quicktime'];
+
+                if (in_array($mimeType, $allowedImages, true)) {
+                    if ($sizeInKilobytes > 10240) {
+                        $fail('Image file size must be less than 10MB.');
+                    }
+
+                    return;
+                }
+
+                if (in_array($mimeType, $allowedVideos, true)) {
+                    if ($sizeInKilobytes > 15360) {
+                        $fail('Video file size must be less than 15MB.');
+                    }
+
+                    return;
+                }
+
+                $fail('Only PNG, JPG, WEBP, GIF, MP4, WEBM, and MOV files are allowed.');
+            },
+        ];
+    }
+
     protected function buildListingData(Request $request, ?Listing $listing, array $albumPaths, ?string $imagePath): array
     {
         $existingData = $listing?->listing_data ?? [];
@@ -629,9 +679,9 @@ class ListingController extends Controller
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'stock' => 'nullable|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'image' => ['nullable', ...$this->listingMediaRules()],
             'album' => 'nullable|array',
-            'album.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'album.*' => $this->listingMediaRules(),
         ]);
 
         if ($validator->fails()) {
@@ -652,13 +702,13 @@ class ListingController extends Controller
         $albumPaths = [];
         if ($request->hasFile('album')) {
             foreach ($request->file('album') as $file) {
-                $albumPaths[] = $this->storeOptimizedListingImage($file);
+                $albumPaths[] = $this->storeListingMedia($file);
             }
         }
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $this->storeOptimizedListingImage($request->file('image'));
+            $imagePath = $this->storeListingMedia($request->file('image'));
         } elseif (!empty($albumPaths)) {
             $imagePath = $albumPaths[0];
         }
@@ -712,9 +762,9 @@ class ListingController extends Controller
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'stock' => 'nullable|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'image' => ['nullable', ...$this->listingMediaRules()],
             'album' => 'nullable|array',
-            'album.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'album.*' => $this->listingMediaRules(),
             'existing_album' => 'nullable|array',
         ]);
 
@@ -762,13 +812,13 @@ class ListingController extends Controller
         $albumPaths = $existingAlbum;
         if ($request->hasFile('album')) {
             foreach ($request->file('album') as $file) {
-                $albumPaths[] = $this->storeOptimizedListingImage($file);
+                $albumPaths[] = $this->storeListingMedia($file);
             }
         }
 
         $imagePath = $listing->getRawOriginal('image') ?: ($listing->listing_data['image'] ?? null);
         if ($request->hasFile('image')) {
-            $imagePath = $this->storeOptimizedListingImage($request->file('image'));
+            $imagePath = $this->storeListingMedia($request->file('image'));
         } elseif (!$imagePath && !empty($albumPaths)) {
             $imagePath = $albumPaths[0];
         }

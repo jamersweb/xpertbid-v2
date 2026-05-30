@@ -288,7 +288,7 @@ class ListingController extends Controller
 
     protected function storeListingMedia($file): string
     {
-        return $file->getMimeType() === 'video/mp4'
+        return str_starts_with((string) $file->getMimeType(), 'video/')
             ? $this->storeListingVideo($file)
             : $this->storeOptimizedListingImage($file);
     }
@@ -311,7 +311,8 @@ class ListingController extends Controller
                     return;
                 }
 
-                if ($mimeType === 'video/mp4') {
+                $allowedVideos = ['video/mp4', 'video/webm', 'video/quicktime'];
+                if (in_array($mimeType, $allowedVideos, true)) {
                     if ($sizeInKilobytes > 15360) {
                         $fail('Video file size must be less than 15MB.');
                     }
@@ -319,7 +320,7 @@ class ListingController extends Controller
                     return;
                 }
 
-                $fail('Only PNG, JPG, WEBP, GIF, and MP4 files are allowed.');
+                $fail('Only PNG, JPG, WEBP, GIF, MP4, WEBM, and MOV files are allowed.');
             },
         ];
     }

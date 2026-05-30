@@ -14,11 +14,11 @@ export default function MediaUpload({ files, setFiles, existingFiles = [], setEx
               let err = "";
 
               selectedFiles.forEach(file => {
-                     const isVideo = file.type === "video/mp4";
+                     const isVideo = file.type.startsWith("video/");
                      const maxSize = isVideo ? 15 * 1024 * 1024 : 10 * 1024 * 1024; // 15MB video, 10MB image
 
-                     if (!["image/png", "image/jpeg", "image/webp", "video/mp4"].includes(file.type)) {
-                            err = "Only PNG, JPG, WEBP, and MP4 files are allowed.";
+                     if (!["image/png", "image/jpeg", "image/webp", "image/gif", "video/mp4", "video/webm", "video/quicktime"].includes(file.type)) {
+                            err = "Only PNG, JPG, WEBP, GIF, MP4, WEBM, and MOV files are allowed.";
                      } else if (file.size > maxSize) {
                             err = isVideo ? "Video file size must be less than 15MB." : "Image file size must be less than 10MB.";
                      } else {
@@ -145,13 +145,13 @@ export default function MediaUpload({ files, setFiles, existingFiles = [], setEx
                                           hidden
                                           ref={fileInputRef}
                                           multiple
-                                          accept="image/png, image/jpeg, image/webp, video/mp4"
+                                          accept="image/png, image/jpeg, image/webp, image/gif, video/mp4, video/webm, video/quicktime"
                                           onChange={handleFileChange}
                                    />
                                    <div className="upload-dropzone-content">
                                           <i className="fa-solid fa-cloud-arrow-up fa-3x mb-3 text-muted"></i>
                                           <h5 className="fw-bold text-dark">Click to upload or drag and drop</h5>
-                                          <p className="text-dark small mb-0">SVG, PNG, JPG or GIF (max. 10MB) / MP4 (max. 15MB)</p>
+                                          <p className="text-dark small mb-0">PNG, JPG, WEBP or GIF (max. 10MB) / MP4, WEBM or MOV (max. 15MB)</p>
                                    </div>
                             </div>
 
@@ -162,7 +162,7 @@ export default function MediaUpload({ files, setFiles, existingFiles = [], setEx
                                    <div className="upload-preview-grid mt-4">
                                           {/* Existing Files */}
                                           {existingFiles.map((url, idx) => {
-                                                 const isVideo = url.toLowerCase().endsWith('.mp4');
+                                                 const isVideo = /\.(mp4|webm|mov)$/i.test(url);
                                                  const fullUrl = url.startsWith('http') ? url : `https://admin.xpertbid.com${url}`;
 
                                                  return (
