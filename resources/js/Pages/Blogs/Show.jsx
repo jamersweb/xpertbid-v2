@@ -42,7 +42,20 @@ export default function Show({ blog }) {
                      const parsed = JSON.parse(rawSchemaMarkup);
                      return JSON.stringify(parsed);
               } catch (error) {
-                     return '';
+                     const normalizedMarkup = rawSchemaMarkup
+                            .replace(/^\s*html\s*/i, '')
+                            .replace(/<script[^>]*type=["']application\/ld\+json["'][^>]*>/i, '')
+                            .replace(/<\/script>\s*$/i, '')
+                            .trim();
+
+                     if (!normalizedMarkup) return '';
+
+                     try {
+                            const parsed = JSON.parse(normalizedMarkup);
+                            return JSON.stringify(parsed);
+                     } catch (nestedError) {
+                            return '';
+                     }
               }
        })();
 
