@@ -96,9 +96,6 @@ export default function AppLayout({ children, title }) {
                                                  <Link className="xp-brand-link" href="/marketplace/vehicles?type=auction" aria-label="View vehicle marketplace">
                                                         <img className="xp-brand-logo xp-brand-logo-vehicle" src="/assets/images/xp-vehicle-logo-clean.png" alt="XpertBid Vehicle" />
                                                  </Link>
-                                                 <Link className="xp-brand-link" href="/marketplace/mandi" aria-label="View mandi marketplace">
-                                                        <img className="xp-brand-logo xp-brand-logo-mandi" src="/assets/images/xp-mandi-logo-clean.svg" alt="XpertBid Mandi" />
-                                                 </Link>
                                           </div>
                                           <div className="xp-brand-controls d-none d-lg-flex">
                                                  <select

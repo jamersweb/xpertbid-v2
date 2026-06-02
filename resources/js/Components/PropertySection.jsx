@@ -4,6 +4,7 @@ import Price from "@/Components/Price";
 import OwnerInfoRow from "@/Components/OwnerInfoRow";
 import FavoriteToggleButton from "@/Components/FavoriteToggleButton";
 import useTranslate from "@/hooks/useTranslate";
+import { getDiscountMeta, isDirectBuyListing } from "@/Utils/listingPricing";
 
 const getProductImageSrc = (product) => {
        const directImage = product?.image_url;
@@ -47,8 +48,8 @@ export default function PropertySection({ products }) {
                                           const hasMaxBid = Number.isFinite(maxBid) && maxBid > 0;
                                           const displayAmount = hasMaxBid ? maxBid : minBid;
                                           const imageSrc = getProductImageSrc(product);
-                                          const normalizedListType = (product?.list_type || product?.listing_type || "").toLowerCase();
-                                          const isNormalList = normalizedListType === "normal" || normalizedListType === "normal_list";
+                                          const directBuyListing = isDirectBuyListing(product);
+                                          const discountMeta = getDiscountMeta(product);
 
                                           return (
                                                  <div key={`${product.slug}-${index}`} className="col-12 col-sm-6 col-lg-4">
@@ -66,7 +67,12 @@ export default function PropertySection({ products }) {
                                                                                     />
                                                                              </div>
                                                                       </Link>
-                                                                      {!isNormalList && (
+                                                                      {discountMeta.hasDiscount && (
+                                                                             <div style={{ position: "absolute", top: "10px", left: "10px", background: "rgba(220, 53, 69, 0.9)", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }}>
+                                                                                    {discountMeta.badgeText}
+                                                                             </div>
+                                                                      )}
+                                                                      {!directBuyListing && (
                                                                              <CountdownTimer startDate={product.start_date} endDate={product.end_date} />
                                                                       )}
                                                                </div>
@@ -86,22 +92,33 @@ export default function PropertySection({ products }) {
                                                                       </h2>
                                                                </div>
 
-                                                               <div className="pro-meta">
-                                                                      <div className="pro-price">
-                                                                             <span>{hasMaxBid ? t('Current Bid') : t('Minimum Bid')}</span>
-                                                                             <p className="price">
-                                                                                    <span className="me-1" style={{ color: "#23262F" }}>
-                                                                                           <Price amountAED={displayAmount} />
-                                                                                    </span>
-                                                                             </p>
-                                                                      </div>
+                                                              <div className="pro-meta">
+                                                                     <div className="pro-price">
+                                                                             <span>{directBuyListing ? t('Price') : (hasMaxBid ? t('Current Bid') : t('Minimum Bid'))}</span>
+                                                                             <div className="price">
+                                                                                    {directBuyListing && discountMeta.hasDiscount ? (
+                                                                                           <div className="d-flex flex-column">
+                                                                                                  <span className="text-decoration-line-through text-muted" style={{ fontSize: "0.8em", lineHeight: 1 }}>
+                                                                                                         <Price amountAED={discountMeta.originalPrice} />
+                                                                                                  </span>
+                                                                                                  <span className="price text-danger">
+                                                                                                         <Price amountAED={discountMeta.finalPrice} />
+                                                                                                  </span>
+                                                                                           </div>
+                                                                                    ) : (
+                                                                                           <span className="me-1" style={{ color: "#23262F" }}>
+                                                                                                  <Price amountAED={displayAmount} />
+                                                                                           </span>
+                                                                                    )}
+                                                                             </div>
+                                                                     </div>
 
                                                                       <div className="pro-buy-btn">
-                                                                             <div className="pro-bid-btn">
-                                                                                    <Link href={`/product/${product.slug}`}>
-                                                                                           {isNormalList ? t('Buy Now') : t('Place Bid')}
-                                                                                    </Link>
-                                                                             </div>
+                                                                            <div className="pro-bid-btn">
+                                                                                   <Link href={`/product/${product.slug}`}>
+                                                                                           {directBuyListing ? t('Buy Now') : t('Place Bid')}
+                                                                                   </Link>
+                                                                            </div>
                                                                       </div>
                                                                </div>
                                                         </div>

@@ -5,13 +5,15 @@ import OwnerInfoRow from "@/Components/OwnerInfoRow";
 import Price from "@/Components/Price";
 import FavoriteToggleButton from "@/Components/FavoriteToggleButton";
 import { useCart } from "@/Contexts/CartContext";
+import { getDiscountMeta, isDirectBuyListing } from "@/Utils/listingPricing";
 
 const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }) => {
        const { addToCart } = useCart();
        const isWonAuction = activeTab === "won";
        const listingKind = auction?.list_type || auction?.listing_type;
        const isLiveAuction = listingKind === "live_auction";
-       const isDirectBuyListing = ["normal", "normal_list", "business", "business_list"].includes(listingKind);
+       const directBuyListing = isDirectBuyListing(auction);
+       const discountMeta = getDiscountMeta(auction);
        const categoryFeatures = auction?.category_features && typeof auction.category_features === "object" ? auction.category_features : {};
        const isPropertyListing = String(auction?.category_id || "") === "222";
 
@@ -65,7 +67,7 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
        const displayAmount = isWonAuction ? winningBidAmount : (hasMaxBid ? maxBid : minBid);
        const displayLabel = isWonAuction
               ? "Winning Bid"
-              : (isDirectBuyListing ? "Price" : (isLiveAuction ? (hasMaxBid ? "Live Bid" : "Start Price") : (hasMaxBid ? "Current Bid" : "Minimum Bid")));
+              : (directBuyListing ? "Price" : (isLiveAuction ? (hasMaxBid ? "Live Bid" : "Start Price") : (hasMaxBid ? "Current Bid" : "Minimum Bid")));
 
        return (
               <div className="product-card-wrapper h-100">
@@ -93,7 +95,16 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
                                    </span>
                             )}
 
-                            {!isWonAuction && !isDirectBuyListing && !isLiveAuction && (
+                            {discountMeta.hasDiscount && (
+                                   <span
+                                          className="badge text-white"
+                                          style={{ position: "absolute", top: 12, left: 12, zIndex: 3, fontSize: 12, padding: "7px 11px", background: "rgba(220, 53, 69, 0.9)", borderRadius: "999px" }}
+                                   >
+                                          {discountMeta.badgeText}
+                                   </span>
+                            )}
+
+                            {!isWonAuction && !directBuyListing && !isLiveAuction && (
                                    <CountdownTimer startDate={auction.start_date} endDate={auction.end_date} />
                             )}
                      </div>
@@ -149,9 +160,20 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
                             <div className="pro-price">
                                    <span>{displayLabel}</span>
                                    <div className="price">
-                                          <span className="price" style={{ color: "#23262F" }}>
-                                                 <Price amountAED={displayAmount} />
-                                          </span>
+                                          {directBuyListing && discountMeta.hasDiscount ? (
+                                                 <div className="d-flex flex-column">
+                                                        <span className="text-decoration-line-through text-muted" style={{ fontSize: "0.8em", lineHeight: 1 }}>
+                                                               <Price amountAED={discountMeta.originalPrice} />
+                                                        </span>
+                                                        <span className="price text-danger">
+                                                               <Price amountAED={discountMeta.finalPrice} />
+                                                        </span>
+                                                 </div>
+                                          ) : (
+                                                 <span className="price" style={{ color: "#23262F" }}>
+                                                        <Price amountAED={displayAmount} />
+                                                 </span>
+                                          )}
                                    </div>
                             </div>
 
@@ -176,7 +198,7 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
                                    ) : (
                                           <div className="pro-bid-btn">
                                                  <Link href={`/product/${auction.slug}`}>
-                                                        {isDirectBuyListing ? "Buy Now" : (isLiveAuction ? "Join Live" : "Place Bid")}
+                                                        {directBuyListing ? "Buy Now" : (isLiveAuction ? "Join Live" : "Place Bid")}
                                                  </Link>
                                           </div>
                                    )}

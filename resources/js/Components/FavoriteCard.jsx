@@ -3,6 +3,7 @@ import { Link, router } from "@inertiajs/react";
 import CountdownTimer from "@/Components/CountdownTimer";
 import OwnerInfoRow from "@/Components/OwnerInfoRow";
 import Price from "@/Components/Price";
+import { getDiscountMeta, isDirectBuyListing } from "@/Utils/listingPricing";
 
 const FavoriteCard = ({ favorite }) => {
        const handleRemove = (e) => {
@@ -18,7 +19,9 @@ const FavoriteCard = ({ favorite }) => {
        const imgPath = favorite.image || "/assets/images/placeholder.jpg";
 
        const title = favorite.title || favorite.name || 'Product';
-       const displayLabel = Number(favorite.current_bid) > 0 ? "Current Bid" : "Minimum Bid";
+       const directBuyListing = isDirectBuyListing(favorite);
+       const discountMeta = getDiscountMeta(favorite);
+       const displayLabel = directBuyListing ? "Price" : (Number(favorite.current_bid) > 0 ? "Current Bid" : "Minimum Bid");
 
        return (
               <div className="col-lg-4 col-md-6 col-sm-12 mkt-child">
@@ -32,8 +35,27 @@ const FavoriteCard = ({ favorite }) => {
                                           />
                                    </Link>
 
-                                   {favorite.end_date && favorite.list_type !== 'normal_list' && (
+                                   {favorite.end_date && !directBuyListing && (
                                           <CountdownTimer startDate={favorite.start_date} endDate={favorite.end_date} />
+                                   )}
+
+                                   {discountMeta.hasDiscount && (
+                                          <div
+                                                 style={{
+                                                        position: "absolute",
+                                                        top: "10px",
+                                                        left: "10px",
+                                                        background: "rgba(220, 53, 69, 0.9)",
+                                                        color: "white",
+                                                        padding: "5px 10px",
+                                                        borderRadius: "999px",
+                                                        fontSize: "12px",
+                                                        fontWeight: "bold",
+                                                        zIndex: 10,
+                                                 }}
+                                          >
+                                                 {discountMeta.badgeText}
+                                          </div>
                                    )}
 
                                    <div className="favourite-icon" onClick={handleRemove} title="Remove from favorites">
@@ -64,15 +86,26 @@ const FavoriteCard = ({ favorite }) => {
                                           <div className="mkt-crt-bid">
                                                  <span className="crnt-bid">{displayLabel}</span>
                                                  <div className="mkt-bid-price">
-                                                        <Price
-                                                               className="price"
-                                                               amountAED={favorite.current_bid || favorite.minimum_bid}
-                                                        />
+                                                        {directBuyListing && discountMeta.hasDiscount ? (
+                                                               <div className="d-flex flex-column">
+                                                                      <span className="text-decoration-line-through text-muted" style={{ fontSize: "0.8em", lineHeight: 1 }}>
+                                                                             <Price className="price" amountAED={discountMeta.originalPrice} />
+                                                                      </span>
+                                                                      <span className="text-danger">
+                                                                             <Price className="price" amountAED={discountMeta.finalPrice} />
+                                                                      </span>
+                                                               </div>
+                                                        ) : (
+                                                               <Price
+                                                                      className="price"
+                                                                      amountAED={favorite.current_bid || favorite.minimum_bid}
+                                                               />
+                                                        )}
                                                  </div>
                                           </div>
                                           <div className="mkt-bid-btn">
                                                  <Link href={`/product/${favorite.slug}`}>
-                                                        {favorite.list_type === 'normal_list' ? "Buy Now" : "Place Bid"}
+                                                        {directBuyListing ? "Buy Now" : "Place Bid"}
                                                  </Link>
                                           </div>
                                    </div>

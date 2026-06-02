@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import ReactQuill from 'react-quill';
+import axios from 'axios';
 import 'react-quill/dist/quill.snow.css';
 
 const inputClass = 'w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 focus:border-black focus:ring-black';
@@ -143,6 +144,10 @@ export default function Form({
               start_date: listing?.listing_data?.start_date ?? '',
               end_date: listing?.listing_data?.end_date ?? '',
               stock: listing?.listing_data?.stock ?? '',
+              variations: listing?.listing_data?.variations ?? [],
+              discount_type: listing?.listing_data?.discount_type ?? '',
+              discount_value: listing?.listing_data?.discount_value ?? '',
+              category_features: listing?.category_features ?? {},
               image: null,
               album: [],
               existing_album: initialAlbum,
@@ -155,9 +160,99 @@ export default function Form({
        const [imagePreviewIsVideo, setImagePreviewIsVideo] = useState(
               Boolean(listing?.image_url && /\.(mp4|webm|mov)$/i.test(listing.image_url))
        );
+       const [dynamicFields, setDynamicFields] = useState([]);
        const isLiveAuction = data.listing_type === 'live_auction';
        const availableSubCategories = subCategories.filter((item) => String(item.parent_id) === String(data.category_id));
        const availableChildCategories = childCategories.filter((item) => String(item.sub_category_id) === String(data.sub_category_id));
+       const supportsCatalogEnhancements = data.listing_type !== 'live_auction';
+
+       const parseFieldOptions = (options) => {
+              if (Array.isArray(options)) return options;
+              if (typeof options === 'string') {
+                     try {
+                            const parsed = JSON.parse(options);
+                            return Array.isArray(parsed) ? parsed : [];
+                     } catch {
+                            return [];
+                     }
+              }
+
+              return [];
+       };
+
+       const normalizedFieldName = (field) => {
+              const raw = String(field?.field_name || '').trim();
+              return raw || `field_${field?.id}`;
+       };
+
+       const fieldNameCounts = useMemo(() => {
+              return (dynamicFields || []).reduce((acc, field) => {
+                     const base = normalizedFieldName(field);
+                     acc[base] = (acc[base] || 0) + 1;
+                     return acc;
+              }, {});
+       }, [dynamicFields]);
+
+       const getIdFeatureKey = (field) => `field_${field?.id}`;
+
+       const getFeatureKey = (field) => {
+              const base = normalizedFieldName(field);
+              const idKey = getIdFeatureKey(field);
+              return fieldNameCounts[base] > 1 ? `${base}__${field.id}` : (base || idKey);
+       };
+
+       const getFeatureValue = (field) => {
+              const features = data?.category_features && typeof data.category_features === 'object' && !Array.isArray(data.category_features)
+                     ? data.category_features
+                     : {};
+              const idKey = getIdFeatureKey(field);
+              const key = getFeatureKey(field);
+              const base = normalizedFieldName(field);
+
+              return features[idKey] ?? features[key] ?? features[base] ?? '';
+       };
+
+       const updateFeatureValue = (field, value) => {
+              const base = normalizedFieldName(field);
+              const key = getFeatureKey(field);
+              const idKey = getIdFeatureKey(field);
+              const isDuplicateFieldName = fieldNameCounts[base] > 1;
+              const previousFeatures = data?.category_features && typeof data.category_features === 'object' && !Array.isArray(data.category_features)
+                     ? data.category_features
+                     : {};
+              const nextFeatures = {
+                     ...previousFeatures,
+                     [idKey]: value,
+                     [key]: value,
+              };
+
+              if (!isDuplicateFieldName && base) {
+                     nextFeatures[base] = value;
+              }
+
+              setData('category_features', nextFeatures);
+       };
+
+       const addVariation = () => {
+              const nextVariations = [...(data.variations || []), { name: '', price: '', discount_type: '', discount_value: '' }];
+              setData('variations', nextVariations);
+       };
+
+       const removeVariation = (index) => {
+              const nextVariations = [...(data.variations || [])];
+              nextVariations.splice(index, 1);
+              setData('variations', nextVariations);
+       };
+
+       const updateVariation = (index, field, value) => {
+              const nextVariations = [...(data.variations || [])];
+              nextVariations[index] = {
+                     ...(nextVariations[index] || {}),
+                     [field]: value,
+              };
+              setData('variations', nextVariations);
+       };
+
        const handleListingTypeChange = (value) => {
               setData({
                      ...data,
@@ -171,13 +266,44 @@ export default function Form({
                                    stock: '',
                             }
                             : {}),
+                     ...(value === 'auction' || value === 'live_auction'
+                            ? {
+                                   variations: [],
+                                   discount_type: '',
+                                   discount_value: '',
+                            }
+                            : {}),
               });
        };
+
+       useEffect(() => {
+              if (!data.category_id) {
+                     setDynamicFields([]);
+                     return;
+              }
+
+              const listingTypeForFields = data.listing_type === 'live_auction' ? 'auction' : data.listing_type;
+
+              axios.get(`/get-dynamic-fields/${data.category_id}/${listingTypeForFields}`)
+                     .then((res) => {
+                            if (res.data?.status === 'success') {
+                                   setDynamicFields(res.data.data || []);
+                                   return;
+                            }
+
+                            setDynamicFields([]);
+                     })
+                     .catch(() => setDynamicFields([]));
+       }, [data.category_id, data.listing_type]);
 
        const submit = (e) => {
               e.preventDefault();
 
-              const payload = { ...data, album: Array.from(data.album || []) };
+              const payload = {
+                     ...data,
+                     album: Array.from(data.album || []),
+                     variations: Array.isArray(data.variations) ? data.variations : [],
+              };
 
               if (isEditing) {
                      router.post(route('admin.listings.update', listing.id), { ...payload, _method: 'put' }, { forceFormData: true });
@@ -331,6 +457,107 @@ export default function Form({
                                                  </div>
                                           </Field>
 
+                                          {supportsCatalogEnhancements && (
+                                                 <div className="space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-5">
+                                                        <div className="flex items-center justify-between gap-3">
+                                                               <div>
+                                                                      <h3 className="text-base font-bold text-gray-900">Discount & Variations</h3>
+                                                                      <p className="text-sm text-gray-500">Add base discount details or create product variations for this listing.</p>
+                                                               </div>
+                                                               <button
+                                                                      type="button"
+                                                                      onClick={addVariation}
+                                                                      className="px-3 py-2 rounded-xl border border-gray-300 text-sm font-semibold text-gray-700 hover:bg-white"
+                                                               >
+                                                                      Add Variation
+                                                               </button>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                               <Field label="Discount Type" error={errors.discount_type}>
+                                                                      <select
+                                                                             className={inputClass}
+                                                                             value={data.discount_type}
+                                                                             onChange={(e) => setData('discount_type', e.target.value)}
+                                                                      >
+                                                                             <option value="">No discount</option>
+                                                                             <option value="percent">Percent</option>
+                                                                             <option value="flat">Flat</option>
+                                                                      </select>
+                                                               </Field>
+                                                               <Field label="Discount Value" error={errors.discount_value}>
+                                                                      <input
+                                                                             type="number"
+                                                                             className={inputClass}
+                                                                             value={data.discount_value}
+                                                                             onChange={(e) => setData('discount_value', e.target.value)}
+                                                                             disabled={!data.discount_type}
+                                                                      />
+                                                               </Field>
+                                                        </div>
+
+                                                        {(data.variations || []).length > 0 && (
+                                                               <div className="space-y-3">
+                                                                      {(data.variations || []).map((variation, index) => (
+                                                                             <div key={`variation-${index}`} className="rounded-2xl border border-gray-200 bg-white p-4 space-y-4">
+                                                                                    <div className="flex items-center justify-between gap-3">
+                                                                                           <h4 className="text-sm font-bold text-gray-800">Variation {index + 1}</h4>
+                                                                                           <button
+                                                                                                  type="button"
+                                                                                                  onClick={() => removeVariation(index)}
+                                                                                                  className="text-sm font-semibold text-rose-600 hover:text-rose-700"
+                                                                                           >
+                                                                                                  Remove
+                                                                                           </button>
+                                                                                    </div>
+
+                                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                                           <Field label="Variation Name">
+                                                                                                  <input
+                                                                                                         className={inputClass}
+                                                                                                         value={variation?.name || ''}
+                                                                                                         onChange={(e) => updateVariation(index, 'name', e.target.value)}
+                                                                                                  />
+                                                                                           </Field>
+                                                                                           <Field label="Variation Price">
+                                                                                                  <input
+                                                                                                         type="number"
+                                                                                                         className={inputClass}
+                                                                                                         value={variation?.price || ''}
+                                                                                                         onChange={(e) => updateVariation(index, 'price', e.target.value)}
+                                                                                                  />
+                                                                                           </Field>
+                                                                                    </div>
+
+                                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                                           <Field label="Variation Discount Type">
+                                                                                                  <select
+                                                                                                         className={inputClass}
+                                                                                                         value={variation?.discount_type || ''}
+                                                                                                         onChange={(e) => updateVariation(index, 'discount_type', e.target.value)}
+                                                                                                  >
+                                                                                                         <option value="">No discount</option>
+                                                                                                         <option value="percent">Percent</option>
+                                                                                                         <option value="flat">Flat</option>
+                                                                                                  </select>
+                                                                                           </Field>
+                                                                                           <Field label="Variation Discount Value">
+                                                                                                  <input
+                                                                                                         type="number"
+                                                                                                         className={inputClass}
+                                                                                                         value={variation?.discount_value || ''}
+                                                                                                         onChange={(e) => updateVariation(index, 'discount_value', e.target.value)}
+                                                                                                         disabled={!variation?.discount_type}
+                                                                                                  />
+                                                                                           </Field>
+                                                                                    </div>
+                                                                             </div>
+                                                                      ))}
+                                                               </div>
+                                                        )}
+                                                 </div>
+                                          )}
+
                                           {(data.listing_type === 'auction' || isLiveAuction) ? (
                                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <Field label="Start Price" error={errors.price}>
@@ -361,6 +588,82 @@ export default function Form({
                                                         <Field label="End Date" error={errors.end_date}>
                                                                <input type="datetime-local" className={inputClass} value={data.end_date} onChange={(e) => setData('end_date', e.target.value)} />
                                                         </Field>
+                                                 </div>
+                                          )}
+
+                                          {dynamicFields.length > 0 && (
+                                                 <div className="space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-5">
+                                                        <div>
+                                                               <h3 className="text-base font-bold text-gray-900">Dynamic Fields</h3>
+                                                               <p className="text-sm text-gray-500">Category-specific fields configured from the dynamic fields module.</p>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                               {dynamicFields.map((field) => {
+                                                                      const inputType = String(field.input_type || 'text').trim().toLowerCase();
+                                                                      const fieldOptions = parseFieldOptions(field.options);
+
+                                                                      return (
+                                                                             <Field key={field.id} label={field.label} error={errors[`category_features.field_${field.id}`] || errors[`field_${field.id}`]}>
+                                                                                    {inputType === 'select' ? (
+                                                                                           <select
+                                                                                                  className={inputClass}
+                                                                                                  value={getFeatureValue(field)}
+                                                                                                  onChange={(e) => updateFeatureValue(field, e.target.value)}
+                                                                                           >
+                                                                                                  <option value="">Select {field.label}</option>
+                                                                                                  {fieldOptions.map((option, index) => (
+                                                                                                         <option key={`${field.id}-${index}`} value={option}>{option}</option>
+                                                                                                  ))}
+                                                                                           </select>
+                                                                                    ) : inputType === 'radio' ? (
+                                                                                           <div className="flex flex-wrap gap-3 pt-2">
+                                                                                                  {fieldOptions.map((option, index) => {
+                                                                                                         const radioId = `admin_dynamic_${field.id}_${index}`;
+                                                                                                         return (
+                                                                                                                <label key={radioId} htmlFor={radioId} className="inline-flex items-center gap-2 text-sm text-gray-700">
+                                                                                                                       <input
+                                                                                                                              id={radioId}
+                                                                                                                              type="radio"
+                                                                                                                              name={`admin_dynamic_${field.id}`}
+                                                                                                                              className="h-4 w-4 border-gray-300 text-black focus:ring-black"
+                                                                                                                              value={option}
+                                                                                                                              checked={getFeatureValue(field) === option}
+                                                                                                                              onChange={(e) => updateFeatureValue(field, e.target.value)}
+                                                                                                                       />
+                                                                                                                       <span>{option}</span>
+                                                                                                                </label>
+                                                                                                         );
+                                                                                                  })}
+                                                                                           </div>
+                                                                                    ) : inputType === 'textarea' ? (
+                                                                                           <textarea
+                                                                                                  className={inputClass}
+                                                                                                  value={getFeatureValue(field)}
+                                                                                                  onChange={(e) => updateFeatureValue(field, e.target.value)}
+                                                                                           />
+                                                                                    ) : inputType === 'checkbox' ? (
+                                                                                           <label className="inline-flex items-center gap-3 cursor-pointer py-2">
+                                                                                                  <input
+                                                                                                         type="checkbox"
+                                                                                                         className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                                                                                                         checked={Boolean(getFeatureValue(field))}
+                                                                                                         onChange={(e) => updateFeatureValue(field, e.target.checked)}
+                                                                                                  />
+                                                                                                  <span className="text-sm text-gray-700">Enable {field.label}</span>
+                                                                                           </label>
+                                                                                    ) : (
+                                                                                           <input
+                                                                                                  type={inputType || 'text'}
+                                                                                                  className={inputClass}
+                                                                                                  value={getFeatureValue(field)}
+                                                                                                  onChange={(e) => updateFeatureValue(field, e.target.value)}
+                                                                                           />
+                                                                                    )}
+                                                                             </Field>
+                                                                      );
+                                                               })}
+                                                        </div>
                                                  </div>
                                           )}
                                    </div>

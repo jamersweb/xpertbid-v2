@@ -4,6 +4,7 @@ import ListPackeg from "@/Components/ListPackeg";
 import Price from "@/Components/Price";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { getBaseListingPrice, getDiscountMeta } from "@/Utils/listingPricing";
 
 const ListingCard = ({ listing, onDeleted }) => {
        const [isListPackegOpen, setIsListPackegOpen] = useState(false);
@@ -70,6 +71,8 @@ const ListingCard = ({ listing, onDeleted }) => {
 
        const normalizedListType = (listing.list_type || listing.listing_type || "").toLowerCase();
        const isNormalList = normalizedListType === "normal_list" || normalizedListType === "normal";
+       const discountMeta = getDiscountMeta(listing);
+       const baseListingPrice = getBaseListingPrice(listing);
        const highestBidAED = typeof listing?.currentBid === "number" ? listing.currentBid : 0;
        const listingTitle = listing?.title || "Untitled Listing";
        const listingStartDate = listing?.start_date || "Not set";
@@ -89,7 +92,7 @@ const ListingCard = ({ listing, onDeleted }) => {
                                    <div className="row">
                                           <div className="col-md-3">
                                                  <div className="listing-img" style={{ position: "relative", width: "100%", height: "130px", overflow: "hidden" }}>
-                                                        {listing.list_type === "normal_list" && listing.discount_type && listing.discount_value > 0 && (
+                                                        {discountMeta.hasDiscount && (
                                                                <div
                                                                       style={{
                                                                              position: "absolute",
@@ -104,7 +107,7 @@ const ListingCard = ({ listing, onDeleted }) => {
                                                                              zIndex: 10,
                                                                       }}
                                                                >
-                                                                      {listing.discount_type === "percent" ? `${Math.round(listing.discount_value)}%` : "SALE"}
+                                                                      {discountMeta.badgeText}
                                                                </div>
                                                         )}
 
@@ -186,30 +189,20 @@ const ListingCard = ({ listing, onDeleted }) => {
                                                                              <span className="ms-1 listingPriceNumber">
                                                                                     {isNormalList ? (
                                                                                            (() => {
-                                                                                                  let finalPrice = Number(listing.reserve_price || listing.minimum_bid || 0);
-                                                                                                  const originalPrice = finalPrice;
-                                                                                                  if (listing.discount_type && listing.discount_value > 0) {
-                                                                                                         if (listing.discount_type === "percent") {
-                                                                                                                finalPrice = originalPrice - (originalPrice * (listing.discount_value / 100));
-                                                                                                         } else if (listing.discount_type === "flat") {
-                                                                                                                finalPrice = originalPrice - listing.discount_value;
-                                                                                                         }
-
-                                                                                                         if (finalPrice < 0) finalPrice = 0;
-
+                                                                                                  if (discountMeta.hasDiscount) {
                                                                                                          return (
                                                                                                                 <span className="d-flex align-items-center gap-2">
                                                                                                                        <span className="text-decoration-line-through text-muted fs-6">
-                                                                                                                              <Price amountAED={originalPrice} />
+                                                                                                                              <Price amountAED={discountMeta.originalPrice} />
                                                                                                                        </span>
                                                                                                                        <span className="text-danger">
-                                                                                                                              <Price amountAED={finalPrice} />
+                                                                                                                              <Price amountAED={discountMeta.finalPrice} />
                                                                                                                        </span>
                                                                                                                 </span>
                                                                                                          );
                                                                                                   }
 
-                                                                                                  return <Price amountAED={finalPrice} />;
+                                                                                                  return <Price amountAED={baseListingPrice} />;
                                                                                            })()
                                                                                     ) : highestBidAED > 0 ? (
                                                                                            <Price amountAED={highestBidAED} />

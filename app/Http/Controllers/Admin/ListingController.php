@@ -101,6 +101,9 @@ class ListingController extends Controller
             'start_date' => $request->listing_type === 'auction' ? $request->start_date : null,
             'end_date' => $request->listing_type === 'auction' ? $request->end_date : null,
             'stock' => $request->listing_type === 'business' ? $request->stock : null,
+            'variations' => $request->listing_type !== 'live_auction' ? ($request->input('variations') ?? []) : null,
+            'discount_type' => $request->listing_type !== 'live_auction' ? $request->discount_type : null,
+            'discount_value' => $request->listing_type !== 'live_auction' ? $request->discount_value : null,
             'image' => $imagePath,
             'album' => $albumPaths,
         ];
@@ -118,6 +121,10 @@ class ListingController extends Controller
 
         if ($request->listing_type !== 'business') {
             unset($listingData['stock']);
+        }
+
+        if ($request->listing_type === 'live_auction') {
+            unset($listingData['variations'], $listingData['discount_type'], $listingData['discount_value']);
         }
 
         if ($request->listing_type === 'auction') {
@@ -679,6 +686,14 @@ class ListingController extends Controller
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'stock' => 'nullable|integer|min:0',
+            'discount_type' => 'nullable|in:percent,flat',
+            'discount_value' => 'nullable|numeric|min:0',
+            'variations' => 'nullable|array',
+            'variations.*.name' => 'nullable|string|max:255',
+            'variations.*.price' => 'nullable|numeric|min:0',
+            'variations.*.discount_type' => 'nullable|in:percent,flat',
+            'variations.*.discount_value' => 'nullable|numeric|min:0',
+            'category_features' => 'nullable|array',
             'image' => ['nullable', ...$this->listingMediaRules()],
             'album' => 'nullable|array',
             'album.*' => $this->listingMediaRules(),
@@ -732,6 +747,7 @@ class ListingController extends Controller
             'image' => $imagePath,
             'album' => $albumPaths,
             'listing_data' => $listingData,
+            'category_features' => $request->input('category_features', []),
         ]);
 
         $redirectRoute = $request->input('return_to') === 'live_auctions' || $request->listing_type === 'live_auction'
@@ -762,6 +778,14 @@ class ListingController extends Controller
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'stock' => 'nullable|integer|min:0',
+            'discount_type' => 'nullable|in:percent,flat',
+            'discount_value' => 'nullable|numeric|min:0',
+            'variations' => 'nullable|array',
+            'variations.*.name' => 'nullable|string|max:255',
+            'variations.*.price' => 'nullable|numeric|min:0',
+            'variations.*.discount_type' => 'nullable|in:percent,flat',
+            'variations.*.discount_value' => 'nullable|numeric|min:0',
+            'category_features' => 'nullable|array',
             'image' => ['nullable', ...$this->listingMediaRules()],
             'album' => 'nullable|array',
             'album.*' => $this->listingMediaRules(),
@@ -846,6 +870,7 @@ class ListingController extends Controller
             'image' => $imagePath,
             'album' => $albumPaths,
             'listing_data' => $listingData,
+            'category_features' => $request->input('category_features', []),
         ]);
 
         $listing->pendingEdit()?->delete();

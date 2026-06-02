@@ -3,6 +3,7 @@ import Price from "@/Components/Price";
 import OwnerInfoRow from "@/Components/OwnerInfoRow";
 import FavoriteToggleButton from "@/Components/FavoriteToggleButton";
 import useTranslate from "@/hooks/useTranslate";
+import { getBaseListingPrice, getDiscountMeta, isBusinessListing } from "@/Utils/listingPricing";
 
 const getProductImageSrc = (product) => {
        const directImage = product?.image_url;
@@ -41,9 +42,9 @@ export default function NormalListSection({ products }) {
 
                             <div className="row g-4 home-mobile-scroll-row">
                                    {displayProducts.map((product, index) => {
-                                          const normalizedListType = (product?.list_type || product?.listing_type || "").toLowerCase();
-                                          const isBusinessListing = normalizedListType === "business" || normalizedListType === "business_list";
-                                          const price = Number(product?.price ?? product?.buy_now_price ?? product?.minimum_bid ?? 0);
+                                          const businessListing = isBusinessListing(product);
+                                          const price = getBaseListingPrice(product);
+                                          const discountMeta = getDiscountMeta(product);
                                           const imageSrc = getProductImageSrc(product);
 
                                           return (
@@ -51,9 +52,9 @@ export default function NormalListSection({ products }) {
                                                         <div className="product-card-wrapper h-100">
                                                                <div className="pro-image" style={{ position: "relative" }}>
                                                                       <FavoriteToggleButton listingId={product.id} />
-                                                                      {product.discount_type && product.discount_value > 0 && (
+                                                                      {discountMeta.hasDiscount && (
                                                                              <div style={{ position: "absolute", top: "10px", left: "10px", background: "rgba(220, 53, 69, 0.9)", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }}>
-                                                                                    {product.discount_type === "percent" ? `${Math.round(product.discount_value)}% OFF` : "SALE"}
+                                                                                    {discountMeta.badgeText}
                                                                              </div>
                                                                       )}
 
@@ -86,29 +87,19 @@ export default function NormalListSection({ products }) {
                                                                </div>
 
                                                                <div className="pro-meta">
-                                                                      <div className="pro-price">
-                                                                             <span>{isBusinessListing ? t('Business Price') : t('Price')}</span>
+                                                                     <div className="pro-price">
+                                                                             <span>{businessListing ? t('Business Price') : t('Price')}</span>
                                                                              <div className="price">
                                                                                     <span className="me-1" style={{ color: "#23262F" }}>
                                                                                            {(() => {
-                                                                                                  if (product.discount_type && product.discount_value > 0) {
-                                                                                                         let finalPrice = price;
-                                                                                                         const originalPrice = price;
-
-                                                                                                         if (product.discount_type === "percent") {
-                                                                                                                finalPrice = originalPrice - (originalPrice * (product.discount_value / 100));
-                                                                                                         } else if (product.discount_type === "flat") {
-                                                                                                                finalPrice = originalPrice - product.discount_value;
-                                                                                                         }
-                                                                                                         if (finalPrice < 0) finalPrice = 0;
-
+                                                                                                  if (discountMeta.hasDiscount) {
                                                                                                          return (
                                                                                                                 <span className="d-flex align-items-center gap-2">
                                                                                                                        <span className="text-decoration-line-through text-muted fs-6" style={{ fontSize: "0.8em" }}>
-                                                                                                                              <Price amountAED={originalPrice} />
+                                                                                                                              <Price amountAED={discountMeta.originalPrice} />
                                                                                                                        </span>
                                                                                                                        <span className="text-danger fw-bold">
-                                                                                                                              <Price amountAED={finalPrice} />
+                                                                                                                              <Price amountAED={discountMeta.finalPrice} />
                                                                                                                        </span>
                                                                                                                 </span>
                                                                                                          );
@@ -120,11 +111,11 @@ export default function NormalListSection({ products }) {
                                                                       </div>
 
                                                                       <div className="pro-buy-btn">
-                                                                             <div className="pro-bid-btn">
-                                                                                    <Link href={`/product/${product.slug}`}>
-                                                                                           {isBusinessListing ? t('View Product') : t('Buy Now')}
-                                                                                    </Link>
-                                                                             </div>
+                                                                            <div className="pro-bid-btn">
+                                                                                   <Link href={`/product/${product.slug}`}>
+                                                                                           {businessListing ? t('View Product') : t('Buy Now')}
+                                                                                   </Link>
+                                                                            </div>
                                                                       </div>
                                                                </div>
                                                         </div>
