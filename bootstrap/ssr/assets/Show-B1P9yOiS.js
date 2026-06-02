@@ -13,6 +13,7 @@ import "./CurrencyPicker-KgG9a2BI.js";
 function Show({ blog }) {
   const blogTitle = typeof blog?.title === "string" ? blog.title : "Blog";
   const blogImage = typeof blog?.image === "string" ? blog.image.trim() : "";
+  const rawSchemaMarkup = typeof blog?.schema_markup === "string" ? blog.schema_markup.trim() : "";
   const blogContent = typeof blog?.content === "string" ? blog.content : typeof blog?.description === "string" ? blog.description : typeof blog?.body === "string" ? blog.body : "";
   const blogDescription = typeof blog?.excerpt === "string" && blog.excerpt.trim() ? blog.excerpt : typeof blog?.meta_description === "string" && blog.meta_description.trim() ? blog.meta_description : "Read more on our blog.";
   const blogImageSrc = blogImage ? blogImage.startsWith("http") ? blogImage : `/${encodeURI(blogImage)}` : "";
@@ -20,6 +21,15 @@ function Show({ blog }) {
   const shareUrl = typeof window !== "undefined" ? window.location.href : typeof blog?.slug === "string" && blog.slug ? route("blogs.show", blog.slug, false) : "";
   const canonicalUrl = typeof blog?.canonical_url === "string" && blog.canonical_url.trim() ? blog.canonical_url.trim() : shareUrl;
   const shareText = blogTitle;
+  const schemaMarkup = (() => {
+    if (!rawSchemaMarkup) return "";
+    try {
+      const parsed = JSON.parse(rawSchemaMarkup);
+      return JSON.stringify(parsed);
+    } catch (error) {
+      return "";
+    }
+  })();
   const openShareTab = (url) => {
     if (typeof window === "undefined") return;
     const newTab = window.open(url, "_blank");
@@ -74,7 +84,14 @@ function Show({ blog }) {
       /* @__PURE__ */ jsx("title", { children: `${blogTitle} | XpertBid Blog` }),
       /* @__PURE__ */ jsx("meta", { name: "description", content: blogDescription }),
       canonicalUrl && /* @__PURE__ */ jsx("link", { rel: "canonical", href: canonicalUrl }),
-      blog.meta_keywords && /* @__PURE__ */ jsx("meta", { name: "keywords", content: blog.meta_keywords })
+      blog.meta_keywords && /* @__PURE__ */ jsx("meta", { name: "keywords", content: blog.meta_keywords }),
+      schemaMarkup && /* @__PURE__ */ jsx(
+        "script",
+        {
+          type: "application/ld+json",
+          dangerouslySetInnerHTML: { __html: schemaMarkup }
+        }
+      )
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "bg-white min-vh-100 pb-5", children: [
       blogImageSrc && /* @__PURE__ */ jsx("div", { className: "w-100 overflow-hidden", style: { minHeight: "400px", maxHeight: "600px" }, children: /* @__PURE__ */ jsx(
