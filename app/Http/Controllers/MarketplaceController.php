@@ -122,6 +122,11 @@ class MarketplaceController extends Controller
         };
     }
 
+    protected function browseStatuses(): array
+    {
+        return ['active', 'sold_out'];
+    }
+
     protected function canonicalMarketplaceUrl(?string $slug, string $type, Request $request): string
     {
         $query = collect($request->query())
@@ -183,7 +188,7 @@ class MarketplaceController extends Controller
         };
 
         $categoryHasListings = function ($categoryId) {
-            return Listing::where('status', 'active')
+            return Listing::whereIn('status', $this->browseStatuses())
                 ->where('listing_type', '!=', 'live_auction')
                 ->where(function ($q) use ($categoryId) {
                 $q->where('category_id', $categoryId)
@@ -231,7 +236,7 @@ class MarketplaceController extends Controller
 
         $activeSlug = $slug ?? $request->input('category');
 
-        $query = Listing::where('status', 'active')->with([
+        $query = Listing::whereIn('status', $this->browseStatuses())->with([
             'user.individualVerification',
             'user.corporateVerification',
             'category',
@@ -335,7 +340,7 @@ class MarketplaceController extends Controller
             }
         }
 
-        $availabilityQuery = Listing::where('status', 'active')
+        $availabilityQuery = Listing::whereIn('status', $this->browseStatuses())
             ->where('listing_type', '!=', 'live_auction');
 
         if ($categoryScopeIds) {
@@ -502,7 +507,7 @@ class MarketplaceController extends Controller
             $query->where('featured_name', 'home_featured');
         }
 
-        $curatedBaseQuery = Listing::where('status', 'active')->with([
+        $curatedBaseQuery = Listing::whereIn('status', $this->browseStatuses())->with([
             'user.individualVerification',
             'user.corporateVerification',
             'category',
@@ -596,7 +601,7 @@ class MarketplaceController extends Controller
     public function mobileIndex(Request $request)
     {
         $query = Listing::query()
-            ->where('status', 'active')
+            ->whereIn('status', $this->browseStatuses())
             ->where('listing_type', '!=', 'live_auction')
             ->with(['category', 'user'])
             ->withMax('bids', 'bid_amount');

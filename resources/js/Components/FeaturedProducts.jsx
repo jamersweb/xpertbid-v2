@@ -4,7 +4,7 @@ import Price from "@/Components/Price";
 import OwnerInfoRow from "@/Components/OwnerInfoRow";
 import FavoriteToggleButton from "@/Components/FavoriteToggleButton";
 import useTranslate from "@/hooks/useTranslate";
-import { getDiscountMeta, isDirectBuyListing } from "@/Utils/listingPricing";
+import { getDiscountMeta, isDirectBuyListing, isSoldOutListing } from "@/Utils/listingPricing";
 
 const getProductImageSrc = (product) => {
        const directImage = product?.image_url;
@@ -46,6 +46,7 @@ export default function FeaturedProducts({ products }) {
                                                  const minBid = Number(product?.minimum_bid ?? 0);
                                                  const hasMaxBid = Number.isFinite(maxBid) && maxBid > 0;
                                                  const directBuyListing = isDirectBuyListing(product);
+                                                 const isSoldOut = isSoldOutListing(product);
                                                  const discountMeta = getDiscountMeta(product);
                                                  const displayLabel = directBuyListing ? t('Price') : (hasMaxBid ? t('Current Bid') : t('Minimum Bid'));
                                                  const displayAmount = hasMaxBid ? maxBid : minBid;
@@ -68,13 +69,18 @@ export default function FeaturedProducts({ products }) {
                                                                                     </div>
                                                                              </Link>
 
-                                                                             {discountMeta.hasDiscount && (
+                                                                             {isSoldOut && (
+                                                                                    <div style={{ position: "absolute", top: "10px", left: "10px", background: "#111827", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }}>
+                                                                                           Sold Out
+                                                                                    </div>
+                                                                             )}
+                                                                             {!isSoldOut && discountMeta.hasDiscount && (
                                                                                     <div style={{ position: "absolute", top: "10px", left: "10px", background: "rgba(220, 53, 69, 0.9)", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }}>
                                                                                            {discountMeta.badgeText}
                                                                                     </div>
                                                                              )}
 
-                                                                             {!directBuyListing && (
+                                                                             {!isSoldOut && !directBuyListing && (
                                                                                     <CountdownTimer startDate={product.start_date} endDate={product.end_date} />
                                                                              )}
                                                                       </div>
@@ -120,13 +126,19 @@ export default function FeaturedProducts({ products }) {
                                                                                     </div>
                                                                              </div>
 
-                                                                             <div className="pro-buy-btn">
-                                                                                    <div className="pro-bid-btn">
-                                                                                           <Link href={`/product/${product.slug}`}>
-                                                                                                  {directBuyListing ? t('Buy Now') : t('Place Bid')}
-                                                                                           </Link>
-                                                                                    </div>
-                                                                             </div>
+                                                                      <div className="pro-buy-btn">
+                                                                            <div className="pro-bid-btn">
+                                                                                   {isSoldOut ? (
+                                                                                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "14px 22px", background: "#9ca3af", color: "#fff", fontWeight: 600, cursor: "not-allowed" }}>
+                                                                                                 {t('Sold Out')}
+                                                                                          </span>
+                                                                                   ) : (
+                                                                                          <Link href={`/product/${product.slug}`}>
+                                                                                                 {directBuyListing ? t('Buy Now') : t('Place Bid')}
+                                                                                          </Link>
+                                                                                   )}
+                                                                            </div>
+                                                                     </div>
                                                                       </div>
                                                                </div>
                                                         </div>

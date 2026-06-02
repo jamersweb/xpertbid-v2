@@ -165,7 +165,7 @@ class ListingController extends Controller
                 ->select('id', 'name')
                 ->orderBy('name')
                 ->get(),
-            'statuses' => ['inactive', 'active', 'pending', 'declined', 'resubmit', 'closed', 'ended', 'awarded'],
+            'statuses' => ['inactive', 'active', 'pending', 'declined', 'resubmit', 'closed', 'ended', 'awarded', 'sold_out'],
         ];
     }
     /**
@@ -928,7 +928,7 @@ class ListingController extends Controller
     {
         $listing = Listing::findOrFail($id);
         $request->validate([
-            'status' => 'required|string|in:active,inactive,pending,declined'
+            'status' => 'required|string|in:active,inactive,pending,declined,sold_out'
         ]);
 
         $listing->update(['status' => $request->status]);

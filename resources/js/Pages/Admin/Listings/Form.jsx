@@ -359,7 +359,7 @@ export default function Form({
                                                  <Field label="Status" error={errors.status}>
                                                         <select className={inputClass} value={data.status} onChange={(e) => setData('status', e.target.value)}>
                                                                {statuses.map((status) => (
-                                                                      <option key={status} value={status}>{status}</option>
+                                                                      <option key={status} value={status}>{status === 'sold_out' ? 'Sold Out' : status}</option>
                                                                ))}
                                                         </select>
                                                  </Field>

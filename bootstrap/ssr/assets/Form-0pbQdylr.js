@@ -300,7 +300,7 @@ function Form({
             ] }) })
           ] }),
           /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [
-            /* @__PURE__ */ jsx(Field, { label: "Status", error: errors.status, children: /* @__PURE__ */ jsx("select", { className: inputClass, value: data.status, onChange: (e) => setData("status", e.target.value), children: statuses.map((status) => /* @__PURE__ */ jsx("option", { value: status, children: status }, status)) }) }),
+            /* @__PURE__ */ jsx(Field, { label: "Status", error: errors.status, children: /* @__PURE__ */ jsx("select", { className: inputClass, value: data.status, onChange: (e) => setData("status", e.target.value), children: statuses.map((status) => /* @__PURE__ */ jsx("option", { value: status, children: status === "sold_out" ? "Sold Out" : status }, status)) }) }),
             /* @__PURE__ */ jsx(Field, { label: "Category", error: errors.category_id, children: /* @__PURE__ */ jsx(
               SearchableSelect,
               {

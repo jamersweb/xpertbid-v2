@@ -3,7 +3,7 @@ import Price from "@/Components/Price";
 import OwnerInfoRow from "@/Components/OwnerInfoRow";
 import FavoriteToggleButton from "@/Components/FavoriteToggleButton";
 import useTranslate from "@/hooks/useTranslate";
-import { getBaseListingPrice, getDiscountMeta, isBusinessListing } from "@/Utils/listingPricing";
+import { getBaseListingPrice, getDiscountMeta, isBusinessListing, isSoldOutListing } from "@/Utils/listingPricing";
 
 const getProductImageSrc = (product) => {
        const directImage = product?.image_url;
@@ -45,6 +45,7 @@ export default function NormalListSection({ products }) {
                                           const businessListing = isBusinessListing(product);
                                           const price = getBaseListingPrice(product);
                                           const discountMeta = getDiscountMeta(product);
+                                          const isSoldOut = isSoldOutListing(product);
                                           const imageSrc = getProductImageSrc(product);
 
                                           return (
@@ -52,7 +53,13 @@ export default function NormalListSection({ products }) {
                                                         <div className="product-card-wrapper h-100">
                                                                <div className="pro-image" style={{ position: "relative" }}>
                                                                       <FavoriteToggleButton listingId={product.id} />
-                                                                      {discountMeta.hasDiscount && (
+                                                                      {isSoldOut && (
+                                                                             <div style={{ position: "absolute", top: "10px", left: "10px", background: "#111827", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }}>
+                                                                                    Sold Out
+                                                                             </div>
+                                                                      )}
+
+                                                                      {!isSoldOut && discountMeta.hasDiscount && (
                                                                              <div style={{ position: "absolute", top: "10px", left: "10px", background: "rgba(220, 53, 69, 0.9)", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }}>
                                                                                     {discountMeta.badgeText}
                                                                              </div>
@@ -112,9 +119,15 @@ export default function NormalListSection({ products }) {
 
                                                                       <div className="pro-buy-btn">
                                                                             <div className="pro-bid-btn">
-                                                                                   <Link href={`/product/${product.slug}`}>
-                                                                                           {businessListing ? t('View Product') : t('Buy Now')}
-                                                                                   </Link>
+                                                                                   {isSoldOut ? (
+                                                                                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "14px 22px", background: "#9ca3af", color: "#fff", fontWeight: 600, cursor: "not-allowed" }}>
+                                                                                                 {t('Sold Out')}
+                                                                                          </span>
+                                                                                   ) : (
+                                                                                          <Link href={`/product/${product.slug}`}>
+                                                                                                 {businessListing ? t('View Product') : t('Buy Now')}
+                                                                                          </Link>
+                                                                                   )}
                                                                             </div>
                                                                       </div>
                                                                </div>

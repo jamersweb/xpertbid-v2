@@ -7,8 +7,8 @@ import { Swiper, SwiperSlide } from "swiper/react";
 /* empty css                    */
 import { FreeMode, Navigation, Thumbs } from "swiper/modules";
 import { C as CountdownTimer } from "./OwnerInfoRow-DJ1W7dqV.js";
-import { Y as YoutubeLiveEmbed, B as BidSection, a as BidHistory } from "./YoutubeLiveEmbed-BW-NNHuN.js";
-import { A as AuctionCard } from "./AuctionCard-DfcN-9mi.js";
+import { Y as YoutubeLiveEmbed, B as BidSection, a as BidHistory } from "./YoutubeLiveEmbed-DtwhkCFH.js";
+import { A as AuctionCard } from "./AuctionCard-CkurWAja.js";
 import { L as ListingLiveChat } from "./ListingLiveChat-DrCA7khS.js";
 import { P as Price } from "./Price-CF5NSPt0.js";
 import { C as CartProvider } from "./CartContext-DXNQZwkV.js";
@@ -18,8 +18,8 @@ import "sweetalert2";
 import "axios";
 import "./CurrencyPicker-KgG9a2BI.js";
 import "./useCurrencyList-Ce5tJXO9.js";
+import "./listingPricing-CwGdsu2n.js";
 import "./FavoriteToggleButton-1jmbejDw.js";
-import "./listingPricing-tbgbFOnH.js";
 function ProductHeader({ views, productId, slug, link, backHref = "/marketplace" }) {
   const shareUrl = typeof window !== "undefined" ? link || `${window.location.origin}/product/${slug}` : "";
   const handleCopyLink = () => {
@@ -142,7 +142,25 @@ function ProductImages({ albumImages, videos = null, status, mainImage, listType
         border: "2px solid rgba(255, 255, 255, 0.2)",
         animation: "pulseGlow 2s infinite"
       }, children: "AWARDED" }),
-      String(listType || "").toLowerCase() === "auction" && endDate && /* @__PURE__ */ jsx("div", { style: {
+      (status === "sold_out" || status === "sold out") && /* @__PURE__ */ jsx("div", { className: "soldOutBadge", style: {
+        position: "absolute",
+        bottom: "20px",
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 20,
+        background: "linear-gradient(135deg, #991b1b 0%, #dc2626 100%)",
+        color: "white",
+        padding: "8px 24px",
+        borderRadius: "50px",
+        fontWeight: "800",
+        fontSize: "0.9rem",
+        letterSpacing: "1.5px",
+        textTransform: "uppercase",
+        boxShadow: "0 10px 15px -3px rgba(220, 38, 38, 0.35)",
+        whiteSpace: "nowrap",
+        border: "2px solid rgba(255, 255, 255, 0.2)"
+      }, children: "SOLD OUT" }),
+      String(listType || "").toLowerCase() === "auction" && endDate && !(status === "sold_out" || status === "sold out") && /* @__PURE__ */ jsx("div", { style: {
         position: "absolute",
         left: "0",
         right: "0",

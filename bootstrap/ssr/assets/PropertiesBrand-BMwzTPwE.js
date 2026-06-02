@@ -2,7 +2,7 @@ import { jsxs, jsx } from "react/jsx-runtime";
 import "react";
 import { Head } from "@inertiajs/react";
 import { A as AppLayout } from "./AppLayout-CKzCZqB6.js";
-import { A as AuctionCard } from "./AuctionCard-DfcN-9mi.js";
+import { A as AuctionCard } from "./AuctionCard-CkurWAja.js";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 /* empty css                */
@@ -17,7 +17,7 @@ import "sweetalert2";
 import "./CurrencyPicker-KgG9a2BI.js";
 import "./OwnerInfoRow-DJ1W7dqV.js";
 import "./FavoriteToggleButton-1jmbejDw.js";
-import "./listingPricing-tbgbFOnH.js";
+import "./listingPricing-CwGdsu2n.js";
 const TOP_BANNER_DESKTOP = "/assets/images/desk_b_ban.png";
 const TOP_BANNER_MOBILE = "/assets/images/mob_b_ban.png";
 const SMALL_BANNERS = [

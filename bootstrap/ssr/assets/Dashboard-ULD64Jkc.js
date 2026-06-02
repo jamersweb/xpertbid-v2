@@ -1,7 +1,7 @@
 import { jsxs, jsx } from "react/jsx-runtime";
 import { A as AppLayout } from "./AppLayout-CKzCZqB6.js";
 import { Head, Link } from "@inertiajs/react";
-import { L as ListingCard } from "./ListingCard-CvD1eX3Z.js";
+import { L as ListingCard } from "./ListingCard-B94e3GBu.js";
 import { u as useTranslate } from "./CurrencyPicker-KgG9a2BI.js";
 import "ziggy-js";
 import "react";
@@ -12,7 +12,7 @@ import "axios";
 import "react-loader-spinner";
 import "sweetalert2";
 import "./ErrorPopup-VSFE5nHL.js";
-import "./listingPricing-tbgbFOnH.js";
+import "./listingPricing-CwGdsu2n.js";
 function Dashboard({ listingsCount, biddingsCount, listings }) {
   const { t } = useTranslate();
   return /* @__PURE__ */ jsxs(AppLayout, { title: t("Dashboard"), children: [

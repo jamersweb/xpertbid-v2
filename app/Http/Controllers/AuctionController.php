@@ -167,6 +167,11 @@ class AuctionController extends Controller
         ];
     }
 
+    protected function browseStatuses(): array
+    {
+        return ['active', 'sold_out'];
+    }
+
     public function home()
     {
         $favoriteListingIds = auth()->check()
@@ -176,7 +181,7 @@ class AuctionController extends Controller
         // Data for Home Page
         $sliders = \App\Models\Slider::where('status', 'active')->get(); 
         $activeCategoryIds = \App\Models\Listing::query()
-            ->where('status', 'active')
+            ->whereIn('status', $this->browseStatuses())
             ->where('listing_type', '!=', 'live_auction')
             ->get(['category_id', 'sub_category_id', 'child_category_id'])
             ->flatMap(fn ($listing) => [
@@ -220,7 +225,7 @@ class AuctionController extends Controller
             ->values();
         
         $featured = \App\Models\Listing::where('featured_name', 'home_featured')
-            ->where("status", "active")
+            ->whereIn("status", $this->browseStatuses())
             ->with(array_merge($this->listingUserRelations(), ['bids'])) // Eager load relationships
             ->withMax('bids', 'bid_amount')
             ->latest()
@@ -229,7 +234,7 @@ class AuctionController extends Controller
             
         // Latest Vehicles (using category filter for now, or listing_type if applicable)
         $latestVehicles = \App\Models\Listing::where('category_id', 311)
-            ->where('status', 'active')
+            ->whereIn('status', $this->browseStatuses())
             ->withMax('bids', 'bid_amount')
             ->with($this->listingUserRelations())
             ->latest()
@@ -238,14 +243,14 @@ class AuctionController extends Controller
 
         // Latest Properties
         $latestProperties = \App\Models\Listing::where('category_id', 222)
-            ->where('status', 'active')
+            ->whereIn('status', $this->browseStatuses())
             ->withMax('bids', 'bid_amount')
             ->with($this->listingUserRelations())
             ->latest()
             ->take(12)
             ->get();
             
-        $latestAuctions = \App\Models\Listing::where('status', 'active')
+        $latestAuctions = \App\Models\Listing::whereIn('status', $this->browseStatuses())
             ->where('listing_type', 'auction')
             ->with($this->listingUserRelations())
             ->withMax('bids', 'bid_amount')
@@ -253,7 +258,7 @@ class AuctionController extends Controller
             ->take(8)
             ->get();
 
-        $latestLiveAuctions = \App\Models\Listing::where('status', 'active')
+        $latestLiveAuctions = \App\Models\Listing::whereIn('status', $this->browseStatuses())
             ->where('listing_type', 'live_auction')
             ->with($this->listingUserRelations())
             ->withMax('bids', 'bid_amount')
@@ -263,7 +268,7 @@ class AuctionController extends Controller
 
         // Latest Normal Lists
         $latestNormalLists = \App\Models\Listing::whereIn('listing_type', ['normal_list', 'normal', 'business_list', 'business'])
-            ->where('status', 'active')
+            ->whereIn('status', $this->browseStatuses())
             ->with($this->listingUserRelations())
             ->latest()
             ->take(12)
@@ -749,7 +754,7 @@ class AuctionController extends Controller
 
     public function get_products()
     {
-        $product = \App\Models\Listing::where('status', 'active')->withMax('bids', 'bid_amount')->latest()->get()->take(9);
+        $product = \App\Models\Listing::whereIn('status', $this->browseStatuses())->withMax('bids', 'bid_amount')->latest()->get()->take(9);
 
         // Add owner data for each product (OwnerInfoRow expects user relationship)
         foreach ($product as $p) {
@@ -765,10 +770,10 @@ class AuctionController extends Controller
 
     public function get_featured()
     {
-        // 1. Fetch ALL active featured products sorted by latest
+        // 1. Fetch all visible featured products sorted by latest
         $allFeatured = \App\Models\Listing::where('featured_name', 'home_featured')
             ->withMax('bids', 'bid_amount')
-            ->where("status", "active")
+            ->whereIn("status", $this->browseStatuses())
             ->latest()
             ->get();
 
@@ -803,7 +808,7 @@ class AuctionController extends Controller
     public function get_featured_vehicle()
     {
         $product = \App\Models\Listing::where('featured_name', 'vehicle_featured')
-            ->where("status", "active")
+            ->whereIn("status", $this->browseStatuses())
             ->latest()
             ->get();
         return response()->json(['product' => $product]);
@@ -811,7 +816,7 @@ class AuctionController extends Controller
     public function get_featured_service()
     {
         $product = \App\Models\Listing::where('featured_name', 'service_featured')
-            ->where("status", "active")
+            ->whereIn("status", $this->browseStatuses())
             ->latest()
             ->get();
         return response()->json(['product' => $product]);
@@ -819,26 +824,41 @@ class AuctionController extends Controller
     public function get_featured_realstate()
     {
         $product = \App\Models\Listing::where('featured_name', 'realstate_featured')
-            ->where("status", "active")
+            ->whereIn("status", $this->browseStatuses())
             ->latest()
             ->get();
         return response()->json(['product' => $product]);
     }
     public function get_vehicle()
     {
-        $product = \App\Models\Listing::whereBetween('category_id', [190, 200])->orWhere('category_id', 214)->where("status", "active")->latest()->get();
+        $product = \App\Models\Listing::where(function ($query) {
+                $query->whereBetween('category_id', [190, 200])
+                    ->orWhere('category_id', 214);
+            })
+            ->whereIn("status", $this->browseStatuses())
+            ->latest()
+            ->get();
 
         return response()->json(['product' => $product]);
     }
     public function get_realestate()
     {
-        $product = \App\Models\Listing::whereBetween('category_id', [207, 211])->orWhere('category_id', 216)->where("status", "active")->latest()->get();
+        $product = \App\Models\Listing::where(function ($query) {
+                $query->whereBetween('category_id', [207, 211])
+                    ->orWhere('category_id', 216);
+            })
+            ->whereIn("status", $this->browseStatuses())
+            ->latest()
+            ->get();
         return response()->json(['product' => $product]);
     }
     public function get_service()
     {
-        $product = \App\Models\Listing::whereBetween('category_id', [201, 206])->orWhere('category_id', 215)
-            ->where("status", "active")
+        $product = \App\Models\Listing::where(function ($query) {
+                $query->whereBetween('category_id', [201, 206])
+                    ->orWhere('category_id', 215);
+            })
+            ->whereIn("status", $this->browseStatuses())
             ->latest()
             ->get();
         return response()->json(['product' => $product]);
@@ -848,7 +868,7 @@ class AuctionController extends Controller
     public function get_latest_vehicles()
     {
         $products = \App\Models\Listing::where('category_id', 311)
-            ->where('status', 'active')
+            ->whereIn('status', $this->browseStatuses())
             ->withMax('bids', 'bid_amount')
             ->latest()
             ->take(12)
@@ -870,7 +890,7 @@ class AuctionController extends Controller
     public function get_latest_properties()
     {
         $products = \App\Models\Listing::where('category_id', 222)
-            ->where('status', 'active')
+            ->whereIn('status', $this->browseStatuses())
             ->withMax('bids', 'bid_amount')
             ->latest()
             ->take(12)
@@ -892,7 +912,7 @@ class AuctionController extends Controller
     public function get_latest_normal_lists()
     {
         $products = \App\Models\Listing::where('listing_type', 'normal_list')
-            ->where('status', 'active')
+            ->whereIn('status', $this->browseStatuses())
             ->withMax('bids', 'bid_amount')
             ->latest()
             ->take(12)
@@ -914,7 +934,7 @@ class AuctionController extends Controller
     public function get_latest_auctions()
     {
         $products = \App\Models\Listing::whereIn('listing_type', ['auction', 'live_auction'])
-            ->where('status', 'active')
+            ->whereIn('status', $this->browseStatuses())
             ->withMax('bids', 'bid_amount')
             ->latest()
             ->take(12)
@@ -1064,7 +1084,7 @@ class AuctionController extends Controller
         // 1. Same Category
         $sameCategory = \App\Models\Listing::where('category_id', $listing->category_id)
             ->where('id', '!=', $listing->id)
-            ->where('status', 'active')
+            ->whereIn('status', $this->browseStatuses())
             ->latest()
             ->take(12)
             ->get();
@@ -1072,14 +1092,14 @@ class AuctionController extends Controller
         // 2. 1 Rupee Auctions
         $oneRupee = \App\Models\Listing::where('is_1_rupee', 1)
             ->where('id', '!=', $listing->id)
-            ->where('status', 'active')
+            ->whereIn('status', $this->browseStatuses())
             ->latest()
             ->take(12)
             ->get();
 
         // 3. Latest Products
         $latest = \App\Models\Listing::where('id', '!=', $listing->id)
-            ->where('status', 'active')
+            ->whereIn('status', $this->browseStatuses())
             ->latest()
             ->take(12)
             ->get();
@@ -1128,7 +1148,10 @@ class AuctionController extends Controller
             $q->whereIn('child_category_id', $cat_id)
               ->orWhereIn('sub_category_id', $cat_id)
               ->orWhereIn('category_id', $cat_id);
-        })->latest()->get();
+        })
+        ->whereIn('status', $this->browseStatuses())
+        ->latest()
+        ->get();
 
         return response()->json(['product' => $product]);
     }

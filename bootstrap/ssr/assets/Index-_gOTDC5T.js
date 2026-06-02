@@ -94,9 +94,10 @@ function Index({
     resubmit: "bg-sky-100 text-sky-700",
     ended: "bg-orange-100 text-orange-700",
     closed: "bg-slate-100 text-slate-700",
-    awarded: "bg-violet-100 text-violet-700"
+    awarded: "bg-violet-100 text-violet-700",
+    sold_out: "bg-rose-100 text-rose-700"
   };
-  const statusOptions = ["", "pending", "active", "declined", "inactive", "resubmit", "ended", "closed", "awarded"];
+  const statusOptions = ["", "pending", "active", "declined", "inactive", "resubmit", "ended", "closed", "awarded", "sold_out"];
   const formatListingType = (type) => type === "live_auction" ? "Live Auction" : String(type || "").replace("_", " ");
   return /* @__PURE__ */ jsxs(AdminLayout, { title: pageTitle, children: [
     /* @__PURE__ */ jsx(Head, { title: pageTitle }),
@@ -151,7 +152,7 @@ function Index({
               className: "bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm text-gray-900 px-4 py-2 appearance-none transition-all",
               value: status,
               onChange: (e) => setStatus(e.target.value),
-              children: statusOptions.map((statusOption) => /* @__PURE__ */ jsx("option", { value: statusOption, children: statusOption ? statusOption.charAt(0).toUpperCase() + statusOption.slice(1) : "All Status" }, statusOption || "all"))
+              children: statusOptions.map((statusOption) => /* @__PURE__ */ jsx("option", { value: statusOption, children: statusOption ? statusOption === "sold_out" ? "Sold Out" : statusOption.charAt(0).toUpperCase() + statusOption.slice(1) : "All Status" }, statusOption || "all"))
             }
           ),
           /* @__PURE__ */ jsx("button", { type: "submit", className: "px-6 py-2 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors", children: "Filter" })
@@ -198,7 +199,7 @@ function Index({
               className: "text-sm font-bold text-black"
             }
           ) }),
-          /* @__PURE__ */ jsx("td", { className: "px-6 py-4", children: /* @__PURE__ */ jsx("span", { className: `px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBadges[listing.status] || "bg-gray-100 text-gray-700"}`, children: listing.status }) }),
+          /* @__PURE__ */ jsx("td", { className: "px-6 py-4", children: /* @__PURE__ */ jsx("span", { className: `px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBadges[listing.status] || "bg-gray-100 text-gray-700"}`, children: listing.status === "sold_out" ? "Sold Out" : listing.status }) }),
           /* @__PURE__ */ jsx("td", { className: "px-6 py-4 text-right", children: /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-end gap-2", children: [
             listing.pending_edit && /* @__PURE__ */ jsx(
               "button",

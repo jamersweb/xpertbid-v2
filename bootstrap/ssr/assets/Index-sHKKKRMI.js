@@ -2,7 +2,7 @@ import { jsxs, jsx, Fragment } from "react/jsx-runtime";
 import { useState, useEffect } from "react";
 import { Head, router } from "@inertiajs/react";
 import { A as AppLayout } from "./AppLayout-CKzCZqB6.js";
-import { A as AuctionCard } from "./AuctionCard-DfcN-9mi.js";
+import { A as AuctionCard } from "./AuctionCard-CkurWAja.js";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 /* empty css                */
@@ -17,7 +17,7 @@ import "sweetalert2";
 import "./CurrencyPicker-KgG9a2BI.js";
 import "./OwnerInfoRow-DJ1W7dqV.js";
 import "./FavoriteToggleButton-1jmbejDw.js";
-import "./listingPricing-tbgbFOnH.js";
+import "./listingPricing-CwGdsu2n.js";
 const parseDynamicOptions = (options) => {
   if (Array.isArray(options)) {
     return options.filter((item) => String(item || "").trim() !== "");

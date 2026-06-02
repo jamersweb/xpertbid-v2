@@ -4,6 +4,7 @@ import axios from "axios";
 import { usePage, router } from "@inertiajs/react";
 import { P as Price } from "./Price-CF5NSPt0.js";
 import { u as useCart } from "./CartContext-DXNQZwkV.js";
+import { i as isSoldOutListing } from "./listingPricing-CwGdsu2n.js";
 function BidSection({ product, highestBidProp, onBidPlaced, winnerDetails, isFavoriteProp }) {
   const { auth, flash } = usePage().props;
   const { addToCart } = useCart();
@@ -18,6 +19,7 @@ function BidSection({ product, highestBidProp, onBidPlaced, winnerDetails, isFav
   const normalizedListType = String(product?.list_type || product?.listing_type || "").toLowerCase();
   const isAuctionSale = normalizedListType === "auction" || normalizedListType === "live_auction";
   const isDirectSale = normalizedListType === "normal" || normalizedListType === "normal_list" || normalizedListType === "business" || normalizedListType === "business_list";
+  const isSoldOut = isSoldOutListing(product);
   const auctionStartPrice = product.minimum_bid || product.listing_data?.start_price || 0;
   const auctionReservePrice = product.reserve_price || product.listing_data?.reserve_price || 0;
   const categoryIds = [
@@ -91,6 +93,10 @@ function BidSection({ product, highestBidProp, onBidPlaced, winnerDetails, isFav
   };
   const isOwner = auth.user && (auth.user.id === product.user_id || auth.user.id === product.owner_id || auth.user.id === product.seller_id);
   const handlePlaceBid = async () => {
+    if (isSoldOut) {
+      showNotification("This product is sold out", "error");
+      return;
+    }
     if (!auth.user) {
       showNotification("Please login to place a bid", "error");
       return;
@@ -129,6 +135,10 @@ function BidSection({ product, highestBidProp, onBidPlaced, winnerDetails, isFav
     });
   };
   const handleAddToCart = async () => {
+    if (isSoldOut) {
+      showNotification("This product is sold out", "error");
+      return;
+    }
     setIsAddingToCart(true);
     const result = await addToCart(product.id, "product", null, product);
     setIsAddingToCart(false);
@@ -139,6 +149,10 @@ function BidSection({ product, highestBidProp, onBidPlaced, winnerDetails, isFav
     }
   };
   const handleBuyNow = async () => {
+    if (isSoldOut) {
+      showNotification("This product is sold out", "error");
+      return;
+    }
     setIsAddingToCart(true);
     const result = await addToCart(product.id, "product", null, product);
     if (result.success || result.message === "Product already in cart") {
@@ -183,6 +197,10 @@ function BidSection({ product, highestBidProp, onBidPlaced, winnerDetails, isFav
   };
   return /* @__PURE__ */ jsxs("div", { className: "product-details-brief-parent", style: { padding: "0 10px" }, children: [
     /* @__PURE__ */ jsx("h2", { className: "product-heading mb-3", children: product.title }),
+    isSoldOut && /* @__PURE__ */ jsxs("div", { className: "sold-out-banner mb-4", children: [
+      /* @__PURE__ */ jsx("i", { className: "fa-solid fa-box-open me-2" }),
+      "Sold Out"
+    ] }),
     /* @__PURE__ */ jsxs("div", { className: "owned-by-and-favoruite d-flex align-items-center justify-content-between mb-4", children: [
       /* @__PURE__ */ jsxs("div", { className: "owned d-flex align-items-center gap-2", children: [
         /* @__PURE__ */ jsx("div", { className: "customer-profile-wrap", children: /* @__PURE__ */ jsx(
@@ -237,7 +255,7 @@ function BidSection({ product, highestBidProp, onBidPlaced, winnerDetails, isFav
           "Establishing contact with the highest bidder"
         ] })
       ] }),
-      product.status !== "awarded" && product.status !== "awarded " && /* @__PURE__ */ jsxs("div", { className: "bid-input-wrap mb-3", children: [
+      product.status !== "awarded" && product.status !== "awarded " && !isSoldOut && /* @__PURE__ */ jsxs("div", { className: "bid-input-wrap mb-3", children: [
         /* @__PURE__ */ jsx(
           "input",
           {
@@ -294,7 +312,10 @@ function BidSection({ product, highestBidProp, onBidPlaced, winnerDetails, isFav
           hasDiscount && /* @__PURE__ */ jsx("span", { className: "badge bg-danger", children: product.discount_type === "percent" ? `${discountValue}% OFF` : "SALE" })
         ] })
       ] }) }),
-      /* @__PURE__ */ jsx("div", { className: "action-buttons d-grid gap-2 mb-3", children: shouldContactSupport ? /* @__PURE__ */ jsxs(
+      /* @__PURE__ */ jsx("div", { className: "action-buttons d-grid gap-2 mb-3", children: isSoldOut ? /* @__PURE__ */ jsxs("div", { className: "sold-out-action-box", children: [
+        /* @__PURE__ */ jsx("span", { className: "sold-out-action-label", children: "Sold Out" }),
+        /* @__PURE__ */ jsx("p", { className: "mb-0 text-muted", style: { fontSize: "13px" }, children: "This listing is no longer available for purchase or bidding." })
+      ] }) : shouldContactSupport ? /* @__PURE__ */ jsxs(
         "button",
         {
           className: "btn w-100 fw-bold",
@@ -380,6 +401,39 @@ function BidSection({ product, highestBidProp, onBidPlaced, winnerDetails, isFav
                                    white-space: nowrap;
                                    overflow: hidden;
                                    text-overflow: ellipsis;
+                            }
+                            .sold-out-banner {
+                                   display: inline-flex;
+                                   align-items: center;
+                                   gap: 8px;
+                                   padding: 10px 18px;
+                                   border-radius: 999px;
+                                   background: linear-gradient(135deg, #991b1b, #dc2626);
+                                   color: #fff;
+                                   font-size: 14px;
+                                   font-weight: 800;
+                                   letter-spacing: 0.08em;
+                                   text-transform: uppercase;
+                                   box-shadow: 0 10px 20px rgba(220, 38, 38, 0.18);
+                            }
+                            .sold-out-action-box {
+                                   padding: 16px 18px;
+                                   border-radius: 16px;
+                                   border: 1px solid #fecaca;
+                                   background: #fff1f2;
+                                   text-align: center;
+                            }
+                            .sold-out-action-label {
+                                   display: inline-block;
+                                   margin-bottom: 8px;
+                                   padding: 6px 14px;
+                                   border-radius: 999px;
+                                   background: #dc2626;
+                                   color: #fff;
+                                   font-size: 12px;
+                                   font-weight: 800;
+                                   letter-spacing: 0.08em;
+                                   text-transform: uppercase;
                             }
                             .detail-auction-meta .price span {
                                    color: inherit !important;

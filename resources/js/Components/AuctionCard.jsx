@@ -5,13 +5,14 @@ import OwnerInfoRow from "@/Components/OwnerInfoRow";
 import Price from "@/Components/Price";
 import FavoriteToggleButton from "@/Components/FavoriteToggleButton";
 import { useCart } from "@/Contexts/CartContext";
-import { getDiscountMeta, isDirectBuyListing } from "@/Utils/listingPricing";
+import { getDiscountMeta, isDirectBuyListing, isSoldOutListing } from "@/Utils/listingPricing";
 
 const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }) => {
        const { addToCart } = useCart();
        const isWonAuction = activeTab === "won";
        const listingKind = auction?.list_type || auction?.listing_type;
        const isLiveAuction = listingKind === "live_auction";
+       const isSoldOut = isSoldOutListing(auction);
        const directBuyListing = isDirectBuyListing(auction);
        const discountMeta = getDiscountMeta(auction);
        const categoryFeatures = auction?.category_features && typeof auction.category_features === "object" ? auction.category_features : {};
@@ -95,7 +96,16 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
                                    </span>
                             )}
 
-                            {discountMeta.hasDiscount && (
+                            {isSoldOut && (
+                                   <span
+                                          className="badge rounded-pill bg-dark text-white"
+                                          style={{ position: "absolute", top: 12, left: 12, zIndex: 3, fontSize: 12, padding: "7px 11px" }}
+                                   >
+                                          Sold Out
+                                   </span>
+                            )}
+
+                            {!isSoldOut && discountMeta.hasDiscount && (
                                    <span
                                           className="badge text-white"
                                           style={{ position: "absolute", top: 12, left: 12, zIndex: 3, fontSize: 12, padding: "7px 11px", background: "rgba(220, 53, 69, 0.9)", borderRadius: "999px" }}
@@ -104,7 +114,7 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
                                    </span>
                             )}
 
-                            {!isWonAuction && !directBuyListing && !isLiveAuction && (
+                            {!isSoldOut && !isWonAuction && !directBuyListing && !isLiveAuction && (
                                    <CountdownTimer startDate={auction.start_date} endDate={auction.end_date} />
                             )}
                      </div>
@@ -179,27 +189,50 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
 
                             <div className="pro-buy-btn">
                                    {isWonAuction ? (
-                                          <button
-                                                 type="button"
-                                                 onClick={handleCheckout}
-                                                 disabled={auction.status === "closed"}
-                                                 style={{
-                                                        border: "none",
-                                                        background: "#23262F",
-                                                        color: "#fff",
-                                                        borderRadius: "12px",
-                                                        padding: "14px 22px",
-                                                        fontWeight: 600,
-                                                        lineHeight: 1,
-                                                 }}
-                                          >
-                                                 Checkout
-                                          </button>
+                                          isSoldOut ? (
+                                                 <button
+                                                        type="button"
+                                                        disabled
+                                                        style={{
+                                                               border: "none",
+                                                               background: "#9ca3af",
+                                                               color: "#fff",
+                                                               borderRadius: "12px",
+                                                               padding: "14px 22px",
+                                                               fontWeight: 600,
+                                                               lineHeight: 1,
+                                                               cursor: "not-allowed",
+                                                        }}
+                                                 >
+                                                        Sold Out
+                                                 </button>
+                                          ) : (
+                                                 <button
+                                                        type="button"
+                                                        onClick={handleCheckout}
+                                                        disabled={auction.status === "closed"}
+                                                        style={{
+                                                               border: "none",
+                                                               background: "#23262F",
+                                                               color: "#fff",
+                                                               borderRadius: "12px",
+                                                               padding: "14px 22px",
+                                                               fontWeight: 600,
+                                                               lineHeight: 1,
+                                                        }}
+                                                 >
+                                                        Checkout
+                                                 </button>
+                                          )
                                    ) : (
                                           <div className="pro-bid-btn">
-                                                 <Link href={`/product/${auction.slug}`}>
-                                                        {directBuyListing ? "Buy Now" : (isLiveAuction ? "Join Live" : "Place Bid")}
-                                                 </Link>
+                                                 {isSoldOut ? (
+                                                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "14px 22px", background: "#9ca3af", color: "#fff", fontWeight: 600, cursor: "not-allowed" }}>Sold Out</span>
+                                                 ) : (
+                                                        <Link href={`/product/${auction.slug}`}>
+                                                               {directBuyListing ? "Buy Now" : (isLiveAuction ? "Join Live" : "Place Bid")}
+                                                        </Link>
+                                                 )}
                                           </div>
                                    )}
                             </div>

@@ -4,7 +4,7 @@ import { Link, router, Head } from "@inertiajs/react";
 import { A as AppLayout } from "./AppLayout-CKzCZqB6.js";
 import { C as CountdownTimer, O as OwnerInfoRow } from "./OwnerInfoRow-DJ1W7dqV.js";
 import { P as Price } from "./Price-CF5NSPt0.js";
-import { i as isDirectBuyListing, g as getDiscountMeta } from "./listingPricing-tbgbFOnH.js";
+import { b as isDirectBuyListing, i as isSoldOutListing, g as getDiscountMeta } from "./listingPricing-CwGdsu2n.js";
 import "ziggy-js";
 import "./CartContext-DXNQZwkV.js";
 import "react-loader-spinner";
@@ -25,6 +25,7 @@ const FavoriteCard = ({ favorite }) => {
   const imgPath = favorite.image || "/assets/images/placeholder.jpg";
   const title = favorite.title || favorite.name || "Product";
   const directBuyListing = isDirectBuyListing(favorite);
+  const isSoldOut = isSoldOutListing(favorite);
   const discountMeta = getDiscountMeta(favorite);
   const displayLabel = directBuyListing ? "Price" : Number(favorite.current_bid) > 0 ? "Current Bid" : "Minimum Bid";
   return /* @__PURE__ */ jsx("div", { className: "col-lg-4 col-md-6 col-sm-12 mkt-child", children: /* @__PURE__ */ jsxs("div", { className: "market-card", children: [
@@ -37,8 +38,26 @@ const FavoriteCard = ({ favorite }) => {
           loading: "lazy"
         }
       ) }),
-      favorite.end_date && !directBuyListing && /* @__PURE__ */ jsx(CountdownTimer, { startDate: favorite.start_date, endDate: favorite.end_date }),
-      discountMeta.hasDiscount && /* @__PURE__ */ jsx(
+      favorite.end_date && !isSoldOut && !directBuyListing && /* @__PURE__ */ jsx(CountdownTimer, { startDate: favorite.start_date, endDate: favorite.end_date }),
+      isSoldOut && /* @__PURE__ */ jsx(
+        "div",
+        {
+          style: {
+            position: "absolute",
+            top: "10px",
+            left: "10px",
+            background: "#111827",
+            color: "white",
+            padding: "5px 10px",
+            borderRadius: "999px",
+            fontSize: "12px",
+            fontWeight: "bold",
+            zIndex: 10
+          },
+          children: "Sold Out"
+        }
+      ),
+      !isSoldOut && discountMeta.hasDiscount && /* @__PURE__ */ jsx(
         "div",
         {
           style: {
@@ -82,7 +101,7 @@ const FavoriteCard = ({ favorite }) => {
       /* @__PURE__ */ jsxs("div", { className: "mkt-detail", children: [
         /* @__PURE__ */ jsxs("div", { className: "mkt-crt-bid", children: [
           /* @__PURE__ */ jsx("span", { className: "crnt-bid", children: displayLabel }),
-          /* @__PURE__ */ jsx("div", { className: "mkt-bid-price", children: directBuyListing && discountMeta.hasDiscount ? /* @__PURE__ */ jsxs("div", { className: "d-flex flex-column", children: [
+          /* @__PURE__ */ jsx("div", { className: "mkt-bid-price", children: isSoldOut ? /* @__PURE__ */ jsx("span", { className: "price text-muted fw-bold", children: "Sold Out" }) : directBuyListing && discountMeta.hasDiscount ? /* @__PURE__ */ jsxs("div", { className: "d-flex flex-column", children: [
             /* @__PURE__ */ jsx("span", { className: "text-decoration-line-through text-muted", style: { fontSize: "0.8em", lineHeight: 1 }, children: /* @__PURE__ */ jsx(Price, { className: "price", amountAED: discountMeta.originalPrice }) }),
             /* @__PURE__ */ jsx("span", { className: "text-danger", children: /* @__PURE__ */ jsx(Price, { className: "price", amountAED: discountMeta.finalPrice }) })
           ] }) : /* @__PURE__ */ jsx(
@@ -93,7 +112,7 @@ const FavoriteCard = ({ favorite }) => {
             }
           ) })
         ] }),
-        /* @__PURE__ */ jsx("div", { className: "mkt-bid-btn", children: /* @__PURE__ */ jsx(Link, { href: `/product/${favorite.slug}`, children: directBuyListing ? "Buy Now" : "Place Bid" }) })
+        /* @__PURE__ */ jsx("div", { className: "mkt-bid-btn", children: isSoldOut ? /* @__PURE__ */ jsx("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "12px 18px", background: "#9ca3af", color: "#fff", fontWeight: 600, cursor: "not-allowed" }, children: "Sold Out" }) : /* @__PURE__ */ jsx(Link, { href: `/product/${favorite.slug}`, children: directBuyListing ? "Buy Now" : "Place Bid" }) })
       ] })
     ] })
   ] }) });

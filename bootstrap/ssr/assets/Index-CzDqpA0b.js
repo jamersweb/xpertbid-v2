@@ -1,7 +1,7 @@
 import { jsx, jsxs } from "react/jsx-runtime";
 import "react";
 import { A as AppLayout } from "./AppLayout-CKzCZqB6.js";
-import { A as AuctionCard } from "./AuctionCard-DfcN-9mi.js";
+import { A as AuctionCard } from "./AuctionCard-CkurWAja.js";
 import { router } from "@inertiajs/react";
 import { u as useTranslate } from "./CurrencyPicker-KgG9a2BI.js";
 import "ziggy-js";
@@ -13,7 +13,7 @@ import "react-loader-spinner";
 import "sweetalert2";
 import "./OwnerInfoRow-DJ1W7dqV.js";
 import "./FavoriteToggleButton-1jmbejDw.js";
-import "./listingPricing-tbgbFOnH.js";
+import "./listingPricing-CwGdsu2n.js";
 const TabNavigation = ({ tabs, activeTab, onTabChange }) => {
   return /* @__PURE__ */ jsx("ul", { className: "nav nav-tabs bid-tabs-child", role: "tablist", children: tabs.map((tab) => /* @__PURE__ */ jsx(
     "li",

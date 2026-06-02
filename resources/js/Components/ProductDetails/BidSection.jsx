@@ -3,6 +3,7 @@ import axios from 'axios';
 import { usePage, router } from '@inertiajs/react';
 import Price from '@/Components/Price';
 import { useCart } from '@/Contexts/CartContext';
+import { isSoldOutListing } from '@/Utils/listingPricing';
 
 export default function BidSection({ product, highestBidProp, onBidPlaced, winnerDetails, isFavoriteProp }) {
        const { auth, flash } = usePage().props;
@@ -19,6 +20,7 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
        const normalizedListType = String(product?.list_type || product?.listing_type || '').toLowerCase();
        const isAuctionSale = normalizedListType === 'auction' || normalizedListType === 'live_auction';
        const isDirectSale = normalizedListType === 'normal' || normalizedListType === 'normal_list' || normalizedListType === 'business' || normalizedListType === 'business_list';
+       const isSoldOut = isSoldOutListing(product);
        const auctionStartPrice = product.minimum_bid || product.listing_data?.start_price || 0;
        const auctionReservePrice = product.reserve_price || product.listing_data?.reserve_price || 0;
        const categoryIds = [
@@ -105,6 +107,11 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
        );
 
        const handlePlaceBid = async () => {
+              if (isSoldOut) {
+                     showNotification('This product is sold out', 'error');
+                     return;
+              }
+
               if (!auth.user) {
                      showNotification('Please login to place a bid', 'error');
                      return;
@@ -150,6 +157,11 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
        };
 
        const handleAddToCart = async () => {
+              if (isSoldOut) {
+                     showNotification('This product is sold out', 'error');
+                     return;
+              }
+
               setIsAddingToCart(true);
               const result = await addToCart(product.id, 'product', null, product);
               setIsAddingToCart(false);
@@ -162,6 +174,11 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
        };
 
        const handleBuyNow = async () => {
+              if (isSoldOut) {
+                     showNotification('This product is sold out', 'error');
+                     return;
+              }
+
               setIsAddingToCart(true);
               const result = await addToCart(product.id, 'product', null, product);
               if (result.success || result.message === 'Product already in cart') {
@@ -228,8 +245,15 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
        };
 
        return (
-              <div className="product-details-brief-parent" style={{ padding: '0 10px' }}>
-                     <h2 className="product-heading mb-3">{product.title}</h2>
+             <div className="product-details-brief-parent" style={{ padding: '0 10px' }}>
+                    <h2 className="product-heading mb-3">{product.title}</h2>
+
+                    {isSoldOut && (
+                           <div className="sold-out-banner mb-4">
+                                  <i className="fa-solid fa-box-open me-2"></i>
+                                  Sold Out
+                           </div>
+                    )}
 
                      <div className="owned-by-and-favoruite d-flex align-items-center justify-content-between mb-4">
                             <div className="owned d-flex align-items-center gap-2">
@@ -290,7 +314,7 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                                           </div>
                                    )}
 
-                                   {(product.status !== 'awarded' && product.status !== 'awarded ') && (
+                                   {(product.status !== 'awarded' && product.status !== 'awarded ' && !isSoldOut) && (
                                           <div className="bid-input-wrap mb-3">
                                                  <input
                                                         type="number"
@@ -371,7 +395,14 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                                           </div>
 
                                           <div className="action-buttons d-grid gap-2 mb-3">
-                                                 {shouldContactSupport ? (
+                                                 {isSoldOut ? (
+                                                        <div className="sold-out-action-box">
+                                                               <span className="sold-out-action-label">Sold Out</span>
+                                                               <p className="mb-0 text-muted" style={{ fontSize: '13px' }}>
+                                                                      This listing is no longer available for purchase or bidding.
+                                                               </p>
+                                                        </div>
+                                                 ) : shouldContactSupport ? (
                                                         <button
                                                                className="btn w-100 fw-bold"
                                                                style={{ height: '50px', fontSize: '16px', borderRadius: '10px', backgroundColor: '#25D366', color: '#fff', border: 'none' }}
@@ -458,6 +489,39 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                                    white-space: nowrap;
                                    overflow: hidden;
                                    text-overflow: ellipsis;
+                            }
+                            .sold-out-banner {
+                                   display: inline-flex;
+                                   align-items: center;
+                                   gap: 8px;
+                                   padding: 10px 18px;
+                                   border-radius: 999px;
+                                   background: linear-gradient(135deg, #991b1b, #dc2626);
+                                   color: #fff;
+                                   font-size: 14px;
+                                   font-weight: 800;
+                                   letter-spacing: 0.08em;
+                                   text-transform: uppercase;
+                                   box-shadow: 0 10px 20px rgba(220, 38, 38, 0.18);
+                            }
+                            .sold-out-action-box {
+                                   padding: 16px 18px;
+                                   border-radius: 16px;
+                                   border: 1px solid #fecaca;
+                                   background: #fff1f2;
+                                   text-align: center;
+                            }
+                            .sold-out-action-label {
+                                   display: inline-block;
+                                   margin-bottom: 8px;
+                                   padding: 6px 14px;
+                                   border-radius: 999px;
+                                   background: #dc2626;
+                                   color: #fff;
+                                   font-size: 12px;
+                                   font-weight: 800;
+                                   letter-spacing: 0.08em;
+                                   text-transform: uppercase;
                             }
                             .detail-auction-meta .price span {
                                    color: inherit !important;

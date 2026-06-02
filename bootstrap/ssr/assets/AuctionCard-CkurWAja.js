@@ -5,12 +5,13 @@ import { C as CountdownTimer, O as OwnerInfoRow } from "./OwnerInfoRow-DJ1W7dqV.
 import { P as Price } from "./Price-CF5NSPt0.js";
 import { F as FavoriteToggleButton } from "./FavoriteToggleButton-1jmbejDw.js";
 import { u as useCart } from "./CartContext-DXNQZwkV.js";
-import { i as isDirectBuyListing, g as getDiscountMeta } from "./listingPricing-tbgbFOnH.js";
+import { i as isSoldOutListing, b as isDirectBuyListing, g as getDiscountMeta } from "./listingPricing-CwGdsu2n.js";
 const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }) => {
   const { addToCart } = useCart();
   const isWonAuction = activeTab === "won";
   const listingKind = auction?.list_type || auction?.listing_type;
   const isLiveAuction = listingKind === "live_auction";
+  const isSoldOut = isSoldOutListing(auction);
   const directBuyListing = isDirectBuyListing(auction);
   const discountMeta = getDiscountMeta(auction);
   const categoryFeatures = auction?.category_features && typeof auction.category_features === "object" ? auction.category_features : {};
@@ -75,7 +76,15 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
           ]
         }
       ),
-      discountMeta.hasDiscount && /* @__PURE__ */ jsx(
+      isSoldOut && /* @__PURE__ */ jsx(
+        "span",
+        {
+          className: "badge rounded-pill bg-dark text-white",
+          style: { position: "absolute", top: 12, left: 12, zIndex: 3, fontSize: 12, padding: "7px 11px" },
+          children: "Sold Out"
+        }
+      ),
+      !isSoldOut && discountMeta.hasDiscount && /* @__PURE__ */ jsx(
         "span",
         {
           className: "badge text-white",
@@ -83,7 +92,7 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
           children: discountMeta.badgeText
         }
       ),
-      !isWonAuction && !directBuyListing && !isLiveAuction && /* @__PURE__ */ jsx(CountdownTimer, { startDate: auction.start_date, endDate: auction.end_date })
+      !isSoldOut && !isWonAuction && !directBuyListing && !isLiveAuction && /* @__PURE__ */ jsx(CountdownTimer, { startDate: auction.start_date, endDate: auction.end_date })
     ] }),
     /* @__PURE__ */ jsx(
       OwnerInfoRow,
@@ -140,7 +149,24 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
           /* @__PURE__ */ jsx("span", { className: "price text-danger", children: /* @__PURE__ */ jsx(Price, { amountAED: discountMeta.finalPrice }) })
         ] }) : /* @__PURE__ */ jsx("span", { className: "price", style: { color: "#23262F" }, children: /* @__PURE__ */ jsx(Price, { amountAED: displayAmount }) }) })
       ] }),
-      /* @__PURE__ */ jsx("div", { className: "pro-buy-btn", children: isWonAuction ? /* @__PURE__ */ jsx(
+      /* @__PURE__ */ jsx("div", { className: "pro-buy-btn", children: isWonAuction ? isSoldOut ? /* @__PURE__ */ jsx(
+        "button",
+        {
+          type: "button",
+          disabled: true,
+          style: {
+            border: "none",
+            background: "#9ca3af",
+            color: "#fff",
+            borderRadius: "12px",
+            padding: "14px 22px",
+            fontWeight: 600,
+            lineHeight: 1,
+            cursor: "not-allowed"
+          },
+          children: "Sold Out"
+        }
+      ) : /* @__PURE__ */ jsx(
         "button",
         {
           type: "button",
@@ -157,7 +183,7 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
           },
           children: "Checkout"
         }
-      ) : /* @__PURE__ */ jsx("div", { className: "pro-bid-btn", children: /* @__PURE__ */ jsx(Link, { href: `/product/${auction.slug}`, children: directBuyListing ? "Buy Now" : isLiveAuction ? "Join Live" : "Place Bid" }) }) })
+      ) : /* @__PURE__ */ jsx("div", { className: "pro-bid-btn", children: isSoldOut ? /* @__PURE__ */ jsx("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "14px 22px", background: "#9ca3af", color: "#fff", fontWeight: 600, cursor: "not-allowed" }, children: "Sold Out" }) : /* @__PURE__ */ jsx(Link, { href: `/product/${auction.slug}`, children: directBuyListing ? "Buy Now" : isLiveAuction ? "Join Live" : "Place Bid" }) }) })
     ] })
   ] });
 };

@@ -16,6 +16,7 @@ const ListingCard = ({ listing, onDeleted }) => {
        const isCancelled = (listing.status || "").toLowerCase() === "cancelled";
        const isDraft = listing.is_draft === true;
        const isActive = (listing.status || "").toLowerCase() === "active";
+       const isSoldOut = (listing.status || "").toLowerCase() === "sold_out";
        const localStorageKey = `promoted_${listing.id}`;
 
        useEffect(() => {
@@ -164,18 +165,20 @@ const ListingCard = ({ listing, onDeleted }) => {
                                                                       padding: "4px 12px",
                                                                       textTransform: "capitalize",
                                                                       fontWeight: "600",
-                                                                      ...(listing?.status?.toLowerCase() === "active"
-                                                                             ? { backgroundColor: "#E3F9E5", color: "#1B7C25", border: "1px solid #1B7C25" }
-                                                                             : listing?.status?.toLowerCase() === "inactive"
-                                                                                    ? { backgroundColor: "#F0F2F5", color: "#64748b", border: "1px solid #64748b" }
+                                                                     ...(listing?.status?.toLowerCase() === "active"
+                                                                            ? { backgroundColor: "#E3F9E5", color: "#1B7C25", border: "1px solid #1B7C25" }
+                                                                            : listing?.status?.toLowerCase() === "inactive"
+                                                                                   ? { backgroundColor: "#F0F2F5", color: "#64748b", border: "1px solid #64748b" }
                                                                                     : listing?.status?.toLowerCase() === "pending"
                                                                                            ? { backgroundColor: "#FFF4E5", color: "#B76E00", border: "1px solid #B76E00" }
+                                                                                           : listing?.status?.toLowerCase() === "sold_out"
+                                                                                                  ? { backgroundColor: "#FFE4E6", color: "#BE123C", border: "1px solid #BE123C" }
                                                                                            : listing?.status?.toLowerCase() === "decline"
                                                                                                   ? { backgroundColor: "#FFEBEB", color: "#D32F2F", border: "1px solid #D32F2F" }
                                                                                                   : { backgroundColor: "#f1f5f9", color: "#475569", border: "1px solid #475569" }),
                                                                }}
                                                         >
-                                                               {listing?.status || "Draft"}
+                                                               {isSoldOut ? "Sold Out" : (listing?.status || "Draft")}
                                                         </span>
                                                  </h3>
 

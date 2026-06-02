@@ -1,6 +1,9 @@
 function normalizeListingType(item) {
   return String(item?.list_type || item?.listing_type || "").trim().toLowerCase();
 }
+function isSoldOutListing(item) {
+  return String(item?.status || "").trim().toLowerCase() === "sold_out";
+}
 function isDirectBuyListing(item) {
   const normalized = normalizeListingType(item);
   return ["normal", "normal_list", "business", "business_list"].includes(normalized);
@@ -49,7 +52,8 @@ function getDiscountMeta(item) {
 }
 export {
   getBaseListingPrice as a,
-  isBusinessListing as b,
+  isDirectBuyListing as b,
+  isBusinessListing as c,
   getDiscountMeta as g,
-  isDirectBuyListing as i
+  isSoldOutListing as i
 };

@@ -2,6 +2,10 @@ export function normalizeListingType(item) {
        return String(item?.list_type || item?.listing_type || "").trim().toLowerCase();
 }
 
+export function isSoldOutListing(item) {
+       return String(item?.status || "").trim().toLowerCase() === "sold_out";
+}
+
 export function isDirectBuyListing(item) {
        const normalized = normalizeListingType(item);
        return ["normal", "normal_list", "business", "business_list"].includes(normalized);

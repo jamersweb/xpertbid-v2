@@ -3,7 +3,7 @@ import { Link, router } from "@inertiajs/react";
 import CountdownTimer from "@/Components/CountdownTimer";
 import OwnerInfoRow from "@/Components/OwnerInfoRow";
 import Price from "@/Components/Price";
-import { getDiscountMeta, isDirectBuyListing } from "@/Utils/listingPricing";
+import { getDiscountMeta, isDirectBuyListing, isSoldOutListing } from "@/Utils/listingPricing";
 
 const FavoriteCard = ({ favorite }) => {
        const handleRemove = (e) => {
@@ -20,6 +20,7 @@ const FavoriteCard = ({ favorite }) => {
 
        const title = favorite.title || favorite.name || 'Product';
        const directBuyListing = isDirectBuyListing(favorite);
+       const isSoldOut = isSoldOutListing(favorite);
        const discountMeta = getDiscountMeta(favorite);
        const displayLabel = directBuyListing ? "Price" : (Number(favorite.current_bid) > 0 ? "Current Bid" : "Minimum Bid");
 
@@ -35,11 +36,30 @@ const FavoriteCard = ({ favorite }) => {
                                           />
                                    </Link>
 
-                                   {favorite.end_date && !directBuyListing && (
+                                   {favorite.end_date && !isSoldOut && !directBuyListing && (
                                           <CountdownTimer startDate={favorite.start_date} endDate={favorite.end_date} />
                                    )}
 
-                                   {discountMeta.hasDiscount && (
+                                   {isSoldOut && (
+                                          <div
+                                                 style={{
+                                                        position: "absolute",
+                                                        top: "10px",
+                                                        left: "10px",
+                                                        background: "#111827",
+                                                        color: "white",
+                                                        padding: "5px 10px",
+                                                        borderRadius: "999px",
+                                                        fontSize: "12px",
+                                                        fontWeight: "bold",
+                                                        zIndex: 10,
+                                                 }}
+                                          >
+                                                 Sold Out
+                                          </div>
+                                   )}
+
+                                   {!isSoldOut && discountMeta.hasDiscount && (
                                           <div
                                                  style={{
                                                         position: "absolute",
@@ -82,11 +102,13 @@ const FavoriteCard = ({ favorite }) => {
                                           isFeatured={Boolean(favorite?.featured_name)}
                                    />
 
-                                   <div className="mkt-detail">
-                                          <div className="mkt-crt-bid">
-                                                 <span className="crnt-bid">{displayLabel}</span>
-                                                 <div className="mkt-bid-price">
-                                                        {directBuyListing && discountMeta.hasDiscount ? (
+                                          <div className="mkt-detail">
+                                         <div className="mkt-crt-bid">
+                                                <span className="crnt-bid">{displayLabel}</span>
+                                                <div className="mkt-bid-price">
+                                                        {isSoldOut ? (
+                                                               <span className="price text-muted fw-bold">Sold Out</span>
+                                                        ) : directBuyListing && discountMeta.hasDiscount ? (
                                                                <div className="d-flex flex-column">
                                                                       <span className="text-decoration-line-through text-muted" style={{ fontSize: "0.8em", lineHeight: 1 }}>
                                                                              <Price className="price" amountAED={discountMeta.originalPrice} />
@@ -104,9 +126,15 @@ const FavoriteCard = ({ favorite }) => {
                                                  </div>
                                           </div>
                                           <div className="mkt-bid-btn">
-                                                 <Link href={`/product/${favorite.slug}`}>
-                                                        {directBuyListing ? "Buy Now" : "Place Bid"}
-                                                 </Link>
+                                                 {isSoldOut ? (
+                                                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "12px 18px", background: "#9ca3af", color: "#fff", fontWeight: 600, cursor: "not-allowed" }}>
+                                                               Sold Out
+                                                        </span>
+                                                 ) : (
+                                                        <Link href={`/product/${favorite.slug}`}>
+                                                               {directBuyListing ? "Buy Now" : "Place Bid"}
+                                                        </Link>
+                                                 )}
                                           </div>
                                    </div>
                             </div>

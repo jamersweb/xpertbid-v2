@@ -107,9 +107,10 @@ export default function Index({
               ended: 'bg-orange-100 text-orange-700',
               closed: 'bg-slate-100 text-slate-700',
               awarded: 'bg-violet-100 text-violet-700',
+              sold_out: 'bg-rose-100 text-rose-700',
        };
 
-       const statusOptions = ['', 'pending', 'active', 'declined', 'inactive', 'resubmit', 'ended', 'closed', 'awarded'];
+       const statusOptions = ['', 'pending', 'active', 'declined', 'inactive', 'resubmit', 'ended', 'closed', 'awarded', 'sold_out'];
        const formatListingType = (type) => type === 'live_auction' ? 'Live Auction' : String(type || '').replace('_', ' ');
 
        return (
@@ -161,7 +162,11 @@ export default function Index({
                                           >
                                                  {statusOptions.map((statusOption) => (
                                                         <option key={statusOption || 'all'} value={statusOption}>
-                                                               {statusOption ? statusOption.charAt(0).toUpperCase() + statusOption.slice(1) : 'All Status'}
+                                                               {statusOption
+                                                                      ? (statusOption === 'sold_out'
+                                                                             ? 'Sold Out'
+                                                                             : statusOption.charAt(0).toUpperCase() + statusOption.slice(1))
+                                                                      : 'All Status'}
                                                         </option>
                                                  ))}
                                           </select>
@@ -230,7 +235,7 @@ export default function Index({
                                                                 </td>
                                                                <td className="px-6 py-4">
                                                                       <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBadges[listing.status] || 'bg-gray-100 text-gray-700'}`}>
-                                                                             {listing.status}
+                                                               {listing.status === 'sold_out' ? 'Sold Out' : listing.status}
                                                                       </span>
                                                                </td>
                                                                        <td className="px-6 py-4 text-right">

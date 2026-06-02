@@ -1,7 +1,7 @@
 import { jsxs, jsx } from "react/jsx-runtime";
 import { Head, router } from "@inertiajs/react";
 import { A as AppLayout } from "./AppLayout-CKzCZqB6.js";
-import { Y as YoutubeLiveEmbed, B as BidSection, a as BidHistory } from "./YoutubeLiveEmbed-BW-NNHuN.js";
+import { Y as YoutubeLiveEmbed, B as BidSection, a as BidHistory } from "./YoutubeLiveEmbed-DtwhkCFH.js";
 import { L as ListingLiveChat } from "./ListingLiveChat-DrCA7khS.js";
 import "ziggy-js";
 import "react";
@@ -12,6 +12,7 @@ import "axios";
 import "react-loader-spinner";
 import "sweetalert2";
 import "./CurrencyPicker-KgG9a2BI.js";
+import "./listingPricing-CwGdsu2n.js";
 function LiveAuction({
   auction,
   bids,

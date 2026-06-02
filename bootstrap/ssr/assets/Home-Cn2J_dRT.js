@@ -8,7 +8,7 @@ import { u as useTranslate } from "./CurrencyPicker-KgG9a2BI.js";
 import { C as CountdownTimer, O as OwnerInfoRow } from "./OwnerInfoRow-DJ1W7dqV.js";
 import { P as Price } from "./Price-CF5NSPt0.js";
 import { F as FavoriteToggleButton } from "./FavoriteToggleButton-1jmbejDw.js";
-import { i as isDirectBuyListing, g as getDiscountMeta, b as isBusinessListing, a as getBaseListingPrice } from "./listingPricing-tbgbFOnH.js";
+import { b as isDirectBuyListing, i as isSoldOutListing, g as getDiscountMeta, c as isBusinessListing, a as getBaseListingPrice } from "./listingPricing-CwGdsu2n.js";
 import { FaClock, FaGlobe, FaClipboardList } from "react-icons/fa";
 import "react";
 import "ziggy-js";
@@ -395,6 +395,7 @@ function FeaturedProducts({ products }) {
       const minBid = Number(product?.minimum_bid ?? 0);
       const hasMaxBid = Number.isFinite(maxBid) && maxBid > 0;
       const directBuyListing = isDirectBuyListing(product);
+      const isSoldOut = isSoldOutListing(product);
       const discountMeta = getDiscountMeta(product);
       const displayLabel = directBuyListing ? t("Price") : hasMaxBid ? t("Current Bid") : t("Minimum Bid");
       const displayAmount = hasMaxBid ? maxBid : minBid;
@@ -412,8 +413,9 @@ function FeaturedProducts({ products }) {
               loading: index === 0 ? "eager" : "lazy"
             }
           ) }) }),
-          discountMeta.hasDiscount && /* @__PURE__ */ jsx("div", { style: { position: "absolute", top: "10px", left: "10px", background: "rgba(220, 53, 69, 0.9)", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }, children: discountMeta.badgeText }),
-          !directBuyListing && /* @__PURE__ */ jsx(CountdownTimer, { startDate: product.start_date, endDate: product.end_date })
+          isSoldOut && /* @__PURE__ */ jsx("div", { style: { position: "absolute", top: "10px", left: "10px", background: "#111827", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }, children: "Sold Out" }),
+          !isSoldOut && discountMeta.hasDiscount && /* @__PURE__ */ jsx("div", { style: { position: "absolute", top: "10px", left: "10px", background: "rgba(220, 53, 69, 0.9)", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }, children: discountMeta.badgeText }),
+          !isSoldOut && !directBuyListing && /* @__PURE__ */ jsx(CountdownTimer, { startDate: product.start_date, endDate: product.end_date })
         ] }),
         /* @__PURE__ */ jsx(
           OwnerInfoRow,
@@ -439,7 +441,7 @@ function FeaturedProducts({ products }) {
               return /* @__PURE__ */ jsx("span", { className: "price", style: { color: "#23262F" }, children: /* @__PURE__ */ jsx(Price, { amountAED: finalPrice }) });
             })() })
           ] }),
-          /* @__PURE__ */ jsx("div", { className: "pro-buy-btn", children: /* @__PURE__ */ jsx("div", { className: "pro-bid-btn", children: /* @__PURE__ */ jsx(Link, { href: `/product/${product.slug}`, children: directBuyListing ? t("Buy Now") : t("Place Bid") }) }) })
+          /* @__PURE__ */ jsx("div", { className: "pro-buy-btn", children: /* @__PURE__ */ jsx("div", { className: "pro-bid-btn", children: isSoldOut ? /* @__PURE__ */ jsx("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "14px 22px", background: "#9ca3af", color: "#fff", fontWeight: 600, cursor: "not-allowed" }, children: t("Sold Out") }) : /* @__PURE__ */ jsx(Link, { href: `/product/${product.slug}`, children: directBuyListing ? t("Buy Now") : t("Place Bid") }) }) })
         ] })
       ] }) }, `${product.slug}-${index}`);
     }) }) : /* @__PURE__ */ jsx("p", { children: t("No products found.") })
@@ -476,6 +478,7 @@ function VehicleSection({ products }) {
       const displayAmount = hasMaxBid ? maxBid : minBid;
       const imageSrc = getProductImageSrc$3(product);
       const directBuyListing = isDirectBuyListing(product);
+      const isSoldOut = isSoldOutListing(product);
       const discountMeta = getDiscountMeta(product);
       return /* @__PURE__ */ jsx("div", { className: "col-12 col-sm-6 col-lg-4", children: /* @__PURE__ */ jsxs("div", { className: "product-card-wrapper h-100", children: [
         /* @__PURE__ */ jsxs("div", { className: "pro-image", style: { position: "relative" }, children: [
@@ -490,8 +493,9 @@ function VehicleSection({ products }) {
               loading: "lazy"
             }
           ) }) }),
-          discountMeta.hasDiscount && /* @__PURE__ */ jsx("div", { style: { position: "absolute", top: "10px", left: "10px", background: "rgba(220, 53, 69, 0.9)", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }, children: discountMeta.badgeText }),
-          !directBuyListing && /* @__PURE__ */ jsx(CountdownTimer, { startDate: product.start_date, endDate: product.end_date })
+          isSoldOut && /* @__PURE__ */ jsx("div", { style: { position: "absolute", top: "10px", left: "10px", background: "#111827", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }, children: "Sold Out" }),
+          !isSoldOut && discountMeta.hasDiscount && /* @__PURE__ */ jsx("div", { style: { position: "absolute", top: "10px", left: "10px", background: "rgba(220, 53, 69, 0.9)", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }, children: discountMeta.badgeText }),
+          !isSoldOut && !directBuyListing && /* @__PURE__ */ jsx(CountdownTimer, { startDate: product.start_date, endDate: product.end_date })
         ] }),
         /* @__PURE__ */ jsx(
           OwnerInfoRow,
@@ -511,7 +515,7 @@ function VehicleSection({ products }) {
               /* @__PURE__ */ jsx("span", { className: "price text-danger", children: /* @__PURE__ */ jsx(Price, { amountAED: discountMeta.finalPrice }) })
             ] }) : /* @__PURE__ */ jsx("span", { className: "me-1", style: { color: "#23262F" }, children: /* @__PURE__ */ jsx(Price, { amountAED: displayAmount }) }) })
           ] }),
-          /* @__PURE__ */ jsx("div", { className: "pro-buy-btn", children: /* @__PURE__ */ jsx("div", { className: "pro-bid-btn", children: /* @__PURE__ */ jsx(Link, { href: `/product/${product.slug}`, children: directBuyListing ? t("Buy Now") : t("Place Bid") }) }) })
+          /* @__PURE__ */ jsx("div", { className: "pro-buy-btn", children: /* @__PURE__ */ jsx("div", { className: "pro-bid-btn", children: isSoldOut ? /* @__PURE__ */ jsx("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "14px 22px", background: "#9ca3af", color: "#fff", fontWeight: 600, cursor: "not-allowed" }, children: t("Sold Out") }) : /* @__PURE__ */ jsx(Link, { href: `/product/${product.slug}`, children: directBuyListing ? t("Buy Now") : t("Place Bid") }) }) })
         ] })
       ] }) }, `${product.slug}-${index}`);
     }) })
@@ -548,6 +552,7 @@ function PropertySection({ products }) {
       const displayAmount = hasMaxBid ? maxBid : minBid;
       const imageSrc = getProductImageSrc$2(product);
       const directBuyListing = isDirectBuyListing(product);
+      const isSoldOut = isSoldOutListing(product);
       const discountMeta = getDiscountMeta(product);
       return /* @__PURE__ */ jsx("div", { className: "col-12 col-sm-6 col-lg-4", children: /* @__PURE__ */ jsxs("div", { className: "product-card-wrapper h-100", children: [
         /* @__PURE__ */ jsxs("div", { className: "pro-image", style: { position: "relative" }, children: [
@@ -562,8 +567,9 @@ function PropertySection({ products }) {
               loading: "lazy"
             }
           ) }) }),
-          discountMeta.hasDiscount && /* @__PURE__ */ jsx("div", { style: { position: "absolute", top: "10px", left: "10px", background: "rgba(220, 53, 69, 0.9)", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }, children: discountMeta.badgeText }),
-          !directBuyListing && /* @__PURE__ */ jsx(CountdownTimer, { startDate: product.start_date, endDate: product.end_date })
+          isSoldOut && /* @__PURE__ */ jsx("div", { style: { position: "absolute", top: "10px", left: "10px", background: "#111827", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }, children: "Sold Out" }),
+          !isSoldOut && discountMeta.hasDiscount && /* @__PURE__ */ jsx("div", { style: { position: "absolute", top: "10px", left: "10px", background: "rgba(220, 53, 69, 0.9)", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }, children: discountMeta.badgeText }),
+          !isSoldOut && !directBuyListing && /* @__PURE__ */ jsx(CountdownTimer, { startDate: product.start_date, endDate: product.end_date })
         ] }),
         /* @__PURE__ */ jsx(
           OwnerInfoRow,
@@ -583,7 +589,7 @@ function PropertySection({ products }) {
               /* @__PURE__ */ jsx("span", { className: "price text-danger", children: /* @__PURE__ */ jsx(Price, { amountAED: discountMeta.finalPrice }) })
             ] }) : /* @__PURE__ */ jsx("span", { className: "me-1", style: { color: "#23262F" }, children: /* @__PURE__ */ jsx(Price, { amountAED: displayAmount }) }) })
           ] }),
-          /* @__PURE__ */ jsx("div", { className: "pro-buy-btn", children: /* @__PURE__ */ jsx("div", { className: "pro-bid-btn", children: /* @__PURE__ */ jsx(Link, { href: `/product/${product.slug}`, children: directBuyListing ? t("Buy Now") : t("Place Bid") }) }) })
+          /* @__PURE__ */ jsx("div", { className: "pro-buy-btn", children: /* @__PURE__ */ jsx("div", { className: "pro-bid-btn", children: isSoldOut ? /* @__PURE__ */ jsx("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "14px 22px", background: "#9ca3af", color: "#fff", fontWeight: 600, cursor: "not-allowed" }, children: t("Sold Out") }) : /* @__PURE__ */ jsx(Link, { href: `/product/${product.slug}`, children: directBuyListing ? t("Buy Now") : t("Place Bid") }) }) })
         ] })
       ] }) }, `${product.slug}-${index}`);
     }) })
@@ -699,11 +705,13 @@ function NormalListSection({ products }) {
       const businessListing = isBusinessListing(product);
       const price = getBaseListingPrice(product);
       const discountMeta = getDiscountMeta(product);
+      const isSoldOut = isSoldOutListing(product);
       const imageSrc = getProductImageSrc(product);
       return /* @__PURE__ */ jsx("div", { className: "col-12 col-sm-6 col-lg-4", children: /* @__PURE__ */ jsxs("div", { className: "product-card-wrapper h-100", children: [
         /* @__PURE__ */ jsxs("div", { className: "pro-image", style: { position: "relative" }, children: [
           /* @__PURE__ */ jsx(FavoriteToggleButton, { listingId: product.id }),
-          discountMeta.hasDiscount && /* @__PURE__ */ jsx("div", { style: { position: "absolute", top: "10px", left: "10px", background: "rgba(220, 53, 69, 0.9)", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }, children: discountMeta.badgeText }),
+          isSoldOut && /* @__PURE__ */ jsx("div", { style: { position: "absolute", top: "10px", left: "10px", background: "#111827", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }, children: "Sold Out" }),
+          !isSoldOut && discountMeta.hasDiscount && /* @__PURE__ */ jsx("div", { style: { position: "absolute", top: "10px", left: "10px", background: "rgba(220, 53, 69, 0.9)", color: "white", padding: "5px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", zIndex: 10 }, children: discountMeta.badgeText }),
           /* @__PURE__ */ jsx(Link, { href: `/product/${product.slug}`, className: "product-box", children: /* @__PURE__ */ jsx("div", { className: "relative aspect-[4/3] w-full overflow-hidden", children: /* @__PURE__ */ jsx(
             "img",
             {
@@ -738,7 +746,7 @@ function NormalListSection({ products }) {
               return /* @__PURE__ */ jsx(Price, { amountAED: price });
             })() }) })
           ] }),
-          /* @__PURE__ */ jsx("div", { className: "pro-buy-btn", children: /* @__PURE__ */ jsx("div", { className: "pro-bid-btn", children: /* @__PURE__ */ jsx(Link, { href: `/product/${product.slug}`, children: businessListing ? t("View Product") : t("Buy Now") }) }) })
+          /* @__PURE__ */ jsx("div", { className: "pro-buy-btn", children: /* @__PURE__ */ jsx("div", { className: "pro-bid-btn", children: isSoldOut ? /* @__PURE__ */ jsx("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "14px 22px", background: "#9ca3af", color: "#fff", fontWeight: 600, cursor: "not-allowed" }, children: t("Sold Out") }) : /* @__PURE__ */ jsx(Link, { href: `/product/${product.slug}`, children: businessListing ? t("View Product") : t("Buy Now") }) }) })
         ] })
       ] }) }, `${product.slug}-${index}`);
     }) })

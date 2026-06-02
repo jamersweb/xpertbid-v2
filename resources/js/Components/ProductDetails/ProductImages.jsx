@@ -70,8 +70,8 @@ export default function ProductImages({ albumImages, videos = null, status, main
        return (
               <div className="product-images-parent m-0">
                      <div className="product-main-image" style={{ position: "relative" }}>
-                            {(status === 'awarded' || status === 'awarded ') && (
-                                   <div className="awardedBadge" style={{
+                           {(status === 'awarded' || status === 'awarded ') && (
+                                  <div className="awardedBadge" style={{
                                           position: 'absolute',
                                           bottom: '20px',
                                           left: '50%',
@@ -91,11 +91,34 @@ export default function ProductImages({ albumImages, videos = null, status, main
                                           animation: 'pulseGlow 2s infinite'
                                    }}>
                                           AWARDED
-                                   </div>
-                            )}
+                                  </div>
+                           )}
 
-                            {String(listType || '').toLowerCase() === 'auction' && endDate && (
-                                   <div style={{
+                           {(status === 'sold_out' || status === 'sold out') && (
+                                  <div className="soldOutBadge" style={{
+                                         position: 'absolute',
+                                         bottom: '20px',
+                                         left: '50%',
+                                         transform: 'translateX(-50%)',
+                                         zIndex: 20,
+                                         background: 'linear-gradient(135deg, #991b1b 0%, #dc2626 100%)',
+                                         color: 'white',
+                                         padding: '8px 24px',
+                                         borderRadius: '50px',
+                                         fontWeight: '800',
+                                         fontSize: '0.9rem',
+                                         letterSpacing: '1.5px',
+                                         textTransform: 'uppercase',
+                                         boxShadow: '0 10px 15px -3px rgba(220, 38, 38, 0.35)',
+                                         whiteSpace: 'nowrap',
+                                         border: '2px solid rgba(255, 255, 255, 0.2)'
+                                  }}>
+                                         SOLD OUT
+                                  </div>
+                           )}
+
+                           {String(listType || '').toLowerCase() === 'auction' && endDate && !(status === 'sold_out' || status === 'sold out') && (
+                                  <div style={{
                                           position: 'absolute',
                                           left: '0',
                                           right: '0',

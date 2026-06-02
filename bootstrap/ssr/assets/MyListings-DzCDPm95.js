@@ -2,7 +2,7 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect } from "react";
 import { A as AppLayout } from "./AppLayout-CKzCZqB6.js";
 import { router } from "@inertiajs/react";
-import { L as ListingCard } from "./ListingCard-CvD1eX3Z.js";
+import { L as ListingCard } from "./ListingCard-B94e3GBu.js";
 import { u as useTranslate } from "./CurrencyPicker-KgG9a2BI.js";
 import "ziggy-js";
 import "./CartContext-DXNQZwkV.js";
@@ -12,7 +12,7 @@ import "axios";
 import "react-loader-spinner";
 import "sweetalert2";
 import "./ErrorPopup-VSFE5nHL.js";
-import "./listingPricing-tbgbFOnH.js";
+import "./listingPricing-CwGdsu2n.js";
 function MyListings({ auctions }) {
   const { t } = useTranslate();
   useEffect(() => {
