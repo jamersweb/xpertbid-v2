@@ -16,6 +16,15 @@ use Laravel\Socialite\Facades\Socialite;
 
 class SocialAuthController extends Controller
 {
+    protected function ensureEmailVerified(User $user): void
+    {
+        if (!$user->hasVerifiedEmail()) {
+            $user->forceFill([
+                'email_verified_at' => now(),
+            ])->save();
+        }
+    }
+
     protected function resolveSignupSource($request, string $default = 'web'): string
     {
         return $request->input('signup_source')
@@ -97,6 +106,7 @@ class SocialAuthController extends Controller
                 ]);
             }
 
+            $this->ensureEmailVerified($user);
             Auth::login($user);
             session()->forget('signup_source');
 
@@ -159,6 +169,7 @@ class SocialAuthController extends Controller
                 }
             }
 
+            $this->ensureEmailVerified($user);
             Auth::login($user);
             session()->forget('signup_source');
 

@@ -58,6 +58,14 @@ class StaticPageController extends Controller
     }
 
     /**
+     * Display the Seller Policy page.
+     */
+    public function sellerPolicy(): Response
+    {
+        return Inertia::render('Static/SellerPolicy');
+    }
+
+    /**
      * Display the FAQ page.
      */
     public function faq(): Response

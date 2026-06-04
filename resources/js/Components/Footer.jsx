@@ -79,6 +79,7 @@ export default function Footer() {
                                                  <ul>
                                                         <li><Link href={route('refund.policy')}>{t('Refund Policy')}</Link></li>
                                                         <li><Link href={route('shipping.policy')}>{t('Shipping Policy')}</Link></li>
+                                                        <li><Link href={route('seller.policy')}>{t('Seller Policy')}</Link></li>
                                                         <li><Link href={route('privacy.policy')}>{t('Privacy Policy')}</Link></li>
                                                         <li><Link href={route('terms')}>{t('Terms & Conditions')}</Link></li>
                                                  </ul>
