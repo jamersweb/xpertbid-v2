@@ -30,6 +30,7 @@ class Listing extends Model
         'album',
         'description',
         'status',
+        'winner_id',
         'featured_name',
         'is_1_rupee',
         'is_autobidder_on',
@@ -77,6 +78,11 @@ class Listing extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function winner()
+    {
+        return $this->belongsTo(User::class, 'winner_id');
     }
 
     /**

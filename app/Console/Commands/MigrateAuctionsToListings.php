@@ -105,6 +105,7 @@ class MigrateAuctionsToListings extends Command
                     'is_1_rupee' => $auction->is_1_rupee,
                     'views' => $auction->views ?: 0,
                     'listing_data' => $listingData,
+                    'winner_id' => $auction->winner_id,
                     'category_features' => $categoryFeatures,
                     'created_at' => $auction->created_at,
                     'updated_at' => $auction->updated_at,

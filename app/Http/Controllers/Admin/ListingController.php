@@ -559,6 +559,7 @@ class ListingController extends Controller
 
             $listing->update([
                 'status' => 'awarded',
+                'winner_id' => $highestBid->user_id,
                 'listing_data' => $listingData,
             ]);
 
@@ -569,6 +570,7 @@ class ListingController extends Controller
 
         $listing->update([
             'status' => 'ended',
+            'winner_id' => null,
             'listing_data' => $listingData,
         ]);
 
@@ -586,6 +588,7 @@ class ListingController extends Controller
 
         $listing->update([
             'status' => 'closed',
+            'winner_id' => null,
             'listing_data' => $listingData,
         ]);
 
@@ -613,6 +616,7 @@ class ListingController extends Controller
 
         $listing->update([
             'status' => 'awarded',
+            'winner_id' => $highestBid->user_id,
             'listing_data' => $listingData,
         ]);
 

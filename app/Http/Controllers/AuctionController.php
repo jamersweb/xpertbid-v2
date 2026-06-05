@@ -119,7 +119,7 @@ class AuctionController extends Controller
 
     protected function resolveListingWinner(\App\Models\Listing $listing, ?\Illuminate\Support\Collection $bidHistory = null): ?User
     {
-        $winnerId = $listing->listing_data['winner_id'] ?? null;
+        $winnerId = $listing->winner_id ?? ($listing->listing_data['winner_id'] ?? null);
         if ($winnerId) {
             $winner = User::find($winnerId);
             if ($winner) {
@@ -1021,7 +1021,7 @@ class AuctionController extends Controller
                 "profile" => $user->profile_pic ?? ''
             ];
 
-            $winnerId = $product->listing_data['winner_id'] ?? null;
+            $winnerId = $product->winner_id ?? ($product->listing_data['winner_id'] ?? null);
 
             if ($product->status == 'awarded' && $winnerId) {
                 $winner = \App\Models\User::find($winnerId);
