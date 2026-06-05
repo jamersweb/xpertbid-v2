@@ -83,11 +83,37 @@ class AuctionController extends Controller
         return $liveAuctions->firstWhere('status', 'active') ?: $liveAuctions->first();
     }
 
-    protected function listingBidQuery(int $listingId)
+    protected function resolveLegacyAuctionIds(\App\Models\Listing $listing): array
     {
-        return Bid::query()->where(function ($query) use ($listingId) {
-            $query->where('listing_id', $listingId)
-                ->orWhere('auction_id', $listingId);
+        $legacyIds = [];
+
+        if (!empty($listing->slug)) {
+            $legacyId = \App\Models\Auction::where('slug', $listing->slug)->value('id');
+            if ($legacyId) {
+                $legacyIds[] = (int) $legacyId;
+            }
+        }
+
+        if (empty($legacyIds) && !empty($listing->title)) {
+            $legacyId = \App\Models\Auction::where('title', $listing->title)->value('id');
+            if ($legacyId) {
+                $legacyIds[] = (int) $legacyId;
+            }
+        }
+
+        return array_values(array_unique($legacyIds));
+    }
+
+    protected function listingBidQuery(\App\Models\Listing $listing)
+    {
+        $listingIds = array_values(array_unique(array_filter([
+            (int) $listing->id,
+            ...$this->resolveLegacyAuctionIds($listing),
+        ])));
+
+        return Bid::query()->where(function ($query) use ($listingIds) {
+            $query->whereIn('listing_id', $listingIds)
+                ->orWhereIn('auction_id', $listingIds);
         });
     }
 
@@ -103,7 +129,7 @@ class AuctionController extends Controller
 
         $highestBid = $bidHistory
             ? $bidHistory->sortByDesc('bid_amount')->first()
-            : $this->listingBidQuery($listing->id)->with('user')->orderByDesc('bid_amount')->first();
+            : $this->listingBidQuery($listing)->with('user')->orderByDesc('bid_amount')->first();
 
         return $highestBid?->user;
     }
@@ -595,12 +621,12 @@ class AuctionController extends Controller
             });
 
         // 4. Calculate Highest Bid (Server-side source of truth)
-        $highestBid = $this->listingBidQuery($listing->id)->max('bid_amount') ?? 0;
+        $highestBid = $this->listingBidQuery($listing)->max('bid_amount') ?? 0;
 
         // 5. Winner Details (if awarded)
         $winnerDetails = null;
         if ($listing->status === 'awarded' || $listing->status === 'awarded ') {
-             $winningBid = $this->listingBidQuery($listing->id)->with('user')->orderBy('bid_amount', 'desc')->first();
+             $winningBid = $this->listingBidQuery($listing)->with('user')->orderBy('bid_amount', 'desc')->first();
              if ($winningBid && $winningBid->user) {
                  $winnerDetails = [[
                      'name' => $winningBid->user->name,
@@ -692,7 +718,7 @@ class AuctionController extends Controller
 
         return Inertia::render('Auctions/Show', [
             'auction' => $listing,
-            'bids' => $this->listingBidQuery($listing->id)->with('user')->orderBy('created_at', 'desc')->get(), // specific order for history
+            'bids' => $this->listingBidQuery($listing)->with('user')->orderBy('created_at', 'desc')->get(), // specific order for history
             'related' => $related,
             'highestBid' => $highestBid, 
             'winnerDetails' => $winnerDetails,
@@ -1019,7 +1045,7 @@ class AuctionController extends Controller
 
         // Add owner and winner data for each product
         foreach ($products as $product) {
-            $productBidQuery = $this->listingBidQuery($product->id)->with('user');
+            $productBidQuery = $this->listingBidQuery($product)->with('user');
             $product->bids_max_bid_amount = (clone $productBidQuery)->max('bid_amount') ?? 0;
             $product->owner = [
                 "name" => $product->user->name ?? '',
@@ -1081,7 +1107,7 @@ class AuctionController extends Controller
         $listing->increment('views');
 
         // Bids history
-        $bids = $this->listingBidQuery($listing->id)->with('user')->latest()->get();
+        $bids = $this->listingBidQuery($listing)->with('user')->latest()->get();
 
         $product['product'] = [$listing];
         $product['owner'][] = [
