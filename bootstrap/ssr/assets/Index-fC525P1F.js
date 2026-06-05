@@ -414,6 +414,7 @@ function LandingAuctionCard({ item }) {
     if (imagePath.startsWith("http")) return imagePath;
     return imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
   };
+  const winnerName = item?.winner_details?.name || item?.winner_details?.[0]?.name || "the highest bidder";
   const imageUrl = getImageUrl(item.image_url || item.image);
   return /* @__PURE__ */ jsx(Link, { href: route("product.show", item.slug), style: { textDecoration: "none", color: "inherit", display: "block", height: "100%" }, children: /* @__PURE__ */ jsxs("div", { className: "marketCard", children: [
     /* @__PURE__ */ jsxs("div", { className: "mktImg", children: [
@@ -441,13 +442,11 @@ function LandingAuctionCard({ item }) {
           isFeatured: Boolean(item?.featured_name)
         }
       ),
-      /* @__PURE__ */ jsx("div", { className: "mktDetail", children: item.status === "awarded" || item.status === "awarded " ? /* @__PURE__ */ jsxs("div", { className: "winnerSection", children: [
-        /* @__PURE__ */ jsx("p", { className: "text-gray-500 text-xs font-semibold uppercase tracking-wide mb-1", style: { fontSize: "0.75rem", color: "#6b7280" }, children: "Winning Bidder" }),
-        /* @__PURE__ */ jsxs("div", { className: "winnerText", children: [
-          /* @__PURE__ */ jsx("span", { className: "trophyIcon", children: "🏆" }),
-          "Establishing contact with the highest bidder"
-        ] })
-      ] }) : /* @__PURE__ */ jsxs(Fragment, { children: [
+      /* @__PURE__ */ jsx("div", { className: "mktDetail", children: item.status === "awarded" || item.status === "awarded " ? /* @__PURE__ */ jsx("div", { className: "winnerSection", children: /* @__PURE__ */ jsxs("div", { className: "winnerText", children: [
+        /* @__PURE__ */ jsx("span", { className: "trophyIcon", children: "🏆" }),
+        "Bid awarded to ",
+        winnerName
+      ] }) }) : /* @__PURE__ */ jsxs(Fragment, { children: [
         /* @__PURE__ */ jsxs("div", { className: "mktCrtBid", children: [
           /* @__PURE__ */ jsx("span", { className: "crntBid", children: Number(item.bids_max_bid_amount) > 0 ? "Current Bid" : "Result" }),
           /* @__PURE__ */ jsx("div", { className: "mktBidPrice", children: /* @__PURE__ */ jsx(Price, { amountAED: Number(item.bids_max_bid_amount) > 0 ? item.bids_max_bid_amount : item.minimum_bid }) })

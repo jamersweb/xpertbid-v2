@@ -38,6 +38,7 @@ function BidSection({ product, highestBidProp, onBidPlaced, winnerDetails, isFav
   ].map((value) => String(value || "").toLowerCase());
   const isPropertyOrVehicle = categoryIds.some((id) => id === "222" || id === "311") || categoryNames.some((name) => name.includes("property") || name.includes("vehicle"));
   const shouldContactSupport = isDirectSale && isPropertyOrVehicle;
+  const winnerName = winnerDetails?.[0]?.name || winnerDetails?.name || product?.winner_details?.name || product?.winner_details?.[0]?.name || "the highest bidder";
   const baseSalePrice = Number(product.buy_now_price || product.minimum_bid || 0);
   const discountValue = Number(product.discount_value || 0);
   const hasDiscount = isDirectSale && discountValue > 0;
@@ -248,13 +249,11 @@ function BidSection({ product, highestBidProp, onBidPlaced, winnerDetails, isFav
         /* @__PURE__ */ jsx("span", { className: "rank", children: "Highest Bid" }),
         /* @__PURE__ */ jsx("div", { className: "price", title: String(highestBid), children: /* @__PURE__ */ jsx(Price, { amountAED: highestBid }) })
       ] }) }),
-      (product.status === "awarded" || product.status === "awarded ") && /* @__PURE__ */ jsxs("div", { className: "winner-section-ref mb-3", children: [
-        /* @__PURE__ */ jsx("p", { className: "text-muted small fw-bold text-uppercase mb-1", style: { fontSize: "11px", letterSpacing: "0.5px" }, children: "Winning Bidder" }),
-        /* @__PURE__ */ jsxs("div", { className: "winner-text-ref", children: [
-          /* @__PURE__ */ jsx("span", { className: "trophy-icon-ref", children: "🏆" }),
-          "Establishing contact with the highest bidder"
-        ] })
-      ] }),
+      (product.status === "awarded" || product.status === "awarded ") && /* @__PURE__ */ jsx("div", { className: "winner-section-ref mb-3", children: /* @__PURE__ */ jsxs("div", { className: "winner-text-ref", children: [
+        /* @__PURE__ */ jsx("span", { className: "trophy-icon-ref", children: "🏆" }),
+        "Bid awarded to ",
+        winnerName
+      ] }) }),
       product.status !== "awarded" && product.status !== "awarded " && !isSoldOut && /* @__PURE__ */ jsxs("div", { className: "bid-input-wrap mb-3", children: [
         /* @__PURE__ */ jsx(
           "input",

@@ -437,6 +437,8 @@ function LandingAuctionCard({ item }) {
               return imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
        };
 
+       const winnerName = item?.winner_details?.name || item?.winner_details?.[0]?.name || 'the highest bidder';
+
        const imageUrl = getImageUrl(item.image_url || item.image);
 
        return (
@@ -489,10 +491,9 @@ function LandingAuctionCard({ item }) {
                                    <div className="mktDetail">
                                           {(item.status === 'awarded' || item.status === 'awarded ') ? (
                                                  <div className="winnerSection">
-                                                        <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-1" style={{ fontSize: '0.75rem', color: '#6b7280' }}>Winning Bidder</p>
                                                         <div className="winnerText">
                                                                <span className="trophyIcon">🏆</span>
-                                                               Establishing contact with the highest bidder
+                                                               Bid awarded to {winnerName}
                                                         </div>
                                                  </div>
                                           ) : (

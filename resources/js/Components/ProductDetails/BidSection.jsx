@@ -40,6 +40,7 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
        const isPropertyOrVehicle = categoryIds.some((id) => id === '222' || id === '311')
               || categoryNames.some((name) => name.includes('property') || name.includes('vehicle'));
        const shouldContactSupport = isDirectSale && isPropertyOrVehicle;
+       const winnerName = winnerDetails?.[0]?.name || winnerDetails?.name || product?.winner_details?.name || product?.winner_details?.[0]?.name || 'the highest bidder';
        const baseSalePrice = Number(product.buy_now_price || product.minimum_bid || 0);
        const discountValue = Number(product.discount_value || 0);
        const hasDiscount = isDirectSale && discountValue > 0;
@@ -306,10 +307,9 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                                    {/* Winner details if awarded */}
                                    {(product.status === 'awarded' || product.status === 'awarded ') && (
                                           <div className="winner-section-ref mb-3">
-                                                 <p className="text-muted small fw-bold text-uppercase mb-1" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Winning Bidder</p>
                                                  <div className="winner-text-ref">
                                                         <span className="trophy-icon-ref">🏆</span>
-                                                        Establishing contact with the highest bidder
+                                                        Bid awarded to {winnerName}
                                                  </div>
                                           </div>
                                    )}

@@ -1,7 +1,7 @@
 import { jsxs, jsx } from "react/jsx-runtime";
 import { Head, router } from "@inertiajs/react";
 import { A as AppLayout } from "./AppLayout-BQ8UWi9o.js";
-import { Y as YoutubeLiveEmbed, B as BidSection, a as BidHistory } from "./YoutubeLiveEmbed-DtwhkCFH.js";
+import { Y as YoutubeLiveEmbed, B as BidSection, a as BidHistory } from "./YoutubeLiveEmbed-BGwpEyu9.js";
 import { L as ListingLiveChat } from "./ListingLiveChat-DrCA7khS.js";
 import "ziggy-js";
 import "react";
