@@ -99,7 +99,7 @@ function PropertiesBrand({ brand, listings }) {
         /* @__PURE__ */ jsx("source", { media: "(max-width: 767px)", srcSet: bannerSet.top === TOP_BANNER_DESKTOP ? TOP_BANNER_MOBILE : bannerSet.top }),
         /* @__PURE__ */ jsx("img", { src: bannerSet.top, alt: "Properties banner", className: "w-100 h-100 object-fit-cover", style: { borderRadius: "28px" } })
       ] }) }),
-      /* @__PURE__ */ jsx("div", { className: "row g-3 mb-4", children: bannerSet.small.map((src, index) => /* @__PURE__ */ jsx("div", { className: "col-12 col-md-4", children: /* @__PURE__ */ jsx("div", { className: "overflow-hidden position-relative", style: { minHeight: "140px", borderRadius: "22px" }, children: /* @__PURE__ */ jsx("img", { src, alt: `Promo ${index + 1}`, className: "w-100 h-100 object-fit-cover", style: { minHeight: "140px", borderRadius: "22px" } }) }) }, src)) }),
+      /* @__PURE__ */ jsx("div", { className: "row g-3 mb-4", children: bannerSet.small.map((src, index) => /* @__PURE__ */ jsx("div", { className: "col-12 col-md-4", children: /* @__PURE__ */ jsx("div", { className: "overflow-hidden position-relative brand-small-banner", children: /* @__PURE__ */ jsx("img", { src, alt: `Promo ${index + 1}`, className: "w-100 h-100 object-fit-cover brand-small-banner-image" }) }) }, src)) }),
       items.length === 0 ? /* @__PURE__ */ jsxs("div", { className: "text-center py-5 bg-white rounded-4 border", children: [
         /* @__PURE__ */ jsx("h3", { className: "h5 fw-bold", children: "No listings found" }),
         /* @__PURE__ */ jsx("p", { className: "text-muted mb-0", children: "No active listings are currently available for this brand." })
@@ -133,6 +133,15 @@ function PropertiesBrand({ brand, listings }) {
         .properties-section-title {
           font-size: clamp(1.45rem, 2.6vw, 2rem);
           line-height: 1.2;
+        }
+
+        .brand-small-banner {
+          height: 240px;
+          border-radius: 22px;
+        }
+
+        .brand-small-banner-image {
+          border-radius: 22px;
         }
 
         .marketplace-curated-slider {
@@ -193,6 +202,10 @@ function PropertiesBrand({ brand, listings }) {
         }
 
         @media (max-width: 767px) {
+          .brand-small-banner {
+            height: 180px;
+          }
+
           .marketplace-curated-slider .swiper {
             padding-bottom: 8px;
           }

@@ -114,8 +114,8 @@ export default function PropertiesBrand({ brand, listings }) {
         <div className="row g-3 mb-4">
           {bannerSet.small.map((src, index) => (
             <div className="col-12 col-md-4" key={src}>
-              <div className="overflow-hidden position-relative" style={{ minHeight: '140px', borderRadius: '22px' }}>
-                <img src={src} alt={`Promo ${index + 1}`} className="w-100 h-100 object-fit-cover" style={{ minHeight: '140px', borderRadius: '22px' }} />
+              <div className="overflow-hidden position-relative brand-small-banner">
+                <img src={src} alt={`Promo ${index + 1}`} className="w-100 h-100 object-fit-cover brand-small-banner-image" />
               </div>
             </div>
           ))}
@@ -178,6 +178,15 @@ export default function PropertiesBrand({ brand, listings }) {
           line-height: 1.2;
         }
 
+        .brand-small-banner {
+          height: 240px;
+          border-radius: 22px;
+        }
+
+        .brand-small-banner-image {
+          border-radius: 22px;
+        }
+
         .marketplace-curated-slider {
           position: relative;
           padding-bottom: 2px;
@@ -236,6 +245,10 @@ export default function PropertiesBrand({ brand, listings }) {
         }
 
         @media (max-width: 767px) {
+          .brand-small-banner {
+            height: 180px;
+          }
+
           .marketplace-curated-slider .swiper {
             padding-bottom: 8px;
           }
