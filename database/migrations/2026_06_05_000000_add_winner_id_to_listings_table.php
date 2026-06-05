@@ -12,22 +12,42 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('listings', function (Blueprint $table) {
-            $table->foreignId('winner_id')->nullable()->constrained('users')->nullOnDelete();
-        });
+        if (!Schema::hasColumn('listings', 'winner_id')) {
+            Schema::table('listings', function (Blueprint $table) {
+                $table->foreignId('winner_id')->nullable()->constrained('users')->nullOnDelete();
+            });
+        }
 
         DB::table('listings')
             ->select('id', 'listing_data')
             ->orderBy('id')
             ->chunkById(500, function ($listings) {
+                $candidateWinnerIds = [];
+
                 foreach ($listings as $listing) {
                     $listingData = json_decode($listing->listing_data ?? '', true);
                     $winnerId = $listingData['winner_id'] ?? null;
 
                     if (!empty($winnerId)) {
+                        $candidateWinnerIds[(int) $winnerId] = true;
+                    }
+                }
+
+                $validWinnerIds = DB::table('users')
+                    ->whereIn('id', array_keys($candidateWinnerIds))
+                    ->pluck('id')
+                    ->all();
+
+                $validWinnerIdMap = array_flip($validWinnerIds);
+
+                foreach ($listings as $listing) {
+                    $listingData = json_decode($listing->listing_data ?? '', true);
+                    $winnerId = (int) ($listingData['winner_id'] ?? 0);
+
+                    if ($winnerId > 0 && isset($validWinnerIdMap[$winnerId])) {
                         DB::table('listings')
                             ->where('id', $listing->id)
-                            ->update(['winner_id' => (int) $winnerId]);
+                            ->update(['winner_id' => $winnerId]);
                     }
                 }
             });
