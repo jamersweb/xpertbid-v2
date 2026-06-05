@@ -25,9 +25,23 @@ const SMALL_BANNERS = [
   "/assets/images/shotban2.webp",
   "/assets/images/shotban3.webp"
 ];
+const BRAND_BANNERS = {
+  2: {
+    top: "/assets/images/ban_b2_1.png",
+    small: [
+      "/assets/images/ban_b2_2.png",
+      "/assets/images/ban_b2_3.png",
+      "/assets/images/ban_b2_4.png"
+    ]
+  }
+};
 function PropertiesBrand({ brand, listings }) {
   const items = Array.isArray(listings) ? listings : listings?.data || [];
   const brandName = brand?.name || "Brand";
+  const bannerSet = BRAND_BANNERS[Number(brand?.id)] || {
+    top: TOP_BANNER_DESKTOP,
+    small: SMALL_BANNERS
+  };
   const detectBedrooms = (listing) => {
     const categoryFeatures = listing?.category_features && typeof listing.category_features === "object" ? listing.category_features : {};
     const directKeys = ["field_1", "1", "bedrooms", "bedroom", "beds", "bed"];
@@ -48,7 +62,31 @@ function PropertiesBrand({ brand, listings }) {
     }
     return null;
   };
-  const sections = [
+  const detectAreaSize = (listing) => {
+    const categoryFeatures = listing?.category_features && typeof listing.category_features === "object" ? listing.category_features : {};
+    const directKeys = ["field_6", "6", "area", "sqft", "sq_ft", "square_feet", "squarefeet"];
+    for (const key of directKeys) {
+      const raw = categoryFeatures[key];
+      const value = Number.parseFloat(String(raw).replace(/,/g, ""));
+      if (!Number.isNaN(value) && value > 0) {
+        return value;
+      }
+    }
+    const title = String(listing?.title || "").toLowerCase();
+    const match = title.match(/(\d[\d,]*)\s*(sq\s*ft|sqft|square\s*feet|squarefeet)/i);
+    if (match) {
+      const value = Number.parseFloat(match[1].replace(/,/g, ""));
+      if (!Number.isNaN(value) && value > 0) {
+        return value;
+      }
+    }
+    return null;
+  };
+  const sections = Number(brand?.id) === 2 ? [
+    { key: "1000_plus", title: `${brandName} 1000+ Sq Ft`, filter: (area) => area >= 1e3 && area < 1200 },
+    { key: "1200_plus", title: `${brandName} 1200+ Sq Ft`, filter: (area) => area >= 1200 && area < 1450 },
+    { key: "1450_plus", title: `${brandName} 1450+ Sq Ft`, filter: (area) => area >= 1450 }
+  ] : [
     { key: "two", title: `${brandName} 2 Bedrooms`, filter: (n) => n === 2 },
     { key: "three", title: `${brandName} 3 Bedrooms`, filter: (n) => n === 3 },
     { key: "four", title: `${brandName} 4 Bedrooms`, filter: (n) => n === 4 },
@@ -58,15 +96,18 @@ function PropertiesBrand({ brand, listings }) {
     /* @__PURE__ */ jsx(Head, { title: `${brand?.name || "Brand"} Properties` }),
     /* @__PURE__ */ jsxs("div", { className: "container py-4 py-lg-5 text-dark", children: [
       /* @__PURE__ */ jsx("div", { className: "mb-4 overflow-hidden", style: { height: "600px", borderRadius: "28px" }, children: /* @__PURE__ */ jsxs("picture", { children: [
-        /* @__PURE__ */ jsx("source", { media: "(max-width: 767px)", srcSet: TOP_BANNER_MOBILE }),
-        /* @__PURE__ */ jsx("img", { src: TOP_BANNER_DESKTOP, alt: "Properties banner", className: "w-100 h-100 object-fit-cover", style: { borderRadius: "28px" } })
+        /* @__PURE__ */ jsx("source", { media: "(max-width: 767px)", srcSet: bannerSet.top === TOP_BANNER_DESKTOP ? TOP_BANNER_MOBILE : bannerSet.top }),
+        /* @__PURE__ */ jsx("img", { src: bannerSet.top, alt: "Properties banner", className: "w-100 h-100 object-fit-cover", style: { borderRadius: "28px" } })
       ] }) }),
-      /* @__PURE__ */ jsx("div", { className: "row g-3 mb-4", children: SMALL_BANNERS.map((src, index) => /* @__PURE__ */ jsx("div", { className: "col-12 col-md-4", children: /* @__PURE__ */ jsx("div", { className: "overflow-hidden position-relative", style: { minHeight: "140px", borderRadius: "22px" }, children: /* @__PURE__ */ jsx("img", { src, alt: `Promo ${index + 1}`, className: "w-100 h-100 object-fit-cover", style: { minHeight: "140px", borderRadius: "22px" } }) }) }, src)) }),
+      /* @__PURE__ */ jsx("div", { className: "row g-3 mb-4", children: bannerSet.small.map((src, index) => /* @__PURE__ */ jsx("div", { className: "col-12 col-md-4", children: /* @__PURE__ */ jsx("div", { className: "overflow-hidden position-relative", style: { minHeight: "140px", borderRadius: "22px" }, children: /* @__PURE__ */ jsx("img", { src, alt: `Promo ${index + 1}`, className: "w-100 h-100 object-fit-cover", style: { minHeight: "140px", borderRadius: "22px" } }) }) }, src)) }),
       items.length === 0 ? /* @__PURE__ */ jsxs("div", { className: "text-center py-5 bg-white rounded-4 border", children: [
         /* @__PURE__ */ jsx("h3", { className: "h5 fw-bold", children: "No listings found" }),
         /* @__PURE__ */ jsx("p", { className: "text-muted mb-0", children: "No active listings are currently available for this brand." })
       ] }) : sections.map((section) => {
-        const sectionItems = items.filter((listing) => section.filter(detectBedrooms(listing)));
+        const sectionItems = Number(brand?.id) === 2 ? items.filter((listing) => section.filter(detectAreaSize(listing))) : items.filter((listing) => section.filter(detectBedrooms(listing)));
+        if (sectionItems.length === 0) {
+          return null;
+        }
         return /* @__PURE__ */ jsxs("section", { className: "mb-6", children: [
           /* @__PURE__ */ jsx("div", { className: "d-flex align-items-center justify-content-between mb-3", children: /* @__PURE__ */ jsx("h3", { className: "fw-bold mb-0 text-dark properties-section-title", children: section.title }) }),
           sectionItems.length === 0 ? /* @__PURE__ */ jsx("div", { className: "text-center py-4 bg-white rounded-4 border text-dark", children: "No listings found in this section." }) : /* @__PURE__ */ jsx("div", { className: "marketplace-curated-slider", children: /* @__PURE__ */ jsx(
