@@ -1000,12 +1000,21 @@ class AuctionController extends Controller
                 "profile" => $product->user->profile_pic ?? ''
             ];
 
-            if ($product->status == 'awarded' && ($product->listing_data['winner_id'] ?? null)) {
-                $winner = \App\Models\User::find($product->listing_data['winner_id']);
-                $product->winner_details = [
-                    "name" => $winner->name ?? 'Unknown',
-                    "profile" => $winner->profile_pic ?? ''
-                ];
+            if ($product->status == 'awarded') {
+                $winnerId = $product->listing_data['winner_id'] ?? null;
+                $winner = $winnerId ? \App\Models\User::find($winnerId) : null;
+
+                if (!$winner) {
+                    $highestBid = $product->bids->sortByDesc('bid_amount')->first();
+                    $winner = $highestBid?->user;
+                }
+
+                if ($winner) {
+                    $product->winner_details = [
+                        "name" => $winner->name ?? 'Unknown',
+                        "profile" => $winner->profile_pic ?? ''
+                    ];
+                }
             }
         }
 
@@ -1060,12 +1069,20 @@ class AuctionController extends Controller
             "profile" => $listing->user->profile_pic ?? '',
         ];
 
-        if ($listing->status == 'awarded' && ($listing->listing_data['winner_id'] ?? null)) {
-            $winner = \App\Models\User::find($listing->listing_data['winner_id']);
-            $product['winner_details'][] = [
-                "name" => $winner->name ?? 'Unknown',
-                "profile" => $winner->profile_pic ?? ''
-            ];
+        if ($listing->status == 'awarded') {
+            $winnerId = $listing->listing_data['winner_id'] ?? null;
+            $winner = $winnerId ? \App\Models\User::find($winnerId) : null;
+
+            if (!$winner) {
+                $winner = $bids->sortByDesc('bid_amount')->first()?->user;
+            }
+
+            if ($winner) {
+                $product['winner_details'][] = [
+                    "name" => $winner->name ?? 'Unknown',
+                    "profile" => $winner->profile_pic ?? ''
+                ];
+            }
         }
 
         $product['bids'] = []; // Initialize bids array
