@@ -626,11 +626,11 @@ class AuctionController extends Controller
         // 5. Winner Details (if awarded)
         $winnerDetails = null;
         if ($listing->status === 'awarded' || $listing->status === 'awarded ') {
-             $winningBid = $this->listingBidQuery($listing)->with('user')->orderBy('bid_amount', 'desc')->first();
-             if ($winningBid && $winningBid->user) {
+             $winner = $this->resolveListingWinner($listing);
+             if ($winner) {
                  $winnerDetails = [[
-                     'name' => $winningBid->user->name,
-                     'email' => $winningBid->user->email, // Be careful exposing email? Next.js did it.
+                     'name' => $winner->name,
+                     'email' => $winner->email, // Be careful exposing email? Next.js did it.
                      // Add other details if matching Next.js structure
                  ]];
              }
