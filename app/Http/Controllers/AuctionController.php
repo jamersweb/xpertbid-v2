@@ -83,6 +83,31 @@ class AuctionController extends Controller
         return $liveAuctions->firstWhere('status', 'active') ?: $liveAuctions->first();
     }
 
+    protected function listingBidQuery(int $listingId)
+    {
+        return Bid::query()->where(function ($query) use ($listingId) {
+            $query->where('listing_id', $listingId)
+                ->orWhere('auction_id', $listingId);
+        });
+    }
+
+    protected function resolveListingWinner(\App\Models\Listing $listing, ?\Illuminate\Support\Collection $bidHistory = null): ?User
+    {
+        $winnerId = $listing->listing_data['winner_id'] ?? null;
+        if ($winnerId) {
+            $winner = User::find($winnerId);
+            if ($winner) {
+                return $winner;
+            }
+        }
+
+        $highestBid = $bidHistory
+            ? $bidHistory->sortByDesc('bid_amount')->first()
+            : $this->listingBidQuery($listing->id)->with('user')->orderByDesc('bid_amount')->first();
+
+        return $highestBid?->user;
+    }
+
     protected function serializeLiveAuctionListing(\App\Models\Listing $listing, ?int $activeListingId = null): array
     {
         return [
@@ -570,12 +595,12 @@ class AuctionController extends Controller
             });
 
         // 4. Calculate Highest Bid (Server-side source of truth)
-        $highestBid = $listing->bids()->max('bid_amount') ?? 0;
+        $highestBid = $this->listingBidQuery($listing->id)->max('bid_amount') ?? 0;
 
         // 5. Winner Details (if awarded)
         $winnerDetails = null;
         if ($listing->status === 'awarded' || $listing->status === 'awarded ') {
-             $winningBid = $listing->bids()->orderBy('bid_amount', 'desc')->first();
+             $winningBid = $this->listingBidQuery($listing->id)->with('user')->orderBy('bid_amount', 'desc')->first();
              if ($winningBid && $winningBid->user) {
                  $winnerDetails = [[
                      'name' => $winningBid->user->name,
@@ -667,7 +692,7 @@ class AuctionController extends Controller
 
         return Inertia::render('Auctions/Show', [
             'auction' => $listing,
-            'bids' => $listing->bids()->with('user')->orderBy('created_at', 'desc')->get(), // specific order for history
+            'bids' => $this->listingBidQuery($listing->id)->with('user')->orderBy('created_at', 'desc')->get(), // specific order for history
             'related' => $related,
             'highestBid' => $highestBid, 
             'winnerDetails' => $winnerDetails,
@@ -988,26 +1013,21 @@ class AuctionController extends Controller
     {
         $products = \App\Models\Listing::where('is_1_rupee', 1)
             ->whereIn('status', ['active', 'awarded'])
-            ->withMax('bids', 'bid_amount')
-            ->with(['user', 'bids']) // Load relationships
+            ->with(['user']) // Load relationships
             ->latest()
             ->get();
 
         // Add owner and winner data for each product
         foreach ($products as $product) {
+            $productBidQuery = $this->listingBidQuery($product->id)->with('user');
+            $product->bids_max_bid_amount = (clone $productBidQuery)->max('bid_amount') ?? 0;
             $product->owner = [
                 "name" => $product->user->name ?? '',
                 "profile" => $product->user->profile_pic ?? ''
             ];
 
             if ($product->status == 'awarded') {
-                $winnerId = $product->listing_data['winner_id'] ?? null;
-                $winner = $winnerId ? \App\Models\User::find($winnerId) : null;
-
-                if (!$winner) {
-                    $highestBid = $product->bids->sortByDesc('bid_amount')->first();
-                    $winner = $highestBid?->user;
-                }
+                $winner = $this->resolveListingWinner($product, $productBidQuery->get());
 
                 if ($winner) {
                     $product->winner_details = [
@@ -1061,7 +1081,7 @@ class AuctionController extends Controller
         $listing->increment('views');
 
         // Bids history
-        $bids = $listing->bids()->with('user')->latest()->get();
+        $bids = $this->listingBidQuery($listing->id)->with('user')->latest()->get();
 
         $product['product'] = [$listing];
         $product['owner'][] = [
@@ -1070,12 +1090,7 @@ class AuctionController extends Controller
         ];
 
         if ($listing->status == 'awarded') {
-            $winnerId = $listing->listing_data['winner_id'] ?? null;
-            $winner = $winnerId ? \App\Models\User::find($winnerId) : null;
-
-            if (!$winner) {
-                $winner = $bids->sortByDesc('bid_amount')->first()?->user;
-            }
+            $winner = $this->resolveListingWinner($listing, $bids);
 
             if ($winner) {
                 $product['winner_details'][] = [
