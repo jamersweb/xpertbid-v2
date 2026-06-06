@@ -8,7 +8,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode, Navigation, Thumbs } from "swiper/modules";
 import { C as CountdownTimer } from "./OwnerInfoRow-DJ1W7dqV.js";
 import { Y as YoutubeLiveEmbed, B as BidSection, a as BidHistory } from "./YoutubeLiveEmbed-BGwpEyu9.js";
-import { A as AuctionCard } from "./AuctionCard-CkurWAja.js";
+import { A as AuctionCard } from "./AuctionCard-CkLAuDiK.js";
 import { L as ListingLiveChat } from "./ListingLiveChat-DrCA7khS.js";
 import { P as Price } from "./Price-CF5NSPt0.js";
 import { C as CartProvider } from "./CartContext-DXNQZwkV.js";

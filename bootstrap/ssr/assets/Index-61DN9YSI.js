@@ -2,7 +2,7 @@ import { jsxs, jsx, Fragment } from "react/jsx-runtime";
 import { useState, useEffect } from "react";
 import { Head, router } from "@inertiajs/react";
 import { A as AppLayout } from "./AppLayout-BQ8UWi9o.js";
-import { A as AuctionCard } from "./AuctionCard-CkurWAja.js";
+import { A as AuctionCard } from "./AuctionCard-CkLAuDiK.js";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 /* empty css                */

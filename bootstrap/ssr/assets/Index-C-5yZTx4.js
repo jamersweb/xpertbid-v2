@@ -1,7 +1,7 @@
 import { jsx, jsxs } from "react/jsx-runtime";
 import "react";
 import { A as AppLayout } from "./AppLayout-BQ8UWi9o.js";
-import { A as AuctionCard } from "./AuctionCard-CkurWAja.js";
+import { A as AuctionCard } from "./AuctionCard-CkLAuDiK.js";
 import { router } from "@inertiajs/react";
 import { u as useTranslate } from "./CurrencyPicker-KgG9a2BI.js";
 import "ziggy-js";

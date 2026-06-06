@@ -1,6 +1,6 @@
 import { jsxs, jsx } from "react/jsx-runtime";
 import "react";
-import { A as AuctionCard } from "./AuctionCard-CkurWAja.js";
+import { A as AuctionCard } from "./AuctionCard-CkLAuDiK.js";
 import "@inertiajs/react";
 import "./OwnerInfoRow-DJ1W7dqV.js";
 import "./Price-CF5NSPt0.js";

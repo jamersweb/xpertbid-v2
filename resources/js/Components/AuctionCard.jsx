@@ -156,8 +156,8 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
                                    )}
                                    {area && (
                                           <span
-                                                 className="badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-2 py-2 text-truncate"
-                                                 style={{ maxWidth: "38%", fontSize: "0.88rem", minWidth: 0 }}
+                                                 className="badge rounded-pill text-bg-light border text-dark d-inline-flex align-items-center gap-1 px-2 py-2"
+                                                 style={{ fontSize: "0.88rem", minWidth: 0, whiteSpace: "normal", flex: "0 0 auto" }}
                                           >
                                                  <i className="fa-solid fa-ruler-combined text-primary" aria-hidden="true"></i>
                                                  {area}

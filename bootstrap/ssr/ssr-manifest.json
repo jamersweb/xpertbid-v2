@@ -11,7 +11,7 @@
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "node_modules/swiper/modules/free-mode.css": [
-    "/build/assets/Show-B27Ytnf-.js",
+    "/build/assets/Show-D0bjeq2I.js",
     "/build/assets/Show-VUyWc9KG.css",
     "/build/assets/swiper-C2J0D0kV.css",
     "/build/assets/navigation-6AKkHmRK.css"
@@ -22,7 +22,7 @@
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "node_modules/swiper/modules/thumbs.css": [
-    "/build/assets/Show-B27Ytnf-.js",
+    "/build/assets/Show-D0bjeq2I.js",
     "/build/assets/Show-VUyWc9KG.css",
     "/build/assets/swiper-C2J0D0kV.css",
     "/build/assets/navigation-6AKkHmRK.css"
@@ -39,7 +39,7 @@
     "/build/assets/GuestLayout-DaSCEquR.js"
   ],
   "resources/js/Components/AuctionCard.jsx": [
-    "/build/assets/AuctionCard-CkurWAja.js"
+    "/build/assets/AuctionCard-CkLAuDiK.js"
   ],
   "resources/js/Components/AuctionSection.jsx": [
     "/build/assets/Home-C6676Ekt.js",
@@ -143,19 +143,19 @@
     "/build/assets/ListingLiveChat-DrCA7khS.js"
   ],
   "resources/js/Components/ProductDetails/ProductHeader.jsx": [
-    "/build/assets/Show-B27Ytnf-.js",
+    "/build/assets/Show-D0bjeq2I.js",
     "/build/assets/Show-VUyWc9KG.css",
     "/build/assets/swiper-C2J0D0kV.css",
     "/build/assets/navigation-6AKkHmRK.css"
   ],
   "resources/js/Components/ProductDetails/ProductImages.jsx": [
-    "/build/assets/Show-B27Ytnf-.js",
+    "/build/assets/Show-D0bjeq2I.js",
     "/build/assets/Show-VUyWc9KG.css",
     "/build/assets/swiper-C2J0D0kV.css",
     "/build/assets/navigation-6AKkHmRK.css"
   ],
   "resources/js/Components/ProductDetails/RelatedItems.jsx": [
-    "/build/assets/Show-B27Ytnf-.js",
+    "/build/assets/Show-D0bjeq2I.js",
     "/build/assets/Show-VUyWc9KG.css",
     "/build/assets/swiper-C2J0D0kV.css",
     "/build/assets/navigation-6AKkHmRK.css"
@@ -221,7 +221,7 @@
     "/build/assets/ErrorPopup-VSFE5nHL.js"
   ],
   "resources/js/Components/TabNavigation.jsx": [
-    "/build/assets/Index-BrbdYI4t.js"
+    "/build/assets/Index-C-5yZTx4.js"
   ],
   "resources/js/Components/TextInput.jsx": [
     "/build/assets/InputError-CuGgaxYl.js"
@@ -407,7 +407,7 @@
     "/build/assets/MyListings-B-s1pLWv.js"
   ],
   "resources/js/Pages/Auctions/Show.jsx": [
-    "/build/assets/Show-B27Ytnf-.js",
+    "/build/assets/Show-D0bjeq2I.js",
     "/build/assets/Show-VUyWc9KG.css",
     "/build/assets/swiper-C2J0D0kV.css",
     "/build/assets/navigation-6AKkHmRK.css"
@@ -431,7 +431,7 @@
     "/build/assets/VerifyEmail-n3wPR9Z5.js"
   ],
   "resources/js/Pages/Bids/Index.jsx": [
-    "/build/assets/Index-BrbdYI4t.js"
+    "/build/assets/Index-C-5yZTx4.js"
   ],
   "resources/js/Pages/Blogs/Index.jsx": [
     "/build/assets/Index-BUzNtoCE.js"
@@ -440,7 +440,7 @@
     "/build/assets/Show-G6VvDv8H.js"
   ],
   "resources/js/Pages/Brands/PropertiesBrand.jsx": [
-    "/build/assets/PropertiesBrand-NvUbcByf.js",
+    "/build/assets/PropertiesBrand-BigJM5dw.js",
     "/build/assets/swiper-C2J0D0kV.css",
     "/build/assets/navigation-6AKkHmRK.css"
   ],
@@ -483,13 +483,13 @@
     "/build/assets/Index-Dnih6kvF.js"
   ],
   "resources/js/Pages/Marketplace/Components/ExploreProducts.jsx": [
-    "/build/assets/ExploreProducts-Z03EnjXS.js"
+    "/build/assets/ExploreProducts-By-1GAGQ.js"
   ],
   "resources/js/Pages/Marketplace/Components/Filter.jsx": [
     "/build/assets/Filter-DfJshiV3.js"
   ],
   "resources/js/Pages/Marketplace/Index.jsx": [
-    "/build/assets/Index-D512z_Wq.js",
+    "/build/assets/Index-61DN9YSI.js",
     "/build/assets/swiper-C2J0D0kV.css",
     "/build/assets/navigation-6AKkHmRK.css"
   ],
