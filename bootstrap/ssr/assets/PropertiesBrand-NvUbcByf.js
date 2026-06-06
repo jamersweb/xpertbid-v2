@@ -18,20 +18,34 @@ import "./CurrencyPicker-KgG9a2BI.js";
 import "./OwnerInfoRow-DJ1W7dqV.js";
 import "./FavoriteToggleButton-1jmbejDw.js";
 import "./listingPricing-CwGdsu2n.js";
-const TOP_BANNER_DESKTOP = "/assets/images/desk_b_ban.png";
-const TOP_BANNER_MOBILE = "/assets/images/mob_b_ban.png";
-const SMALL_BANNERS = [
-  "/assets/images/shotban1.webp",
-  "/assets/images/shotban2.webp",
-  "/assets/images/shotban3.webp"
-];
+const PROPERTY_BANNER_IMAGES = {
+  skyline: {
+    desktop: "https://images.unsplash.com/photo-1764254810930-4cdf96de0ef0?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=1920&h=620",
+    mobile: "https://images.unsplash.com/photo-1764254810930-4cdf96de0ef0?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=900&h=420"
+  },
+  apartmentBlocks: {
+    desktop: "https://images.unsplash.com/photo-1776066361467-f70a25cf0dc8?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=1920&h=620",
+    mobile: "https://images.unsplash.com/photo-1776066361467-f70a25cf0dc8?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=900&h=420"
+  },
+  aerialComplex: "https://images.unsplash.com/photo-1776066361467-f70a25cf0dc8?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=1400&h=900",
+  cityView: "https://images.unsplash.com/photo-1764232165240-73be9237845f?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=1400&h=900",
+  buildingComplex: "https://images.unsplash.com/photo-1764254810930-4cdf96de0ef0?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=1400&h=900"
+};
 const BRAND_BANNERS = {
-  2: {
-    top: "/assets/images/ban_b2_1.png",
+  1: {
+    top: PROPERTY_BANNER_IMAGES.skyline,
     small: [
-      "/assets/images/ban_b2_2.png",
-      "/assets/images/ban_b2_3.png",
-      "/assets/images/ban_b2_4.png"
+      PROPERTY_BANNER_IMAGES.aerialComplex,
+      PROPERTY_BANNER_IMAGES.cityView,
+      PROPERTY_BANNER_IMAGES.buildingComplex
+    ]
+  },
+  2: {
+    top: PROPERTY_BANNER_IMAGES.apartmentBlocks,
+    small: [
+      PROPERTY_BANNER_IMAGES.cityView,
+      PROPERTY_BANNER_IMAGES.buildingComplex,
+      PROPERTY_BANNER_IMAGES.aerialComplex
     ]
   }
 };
@@ -39,8 +53,12 @@ function PropertiesBrand({ brand, listings }) {
   const items = Array.isArray(listings) ? listings : listings?.data || [];
   const brandName = brand?.name || "Brand";
   const bannerSet = BRAND_BANNERS[Number(brand?.id)] || {
-    top: TOP_BANNER_DESKTOP,
-    small: SMALL_BANNERS
+    top: PROPERTY_BANNER_IMAGES.skyline,
+    small: [
+      PROPERTY_BANNER_IMAGES.aerialComplex,
+      PROPERTY_BANNER_IMAGES.cityView,
+      PROPERTY_BANNER_IMAGES.buildingComplex
+    ]
   };
   const detectBedrooms = (listing) => {
     const categoryFeatures = listing?.category_features && typeof listing.category_features === "object" ? listing.category_features : {};
@@ -95,9 +113,9 @@ function PropertiesBrand({ brand, listings }) {
   return /* @__PURE__ */ jsxs(AppLayout, { children: [
     /* @__PURE__ */ jsx(Head, { title: `${brand?.name || "Brand"} Properties` }),
     /* @__PURE__ */ jsxs("div", { className: "container py-4 py-lg-5 text-dark", children: [
-      /* @__PURE__ */ jsx("div", { className: "mb-4 overflow-hidden", style: { height: "600px", borderRadius: "28px" }, children: /* @__PURE__ */ jsxs("picture", { children: [
-        /* @__PURE__ */ jsx("source", { media: "(max-width: 767px)", srcSet: bannerSet.top === TOP_BANNER_DESKTOP ? TOP_BANNER_MOBILE : bannerSet.top }),
-        /* @__PURE__ */ jsx("img", { src: bannerSet.top, alt: "Properties banner", className: "w-100 h-100 object-fit-cover", style: { borderRadius: "28px" } })
+      /* @__PURE__ */ jsx("div", { className: "mb-4 overflow-hidden brand-top-banner", children: /* @__PURE__ */ jsxs("picture", { children: [
+        /* @__PURE__ */ jsx("source", { media: "(max-width: 767px)", srcSet: bannerSet.top.mobile || bannerSet.top.desktop || bannerSet.top }),
+        /* @__PURE__ */ jsx("img", { src: bannerSet.top.desktop || bannerSet.top, alt: "Properties banner", className: "w-100 h-100 object-fit-cover", style: { borderRadius: "28px" } })
       ] }) }),
       /* @__PURE__ */ jsx("div", { className: "row g-3 mb-4", children: bannerSet.small.map((src, index) => /* @__PURE__ */ jsx("div", { className: "col-12 col-md-4", children: /* @__PURE__ */ jsx("div", { className: "overflow-hidden position-relative brand-small-banner", children: /* @__PURE__ */ jsx("img", { src, alt: `Promo ${index + 1}`, className: "w-100 h-100 object-fit-cover brand-small-banner-image" }) }) }, src)) }),
       items.length === 0 ? /* @__PURE__ */ jsxs("div", { className: "text-center py-5 bg-white rounded-4 border", children: [
@@ -133,6 +151,20 @@ function PropertiesBrand({ brand, listings }) {
         .properties-section-title {
           font-size: clamp(1.45rem, 2.6vw, 2rem);
           line-height: 1.2;
+        }
+
+        .brand-top-banner {
+          height: 420px;
+          border-radius: 32px;
+          overflow: hidden;
+        }
+
+        .brand-top-banner picture,
+        .brand-top-banner img {
+          width: 100%;
+          height: 100%;
+          display: block;
+          object-fit: cover;
         }
 
         .brand-small-banner {
@@ -202,6 +234,11 @@ function PropertiesBrand({ brand, listings }) {
         }
 
         @media (max-width: 767px) {
+          .brand-top-banner {
+            height: 210px;
+            border-radius: 24px;
+          }
+
           .brand-small-banner {
             height: 180px;
           }
@@ -213,6 +250,12 @@ function PropertiesBrand({ brand, listings }) {
           .marketplace-curated-slider .swiper-button-prev,
           .marketplace-curated-slider .swiper-button-next {
             display: none !important;
+          }
+        }
+
+        @media (max-width: 991px) and (min-width: 768px) {
+          .brand-top-banner {
+            height: 360px;
           }
         }
       ` })
