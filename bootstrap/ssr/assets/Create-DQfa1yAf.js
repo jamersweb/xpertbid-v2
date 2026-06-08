@@ -1,5 +1,5 @@
 import { jsxs, jsx, Fragment } from "react/jsx-runtime";
-import "react";
+import { useRef, useState, useEffect } from "react";
 import { A as AdminLayout } from "./AdminLayout-CZrc0vs-.js";
 import { useForm, Head, Link } from "@inertiajs/react";
 import ReactQuill from "react-quill";
@@ -8,6 +8,7 @@ import "./CurrencyPicker-KgG9a2BI.js";
 import "./useCurrencyList-Ce5tJXO9.js";
 import "axios";
 function Create() {
+  const fileInputRef = useRef(null);
   const { data, setData, post, processing, errors } = useForm({
     title: "",
     slug: "",
@@ -18,6 +19,26 @@ function Create() {
     canonical_url: "",
     schema_markup: ""
   });
+  const [imagePreview, setImagePreview] = useState(null);
+  useEffect(() => {
+    if (!data.image) {
+      setImagePreview(null);
+      return void 0;
+    }
+    const previewUrl = URL.createObjectURL(data.image);
+    setImagePreview(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [data.image]);
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0] || null;
+    setData("image", file);
+  };
+  const removeSelectedImage = () => {
+    setData("image", null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
   const submit = (e) => {
     e.preventDefault();
     post(route("admin.blogs.store"));
@@ -69,9 +90,10 @@ function Create() {
                 /* @__PURE__ */ jsx(
                   "input",
                   {
+                    ref: fileInputRef,
                     type: "file",
                     className: "absolute inset-0 opacity-0 cursor-pointer z-10",
-                    onChange: (e) => setData("image", e.target.files[0])
+                    onChange: handleImageChange
                   }
                 ),
                 /* @__PURE__ */ jsxs("div", { className: "space-y-2 text-center", children: [
@@ -83,12 +105,24 @@ function Create() {
                   /* @__PURE__ */ jsx("p", { className: "text-[10px] text-gray-300 font-bold uppercase tracking-wider", children: "PNG, JPG, GIF up to 2MB" })
                 ] })
               ] }) }),
-              data.image && /* @__PURE__ */ jsxs("div", { className: "mt-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3", children: [
-                /* @__PURE__ */ jsx("div", { className: "w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white", children: /* @__PURE__ */ jsx("i", { className: "fa-solid fa-check" }) }),
-                /* @__PURE__ */ jsxs("div", { children: [
-                  /* @__PURE__ */ jsx("p", { className: "text-xs font-black text-emerald-900 truncate max-w-xs", children: data.image.name }),
-                  /* @__PURE__ */ jsx("p", { className: "text-[10px] text-emerald-600 font-bold uppercase tracking-tight", children: "File selected" })
-                ] })
+              data.image && /* @__PURE__ */ jsxs("div", { className: "mt-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-3", children: [
+                /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [
+                  /* @__PURE__ */ jsx("div", { className: "w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white", children: /* @__PURE__ */ jsx("i", { className: "fa-solid fa-check" }) }),
+                  /* @__PURE__ */ jsxs("div", { className: "min-w-0 flex-1", children: [
+                    /* @__PURE__ */ jsx("p", { className: "text-xs font-black text-emerald-900 truncate max-w-xs", children: data.image.name }),
+                    /* @__PURE__ */ jsx("p", { className: "text-[10px] text-emerald-600 font-bold uppercase tracking-tight", children: "File selected" })
+                  ] }),
+                  /* @__PURE__ */ jsx(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: removeSelectedImage,
+                      className: "text-xs font-black text-rose-600 hover:text-rose-700",
+                      children: "Remove"
+                    }
+                  )
+                ] }),
+                imagePreview && /* @__PURE__ */ jsx("div", { className: "overflow-hidden rounded-xl border border-emerald-100 bg-white", children: /* @__PURE__ */ jsx("img", { src: imagePreview, alt: "Selected preview", className: "w-full h-48 object-cover" }) })
               ] }),
               errors.image && /* @__PURE__ */ jsx("p", { className: "mt-2 text-xs text-rose-500 font-bold", children: errors.image })
             ] }),

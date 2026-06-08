@@ -62,6 +62,30 @@ const sanitizeSeoHtml = (html) => {
   }
   return html.replace(/<li\b[^>]*>(?:\s|&nbsp;|&#160;|<br\s*\/?>|<span\b[^>]*>\s*<\/span>)*<\/li>/gi, "").replace(/<p\b[^>]*>(?:\s|&nbsp;|&#160;|<br\s*\/?>|<span\b[^>]*>\s*<\/span>)*<\/p>/gi, "").replace(/<ul\b([^>]*)>\s*<\/ul>/gi, "<ul$1></ul>").replace(/<ol\b([^>]*)>\s*<\/ol>/gi, "<ol$1></ol>");
 };
+const normalizeSchemaMarkup = (schemaMarkup) => {
+  if (typeof schemaMarkup !== "string") {
+    return "";
+  }
+  const rawMarkup = schemaMarkup.trim();
+  if (!rawMarkup) {
+    return "";
+  }
+  try {
+    const parsed = JSON.parse(rawMarkup);
+    return JSON.stringify(parsed);
+  } catch (error) {
+    const normalizedMarkup = rawMarkup.replace(/^\s*html\s*/i, "").replace(/<script[^>]*type=["']application\/ld\+json["'][^>]*>/i, "").replace(/<\/script>\s*$/i, "").trim();
+    if (!normalizedMarkup) {
+      return "";
+    }
+    try {
+      const parsed = JSON.parse(normalizedMarkup);
+      return JSON.stringify(parsed);
+    } catch (nestedError) {
+      return "";
+    }
+  }
+};
 const CuratedMarketplaceSection = ({ title, items = [], slider = false }) => {
   if (!items || items.length === 0) {
     return null;
@@ -171,6 +195,7 @@ function Index({
   const latestGridTitle = sectionTitleMap[sectionMode] || `Latest ${sectionEntityName}`;
   const seoShortContent = sanitizeSeoHtml(currentCategory?.seo_short_content);
   const seoContent = sanitizeSeoHtml(currentCategory?.seo_content);
+  const schemaMarkup = normalizeSchemaMarkup(currentCategory?.schema_markup);
   const tabs = [
     { key: "auction", label: "Auction", mobileLabel: "Auction" },
     { key: "normal", label: "Normal Products", mobileLabel: "Normal" },
@@ -431,6 +456,13 @@ function Index({
         {
           name: "description",
           content: currentCategory?.meta_description || "Explore our marketplace for the best deals."
+        }
+      ),
+      schemaMarkup && /* @__PURE__ */ jsx(
+        "script",
+        {
+          type: "application/ld+json",
+          dangerouslySetInnerHTML: { __html: schemaMarkup }
         }
       )
     ] }),

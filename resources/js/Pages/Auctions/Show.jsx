@@ -53,6 +53,39 @@ const listingImageUrl = (path) => {
        return `/${String(path).replace(/^\/+/, '')}`;
 };
 
+const normalizeSchemaMarkup = (schemaMarkup) => {
+       if (typeof schemaMarkup !== 'string') {
+              return '';
+       }
+
+       const rawMarkup = schemaMarkup.trim();
+       if (!rawMarkup) {
+              return '';
+       }
+
+       try {
+              const parsed = JSON.parse(rawMarkup);
+              return JSON.stringify(parsed);
+       } catch (error) {
+              const normalizedMarkup = rawMarkup
+                     .replace(/^\s*html\s*/i, '')
+                     .replace(/<script[^>]*type=["']application\/ld\+json["'][^>]*>/i, '')
+                     .replace(/<\/script>\s*$/i, '')
+                     .trim();
+
+              if (!normalizedMarkup) {
+                     return '';
+              }
+
+              try {
+                     const parsed = JSON.parse(normalizedMarkup);
+                     return JSON.stringify(parsed);
+              } catch (nestedError) {
+                     return '';
+              }
+       }
+};
+
 export default function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, dynamicFields = [], liveVideoId = null, liveActiveAuction = null, marketplaceBackUrl = null }) {
        const { auth } = usePage().props;
        const listingType = String(auction?.listing_type || '').toLowerCase();
@@ -61,6 +94,7 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
        const [mobileBidAmount, setMobileBidAmount] = useState('');
        const [mobileBidSending, setMobileBidSending] = useState(false);
        const activeLiveVideoId = liveVideoId || auction?.youtube_video_id;
+       const schemaMarkup = normalizeSchemaMarkup(auction?.category?.schema_markup);
 
        // Bids update automatically via Inertia props after a successful POST
        const categoryFeatures = auction?.category_features && typeof auction.category_features === 'object'
@@ -201,9 +235,15 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
               return (
                      <CartProvider>
                             <AuthModalProvider>
-                            <Head>
+                           <Head>
                                    <title>{auction.title}</title>
                                    <meta name="description" content={auction.description?.substring(0, 160)} />
+                                   {schemaMarkup && (
+                                          <script
+                                                 type="application/ld+json"
+                                                 dangerouslySetInnerHTML={{ __html: schemaMarkup }}
+                                          />
+                                   )}
                             </Head>
 
                             <main className="live-product-detail-page">
@@ -963,6 +1003,12 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
               <AppLayout title={auction.title}>
                      <Head>
                             <meta name="description" content={auction.description?.substring(0, 160)} />
+                            {schemaMarkup && (
+                                   <script
+                                          type="application/ld+json"
+                                          dangerouslySetInnerHTML={{ __html: schemaMarkup }}
+                                   />
+                            )}
                      </Head>
 
                      <ProductHeader

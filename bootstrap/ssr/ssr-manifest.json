@@ -11,7 +11,7 @@
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "node_modules/swiper/modules/free-mode.css": [
-    "/build/assets/Show-D0bjeq2I.js",
+    "/build/assets/Show-xN1bdLXk.js",
     "/build/assets/Show-VUyWc9KG.css",
     "/build/assets/swiper-C2J0D0kV.css",
     "/build/assets/navigation-6AKkHmRK.css"
@@ -22,7 +22,7 @@
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "node_modules/swiper/modules/thumbs.css": [
-    "/build/assets/Show-D0bjeq2I.js",
+    "/build/assets/Show-xN1bdLXk.js",
     "/build/assets/Show-VUyWc9KG.css",
     "/build/assets/swiper-C2J0D0kV.css",
     "/build/assets/navigation-6AKkHmRK.css"
@@ -143,19 +143,19 @@
     "/build/assets/ListingLiveChat-DrCA7khS.js"
   ],
   "resources/js/Components/ProductDetails/ProductHeader.jsx": [
-    "/build/assets/Show-D0bjeq2I.js",
+    "/build/assets/Show-xN1bdLXk.js",
     "/build/assets/Show-VUyWc9KG.css",
     "/build/assets/swiper-C2J0D0kV.css",
     "/build/assets/navigation-6AKkHmRK.css"
   ],
   "resources/js/Components/ProductDetails/ProductImages.jsx": [
-    "/build/assets/Show-D0bjeq2I.js",
+    "/build/assets/Show-xN1bdLXk.js",
     "/build/assets/Show-VUyWc9KG.css",
     "/build/assets/swiper-C2J0D0kV.css",
     "/build/assets/navigation-6AKkHmRK.css"
   ],
   "resources/js/Components/ProductDetails/RelatedItems.jsx": [
-    "/build/assets/Show-D0bjeq2I.js",
+    "/build/assets/Show-xN1bdLXk.js",
     "/build/assets/Show-VUyWc9KG.css",
     "/build/assets/swiper-C2J0D0kV.css",
     "/build/assets/navigation-6AKkHmRK.css"
@@ -258,11 +258,11 @@
     "/build/assets/Index-DQOsrXwl.js"
   ],
   "resources/js/Pages/Admin/Blogs/Create.jsx": [
-    "/build/assets/Create-Bn-T6XVg.js",
+    "/build/assets/Create-DQfa1yAf.js",
     "/build/assets/quill-D32Un0ak.css"
   ],
   "resources/js/Pages/Admin/Blogs/Edit.jsx": [
-    "/build/assets/Edit-CRdBobdG.js",
+    "/build/assets/Edit-DEH2dD-x.js",
     "/build/assets/quill-D32Un0ak.css"
   ],
   "resources/js/Pages/Admin/Blogs/Index.jsx": [
@@ -277,8 +277,12 @@
   "resources/js/Pages/Admin/CRM/Index.jsx": [
     "/build/assets/Index-BSzsD53U.js"
   ],
+  "resources/js/Pages/Admin/Categories/Form.jsx": [
+    "/build/assets/Form-yVmDrXja.js",
+    "/build/assets/quill-D32Un0ak.css"
+  ],
   "resources/js/Pages/Admin/Categories/Index.jsx": [
-    "/build/assets/Index-CAwtvxcy.js"
+    "/build/assets/Index-DUc2B-Es.js"
   ],
   "resources/js/Pages/Admin/Chat/Index.jsx": [
     "/build/assets/Index-BVjzBHlM.js"
@@ -407,7 +411,7 @@
     "/build/assets/MyListings-B-s1pLWv.js"
   ],
   "resources/js/Pages/Auctions/Show.jsx": [
-    "/build/assets/Show-D0bjeq2I.js",
+    "/build/assets/Show-xN1bdLXk.js",
     "/build/assets/Show-VUyWc9KG.css",
     "/build/assets/swiper-C2J0D0kV.css",
     "/build/assets/navigation-6AKkHmRK.css"
@@ -489,7 +493,7 @@
     "/build/assets/Filter-DfJshiV3.js"
   ],
   "resources/js/Pages/Marketplace/Index.jsx": [
-    "/build/assets/Index-61DN9YSI.js",
+    "/build/assets/Index-B54P-oMs.js",
     "/build/assets/swiper-C2J0D0kV.css",
     "/build/assets/navigation-6AKkHmRK.css"
   ],

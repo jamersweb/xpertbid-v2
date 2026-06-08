@@ -517,6 +517,30 @@ const listingImageUrl = (path) => {
   if (String(path).startsWith("http") || String(path).startsWith("/")) return path;
   return `/${String(path).replace(/^\/+/, "")}`;
 };
+const normalizeSchemaMarkup = (schemaMarkup) => {
+  if (typeof schemaMarkup !== "string") {
+    return "";
+  }
+  const rawMarkup = schemaMarkup.trim();
+  if (!rawMarkup) {
+    return "";
+  }
+  try {
+    const parsed = JSON.parse(rawMarkup);
+    return JSON.stringify(parsed);
+  } catch (error) {
+    const normalizedMarkup = rawMarkup.replace(/^\s*html\s*/i, "").replace(/<script[^>]*type=["']application\/ld\+json["'][^>]*>/i, "").replace(/<\/script>\s*$/i, "").trim();
+    if (!normalizedMarkup) {
+      return "";
+    }
+    try {
+      const parsed = JSON.parse(normalizedMarkup);
+      return JSON.stringify(parsed);
+    } catch (nestedError) {
+      return "";
+    }
+  }
+};
 function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, dynamicFields = [], liveVideoId = null, liveActiveAuction = null, marketplaceBackUrl = null }) {
   const { auth } = usePage().props;
   const listingType = String(auction?.listing_type || "").toLowerCase();
@@ -525,6 +549,7 @@ function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, d
   const [mobileBidAmount, setMobileBidAmount] = useState("");
   const [mobileBidSending, setMobileBidSending] = useState(false);
   const activeLiveVideoId = liveVideoId || auction?.youtube_video_id;
+  const schemaMarkup = normalizeSchemaMarkup(auction?.category?.schema_markup);
   const categoryFeatures = auction?.category_features && typeof auction.category_features === "object" ? auction.category_features : {};
   const fieldNameCounts = dynamicFields.reduce((acc, field) => {
     const key = String(field?.field_name || "").trim();
@@ -629,7 +654,14 @@ function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, d
     return /* @__PURE__ */ jsx(CartProvider, { children: /* @__PURE__ */ jsxs(AuthModalProvider, { children: [
       /* @__PURE__ */ jsxs(Head, { children: [
         /* @__PURE__ */ jsx("title", { children: auction.title }),
-        /* @__PURE__ */ jsx("meta", { name: "description", content: auction.description?.substring(0, 160) })
+        /* @__PURE__ */ jsx("meta", { name: "description", content: auction.description?.substring(0, 160) }),
+        schemaMarkup && /* @__PURE__ */ jsx(
+          "script",
+          {
+            type: "application/ld+json",
+            dangerouslySetInnerHTML: { __html: schemaMarkup }
+          }
+        )
       ] }),
       /* @__PURE__ */ jsx("main", { className: "live-product-detail-page", children: /* @__PURE__ */ jsxs("div", { className: "live-product-detail-grid", children: [
         /* @__PURE__ */ jsxs("div", { className: "live-product-mobile-video-panel", children: [
@@ -1366,7 +1398,16 @@ function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, d
     ] }) });
   }
   return /* @__PURE__ */ jsxs(AppLayout, { title: auction.title, children: [
-    /* @__PURE__ */ jsx(Head, { children: /* @__PURE__ */ jsx("meta", { name: "description", content: auction.description?.substring(0, 160) }) }),
+    /* @__PURE__ */ jsxs(Head, { children: [
+      /* @__PURE__ */ jsx("meta", { name: "description", content: auction.description?.substring(0, 160) }),
+      schemaMarkup && /* @__PURE__ */ jsx(
+        "script",
+        {
+          type: "application/ld+json",
+          dangerouslySetInnerHTML: { __html: schemaMarkup }
+        }
+      )
+    ] }),
     /* @__PURE__ */ jsx(
       ProductHeader,
       {

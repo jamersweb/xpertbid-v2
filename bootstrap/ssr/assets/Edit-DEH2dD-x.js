@@ -1,5 +1,5 @@
 import { jsxs, jsx, Fragment } from "react/jsx-runtime";
-import "react";
+import { useRef, useState, useEffect } from "react";
 import { A as AdminLayout } from "./AdminLayout-CZrc0vs-.js";
 import { useForm, Head, Link } from "@inertiajs/react";
 import ReactQuill from "react-quill";
@@ -8,17 +8,49 @@ import "./CurrencyPicker-KgG9a2BI.js";
 import "./useCurrencyList-Ce5tJXO9.js";
 import "axios";
 function Edit({ blog }) {
+  const fileInputRef = useRef(null);
   const { data, setData, post, processing, errors } = useForm({
     _method: "PUT",
     title: blog.title || "",
     slug: blog.slug || "",
     content: blog.content || "",
     image: null,
+    remove_image: false,
     meta_title: blog.meta_title || "",
     meta_description: blog.meta_description || "",
     canonical_url: blog.canonical_url || "",
     schema_markup: blog.schema_markup || ""
   });
+  const [imagePreview, setImagePreview] = useState(null);
+  useEffect(() => {
+    if (!data.image) {
+      setImagePreview(null);
+      return void 0;
+    }
+    const previewUrl = URL.createObjectURL(data.image);
+    setImagePreview(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [data.image]);
+  const hasExistingImage = Boolean(blog.image) && !data.remove_image;
+  const currentImageUrl = hasExistingImage ? `/${blog.image}` : null;
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0] || null;
+    setData("remove_image", false);
+    setData("image", file);
+  };
+  const removeCurrentImage = () => {
+    setData("remove_image", true);
+    setData("image", null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+  const clearSelectedImage = () => {
+    setData("image", null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
   const submit = (e) => {
     e.preventDefault();
     post(route("admin.blogs.update", blog.id));
@@ -69,7 +101,22 @@ function Edit({ blog }) {
               /* @__PURE__ */ jsxs("div", { className: "flex flex-col md:flex-row gap-6 mb-6", children: [
                 /* @__PURE__ */ jsxs("div", { className: "w-full md:w-1/3", children: [
                   /* @__PURE__ */ jsx("p", { className: "text-[10px] text-gray-400 font-black mb-3 uppercase tracking-widest", children: "Current Image" }),
-                  /* @__PURE__ */ jsx("div", { className: "aspect-video rounded-2xl bg-gray-50 border border-gray-100 shadow-sm overflow-hidden flex items-center justify-center", children: blog.image ? /* @__PURE__ */ jsx("img", { src: `/${blog.image}`, className: "w-full h-full object-cover", alt: "" }) : /* @__PURE__ */ jsx("i", { className: "fa-solid fa-image text-3xl text-gray-100" }) })
+                  /* @__PURE__ */ jsx("div", { className: "aspect-video rounded-2xl bg-gray-50 border border-gray-100 shadow-sm overflow-hidden flex items-center justify-center", children: currentImageUrl ? /* @__PURE__ */ jsx("img", { src: currentImageUrl, className: "w-full h-full object-cover", alt: blog.title || "Current blog image" }) : /* @__PURE__ */ jsxs("div", { className: "text-center px-4", children: [
+                    /* @__PURE__ */ jsx("i", { className: "fa-solid fa-image text-3xl text-gray-100" }),
+                    /* @__PURE__ */ jsx("p", { className: "mt-2 text-[10px] font-black uppercase tracking-widest text-gray-300", children: "No image" })
+                  ] }) }),
+                  hasExistingImage && /* @__PURE__ */ jsxs(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: removeCurrentImage,
+                      className: "mt-3 inline-flex items-center gap-2 text-xs font-black text-rose-600 hover:text-rose-700",
+                      children: [
+                        /* @__PURE__ */ jsx("i", { className: "fa-solid fa-trash" }),
+                        "Remove current image"
+                      ]
+                    }
+                  )
                 ] }),
                 /* @__PURE__ */ jsxs("div", { className: "flex-1", children: [
                   /* @__PURE__ */ jsx("p", { className: "text-[10px] text-gray-400 font-black mb-3 uppercase tracking-widest", children: "Change Image" }),
@@ -77,9 +124,10 @@ function Edit({ blog }) {
                     /* @__PURE__ */ jsx(
                       "input",
                       {
+                        ref: fileInputRef,
                         type: "file",
                         className: "absolute inset-0 opacity-0 cursor-pointer z-10",
-                        onChange: (e) => setData("image", e.target.files[0])
+                        onChange: handleImageChange
                       }
                     ),
                     /* @__PURE__ */ jsxs("div", { className: "space-y-1 text-center self-center", children: [
@@ -89,12 +137,24 @@ function Edit({ blog }) {
                   ] })
                 ] })
               ] }),
-              data.image && /* @__PURE__ */ jsxs("div", { className: "mt-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3", children: [
-                /* @__PURE__ */ jsx("div", { className: "w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white", children: /* @__PURE__ */ jsx("i", { className: "fa-solid fa-check" }) }),
-                /* @__PURE__ */ jsxs("div", { children: [
-                  /* @__PURE__ */ jsx("p", { className: "text-xs font-black text-emerald-900 truncate max-w-xs", children: data.image.name }),
-                  /* @__PURE__ */ jsx("p", { className: "text-[10px] text-emerald-600 font-bold uppercase tracking-tight", children: "New file selected" })
-                ] })
+              data.image && /* @__PURE__ */ jsxs("div", { className: "mt-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-3", children: [
+                /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [
+                  /* @__PURE__ */ jsx("div", { className: "w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white", children: /* @__PURE__ */ jsx("i", { className: "fa-solid fa-check" }) }),
+                  /* @__PURE__ */ jsxs("div", { className: "min-w-0 flex-1", children: [
+                    /* @__PURE__ */ jsx("p", { className: "text-xs font-black text-emerald-900 truncate max-w-xs", children: data.image.name }),
+                    /* @__PURE__ */ jsx("p", { className: "text-[10px] text-emerald-600 font-bold uppercase tracking-tight", children: "New file selected" })
+                  ] }),
+                  /* @__PURE__ */ jsx(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: clearSelectedImage,
+                      className: "text-xs font-black text-rose-600 hover:text-rose-700",
+                      children: "Remove"
+                    }
+                  )
+                ] }),
+                imagePreview && /* @__PURE__ */ jsx("div", { className: "overflow-hidden rounded-xl border border-emerald-100 bg-white", children: /* @__PURE__ */ jsx("img", { src: imagePreview, alt: "Selected preview", className: "w-full h-48 object-cover" }) })
               ] }),
               errors.image && /* @__PURE__ */ jsx("p", { className: "mt-2 text-xs text-rose-500 font-bold", children: errors.image })
             ] }),

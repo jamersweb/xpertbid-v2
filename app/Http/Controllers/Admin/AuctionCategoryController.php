@@ -13,6 +13,14 @@ use Inertia\Inertia;
 
 class AuctionCategoryController extends Controller
 {
+    protected function formCategories()
+    {
+        return AuctionCategory::with('subCategories.childCategories')
+            ->whereNull('parent_id')
+            ->whereNull('sub_category_id')
+            ->get();
+    }
+
     protected function storeCategoryUpload(Request $request, string $field, string $directory = 'assets/images/category_images'): ?string
     {
         if (!$request->hasFile($field)) {
@@ -57,15 +65,32 @@ class AuctionCategoryController extends Controller
                   ->orWhere('slug', 'LIKE', "%$search%");
             $categories = $query->limit(50)->get();
         } else {
-            $categories = AuctionCategory::with('subCategories.childCategories')
-                ->whereNull('parent_id')
-                ->whereNull('sub_category_id')
-                ->get();
+            $categories = $this->formCategories();
         }
 
         return Inertia::render('Admin/Categories/Index', [
             'categories' => $categories,
             'filters' => $request->only(['search'])
+        ]);
+    }
+
+    public function create()
+    {
+        return Inertia::render('Admin/Categories/Form', [
+            'category' => null,
+            'categories' => $this->formCategories(),
+            'mode' => 'create',
+        ]);
+    }
+
+    public function edit($id)
+    {
+        $category = AuctionCategory::findOrFail($id);
+
+        return Inertia::render('Admin/Categories/Form', [
+            'category' => $category,
+            'categories' => $this->formCategories(),
+            'mode' => 'edit',
         ]);
     }
 

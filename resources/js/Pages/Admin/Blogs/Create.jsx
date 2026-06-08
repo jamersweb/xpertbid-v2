@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
 export default function Create() {
+        const fileInputRef = useRef(null);
         const { data, setData, post, processing, errors } = useForm({
                title: '',
                slug: '',
@@ -15,6 +16,31 @@ export default function Create() {
                canonical_url: '',
                schema_markup: '',
         });
+        const [imagePreview, setImagePreview] = useState(null);
+
+        useEffect(() => {
+               if (!data.image) {
+                      setImagePreview(null);
+                      return undefined;
+               }
+
+               const previewUrl = URL.createObjectURL(data.image);
+               setImagePreview(previewUrl);
+
+               return () => URL.revokeObjectURL(previewUrl);
+        }, [data.image]);
+
+        const handleImageChange = (event) => {
+               const file = event.target.files?.[0] || null;
+               setData('image', file);
+        };
+
+        const removeSelectedImage = () => {
+               setData('image', null);
+               if (fileInputRef.current) {
+                      fileInputRef.current.value = '';
+               }
+        };
 
         const submit = (e) => {
                e.preventDefault();
@@ -66,11 +92,12 @@ export default function Create() {
                                                                 <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Featured Image</label>
                                                                 <div className="relative group">
                                                                        <div className="mt-1 flex justify-center px-6 pt-10 pb-10 border-2 border-gray-100 border-dashed rounded-3xl hover:border-black hover:bg-gray-50/50 transition-all cursor-pointer relative overflow-hidden">
-                                                                              <input 
-                                                                                     type="file" 
-                                                                                     className="absolute inset-0 opacity-0 cursor-pointer z-10" 
-                                                                                     onChange={e => setData('image', e.target.files[0])} 
-                                                                              />
+                                                                                     <input
+                                                                                            ref={fileInputRef}
+                                                                                            type="file"
+                                                                                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                                                                            onChange={handleImageChange}
+                                                                                     />
                                                                               <div className="space-y-2 text-center">
                                                                                      <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                                                                                             <i className="fa-solid fa-image text-2xl text-gray-300 group-hover:text-black transition-colors"></i>
@@ -84,14 +111,29 @@ export default function Create() {
                                                                        </div>
                                                                 </div>
                                                                 {data.image && (
-                                                                       <div className="mt-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3">
-                                                                              <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white">
-                                                                                     <i className="fa-solid fa-check"></i>
+                                                                       <div className="mt-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-3">
+                                                                              <div className="flex items-center gap-3">
+                                                                                     <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white">
+                                                                                            <i className="fa-solid fa-check"></i>
+                                                                                     </div>
+                                                                                     <div className="min-w-0 flex-1">
+                                                                                            <p className="text-xs font-black text-emerald-900 truncate max-w-xs">{data.image.name}</p>
+                                                                                            <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">File selected</p>
+                                                                                     </div>
+                                                                                     <button
+                                                                                            type="button"
+                                                                                            onClick={removeSelectedImage}
+                                                                                            className="text-xs font-black text-rose-600 hover:text-rose-700"
+                                                                                     >
+                                                                                            Remove
+                                                                                     </button>
                                                                               </div>
-                                                                              <div>
-                                                                                     <p className="text-xs font-black text-emerald-900 truncate max-w-xs">{data.image.name}</p>
-                                                                                     <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">File selected</p>
-                                                                              </div>
+
+                                                                              {imagePreview && (
+                                                                                     <div className="overflow-hidden rounded-xl border border-emerald-100 bg-white">
+                                                                                            <img src={imagePreview} alt="Selected preview" className="w-full h-48 object-cover" />
+                                                                                     </div>
+                                                                              )}
                                                                        </div>
                                                                 )}
                                                                 {errors.image && <p className="mt-2 text-xs text-rose-500 font-bold">{errors.image}</p>}

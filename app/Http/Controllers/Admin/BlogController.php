@@ -67,23 +67,32 @@ class BlogController extends Controller
             'slug'              => ['required', 'string', 'max:255', Rule::unique('blogs', 'slug')->ignore($blog->id)],
             'content'           => 'required',
             'image'             => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'remove_image'      => 'nullable|boolean',
             'meta_title'        => 'nullable|string|max:255',
             'meta_description'  => 'nullable|string',
             'canonical_url'     => 'nullable|url|max:255',
             'schema_markup'     => 'nullable|string',
         ]);
 
+        $removeImage = filter_var($request->input('remove_image'), FILTER_VALIDATE_BOOLEAN);
+
+        if ($removeImage && $blog->image && file_exists(public_path($blog->image))) {
+            @unlink(public_path($blog->image));
+        }
+
         if ($request->hasFile('image')) {
-            // Delete old image
             if ($blog->image && file_exists(public_path($blog->image))) {
                 @unlink(public_path($blog->image));
             }
-
             $file     = $request->file('image');
             $extension = $file->getClientOriginalExtension();
             $filename = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '_' . time() . '.' . $extension;
             $file->move(public_path('assets/images/blogs'), $filename);
             $data['image'] = 'assets/images/blogs/'.$filename;
+        } elseif ($removeImage) {
+            $data['image'] = null;
+        } else {
+            $data['image'] = $blog->image;
         }
 
         $data['slug'] = Str::slug($request->slug);

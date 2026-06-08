@@ -1,21 +1,60 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
 export default function Edit({ blog }) {
+        const fileInputRef = useRef(null);
         const { data, setData, post, processing, errors } = useForm({
                _method: 'PUT',
                title: blog.title || '',
                slug: blog.slug || '',
                content: blog.content || '',
                image: null,
+               remove_image: false,
                meta_title: blog.meta_title || '',
                meta_description: blog.meta_description || '',
                canonical_url: blog.canonical_url || '',
                schema_markup: blog.schema_markup || '',
         });
+        const [imagePreview, setImagePreview] = useState(null);
+
+        useEffect(() => {
+               if (!data.image) {
+                      setImagePreview(null);
+                      return undefined;
+               }
+
+               const previewUrl = URL.createObjectURL(data.image);
+               setImagePreview(previewUrl);
+
+               return () => URL.revokeObjectURL(previewUrl);
+        }, [data.image]);
+
+        const hasExistingImage = Boolean(blog.image) && !data.remove_image;
+        const currentImageUrl = hasExistingImage ? `/${blog.image}` : null;
+
+        const handleImageChange = (event) => {
+               const file = event.target.files?.[0] || null;
+               setData('remove_image', false);
+               setData('image', file);
+        };
+
+        const removeCurrentImage = () => {
+               setData('remove_image', true);
+               setData('image', null);
+               if (fileInputRef.current) {
+                      fileInputRef.current.value = '';
+               }
+        };
+
+        const clearSelectedImage = () => {
+               setData('image', null);
+               if (fileInputRef.current) {
+                      fileInputRef.current.value = '';
+               }
+        };
 
         const submit = (e) => {
                e.preventDefault();
@@ -63,28 +102,42 @@ export default function Edit({ blog }) {
                                                                 {errors.slug && <p className="mt-2 text-xs text-rose-500 font-bold">{errors.slug}</p>}
                                                          </div>
 
-                                                         <div>
+                                                        <div>
                                                                 <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Featured Image</label>
                                                                 
                                                                 <div className="flex flex-col md:flex-row gap-6 mb-6">
                                                                        <div className="w-full md:w-1/3">
                                                                               <p className="text-[10px] text-gray-400 font-black mb-3 uppercase tracking-widest">Current Image</p>
                                                                               <div className="aspect-video rounded-2xl bg-gray-50 border border-gray-100 shadow-sm overflow-hidden flex items-center justify-center">
-                                                                                     {blog.image ? (
-                                                                                            <img src={`/${blog.image}`} className="w-full h-full object-cover" alt="" />
+                                                                                     {currentImageUrl ? (
+                                                                                            <img src={currentImageUrl} className="w-full h-full object-cover" alt={blog.title || 'Current blog image'} />
                                                                                      ) : (
-                                                                                            <i className="fa-solid fa-image text-3xl text-gray-100"></i>
+                                                                                            <div className="text-center px-4">
+                                                                                                   <i className="fa-solid fa-image text-3xl text-gray-100"></i>
+                                                                                                   <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-gray-300">No image</p>
+                                                                                            </div>
                                                                                      )}
                                                                               </div>
+                                                                              {hasExistingImage && (
+                                                                                     <button
+                                                                                            type="button"
+                                                                                            onClick={removeCurrentImage}
+                                                                                            className="mt-3 inline-flex items-center gap-2 text-xs font-black text-rose-600 hover:text-rose-700"
+                                                                                     >
+                                                                                            <i className="fa-solid fa-trash"></i>
+                                                                                            Remove current image
+                                                                                     </button>
+                                                                              )}
                                                                        </div>
 
                                                                        <div className="flex-1">
                                                                               <p className="text-[10px] text-gray-400 font-black mb-3 uppercase tracking-widest">Change Image</p>
                                                                               <div className="h-[calc(100%-2.5rem)] flex justify-center px-6 pt-5 pb-5 border-2 border-gray-100 border-dashed rounded-2xl hover:border-black hover:bg-gray-50/50 transition-all cursor-pointer relative overflow-hidden group">
-                                                                                     <input 
-                                                                                            type="file" 
-                                                                                            className="absolute inset-0 opacity-0 cursor-pointer z-10" 
-                                                                                            onChange={e => setData('image', e.target.files[0])} 
+                                                                                     <input
+                                                                                            ref={fileInputRef}
+                                                                                            type="file"
+                                                                                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                                                                            onChange={handleImageChange}
                                                                                      />
                                                                                      <div className="space-y-1 text-center self-center">
                                                                                             <i className="fa-solid fa-cloud-arrow-up text-xl text-gray-300 group-hover:text-black transition-colors mb-2"></i>
@@ -97,14 +150,29 @@ export default function Edit({ blog }) {
                                                                 </div>
 
                                                                 {data.image && (
-                                                                       <div className="mt-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3">
-                                                                              <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white">
-                                                                                     <i className="fa-solid fa-check"></i>
+                                                                       <div className="mt-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-3">
+                                                                              <div className="flex items-center gap-3">
+                                                                                     <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white">
+                                                                                            <i className="fa-solid fa-check"></i>
+                                                                                     </div>
+                                                                                     <div className="min-w-0 flex-1">
+                                                                                            <p className="text-xs font-black text-emerald-900 truncate max-w-xs">{data.image.name}</p>
+                                                                                            <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">New file selected</p>
+                                                                                     </div>
+                                                                                     <button
+                                                                                            type="button"
+                                                                                            onClick={clearSelectedImage}
+                                                                                            className="text-xs font-black text-rose-600 hover:text-rose-700"
+                                                                                     >
+                                                                                            Remove
+                                                                                     </button>
                                                                               </div>
-                                                                              <div>
-                                                                                     <p className="text-xs font-black text-emerald-900 truncate max-w-xs">{data.image.name}</p>
-                                                                                     <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">New file selected</p>
-                                                                              </div>
+
+                                                                              {imagePreview && (
+                                                                                     <div className="overflow-hidden rounded-xl border border-emerald-100 bg-white">
+                                                                                            <img src={imagePreview} alt="Selected preview" className="w-full h-48 object-cover" />
+                                                                                     </div>
+                                                                              )}
                                                                        </div>
                                                                 )}
                                                                 {errors.image && <p className="mt-2 text-xs text-rose-500 font-bold">{errors.image}</p>}
