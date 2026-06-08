@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\AuctionController;
@@ -119,6 +120,12 @@ Route::get('/get-slider-service', [SliderController::class, 'get_slider_service'
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::post('/buy-now-inquiry', [BuyNowInquiryController::class, 'store'])->name('buy_now.store');
 Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
+
+Route::middleware('auth')->get('/session/keepalive', function (Request $request) {
+    $request->session()->put('last_keepalive_at', now()->timestamp);
+
+    return response()->noContent();
+})->name('session.keepalive');
 
 // Guest-friendly Cart & Checkout
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');

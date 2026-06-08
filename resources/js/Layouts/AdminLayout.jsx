@@ -3,6 +3,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import AdminSidebar from '@/Components/Admin/AdminSidebar';
 import CurrencyPicker from '@/Components/CurrencyPicker';
 import useTranslate from '@/hooks/useTranslate';
+import useSessionKeepAlive from '@/hooks/useSessionKeepAlive';
 
 export default function AdminLayout({ children, title }) {
        const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -12,6 +13,7 @@ export default function AdminLayout({ children, title }) {
        const supportedLocales = Object.entries(locale?.supported || {});
        const currentLocale = locale?.current || 'en';
        const currentDirection = locale?.supported?.[currentLocale]?.direction || (currentLocale === 'ur' ? 'rtl' : 'ltr');
+       useSessionKeepAlive(Boolean(user));
 
        const handleLogout = () => {
               router.post(route('logout'));

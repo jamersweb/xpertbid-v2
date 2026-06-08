@@ -7,6 +7,7 @@ import { CartProvider } from '@/Contexts/CartContext';
 import { AuthModalProvider } from '@/Contexts/AuthModalContext';
 import { useState, useEffect } from 'react';
 import useTranslate from '@/hooks/useTranslate';
+import useSessionKeepAlive from '@/hooks/useSessionKeepAlive';
 
 export default function AppLayout({ children, title }) {
        const { flash, auth, ziggy, locale } = usePage().props;
@@ -29,6 +30,7 @@ export default function AppLayout({ children, title }) {
               Boolean(auth?.user) &&
               verificationStatus !== 'verified' &&
               (auth?.user ? currentPath !== route('verification.identity', {}, false) : false);
+       useSessionKeepAlive(Boolean(auth?.user));
 
        const handleLocaleChange = (nextLocale) => {
               if (nextLocale === currentLocale) return;

@@ -28,12 +28,6 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (TokenMismatchException $e, Request $request) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'message' => 'Your session expired. Please refresh and try again.',
-                ], 419);
-            }
-
             if ($request->is('logout')) {
                 auth('web')->logout();
                 $request->session()->invalidate();
@@ -45,8 +39,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($request->is('login')) {
                 return redirect()
-                    ->route('home', ['auth' => 'login'])
-                    ->with('error', 'Your session expired. Please try logging in again.');
+                ->route('home', ['auth' => 'login'])
+                ->with('error', 'Your session expired. Please try logging in again.');
+            }
+
+            if ($request->expectsJson() && ! $request->headers->has('X-Inertia')) {
+                return response()->json([
+                    'message' => 'Your session expired. Please refresh and try again.',
+                ], 419);
             }
 
             return redirect()
