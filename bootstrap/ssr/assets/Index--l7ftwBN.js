@@ -86,6 +86,21 @@ const normalizeSchemaMarkup = (schemaMarkup) => {
     }
   }
 };
+const extractSchemaMarkupBlocks = (schemaMarkup) => {
+  if (typeof schemaMarkup !== "string") {
+    return [];
+  }
+  const rawMarkup = schemaMarkup.trim();
+  if (!rawMarkup) {
+    return [];
+  }
+  const scriptMatches = [...rawMarkup.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+  if (scriptMatches.length > 0) {
+    return scriptMatches.map((match) => normalizeSchemaMarkup(match[1] || "")).filter(Boolean);
+  }
+  const normalizedMarkup = normalizeSchemaMarkup(rawMarkup);
+  return normalizedMarkup ? [normalizedMarkup] : [];
+};
 const CuratedMarketplaceSection = ({ title, items = [], slider = false }) => {
   if (!items || items.length === 0) {
     return null;
@@ -195,7 +210,7 @@ function Index({
   const latestGridTitle = sectionTitleMap[sectionMode] || `Latest ${sectionEntityName}`;
   const seoShortContent = sanitizeSeoHtml(currentCategory?.seo_short_content);
   const seoContent = sanitizeSeoHtml(currentCategory?.seo_content);
-  const schemaMarkup = normalizeSchemaMarkup(currentCategory?.schema_markup);
+  const schemaMarkupBlocks = extractSchemaMarkupBlocks(currentCategory?.schema_markup);
   const tabs = [
     { key: "auction", label: "Auction", mobileLabel: "Auction" },
     { key: "normal", label: "Normal Products", mobileLabel: "Normal" },
@@ -458,13 +473,14 @@ function Index({
           content: currentCategory?.meta_description || "Explore our marketplace for the best deals."
         }
       ),
-      schemaMarkup && /* @__PURE__ */ jsx(
+      schemaMarkupBlocks.map((schemaMarkup, index) => /* @__PURE__ */ jsx(
         "script",
         {
           type: "application/ld+json",
           dangerouslySetInnerHTML: { __html: schemaMarkup }
-        }
-      )
+        },
+        `category-schema-${index}`
+      ))
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "pb-5 bg-light min-vh-100", children: [
       /* @__PURE__ */ jsx(

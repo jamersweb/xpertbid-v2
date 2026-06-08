@@ -100,6 +100,27 @@ const normalizeSchemaMarkup = (schemaMarkup) => {
        }
 };
 
+const extractSchemaMarkupBlocks = (schemaMarkup) => {
+       if (typeof schemaMarkup !== 'string') {
+              return [];
+       }
+
+       const rawMarkup = schemaMarkup.trim();
+       if (!rawMarkup) {
+              return [];
+       }
+
+       const scriptMatches = [...rawMarkup.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+       if (scriptMatches.length > 0) {
+              return scriptMatches
+                     .map((match) => normalizeSchemaMarkup(match[1] || ''))
+                     .filter(Boolean);
+       }
+
+       const normalizedMarkup = normalizeSchemaMarkup(rawMarkup);
+       return normalizedMarkup ? [normalizedMarkup] : [];
+};
+
 const CuratedMarketplaceSection = ({ title, items = [], slider = false }) => {
        if (!items || items.length === 0) {
               return null;
@@ -250,7 +271,7 @@ export default function Index({
        const latestGridTitle = sectionTitleMap[sectionMode] || `Latest ${sectionEntityName}`;
        const seoShortContent = sanitizeSeoHtml(currentCategory?.seo_short_content);
        const seoContent = sanitizeSeoHtml(currentCategory?.seo_content);
-       const schemaMarkup = normalizeSchemaMarkup(currentCategory?.schema_markup);
+       const schemaMarkupBlocks = extractSchemaMarkupBlocks(currentCategory?.schema_markup);
 
        const tabs = [
               { key: 'auction', label: 'Auction', mobileLabel: 'Auction' },
@@ -562,12 +583,13 @@ export default function Index({
                                    name="description"
                                    content={currentCategory?.meta_description || 'Explore our marketplace for the best deals.'}
                             />
-                            {schemaMarkup && (
+                            {schemaMarkupBlocks.map((schemaMarkup, index) => (
                                    <script
+                                          key={`category-schema-${index}`}
                                           type="application/ld+json"
                                           dangerouslySetInnerHTML={{ __html: schemaMarkup }}
                                    />
-                            )}
+                            ))}
                      </Head>
 
                      <div className="pb-5 bg-light min-vh-100">

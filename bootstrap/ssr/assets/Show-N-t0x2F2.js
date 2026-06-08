@@ -541,6 +541,21 @@ const normalizeSchemaMarkup = (schemaMarkup) => {
     }
   }
 };
+const extractSchemaMarkupBlocks = (schemaMarkup) => {
+  if (typeof schemaMarkup !== "string") {
+    return [];
+  }
+  const rawMarkup = schemaMarkup.trim();
+  if (!rawMarkup) {
+    return [];
+  }
+  const scriptMatches = [...rawMarkup.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+  if (scriptMatches.length > 0) {
+    return scriptMatches.map((match) => normalizeSchemaMarkup(match[1] || "")).filter(Boolean);
+  }
+  const normalizedMarkup = normalizeSchemaMarkup(rawMarkup);
+  return normalizedMarkup ? [normalizedMarkup] : [];
+};
 function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, dynamicFields = [], liveVideoId = null, liveActiveAuction = null, marketplaceBackUrl = null }) {
   const { auth } = usePage().props;
   const listingType = String(auction?.listing_type || "").toLowerCase();
@@ -549,7 +564,7 @@ function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, d
   const [mobileBidAmount, setMobileBidAmount] = useState("");
   const [mobileBidSending, setMobileBidSending] = useState(false);
   const activeLiveVideoId = liveVideoId || auction?.youtube_video_id;
-  const schemaMarkup = normalizeSchemaMarkup(auction?.category?.schema_markup);
+  const schemaMarkupBlocks = extractSchemaMarkupBlocks(auction?.category?.schema_markup);
   const categoryFeatures = auction?.category_features && typeof auction.category_features === "object" ? auction.category_features : {};
   const fieldNameCounts = dynamicFields.reduce((acc, field) => {
     const key = String(field?.field_name || "").trim();
@@ -655,13 +670,14 @@ function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, d
       /* @__PURE__ */ jsxs(Head, { children: [
         /* @__PURE__ */ jsx("title", { children: auction.title }),
         /* @__PURE__ */ jsx("meta", { name: "description", content: auction.description?.substring(0, 160) }),
-        schemaMarkup && /* @__PURE__ */ jsx(
+        schemaMarkupBlocks.map((schemaMarkup, index) => /* @__PURE__ */ jsx(
           "script",
           {
             type: "application/ld+json",
             dangerouslySetInnerHTML: { __html: schemaMarkup }
-          }
-        )
+          },
+          `auction-schema-${index}`
+        ))
       ] }),
       /* @__PURE__ */ jsx("main", { className: "live-product-detail-page", children: /* @__PURE__ */ jsxs("div", { className: "live-product-detail-grid", children: [
         /* @__PURE__ */ jsxs("div", { className: "live-product-mobile-video-panel", children: [
@@ -1400,13 +1416,14 @@ function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, d
   return /* @__PURE__ */ jsxs(AppLayout, { title: auction.title, children: [
     /* @__PURE__ */ jsxs(Head, { children: [
       /* @__PURE__ */ jsx("meta", { name: "description", content: auction.description?.substring(0, 160) }),
-      schemaMarkup && /* @__PURE__ */ jsx(
+      schemaMarkupBlocks.map((schemaMarkup, index) => /* @__PURE__ */ jsx(
         "script",
         {
           type: "application/ld+json",
           dangerouslySetInnerHTML: { __html: schemaMarkup }
-        }
-      )
+        },
+        `auction-live-schema-${index}`
+      ))
     ] }),
     /* @__PURE__ */ jsx(
       ProductHeader,
