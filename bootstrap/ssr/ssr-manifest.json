@@ -53,7 +53,7 @@
     "/build/assets/AppLayout-BH44Qpoe.js"
   ],
   "resources/js/Components/ContactForm.jsx": [
-    "/build/assets/ContactUs-DOmBvgnZ.js"
+    "/build/assets/ContactForm-BQglLNCx.js"
   ],
   "resources/js/Components/CountdownTimer.jsx": [
     "/build/assets/OwnerInfoRow-DJ1W7dqV.js"
@@ -546,7 +546,10 @@
     "/build/assets/AboutUs-BEInbMp-.js"
   ],
   "resources/js/Pages/Static/ContactUs.jsx": [
-    "/build/assets/ContactUs-DOmBvgnZ.js"
+    "/build/assets/ContactUs-Dtq6ZErH.js"
+  ],
+  "resources/js/Pages/Static/EasyHome.jsx": [
+    "/build/assets/EasyHome-V53AoB3y.js"
   ],
   "resources/js/Pages/Static/FAQ.jsx": [
     "/build/assets/FAQ-Dau3hzzg.js"

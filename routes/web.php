@@ -73,6 +73,7 @@ Route::get('/refund-policy', [App\Http\Controllers\StaticPageController::class, 
 Route::get('/shipping-policy', [App\Http\Controllers\StaticPageController::class, 'shipping'])->name('shipping.policy');
 Route::get('/seller-policy', [App\Http\Controllers\StaticPageController::class, 'sellerPolicy'])->name('seller.policy');
 Route::get('/terms', [App\Http\Controllers\StaticPageController::class, 'terms'])->name('terms');
+Route::get('/easy-home', [App\Http\Controllers\StaticPageController::class, 'easyHome'])->name('easy.home');
 Route::view('/email-template-preview', 'emails.template_preview')->name('email-template.preview');
 
 // Blog (Public)

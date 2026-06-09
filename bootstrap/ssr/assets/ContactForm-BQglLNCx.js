@@ -1,16 +1,8 @@
 import { jsx, jsxs } from "react/jsx-runtime";
-import { useForm, Head } from "@inertiajs/react";
-import { A as AppLayout } from "./AppLayout-BH44Qpoe.js";
 import { useState } from "react";
+import { useForm } from "@inertiajs/react";
 import { S as SuccessPopup, E as ErrorPopup } from "./ErrorPopup-VSFE5nHL.js";
 import { u as useTranslate } from "./useSessionKeepAlive-BIm1aJlj.js";
-import "ziggy-js";
-import "./CartContext-DXNQZwkV.js";
-import "./Price-CF5NSPt0.js";
-import "./useCurrencyList-Ce5tJXO9.js";
-import "axios";
-import "react-loader-spinner";
-import "sweetalert2";
 const ContactForm = () => {
   const { t } = useTranslate();
   const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
@@ -92,12 +84,6 @@ const ContactForm = () => {
     ] }) })
   ] }) });
 };
-function ContactUs() {
-  return /* @__PURE__ */ jsxs(AppLayout, { children: [
-    /* @__PURE__ */ jsx(Head, { title: "Contact Us" }),
-    /* @__PURE__ */ jsx("div", { className: "color py-5", children: /* @__PURE__ */ jsx(ContactForm, {}) })
-  ] });
-}
 export {
-  ContactUs as default
+  ContactForm as C
 };

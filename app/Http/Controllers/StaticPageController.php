@@ -79,4 +79,12 @@ class StaticPageController extends Controller
             'faqs' => $faqs,
         ]);
     }
+
+    /**
+     * Display the Easy Home financing page.
+     */
+    public function easyHome(): Response
+    {
+        return Inertia::render('Static/EasyHome');
+    }
 }
