@@ -15,6 +15,7 @@ class AutoBidCommand extends Command
     private const AUTO_BID_CYCLE_MINUTES = 180;
     private const FIRST_BID_DELAY_RANGE = [5, 15];
     private const FOLLOW_UP_DELAY_RANGE = [50, 65];
+    private const BID_BOOST_RANGE = [50, 700];
 
     /**
      * The name and signature of the console command.
@@ -134,6 +135,8 @@ class AutoBidCommand extends Command
                     continue;
                 }
 
+                $bidBoost = $this->randomBidBoost();
+
                 $currentHighestBid = (float) (Bid::query()
                     ->where('listing_id', $listing->id)
                     ->max('bid_amount') ?? 0);
@@ -144,7 +147,7 @@ class AutoBidCommand extends Command
                     $bidIncrement = 10;
                 }
 
-                $newBidAmount = max($currentHighestBid + $bidIncrement, $minimumBid + $bidIncrement);
+                $newBidAmount = max($currentHighestBid + $bidBoost, $minimumBid + $bidBoost);
 
                 $latestHighestBid = (float) (Bid::query()
                     ->where('listing_id', $listing->id)
@@ -152,7 +155,7 @@ class AutoBidCommand extends Command
                     ->max('bid_amount') ?? 0);
 
                 if ($newBidAmount <= $latestHighestBid) {
-                    $newBidAmount = $latestHighestBid + $bidIncrement;
+                    $newBidAmount = $latestHighestBid + $bidBoost;
                 }
 
                 $listingData['auto_bid_cycle_started_at'] = $listingData['auto_bid_cycle_started_at'] ?? $now->toDateTimeString();
@@ -182,7 +185,7 @@ class AutoBidCommand extends Command
                 DB::commit();
 
                 $bidsPlaced++;
-                $this->info("Bid placed: listing #{$listing->id}, user #{$selectedUser->id}, amount {$newBidAmount}, cycle bid #" . ($bidsPlacedInCycle + 1));
+                $this->info("Bid placed: listing #{$listing->id}, user #{$selectedUser->id}, boost {$bidBoost}, amount {$newBidAmount}, cycle bid #" . ($bidsPlacedInCycle + 1));
             } catch (\Throwable $e) {
                 DB::rollBack();
                 $errors++;
@@ -272,6 +275,11 @@ class AutoBidCommand extends Command
             : self::FOLLOW_UP_DELAY_RANGE;
 
         return random_int($min, $max);
+    }
+
+    private function randomBidBoost(): int
+    {
+        return random_int(self::BID_BOOST_RANGE[0], self::BID_BOOST_RANGE[1]);
     }
 
     private function parseDateTime($value): ?Carbon
