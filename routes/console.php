@@ -11,7 +11,7 @@ Artisan::command('inspire', function () {
 
 Schedule::command('currency:sync-rates')->everySixHours();
 Schedule::command('auction:check-status')->everyMinute();
-Schedule::command('auto:bid')->everyThreeHours();
+Schedule::command('auto:bid')->everyMinute();
 Schedule::command('verification:send-24h-reminders')->hourly();
 Schedule::command('verification:send-post-verify-inactivity-reminders')->hourly();
 
