@@ -251,7 +251,7 @@ export default function EasyHome() {
                                                                </div>
                                                         </div>
                                                  </div>
-                                          </div>
+                                         </div>
                                    </div>
                             </section>
 
@@ -555,8 +555,10 @@ export default function EasyHome() {
                                                  </div>
                                           </div>
 
-                                          <div className="bg-white rounded-5 shadow-lg p-3 p-lg-4">
-                                                 <ContactForm />
+                                          <div className="container">
+                                                 <div className="bg-white rounded-5 shadow-lg p-3 p-lg-4">
+                                                        <ContactForm />
+                                                 </div>
                                           </div>
                                    </div>
                             </section>

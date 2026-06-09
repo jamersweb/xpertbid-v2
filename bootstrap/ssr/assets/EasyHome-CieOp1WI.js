@@ -535,7 +535,7 @@ function EasyHome() {
             ] })
           ] }) })
         ] }) }),
-        /* @__PURE__ */ jsx("div", { className: "bg-white rounded-5 shadow-lg p-3 p-lg-4", children: /* @__PURE__ */ jsx(ContactForm, {}) })
+        /* @__PURE__ */ jsx("div", { className: "container", children: /* @__PURE__ */ jsx("div", { className: "bg-white rounded-5 shadow-lg p-3 p-lg-4", children: /* @__PURE__ */ jsx(ContactForm, {}) }) })
       ] }) })
     ] }),
     /* @__PURE__ */ jsx("style", { children: `
