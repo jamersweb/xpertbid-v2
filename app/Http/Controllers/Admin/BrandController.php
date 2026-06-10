@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class BrandController extends Controller
@@ -43,13 +44,32 @@ class BrandController extends Controller
         $extension = strtolower($file->getClientOriginalExtension());
         $filename = time() . '_' . uniqid() . '.' . $extension;
 
-        if (!is_dir(public_path($directory))) {
-            mkdir(public_path($directory), 0755, true);
+        Storage::disk('public')->makeDirectory($directory);
+        $storedPath = $file->storeAs($directory, $filename, 'public');
+
+        return $storedPath ? '/storage/' . ltrim($storedPath, '/') : null;
+    }
+
+    protected function removeStoredFile(?string $path): void
+    {
+        if (!$path) {
+            return;
         }
 
-        $file->move(public_path($directory), $filename);
+        $cleanPath = ltrim($path, '/');
 
-        return '/' . trim($directory, '/') . '/' . $filename;
+        if (str_starts_with($cleanPath, 'storage/')) {
+            $diskPath = substr($cleanPath, strlen('storage/'));
+            if (Storage::disk('public')->exists($diskPath)) {
+                Storage::disk('public')->delete($diskPath);
+            }
+            return;
+        }
+
+        $fullPath = public_path($cleanPath);
+        if (file_exists($fullPath)) {
+            @unlink($fullPath);
+        }
     }
 
     public function index(Request $request)
@@ -98,9 +118,7 @@ class BrandController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            if ($brand->image && file_exists(public_path($brand->image))) {
-                @unlink(public_path($brand->image));
-            }
+            $this->removeStoredFile($brand->image);
             $brand->image = $this->storeBrandUpload($request, 'image');
         }
 
@@ -124,9 +142,7 @@ class BrandController extends Controller
             'box_3_img',
             'box_3_img_mob',
         ] as $field) {
-            if ($brand->{$field} && file_exists(public_path($brand->{$field}))) {
-                @unlink(public_path($brand->{$field}));
-            }
+            $this->removeStoredFile($brand->{$field});
         }
 
         $brand->delete();

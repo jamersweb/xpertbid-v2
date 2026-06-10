@@ -8,6 +8,7 @@ use App\Models\Listing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class BrandPageController extends Controller
@@ -22,13 +23,10 @@ class BrandPageController extends Controller
         $extension = strtolower($file->getClientOriginalExtension());
         $filename = time() . '_' . Str::random(12) . '.' . $extension;
 
-        if (!is_dir(public_path($directory))) {
-            mkdir(public_path($directory), 0755, true);
-        }
+        Storage::disk('public')->makeDirectory($directory);
+        $storedPath = $file->storeAs($directory, $filename, 'public');
 
-        $file->move(public_path($directory), $filename);
-
-        return '/' . trim($directory, '/') . '/' . $filename;
+        return $storedPath ? '/storage/' . ltrim($storedPath, '/') : null;
     }
 
     protected function removeStoredFile(?string $path): void
@@ -38,6 +36,15 @@ class BrandPageController extends Controller
         }
 
         $cleanPath = ltrim($path, '/');
+
+        if (str_starts_with($cleanPath, 'storage/')) {
+            $diskPath = substr($cleanPath, strlen('storage/'));
+            if (Storage::disk('public')->exists($diskPath)) {
+                Storage::disk('public')->delete($diskPath);
+            }
+            return;
+        }
+
         $fullPath = public_path($cleanPath);
 
         if (file_exists($fullPath)) {
