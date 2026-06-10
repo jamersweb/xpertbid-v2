@@ -113,8 +113,20 @@ class BrandController extends Controller
 
     public function destroy(Brand $brand)
     {
-        if ($brand->image && file_exists(public_path($brand->image))) {
-            @unlink(public_path($brand->image));
+        foreach ([
+            'image',
+            'banner_img',
+            'banner_img_mob',
+            'box_1_img',
+            'box_1_img_mob',
+            'box_2_img',
+            'box_2_img_mob',
+            'box_3_img',
+            'box_3_img_mob',
+        ] as $field) {
+            if ($brand->{$field} && file_exists(public_path($brand->{$field}))) {
+                @unlink(public_path($brand->{$field}));
+            }
         }
 
         $brand->delete();

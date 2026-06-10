@@ -7,50 +7,48 @@ import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 
-const PROPERTY_BANNER_IMAGES = {
-  skyline: {
-    desktop: 'https://images.unsplash.com/photo-1764254810930-4cdf96de0ef0?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=1920&h=620',
-    mobile: 'https://images.unsplash.com/photo-1764254810930-4cdf96de0ef0?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=900&h=420',
-  },
-  apartmentBlocks: {
-    desktop: 'https://images.unsplash.com/photo-1776066361467-f70a25cf0dc8?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=1920&h=620',
-    mobile: 'https://images.unsplash.com/photo-1776066361467-f70a25cf0dc8?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=900&h=420',
-  },
-  aerialComplex: 'https://images.unsplash.com/photo-1776066361467-f70a25cf0dc8?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=1400&h=900',
-  cityView: 'https://images.unsplash.com/photo-1764232165240-73be9237845f?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=1400&h=900',
-  buildingComplex: 'https://images.unsplash.com/photo-1764254810930-4cdf96de0ef0?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=1400&h=900',
-};
-
-const BRAND_BANNERS = {
+const DEFAULT_BANNER_SETS = {
   1: {
-    top: PROPERTY_BANNER_IMAGES.skyline,
-    small: [
-      PROPERTY_BANNER_IMAGES.aerialComplex,
-      PROPERTY_BANNER_IMAGES.cityView,
-      PROPERTY_BANNER_IMAGES.buildingComplex,
-    ],
+    banner: {
+      desktop: 'https://images.unsplash.com/photo-1764254810930-4cdf96de0ef0?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=1920&h=620',
+      mobile: 'https://images.unsplash.com/photo-1764254810930-4cdf96de0ef0?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=900&h=420',
+    },
   },
   2: {
-    top: PROPERTY_BANNER_IMAGES.apartmentBlocks,
-    small: [
-      PROPERTY_BANNER_IMAGES.cityView,
-      PROPERTY_BANNER_IMAGES.buildingComplex,
-      PROPERTY_BANNER_IMAGES.aerialComplex,
-    ],
+    banner: {
+      desktop: 'https://images.unsplash.com/photo-1776066361467-f70a25cf0dc8?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=1920&h=620',
+      mobile: 'https://images.unsplash.com/photo-1776066361467-f70a25cf0dc8?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=80&w=900&h=420',
+    },
   },
 };
+
+const imageSrc = (value) => {
+  if (!value) return null;
+  if (String(value).startsWith('http')) return value;
+  return `/${String(value).replace(/^\/+/, '')}`;
+};
+
+const normalizeSection = (section) => ({
+  title: section?.title || '',
+  listing_ids: Array.isArray(section?.listing_ids)
+    ? section.listing_ids.map((id) => Number(id)).filter((id) => Number.isInteger(id) && id > 0)
+    : [],
+  type: section?.type === 'bedrooms' ? 'bedrooms' : 'square_feet',
+  min_value: section?.min_value ?? '',
+  max_value: section?.max_value ?? '',
+});
 
 export default function PropertiesBrand({ brand, listings }) {
   const items = Array.isArray(listings) ? listings : (listings?.data || []);
   const brandName = brand?.name || 'Brand';
-  const bannerSet = BRAND_BANNERS[Number(brand?.id)] || {
-    top: PROPERTY_BANNER_IMAGES.skyline,
-    small: [
-      PROPERTY_BANNER_IMAGES.aerialComplex,
-      PROPERTY_BANNER_IMAGES.cityView,
-      PROPERTY_BANNER_IMAGES.buildingComplex,
-    ],
-  };
+  const configuredSections = Array.isArray(brand?.page_sections)
+    ? brand.page_sections.map(normalizeSection)
+    : [];
+  const itemsById = new Map(items.map((listing) => [Number(listing.id), listing]));
+
+  const defaultBannerSet = DEFAULT_BANNER_SETS[Number(brand?.id)] || DEFAULT_BANNER_SETS[1];
+  const bannerDesktop = imageSrc(brand?.banner_img) || defaultBannerSet.banner.desktop;
+  const bannerMobile = imageSrc(brand?.banner_img_mob) || imageSrc(brand?.banner_img) || defaultBannerSet.banner.mobile;
 
   const detectBedrooms = (listing) => {
     const categoryFeatures = listing?.category_features && typeof listing.category_features === 'object'
@@ -104,18 +102,38 @@ export default function PropertiesBrand({ brand, listings }) {
     return null;
   };
 
-  const sections = Number(brand?.id) === 2
-    ? [
-        { key: '1000_plus', title: `${brandName} 1000+ Sq Ft`, filter: (area) => area >= 1000 && area < 1200 },
-        { key: '1200_plus', title: `${brandName} 1200+ Sq Ft`, filter: (area) => area >= 1200 && area < 1450 },
-        { key: '1450_plus', title: `${brandName} 1450+ Sq Ft`, filter: (area) => area >= 1450 },
-      ]
-    : [
-        { key: 'two', title: `${brandName} 2 Bedrooms`, filter: (n) => n === 2 },
-        { key: 'three', title: `${brandName} 3 Bedrooms`, filter: (n) => n === 3 },
-        { key: 'four', title: `${brandName} 4 Bedrooms`, filter: (n) => n === 4 },
-        { key: 'five_plus', title: `${brandName} 5+ Bedrooms`, filter: (n) => n >= 5 },
-      ];
+  const resolveSectionListings = (section) => {
+    if (Array.isArray(section.listing_ids) && section.listing_ids.length > 0) {
+      return section.listing_ids
+        .map((listingId) => itemsById.get(Number(listingId)))
+        .filter(Boolean);
+    }
+
+    const minValue = section.min_value !== '' && section.min_value !== null ? Number(section.min_value) : null;
+    const maxValue = section.max_value !== '' && section.max_value !== null ? Number(section.max_value) : null;
+
+    return items.filter((listing) => {
+      if (section.type === 'square_feet') {
+        const area = detectAreaSize(listing);
+        if (area === null || minValue === null) return false;
+        if (maxValue === null) return area >= minValue;
+        return area >= minValue && area <= maxValue;
+      }
+
+      const bedrooms = detectBedrooms(listing);
+      if (bedrooms === null || minValue === null) return false;
+      if (maxValue === null) return bedrooms >= minValue;
+      return bedrooms >= minValue && bedrooms <= maxValue;
+    });
+  };
+
+  const sections = configuredSections
+    .map((section) => ({
+      ...section,
+      title: section.title?.trim() || `${brandName} Section`,
+      items: resolveSectionListings(section),
+    }))
+    .filter((section) => section.items.length > 0);
 
   return (
     <AppLayout>
@@ -124,19 +142,14 @@ export default function PropertiesBrand({ brand, listings }) {
       <div className="container py-4 py-lg-5 text-dark">
         <div className="mb-4 overflow-hidden brand-top-banner">
           <picture>
-            <source media="(max-width: 767px)" srcSet={bannerSet.top.mobile || bannerSet.top.desktop || bannerSet.top} />
-            <img src={bannerSet.top.desktop || bannerSet.top} alt="Properties banner" className="w-100 h-100 object-fit-cover" style={{ borderRadius: '28px' }} />
+            <source media="(max-width: 767px)" srcSet={bannerMobile} />
+            <img
+              src={bannerDesktop}
+              alt={`${brandName} banner`}
+              className="w-100 h-100 object-fit-cover"
+              style={{ borderRadius: '28px' }}
+            />
           </picture>
-        </div>
-
-        <div className="row g-3 mb-4">
-          {bannerSet.small.map((src, index) => (
-            <div className="col-12 col-md-4" key={src}>
-              <div className="overflow-hidden position-relative brand-small-banner">
-                <img src={src} alt={`Promo ${index + 1}`} className="w-100 h-100 object-fit-cover brand-small-banner-image" />
-              </div>
-            </div>
-          ))}
         </div>
 
         {items.length === 0 ? (
@@ -144,50 +157,39 @@ export default function PropertiesBrand({ brand, listings }) {
             <h3 className="h5 fw-bold">No listings found</h3>
             <p className="text-muted mb-0">No active listings are currently available for this brand.</p>
           </div>
-        ) : sections.map((section) => {
-          const sectionItems = Number(brand?.id) === 2
-            ? items.filter((listing) => section.filter(detectAreaSize(listing)))
-            : items.filter((listing) => section.filter(detectBedrooms(listing)));
+        ) : sections.length === 0 ? (
+          <div className="text-center py-5 bg-white rounded-4 border">
+            <h3 className="h5 fw-bold">No sections configured</h3>
+            <p className="text-muted mb-0">Use the admin brand page builder to add product sections.</p>
+          </div>
+        ) : sections.map((section, index) => (
+          <section key={`${section.title}-${index}`} className="mb-6">
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <h3 className="fw-bold mb-0 text-dark properties-section-title">{section.title}</h3>
+            </div>
 
-          if (sectionItems.length === 0) {
-            return null;
-          }
-
-          return (
-            <section key={section.key} className="mb-6">
-              <div className="d-flex align-items-center justify-content-between mb-3">
-                <h3 className="fw-bold mb-0 text-dark properties-section-title">{section.title}</h3>
-              </div>
-
-              {sectionItems.length === 0 ? (
-                <div className="text-center py-4 bg-white rounded-4 border text-dark">
-                  No listings found in this section.
-                </div>
-              ) : (
-                <div className="marketplace-curated-slider">
-                  <Swiper
-                    modules={[Navigation]}
-                    navigation
-                    spaceBetween={18}
-                    breakpoints={{
-                      320: { slidesPerView: 1.05 },
-                      576: { slidesPerView: 1.4 },
-                      768: { slidesPerView: 2.1 },
-                      992: { slidesPerView: 2.6 },
-                      1200: { slidesPerView: 3.1 },
-                    }}
-                  >
-                    {sectionItems.map((listing) => (
-                      <SwiperSlide key={`${section.key}-${listing.id}`}>
-                        <AuctionCard auction={listing} showPropertyMeta />
-                      </SwiperSlide>
-                    ))}
-                  </Swiper>
-                </div>
-              )}
-            </section>
-          );
-        })}
+            <div className="marketplace-curated-slider">
+              <Swiper
+                modules={[Navigation]}
+                navigation
+                spaceBetween={18}
+                breakpoints={{
+                  320: { slidesPerView: 1.05 },
+                  576: { slidesPerView: 1.4 },
+                  768: { slidesPerView: 2.1 },
+                  992: { slidesPerView: 2.6 },
+                  1200: { slidesPerView: 3.1 },
+                }}
+              >
+                {section.items.map((listing) => (
+                  <SwiperSlide key={`${section.title}-${listing.id}`}>
+                    <AuctionCard auction={listing} showPropertyMeta />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
+          </section>
+        ))}
       </div>
 
       <style>{`
@@ -208,15 +210,6 @@ export default function PropertiesBrand({ brand, listings }) {
           height: 100%;
           display: block;
           object-fit: cover;
-        }
-
-        .brand-small-banner {
-          height: 240px;
-          border-radius: 22px;
-        }
-
-        .brand-small-banner-image {
-          border-radius: 22px;
         }
 
         .marketplace-curated-slider {
@@ -280,10 +273,6 @@ export default function PropertiesBrand({ brand, listings }) {
           .brand-top-banner {
             height: 210px;
             border-radius: 24px;
-          }
-
-          .brand-small-banner {
-            height: 180px;
           }
 
           .marketplace-curated-slider .swiper {

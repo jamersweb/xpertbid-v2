@@ -4,7 +4,19 @@ import { route } from 'ziggy-js';
 import axios from 'axios'; // We still use axios for guest fetching if needed, or just localStorage
 
 const CartContext = createContext();
-export const useCart = () => useContext(CartContext);
+const fallbackCartContext = {
+       cartItems: [],
+       cartCount: 0,
+       loading: false,
+       addToCart: async () => ({ success: false, message: 'Cart is unavailable in this view.' }),
+       removeFromCart: async () => ({ success: false, message: 'Cart is unavailable in this view.' }),
+       updateCartItem: async () => ({ success: false, message: 'Cart is unavailable in this view.' }),
+       clearCart: async () => ({ success: true, message: 'Cart cleared.' }),
+       getTotalPrice: () => 0,
+       fetchCart: () => {},
+};
+
+export const useCart = () => useContext(CartContext) || fallbackCartContext;
 
 export const CartProvider = ({ children }) => {
        const { auth, cart: sharedCartLists } = usePage().props;

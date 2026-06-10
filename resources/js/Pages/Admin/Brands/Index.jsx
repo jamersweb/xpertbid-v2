@@ -83,9 +83,14 @@ export default function Index({ brands, filters }) {
           <h1 className="text-3xl font-black text-gray-900 tracking-tight">Brand Management</h1>
           <p className="text-sm text-gray-500 font-medium">Manage product brands with logo/image.</p>
         </div>
-        <PrimaryButton onClick={() => openModal()}>
-          <i className="fa-solid fa-plus mr-2"></i> Add Brand
-        </PrimaryButton>
+        <div className="flex flex-wrap gap-3">
+          <SecondaryButton type="button" onClick={() => router.visit(route('admin.brand-pages.index'))}>
+            <i className="fa-solid fa-pen-ruler mr-2"></i> Brand Pages
+          </SecondaryButton>
+          <PrimaryButton onClick={() => openModal()}>
+            <i className="fa-solid fa-plus mr-2"></i> Add Brand
+          </PrimaryButton>
+        </div>
       </div>
 
       <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden">
@@ -139,6 +144,9 @@ export default function Index({ brands, filters }) {
                     <div className="flex gap-2 justify-end">
                       <a href={route('admin.brands.show', brand.id)} className="p-2 hover:bg-sky-50 rounded-xl text-sky-600" title="View">
                         <i className="fa-solid fa-eye"></i>
+                      </a>
+                      <a href={route('admin.brand-pages.index', { brand_id: brand.id })} className="p-2 hover:bg-gray-100 rounded-xl text-gray-600" title="Brand Page">
+                        <i className="fa-solid fa-pen-ruler"></i>
                       </a>
                       <button onClick={() => openModal(brand)} className="p-2 hover:bg-amber-50 rounded-xl text-amber-600" title="Edit">
                         <i className="fa-solid fa-pen-to-square"></i>

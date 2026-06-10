@@ -28,6 +28,7 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\LiveAuctionDemoController;
 use App\Http\Controllers\ListingLiveChatController;
 use App\Http\Controllers\BrandPageController;
+use App\Http\Controllers\Admin\BrandPageController as AdminBrandPageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -310,6 +311,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     // Unified Category Management (Refactored to legacy system)
     Route::resource('categories', App\Http\Controllers\Admin\AuctionCategoryController::class)->names('categories');
     Route::resource('brands', App\Http\Controllers\Admin\BrandController::class)->names('brands')->except(['create', 'edit']);
+    Route::get('/brand-pages', [AdminBrandPageController::class, 'index'])->name('brand-pages.index');
+    Route::put('/brand-pages/{brand}', [AdminBrandPageController::class, 'update'])->name('brand-pages.update');
     Route::resource('dynamic-fields', App\Http\Controllers\Admin\DynamicFieldController::class)->names('dynamic-fields');
 
     // Content Management

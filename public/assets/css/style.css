@@ -8915,10 +8915,9 @@ div#navbarSupportedContent {
     background-color: #ffffff;
     border-radius: 18px;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    /* padding-bottom: 18px; */
+    display: block;
+    flex-direction: initial;
+    height: auto;
     transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
