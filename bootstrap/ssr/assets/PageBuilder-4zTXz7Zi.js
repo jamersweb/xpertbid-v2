@@ -33,6 +33,9 @@ const createSectionClientId = () => `${Date.now()}-${Math.random().toString(36).
 const assetUrl = (path) => {
   if (!path) return null;
   if (path.startsWith("http")) return path;
+  if (path.startsWith("/storage/")) {
+    return `/brand-assets/${path.replace(/^\/storage\//, "")}`;
+  }
   return `/${path.replace(/^\/+/, "")}`;
 };
 const normalizeSection = (section) => ({

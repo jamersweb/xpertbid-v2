@@ -62,6 +62,9 @@ Route::get('/marketplace/{slug?}', [MarketplaceController::class, 'index'])->nam
 Route::get('/search-marketplace', [MarketplaceController::class, 'index'])->name('marketplace.search');
 Route::get('/products/filter', [MarketplaceController::class, 'mobileIndex'])->name('marketplace.mobile_filter');
 Route::get('/categories', [AuctionController::class, 'categoriesPage'])->name('categories.page');
+Route::get('/brand-assets/{path}', [BrandPageController::class, 'asset'])
+    ->where('path', '.*')
+    ->name('brand.assets');
 Route::get('/properties-brand/{brand:slug}', [BrandPageController::class, 'propertiesBrand'])->name('properties.brand');
 
 // Static/Info Pages

@@ -35,6 +35,9 @@ const DEFAULT_BANNER_SETS = {
 const imageSrc = (value) => {
   if (!value) return null;
   if (String(value).startsWith("http")) return value;
+  if (String(value).startsWith("/storage/")) {
+    return `/brand-assets/${String(value).replace(/^\/storage\//, "")}`;
+  }
   return `/${String(value).replace(/^\/+/, "")}`;
 };
 const normalizeSection = (section) => ({

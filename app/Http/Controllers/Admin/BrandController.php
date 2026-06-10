@@ -47,7 +47,7 @@ class BrandController extends Controller
         Storage::disk('public')->makeDirectory($directory);
         $storedPath = $file->storeAs($directory, $filename, 'public');
 
-        return $storedPath ? '/storage/' . ltrim($storedPath, '/') : null;
+        return $storedPath ? '/brand-assets/' . ltrim($storedPath, '/') : null;
     }
 
     protected function removeStoredFile(?string $path): void

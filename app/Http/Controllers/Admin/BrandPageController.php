@@ -26,7 +26,7 @@ class BrandPageController extends Controller
         Storage::disk('public')->makeDirectory($directory);
         $storedPath = $file->storeAs($directory, $filename, 'public');
 
-        return $storedPath ? '/storage/' . ltrim($storedPath, '/') : null;
+        return $storedPath ? '/brand-assets/' . ltrim($storedPath, '/') : null;
     }
 
     protected function removeStoredFile(?string $path): void
@@ -182,5 +182,21 @@ class BrandPageController extends Controller
         $brand->save();
 
         return redirect()->back()->with('success', 'Brand page updated successfully.');
+    }
+
+    public function asset(string $path)
+    {
+        $path = ltrim($path, '/');
+
+        if (Storage::disk('public')->exists($path)) {
+            return response()->file(Storage::disk('public')->path($path));
+        }
+
+        $publicPath = public_path($path);
+        if (file_exists($publicPath)) {
+            return response()->file($publicPath);
+        }
+
+        abort(404, 'Asset not found.');
     }
 }
