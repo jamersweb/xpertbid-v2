@@ -5,6 +5,7 @@ import OwnerInfoRow from "@/Components/OwnerInfoRow";
 import FavoriteToggleButton from "@/Components/FavoriteToggleButton";
 import useTranslate from "@/hooks/useTranslate";
 import { getDiscountMeta, isDirectBuyListing, isSoldOutListing } from "@/Utils/listingPricing";
+import { buildProductHref } from "@/Utils/productUrl";
 
 const getProductImageSrc = (product) => {
        const directImage = product?.image_url;
@@ -57,7 +58,7 @@ export default function FeaturedProducts({ products }) {
                                                                <div className="product-card-wrapper h-100">
                                                                       <div className="pro-image" style={{ position: "relative" }}>
                                                                              <FavoriteToggleButton listingId={product.id} />
-                                                                             <Link href={`/product/${product.slug}`} className="product-box">
+                                                                             <Link href={buildProductHref(product.slug)} className="product-box">
                                                                                     <div className="relative aspect-[4/3] w-full overflow-hidden">
                                                                                            <img
                                                                                                   src={imageSrc}
@@ -94,7 +95,7 @@ export default function FeaturedProducts({ products }) {
 
                                                                       <div className="pro-title" style={{ color: "black" }}>
                                                                              <h2>
-                                                                                    <Link href={`/product/${product.slug}`} className="text-color-black">
+                                                                             <Link href={buildProductHref(product.slug)} className="text-color-black">
                                                                                            {product.title}
                                                                                     </Link>
                                                                              </h2>
@@ -133,7 +134,7 @@ export default function FeaturedProducts({ products }) {
                                                                                                  {t('Sold Out')}
                                                                                           </span>
                                                                                    ) : (
-                                                                                          <Link href={`/product/${product.slug}`}>
+                                                                                          <Link href={buildProductHref(product.slug)}>
                                                                                                  {directBuyListing ? t('Buy Now') : t('Place Bid')}
                                                                                           </Link>
                                                                                    )}

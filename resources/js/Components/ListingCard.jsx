@@ -5,6 +5,7 @@ import Price from "@/Components/Price";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { getBaseListingPrice, getDiscountMeta } from "@/Utils/listingPricing";
+import { buildProductHref } from "@/Utils/productUrl";
 
 const ListingCard = ({ listing, onDeleted }) => {
        const [isListPackegOpen, setIsListPackegOpen] = useState(false);
@@ -282,7 +283,7 @@ const ListingCard = ({ listing, onDeleted }) => {
                                    )}
 
                                    {isActive && !isDraft && listing.slug && (
-                                          <Link href={`/product/${listing.slug}`} className="ms-2">
+                                          <Link href={buildProductHref(listing.slug)} className="ms-2">
                                                  <button className="button-style-1 editListing">
                                                         View
                                                  </button>

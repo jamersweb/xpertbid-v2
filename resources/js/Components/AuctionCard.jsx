@@ -6,6 +6,7 @@ import Price from "@/Components/Price";
 import FavoriteToggleButton from "@/Components/FavoriteToggleButton";
 import { useCart } from "@/Contexts/CartContext";
 import { getDiscountMeta, isDirectBuyListing, isSoldOutListing } from "@/Utils/listingPricing";
+import { buildProductHref } from "@/Utils/productUrl";
 
 const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }) => {
        const { addToCart } = useCart();
@@ -74,7 +75,7 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
               <div className="product-card-wrapper h-100">
                      <div className="pro-image m-0" style={{ position: "relative" }}>
                             <FavoriteToggleButton listingId={auction.id} />
-                            <Link href={`/product/${auction.slug}`} className="product-box">
+                            <Link href={buildProductHref(auction.slug)} className="product-box">
                                    <div className="relative aspect-[4/3] w-full overflow-hidden">
                                           <img
                                                  src={imgPath}
@@ -128,7 +129,7 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
 
                      <div className="pro-title" style={{ color: "black" }}>
                             <h2>
-                                   <Link href={`/product/${auction.slug}`} className="text-color-black">
+                                   <Link href={buildProductHref(auction.slug)} className="text-color-black">
                                           {auction.title || auction.name || "Untitled"}
                                    </Link>
                             </h2>
@@ -229,7 +230,7 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
                                                  {isSoldOut ? (
                                                         <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "14px 22px", background: "#9ca3af", color: "#fff", fontWeight: 600, cursor: "not-allowed" }}>Sold Out</span>
                                                  ) : (
-                                                        <Link href={`/product/${auction.slug}`}>
+                                                        <Link href={buildProductHref(auction.slug)}>
                                                                {directBuyListing ? "Buy Now" : (isLiveAuction ? "Join Live" : "Place Bid")}
                                                         </Link>
                                                  )}

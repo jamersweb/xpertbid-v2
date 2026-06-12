@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { router } from '@inertiajs/react';
+import { buildProductHref } from '@/Utils/productUrl';
 
 export default function Search({ isOpen, onClose }) {
        const [query, setQuery] = useState('');
@@ -85,11 +86,11 @@ export default function Search({ isOpen, onClose }) {
                                    <ul className="results">
                                           {results.map(item => (
                                                  <li
-                                                        key={item.id}
-                                                        onClick={() => {
-                                                               router.visit(`/product/${item.slug}`);
+                                                       key={item.id}
+                                                       onClick={() => {
+                                                               router.visit(buildProductHref(item.slug));
                                                                onClose();
-                                                        }}
+                                                       }}
                                                  >
                                                         {item.title}
                                                  </li>

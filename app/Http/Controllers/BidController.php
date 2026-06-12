@@ -10,9 +10,11 @@ use App\Models\NewNotification;
 use Illuminate\Support\Facades\DB;
 use App\Models\IndividualVerification;
 use App\Models\CorporateVerification;
-use Illuminate\Support\Facades\Mail;
 use App\Services\MsgpkService;
+use App\Mail\BidOutbidNotification;
+use App\Support\LoggedMail;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 
 class BidController extends Controller
 {
@@ -22,6 +24,58 @@ class BidController extends Controller
             ?? $request->input('source_platform')
             ?? $request->header('X-Client-Source')
             ?? null;
+    }
+
+    protected function sendOutbidAlert(Listing $listing, Bid $previousHighestBid, float $newBidAmount): void
+    {
+        $recipient = $previousHighestBid->user;
+        if (!$recipient || (int) $recipient->id === (int) auth()->id()) {
+            return;
+        }
+
+        $recipientName = trim((string) ($recipient->name ?? 'there')) ?: 'there';
+        $listingUrl = route('product.show', $listing->slug);
+        $yourBidAmount = (float) $previousHighestBid->bid_amount;
+
+        $hasValidEmail = filter_var((string) ($recipient->email ?? ''), FILTER_VALIDATE_EMAIL);
+        $phone = trim((string) ($recipient->phone ?? ''));
+
+        if ($hasValidEmail) {
+            try {
+                LoggedMail::to($recipient->email)->send(new BidOutbidNotification(
+                    $listing,
+                    $recipientName,
+                    $newBidAmount,
+                    $yourBidAmount,
+                    $listingUrl
+                ));
+                return;
+            } catch (\Throwable $e) {
+                Log::warning('Outbid email failed, trying WhatsApp fallback: ' . $e->getMessage(), [
+                    'listing_id' => $listing->id,
+                    'user_id' => $recipient->id,
+                ]);
+            }
+        }
+
+        if ($phone !== '') {
+            $message = sprintf(
+                'Hi %s, you have been outbid on "%s". Your bid was %s PKR and the new highest bid is %s PKR. View listing: %s',
+                $recipientName,
+                $listing->title ?? 'your listing',
+                number_format($yourBidAmount),
+                number_format($newBidAmount),
+                $listingUrl
+            );
+
+            app(MsgpkService::class)->sendWhatsApp($phone, $message);
+            return;
+        }
+
+        Log::info('No valid email or phone found for outbid notification.', [
+            'listing_id' => $listing->id,
+            'user_id' => $recipient->id,
+        ]);
     }
 
     // protected $msgpkService;
@@ -112,6 +166,14 @@ class BidController extends Controller
 
         // Highest Bid Check
         $currentHighest = Bid::where('listing_id', $listing->id)->max('bid_amount');
+        $previousHighestBid = $currentHighest
+            ? Bid::where('listing_id', $listing->id)
+                ->with('user')
+                ->orderByDesc('bid_amount')
+                ->orderByDesc('id')
+                ->first()
+            : null;
+
         if ($currentHighest && $newAmount <= $currentHighest) {
             if ($request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
@@ -146,6 +208,18 @@ class BidController extends Controller
             // $this->notifyPreviousBidders(...)
 
             DB::commit();
+
+            if ($previousHighestBid && (int) $previousHighestBid->user_id !== (int) $userId) {
+                try {
+                    $this->sendOutbidAlert($listing, $previousHighestBid, $newAmount);
+                } catch (\Throwable $notificationError) {
+                    \Log::warning('Failed to send outbid notification: ' . $notificationError->getMessage(), [
+                        'listing_id' => $listing->id,
+                        'previous_bid_id' => $previousHighestBid->id,
+                        'new_bid_amount' => $newAmount,
+                    ]);
+                }
+            }
 
             if ($request->wantsJson() || $request->expectsJson()) {
                 return response()->json([

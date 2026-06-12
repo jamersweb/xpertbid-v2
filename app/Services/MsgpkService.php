@@ -23,42 +23,8 @@ class MsgpkService
      * @param string $otp
      * @return bool
      */
-    public function sendOtp($mobile, $otp, $type = 0)
+    protected function send($mobile, $message, int $type)
     {
-        // Remove '+' from phone number if present
-        $mobile = str_replace('+', '', $mobile);
-
-        try {
-            $response = Http::asForm()->post($this->baseUrl, [
-                'api_key' => $this->apiKey,
-                'mobile' => $mobile,
-                'message' => "Your verification code is: {$otp}",
-                'priority' => 0,
-                'type' => $type, // 0 for SMS, 2 for WhatsApp (standard for many PK providers)
-            ]);
-
-            if ($response->successful()) {
-                Log::info("Msgpk: OTP sent successfully to {$mobile}. Response: " . $response->body());
-                return true;
-            } else {
-                Log::error("Msgpk: Failed to send OTP to {$mobile}. Status: {$response->status()}. Response: " . $response->body());
-                return false;
-            }
-        } catch (\Exception $e) {
-            Log::error("Msgpk: Exception sending OTP to {$mobile}: " . $e->getMessage());
-            return false;
-        }
-    }
-    /**
-     * Send a generic message via WhatsApp/SMS using Msgpk
-     *
-     * @param string $mobile
-     * @param string $message
-     * @return bool
-     */
-    public function sendMessage($mobile, $message)
-    {
-        // Remove '+' from phone number if present
         $mobile = str_replace('+', '', $mobile);
 
         try {
@@ -67,19 +33,34 @@ class MsgpkService
                 'mobile' => $mobile,
                 'message' => $message,
                 'priority' => 0,
-                'type' => 0,
+                'type' => $type,
             ]);
 
             if ($response->successful()) {
                 Log::info("Msgpk: Message sent successfully to {$mobile}. Response: " . $response->body());
                 return true;
-            } else {
-                Log::error("Msgpk: Failed to send Message to {$mobile}. Status: {$response->status()}. Response: " . $response->body());
-                return false;
             }
+
+            Log::error("Msgpk: Failed to send Message to {$mobile}. Status: {$response->status()}. Response: " . $response->body());
+            return false;
         } catch (\Exception $e) {
             Log::error("Msgpk: Exception sending Message to {$mobile}: " . $e->getMessage());
             return false;
         }
+    }
+
+    public function sendOtp($mobile, $otp, $type = 0)
+    {
+        return $this->send($mobile, "Your verification code is: {$otp}", (int) $type);
+    }
+
+    public function sendMessage($mobile, $message)
+    {
+        return $this->send($mobile, $message, 0);
+    }
+
+    public function sendWhatsApp($mobile, $message)
+    {
+        return $this->send($mobile, $message, 2);
     }
 }

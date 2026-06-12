@@ -1,91 +1,71 @@
-import React, { useState, useEffect } from 'react';
-import { Head, Link } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
-import Price from '@/Components/Price';
-import CountdownTimer from '@/Components/CountdownTimer';
-import OwnerInfoRow from '@/Components/OwnerInfoRow';
-import { FaSearch, FaGavel, FaCheckCircle, FaChevronRight } from 'react-icons/fa';
-import { buildProductHref } from '@/Utils/productUrl';
-
-export default function Index({ auctions, auth }) {
-       const [activeModal, setActiveModal] = useState(null);
-
-       return (
-              <AppLayout title="1 Rupee Auction">
-                     <Head>
-                            <title>1 Rupee Auction | XpertBid</title>
-                            <meta name="description" content="Real products. Real bidding. Starting from Rs. 1." />
-                     </Head>
-
-                     <main className="mainContainer">
-                            <section className="heroBanner" style={{ marginBottom: '50px' }}>
-                                   <div style={{ position: 'relative', width: '100%', height: 'auto' }}>
-                                          <img
-                                                 src="/assets/images/1_rupee.png"
-                                                 alt="1 Rupee Auction"
-                                                 style={{ width: '100%', height: 'auto', display: 'block' }}
-                                          />
-                                   </div>
-                            </section>
-
-                            {/* Live Auctions Section */}
-                            <section className="section">
-                                   <h2 className="sectionTitle">
-                                          Live Auctions You Can Bid On
-                                   </h2>
-
-                                   <div className="auctionGrid">
-                                          {auctions.map((item) => (
-                                                 <LandingAuctionCard key={item.id} item={item} />
-                                          ))}
-                                   </div>
-
-                                   <div className="footerNote" style={{ textAlign: 'center', marginTop: '1.5rem', color: '#6b7280' }}>
-                                          *More items added regularly.
-                                   </div>
-                            </section>
-
-                            {/* How to Win Section */}
-                            <section className="howToWinSection">
-                                   <h2 className="sectionTitle">
-                                          How to Win on XpertBid
-                                   </h2>
-
-                                   <div className="stepsContainer">
-                                          <div className="stepCard">
-                                                 <div className="icon blueIcon"><FaSearch /></div>
-                                                 <span className="stepText">Pick any live auction item</span>
-                                          </div>
-
-                                          <div className="stepCard">
-                                                 <div className="icon yellowIcon"><FaGavel /></div>
-                                                 <span className="stepText">Place your bid (starting from Rs. 1)</span>
-                                          </div>
-
-                                          <div className="checkmarks">
-                                                 <div className="checkItem">
-                                                        <FaCheckCircle /> No brokers
-                                                 </div>
-                                                 <div className="checkItem">
-                                                        <FaCheckCircle /> No fixed prices
-                                                 </div>
-                                          </div>
-                                   </div>
-
-                                   <div className="ctaSection">
-                                          <h3 className="ctaTitle">This Is Not a Giveaway. This Is a Real Auction.</h3>
-                                          <p className="ctaText">You don't need luck. You need timing and smart bidding.</p>
-
-                                          {!auth.user && (
-                                                 <Link href={route('register')} className="joinButton">
-                                                        Join XpertBid & Start Bidding <FaChevronRight style={{ fontSize: '0.875rem' }} />
-                                                 </Link>
-                                          )}
-                                   </div>
-                            </section>
-                     </main>
-
-                     <style>{`
+import { jsxs, jsx, Fragment } from "react/jsx-runtime";
+import { useState } from "react";
+import { Head, Link } from "@inertiajs/react";
+import { A as AppLayout } from "./AppLayout-CWZvIfaV.js";
+import { P as Price } from "./Price-CF5NSPt0.js";
+import { C as CountdownTimer, O as OwnerInfoRow } from "./CountdownTimer-BG03Al8T.js";
+import { FaSearch, FaGavel, FaCheckCircle, FaChevronRight } from "react-icons/fa";
+import { b as buildProductHref } from "./productUrl-SijKnuS_.js";
+import "ziggy-js";
+import "react-loader-spinner";
+import "sweetalert2";
+import "axios";
+import "./useSessionKeepAlive-BIm1aJlj.js";
+import "./useCurrencyList-Ce5tJXO9.js";
+function Index({ auctions, auth }) {
+  const [activeModal, setActiveModal] = useState(null);
+  return /* @__PURE__ */ jsxs(AppLayout, { title: "1 Rupee Auction", children: [
+    /* @__PURE__ */ jsxs(Head, { children: [
+      /* @__PURE__ */ jsx("title", { children: "1 Rupee Auction | XpertBid" }),
+      /* @__PURE__ */ jsx("meta", { name: "description", content: "Real products. Real bidding. Starting from Rs. 1." })
+    ] }),
+    /* @__PURE__ */ jsxs("main", { className: "mainContainer", children: [
+      /* @__PURE__ */ jsx("section", { className: "heroBanner", style: { marginBottom: "50px" }, children: /* @__PURE__ */ jsx("div", { style: { position: "relative", width: "100%", height: "auto" }, children: /* @__PURE__ */ jsx(
+        "img",
+        {
+          src: "/assets/images/1_rupee.png",
+          alt: "1 Rupee Auction",
+          style: { width: "100%", height: "auto", display: "block" }
+        }
+      ) }) }),
+      /* @__PURE__ */ jsxs("section", { className: "section", children: [
+        /* @__PURE__ */ jsx("h2", { className: "sectionTitle", children: "Live Auctions You Can Bid On" }),
+        /* @__PURE__ */ jsx("div", { className: "auctionGrid", children: auctions.map((item) => /* @__PURE__ */ jsx(LandingAuctionCard, { item }, item.id)) }),
+        /* @__PURE__ */ jsx("div", { className: "footerNote", style: { textAlign: "center", marginTop: "1.5rem", color: "#6b7280" }, children: "*More items added regularly." })
+      ] }),
+      /* @__PURE__ */ jsxs("section", { className: "howToWinSection", children: [
+        /* @__PURE__ */ jsx("h2", { className: "sectionTitle", children: "How to Win on XpertBid" }),
+        /* @__PURE__ */ jsxs("div", { className: "stepsContainer", children: [
+          /* @__PURE__ */ jsxs("div", { className: "stepCard", children: [
+            /* @__PURE__ */ jsx("div", { className: "icon blueIcon", children: /* @__PURE__ */ jsx(FaSearch, {}) }),
+            /* @__PURE__ */ jsx("span", { className: "stepText", children: "Pick any live auction item" })
+          ] }),
+          /* @__PURE__ */ jsxs("div", { className: "stepCard", children: [
+            /* @__PURE__ */ jsx("div", { className: "icon yellowIcon", children: /* @__PURE__ */ jsx(FaGavel, {}) }),
+            /* @__PURE__ */ jsx("span", { className: "stepText", children: "Place your bid (starting from Rs. 1)" })
+          ] }),
+          /* @__PURE__ */ jsxs("div", { className: "checkmarks", children: [
+            /* @__PURE__ */ jsxs("div", { className: "checkItem", children: [
+              /* @__PURE__ */ jsx(FaCheckCircle, {}),
+              " No brokers"
+            ] }),
+            /* @__PURE__ */ jsxs("div", { className: "checkItem", children: [
+              /* @__PURE__ */ jsx(FaCheckCircle, {}),
+              " No fixed prices"
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxs("div", { className: "ctaSection", children: [
+          /* @__PURE__ */ jsx("h3", { className: "ctaTitle", children: "This Is Not a Giveaway. This Is a Real Auction." }),
+          /* @__PURE__ */ jsx("p", { className: "ctaText", children: "You don't need luck. You need timing and smart bidding." }),
+          !auth.user && /* @__PURE__ */ jsxs(Link, { href: route("register"), className: "joinButton", children: [
+            "Join XpertBid & Start Bidding ",
+            /* @__PURE__ */ jsx(FaChevronRight, { style: { fontSize: "0.875rem" } })
+          ] })
+        ] })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsx("style", { children: `
                 .mainContainer {
                     min-height: 100vh;
                     padding-bottom: 2.5rem;
@@ -425,98 +405,57 @@ export default function Index({ auctions, auth }) {
                     white-space: nowrap;
                     display: block;
                 }
-            `}</style>
-              </AppLayout>
-       );
+            ` })
+  ] });
 }
-
 function LandingAuctionCard({ item }) {
-       // Helper for image URL
-       const getImageUrl = (imagePath) => {
-              if (!imagePath) return '/assets/images/product-fallback.png';
-              if (imagePath.startsWith('http')) return imagePath;
-              return imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-       };
-
-       const winnerName = item?.winner_details?.name || item?.winner_details?.[0]?.name || 'the highest bidder';
-
-       const imageUrl = getImageUrl(item.image_url || item.image);
-
-       return (
-              <Link href={buildProductHref(item.slug)} style={{ textDecoration: 'none', color: 'inherit', display: 'block', height: '100%' }}>
-                     <div className="marketCard">
-                            <div className="mktImg">
-                                   <img
-                                          src={imageUrl}
-                                          alt={item.title || item.name}
-                                          onError={(e) => { e.target.src = '/assets/images/product-fallback.png'; }}
-                                   />
-
-                                   {(item.status === 'awarded' || item.status === 'awarded ') ? (
-                                          <div className="awardedBadge">
-                                                 AWARDED
-                                          </div>
-                                   ) : (
-                                          <CountdownTimer endDate={item.end_date} />
-                                   )}
-
-                                   {/* Assuming ID 1 logic or similar for 1 Rupee specific badge if needed, 
-                        or rely on item.is_1_rupee if available. 
-                        For now matching reference logic `item.id === 1` but likely generic `Starts From Rs. 1` 
-                        should apply to all on this page? 
-                        The reference only showed it for item.id === 1. I'll keep it or make it generic.
-                        Let's check if there's a property. 
-                        The reference page says "1 Rupee Auction", so maybe all of them are?
-                        I'll leave the badge logic as strictly ported or conditional.
-                        Reference used `item.id === 1`. I'll copy that strictly for now.
-                    */}
-                                   {(item.minimum_bid == 1 || item.id === 1) && (
-                                          <div className="discountBadge">
-                                                 Starts From Rs. 1
-                                          </div>
-                                   )}
-                            </div>
-
-                            <div className="mktBody">
-                                   <div className="mktProHead">
-                                          <h3>{(item.title || item.name)?.length > 25 ? (item.title || item.name).substring(0, 15) + "..." : (item.title || item.name)}</h3>
-                                   </div>
-
-                                   <OwnerInfoRow
-                                          owner={item.owner || item.user}
-                                          fallbackName={item.owner?.name || item.user?.name}
-                                          fallbackAvatar={item.owner?.avatar || item.user?.profile_pic}
-                                          isFeatured={Boolean(item?.featured_name)}
-                                   />
-
-                                   <div className="mktDetail">
-                                          {(item.status === 'awarded' || item.status === 'awarded ') ? (
-                                                 <div className="winnerSection">
-                                                        <div className="winnerText">
-                                                               <span className="trophyIcon">🏆</span>
-                                                               Bid awarded to {winnerName}
-                                                        </div>
-                                                 </div>
-                                          ) : (
-                                                 <>
-                                                        <div className="mktCrtBid">
-                                                               <span className="crntBid">
-                                                                      {Number(item.bids_max_bid_amount) > 0 ? "Current Bid" : "Result"}
-                                                               </span>
-                                                               <div className="mktBidPrice">
-                                                                      <Price amountAED={Number(item.bids_max_bid_amount) > 0 ? item.bids_max_bid_amount : item.minimum_bid} />
-                                                               </div>
-                                                        </div>
-                                                        <div className="w-100">
-                                                               <div className="bidButton">
-                                                                      Bid Now
-                                                               </div>
-                                                        </div>
-                                                 </>
-                                          )}
-                                   </div>
-                            </div>
-                     </div>
-              </Link>
-       );
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return "/assets/images/product-fallback.png";
+    if (imagePath.startsWith("http")) return imagePath;
+    return imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
+  };
+  const winnerName = item?.winner_details?.name || item?.winner_details?.[0]?.name || "the highest bidder";
+  const imageUrl = getImageUrl(item.image_url || item.image);
+  return /* @__PURE__ */ jsx(Link, { href: buildProductHref(item.slug), style: { textDecoration: "none", color: "inherit", display: "block", height: "100%" }, children: /* @__PURE__ */ jsxs("div", { className: "marketCard", children: [
+    /* @__PURE__ */ jsxs("div", { className: "mktImg", children: [
+      /* @__PURE__ */ jsx(
+        "img",
+        {
+          src: imageUrl,
+          alt: item.title || item.name,
+          onError: (e) => {
+            e.target.src = "/assets/images/product-fallback.png";
+          }
+        }
+      ),
+      item.status === "awarded" || item.status === "awarded " ? /* @__PURE__ */ jsx("div", { className: "awardedBadge", children: "AWARDED" }) : /* @__PURE__ */ jsx(CountdownTimer, { endDate: item.end_date }),
+      (item.minimum_bid == 1 || item.id === 1) && /* @__PURE__ */ jsx("div", { className: "discountBadge", children: "Starts From Rs. 1" })
+    ] }),
+    /* @__PURE__ */ jsxs("div", { className: "mktBody", children: [
+      /* @__PURE__ */ jsx("div", { className: "mktProHead", children: /* @__PURE__ */ jsx("h3", { children: (item.title || item.name)?.length > 25 ? (item.title || item.name).substring(0, 15) + "..." : item.title || item.name }) }),
+      /* @__PURE__ */ jsx(
+        OwnerInfoRow,
+        {
+          owner: item.owner || item.user,
+          fallbackName: item.owner?.name || item.user?.name,
+          fallbackAvatar: item.owner?.avatar || item.user?.profile_pic,
+          isFeatured: Boolean(item?.featured_name)
+        }
+      ),
+      /* @__PURE__ */ jsx("div", { className: "mktDetail", children: item.status === "awarded" || item.status === "awarded " ? /* @__PURE__ */ jsx("div", { className: "winnerSection", children: /* @__PURE__ */ jsxs("div", { className: "winnerText", children: [
+        /* @__PURE__ */ jsx("span", { className: "trophyIcon", children: "🏆" }),
+        "Bid awarded to ",
+        winnerName
+      ] }) }) : /* @__PURE__ */ jsxs(Fragment, { children: [
+        /* @__PURE__ */ jsxs("div", { className: "mktCrtBid", children: [
+          /* @__PURE__ */ jsx("span", { className: "crntBid", children: Number(item.bids_max_bid_amount) > 0 ? "Current Bid" : "Result" }),
+          /* @__PURE__ */ jsx("div", { className: "mktBidPrice", children: /* @__PURE__ */ jsx(Price, { amountAED: Number(item.bids_max_bid_amount) > 0 ? item.bids_max_bid_amount : item.minimum_bid }) })
+        ] }),
+        /* @__PURE__ */ jsx("div", { className: "w-100", children: /* @__PURE__ */ jsx("div", { className: "bidButton", children: "Bid Now" }) })
+      ] }) })
+    ] })
+  ] }) });
 }
+export {
+  Index as default
+};

@@ -4,6 +4,7 @@ import CountdownTimer from "@/Components/CountdownTimer";
 import OwnerInfoRow from "@/Components/OwnerInfoRow";
 import Price from "@/Components/Price";
 import { getDiscountMeta, isDirectBuyListing, isSoldOutListing } from "@/Utils/listingPricing";
+import { buildProductHref } from "@/Utils/productUrl";
 
 const FavoriteCard = ({ favorite }) => {
        const handleRemove = (e) => {
@@ -28,7 +29,7 @@ const FavoriteCard = ({ favorite }) => {
               <div className="col-lg-4 col-md-6 col-sm-12 mkt-child">
                      <div className="market-card">
                             <div className="mkt-img">
-                                   <Link href={`/product/${favorite.slug}`} className="product-box">
+                                   <Link href={buildProductHref(favorite.slug)} className="product-box">
                                           <img
                                                  src={imgPath}
                                                  alt={title}
@@ -89,7 +90,7 @@ const FavoriteCard = ({ favorite }) => {
                             <div className="mkt-body">
                                    <div className="mkt-pro-head">
                                           <h3>
-                                                 <Link href={`/product/${favorite.slug}`}>
+                                                 <Link href={buildProductHref(favorite.slug)}>
                                                         {title}
                                                  </Link>
                                           </h3>
@@ -131,7 +132,7 @@ const FavoriteCard = ({ favorite }) => {
                                                                Sold Out
                                                         </span>
                                                  ) : (
-                                                        <Link href={`/product/${favorite.slug}`}>
+                                                        <Link href={buildProductHref(favorite.slug)}>
                                                                {directBuyListing ? "Buy Now" : "Place Bid"}
                                                         </Link>
                                                  )}

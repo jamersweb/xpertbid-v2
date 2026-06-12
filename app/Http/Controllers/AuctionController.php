@@ -585,7 +585,78 @@ class AuctionController extends Controller
         return response()->json(['products' => $auctions]);
     }
 
-    public function show($slug)
+    protected function resolveProductBackUrl(Request $request, \App\Models\Listing $listing): string
+    {
+        $backUrl = (string) $request->query('back', '');
+        if ($backUrl !== '') {
+            $backHost = parse_url($backUrl, PHP_URL_HOST);
+            $appHost = parse_url(config('app.url'), PHP_URL_HOST);
+            $backPath = parse_url($backUrl, PHP_URL_PATH) ?: '';
+
+            $isSameHost = !$backHost || !$appHost || strcasecmp($backHost, $appHost) === 0;
+            $isNotProductPage = !preg_match('#^/product/[^/]+$#', $backPath);
+
+            if ($isSameHost && $isNotProductPage) {
+                return $backUrl;
+            }
+        }
+
+        $referer = (string) $request->headers->get('referer', '');
+
+        if ($referer !== '') {
+            $refererHost = parse_url($referer, PHP_URL_HOST);
+            $appHost = parse_url(config('app.url'), PHP_URL_HOST);
+            $refererPath = parse_url($referer, PHP_URL_PATH) ?: '';
+
+            $isSameHost = !$refererHost || !$appHost || strcasecmp($refererHost, $appHost) === 0;
+            $isNotProductPage = !preg_match('#^/product/[^/]+$#', $refererPath);
+
+            if ($isSameHost && $isNotProductPage) {
+                return $referer;
+            }
+        }
+
+        $sessionBackUrl = (string) $request->session()->get('last_return_url', '');
+        if ($sessionBackUrl !== '') {
+            $sessionHost = parse_url($sessionBackUrl, PHP_URL_HOST);
+            $appHost = parse_url(config('app.url'), PHP_URL_HOST);
+            $sessionPath = parse_url($sessionBackUrl, PHP_URL_PATH) ?: '';
+
+            $isSameHost = !$sessionHost || !$appHost || strcasecmp($sessionHost, $appHost) === 0;
+            $isNotProductPage = !preg_match('#^/product/[^/]+$#', $sessionPath);
+
+            if ($isSameHost && $isNotProductPage) {
+                return $sessionBackUrl;
+            }
+        }
+
+        if ($listing->listing_type === 'live_auction') {
+            return route('live-auctions.public');
+        }
+
+        $marketplaceCategory = $listing->category;
+        if ($marketplaceCategory?->sub_category_id) {
+            $subCategory = AuctionCategory::find($marketplaceCategory->sub_category_id);
+            $marketplaceCategory = $subCategory?->parentCategory ?: $subCategory ?: $marketplaceCategory;
+        } elseif ($marketplaceCategory?->parent_id) {
+            $marketplaceCategory = $marketplaceCategory->parentCategory ?: $marketplaceCategory;
+        }
+
+        $marketplaceTypeSlug = match ($listing->listing_type) {
+            'normal', 'normal_list' => 'normal-products',
+            'business', 'business_list' => 'business-products',
+            default => 'auctions',
+        };
+
+        return $marketplaceCategory?->slug
+            ? route('marketplace.type', [
+                'slug' => $marketplaceCategory->slug,
+                'typeSlug' => $marketplaceTypeSlug,
+            ])
+            : route('marketplace.index');
+    }
+
+    public function show(Request $request, $slug)
     {
         // 1. Fetch the listing with all necessary relationships
         $listingQuery = \App\Models\Listing::query()
@@ -643,28 +714,7 @@ class AuctionController extends Controller
                 ->exists();
         }
 
-        $marketplaceCategory = $listing->category;
-        if ($marketplaceCategory?->sub_category_id) {
-            $subCategory = AuctionCategory::find($marketplaceCategory->sub_category_id);
-            $marketplaceCategory = $subCategory?->parentCategory ?: $subCategory ?: $marketplaceCategory;
-        } elseif ($marketplaceCategory?->parent_id) {
-            $marketplaceCategory = $marketplaceCategory->parentCategory ?: $marketplaceCategory;
-        }
-
-        $marketplaceTypeSlug = match ($listing->listing_type) {
-            'normal', 'normal_list' => 'normal-products',
-            'business', 'business_list' => 'business-products',
-            default => 'auctions',
-        };
-
-        $marketplaceBackUrl = $listing->listing_type === 'live_auction'
-            ? route('live-auctions.public')
-            : ($marketplaceCategory?->slug
-                ? route('marketplace.type', [
-                    'slug' => $marketplaceCategory->slug,
-                    'typeSlug' => $marketplaceTypeSlug,
-                ])
-                : route('marketplace.index'));
+        $marketplaceBackUrl = $this->resolveProductBackUrl($request, $listing);
 
         $liveSession = null;
         $liveActiveAuction = null;

@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 
 export default function ProductHeader({ views, productId, slug, link, backHref = '/marketplace' }) {
        // Build a share URL using slug
@@ -14,13 +14,26 @@ export default function ProductHeader({ views, productId, slug, link, backHref =
                      .catch((err) => console.error("Failed to copy link:", err));
        };
 
+       const handleBack = (event) => {
+              if (typeof window !== 'undefined' && window.history.length > 1) {
+                     event.preventDefault();
+                     window.history.back();
+                     return;
+              }
+
+              if (backHref) {
+                     event.preventDefault();
+                     router.visit(backHref, { preserveScroll: false, preserveState: false });
+              }
+       };
+
        return (
               <section className="prodcut-detail-links product-detail-header-section" style={{ paddingTop: '100px' }}>
                      <div className="container-fluid">
                             <div className="row">
                                    <div className="col-md-6">
                                           <div className="product-back-and-head">
-                                                 <Link href={backHref || '/marketplace'}>
+                                                 <Link href={backHref || '/marketplace'} onClick={handleBack}>
                                                         <i className="fa-solid fa-chevron-left"></i>
                                                  </Link>
                                                  <h3>Product Detail</h3>
