@@ -241,7 +241,7 @@ class MarketplaceController extends Controller
             'user.corporateVerification',
             'category',
             'bids',
-        ]);
+        ])->withMax('bids', 'bid_amount');
         $categoryScopeIds = null;
 
         $currentCategory = null;
@@ -512,7 +512,7 @@ class MarketplaceController extends Controller
             'user.corporateVerification',
             'category',
             'bids',
-        ]);
+        ])->withMax('bids', 'bid_amount');
 
         if ($categoryScopeIds) {
             $categoryIds = $categoryScopeIds['category'];

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import AuctionCard from '@/Components/AuctionCard';
@@ -244,6 +244,8 @@ export default function Index({
 }) {
        const [searchTerm, setSearchTerm] = useState(filters?.search || '');
        const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+       const [isFilterDrawerMounted, setIsFilterDrawerMounted] = useState(false);
+       const [isFilterDrawerClosing, setIsFilterDrawerClosing] = useState(false);
        const [selectedCountryId, setSelectedCountryId] = useState(filters?.country_id ? String(filters.country_id) : '');
        const [selectedStateId, setSelectedStateId] = useState(filters?.state_id ? String(filters.state_id) : '');
        const [selectedCityId, setSelectedCityId] = useState(filters?.city_id ? String(filters.city_id) : '');
@@ -272,6 +274,83 @@ export default function Index({
        const seoShortContent = sanitizeSeoHtml(currentCategory?.seo_short_content);
        const seoContent = sanitizeSeoHtml(currentCategory?.seo_content);
        const schemaMarkupBlocks = extractSchemaMarkupBlocks(currentCategory?.schema_markup);
+       const filterDrawerCloseTimerRef = useRef(null);
+       const filterDrawerOpenRafRef = useRef(null);
+
+       const openFilterDrawer = () => {
+              if (filterDrawerCloseTimerRef.current) {
+                     clearTimeout(filterDrawerCloseTimerRef.current);
+                     filterDrawerCloseTimerRef.current = null;
+              }
+
+              if (filterDrawerOpenRafRef.current) {
+                     cancelAnimationFrame(filterDrawerOpenRafRef.current);
+                     filterDrawerOpenRafRef.current = null;
+              }
+
+              setIsFilterDrawerMounted(true);
+              setIsFilterDrawerClosing(false);
+              setIsFilterDrawerOpen(false);
+
+              filterDrawerOpenRafRef.current = requestAnimationFrame(() => {
+                     filterDrawerOpenRafRef.current = null;
+                     requestAnimationFrame(() => {
+                            setIsFilterDrawerOpen(true);
+                     });
+              });
+       };
+
+       const closeFilterDrawer = () => {
+              setIsFilterDrawerClosing(true);
+              setIsFilterDrawerOpen(false);
+       };
+
+       useEffect(() => {
+              if (isFilterDrawerOpen) {
+                     setIsFilterDrawerMounted(true);
+
+                     if (filterDrawerCloseTimerRef.current) {
+                            clearTimeout(filterDrawerCloseTimerRef.current);
+                            filterDrawerCloseTimerRef.current = null;
+                     }
+
+                     return;
+              }
+
+              if (isFilterDrawerMounted) {
+                     filterDrawerCloseTimerRef.current = setTimeout(() => {
+                            setIsFilterDrawerMounted(false);
+                            setIsFilterDrawerClosing(false);
+                            filterDrawerCloseTimerRef.current = null;
+                     }, 820);
+              }
+       }, [isFilterDrawerOpen, isFilterDrawerMounted]);
+
+       useEffect(() => {
+              if (typeof document === 'undefined') {
+                     return undefined;
+              }
+
+              const previousOverflow = document.body.style.overflow;
+              if (isFilterDrawerOpen) {
+                     document.body.style.overflow = 'hidden';
+              }
+
+              return () => {
+                     document.body.style.overflow = previousOverflow;
+              };
+       }, [isFilterDrawerOpen]);
+
+       useEffect(() => {
+              return () => {
+                     if (filterDrawerCloseTimerRef.current) {
+                            clearTimeout(filterDrawerCloseTimerRef.current);
+                     }
+                     if (filterDrawerOpenRafRef.current) {
+                            cancelAnimationFrame(filterDrawerOpenRafRef.current);
+                     }
+              };
+       }, []);
 
        const tabs = [
               { key: 'auction', label: 'Auction', mobileLabel: 'Auction' },
@@ -509,7 +588,7 @@ export default function Index({
                      preserveScroll: true,
               });
 
-              setIsFilterDrawerOpen(false);
+              closeFilterDrawer();
        };
 
        const clearFilters = () => {
@@ -688,12 +767,12 @@ export default function Index({
                                                                       onChange={(e) => setSearchTerm(e.target.value)}
                                                                       placeholder="Search products..."
                                                                />
-                                                               <button
-                                                                      type="button"
-                                                                      className="marketplace-filter-btn"
-                                                                      onClick={() => setIsFilterDrawerOpen(true)}
-                                                                      aria-label="Open filters"
-                                                               >
+                            <button
+                                 type="button"
+                                 className="marketplace-filter-btn"
+                                 onClick={openFilterDrawer}
+                                 aria-label="Open filters"
+                            >
                                                                       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                                                              <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
                                                                       </svg>
@@ -772,13 +851,16 @@ export default function Index({
                                    </div>
                             </div>
 
-                            {isFilterDrawerOpen && (
+                            {isFilterDrawerMounted && (
                                    <>
-                                          <div className="marketplace-filter-backdrop" onClick={() => setIsFilterDrawerOpen(false)} />
-                                          <aside className="marketplace-filter-drawer">
+                                          <div
+                                                 className={`marketplace-filter-backdrop ${isFilterDrawerOpen ? 'is-open' : ''}`}
+                                                 onClick={closeFilterDrawer}
+                                          />
+                                          <aside className={`marketplace-filter-drawer ${isFilterDrawerOpen ? 'is-open' : ''} ${isFilterDrawerClosing ? 'is-closing' : ''}`}>
                                                  <div className="marketplace-filter-header">
                                                         <h3>Filters</h3>
-                                                        <button type="button" onClick={() => setIsFilterDrawerOpen(false)} aria-label="Close filters">
+                                                        <button type="button" onClick={closeFilterDrawer} aria-label="Close filters">
                                                                &times;
                                                         </button>
                                                  </div>
@@ -1158,21 +1240,37 @@ export default function Index({
                             .marketplace-filter-backdrop {
                                    position: fixed;
                                    inset: 0;
-                                   z-index: 1040;
+                                   z-index: 100002;
                                    background: rgba(15, 23, 42, 0.42);
+                                   opacity: 0;
+                                   pointer-events: none;
+                                   transition: opacity 0.4s ease;
+                            }
+                            .marketplace-filter-backdrop.is-open {
+                                   opacity: 1;
+                                   pointer-events: auto;
                             }
                             .marketplace-filter-drawer {
                                    position: fixed;
                                    top: 0;
-                                   right: 0;
+                                   left: 0;
                                    width: 360px;
                                    max-width: 94vw;
                                    height: 100vh;
-                                   z-index: 1050;
+                                   z-index: 100003;
                                    background: #fff;
-                                   box-shadow: -12px 0 28px rgba(15, 23, 42, 0.2);
+                                   box-shadow: 12px 0 28px rgba(15, 23, 42, 0.2);
                                    display: flex;
                                    flex-direction: column;
+                                   transform: translateX(-100%);
+                                   transition: transform 1.05s cubic-bezier(0.22, 1, 0.36, 1);
+                                   will-change: transform;
+                            }
+                            .marketplace-filter-drawer.is-open {
+                                   transform: translateX(0);
+                            }
+                            .marketplace-filter-drawer.is-closing {
+                                   transform: translateX(100%);
                             }
                             .marketplace-filter-header {
                                    display: flex;
@@ -1466,8 +1564,11 @@ export default function Index({
                                           width: 100%;
                                           max-width: 100%;
                                           top: 0;
-                                          bottom: 70px;
-                                          height: auto;
+                                          right: 0;
+                                          bottom: 0;
+                                          height: 100dvh;
+                                          max-height: 100dvh;
+                                          border-radius: 0;
                                    }
                                    .marketplace-filter-body {
                                           padding-bottom: 12px;
