@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\AuctionCategory;
+use App\Models\Brand;
 use App\Models\Subcategory;
 use App\Models\Seo;
 use App\Models\Bid;
@@ -325,9 +326,16 @@ class AuctionController extends Controller
             ->take(12)
             ->get();
 
+        $brands = Brand::query()
+            ->select(['id', 'name', 'slug', 'image'])
+            ->latest()
+            ->take(12)
+            ->get();
+
         return Inertia::render('Home', [
             'sliders' => $sliders,
             'categories' => $categories,
+            'brands' => $brands,
             'featuredAuctions' => $featured,
             'latestVehicles' => $latestVehicles,
             'latestProperties' => $latestProperties,

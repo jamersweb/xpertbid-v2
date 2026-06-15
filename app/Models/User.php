@@ -135,6 +135,18 @@ class User extends Authenticatable implements MustVerifyEmail
             $user->auctions()->delete();
         });
     }
+
+    public function hasVerifiedEmail(): bool
+    {
+        // Phone-only users do not have a mailbox to verify, so treat a
+        // verified phone as satisfying the email verification gate.
+        if (empty($this->email)) {
+            return (bool) $this->is_phone_verified;
+        }
+
+        return ! is_null($this->email_verified_at);
+    }
+
     // define auctions relation
     public function auctions()
     {

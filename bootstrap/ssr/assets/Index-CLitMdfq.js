@@ -1278,6 +1278,15 @@ function Index({
                                    .marketplace-filter-drawer {
                                           width: 100%;
                                           max-width: 100%;
+                                          top: 0;
+                                          bottom: 70px;
+                                          height: auto;
+                                   }
+                                   .marketplace-filter-body {
+                                          padding-bottom: 12px;
+                                   }
+                                   .marketplace-filter-footer {
+                                          padding-bottom: calc(14px + env(safe-area-inset-bottom));
                                    }
                                    .marketplace-subcategory-tabs {
                                           display: flex;

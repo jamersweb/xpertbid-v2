@@ -1210,7 +1210,7 @@ const SeoContentSection = () => {
       ` })
   ] });
 };
-function Home({ auth, sliders, categories, featuredAuctions, latestAuctions, latestLiveAuctions, latestVehicles, latestProperties, latestNormalLists, favoriteListingIds }) {
+function Home({ auth, sliders, brands, categories, featuredAuctions, latestAuctions, latestLiveAuctions, latestVehicles, latestProperties, latestNormalLists, favoriteListingIds }) {
   const { t } = useTranslate();
   return /* @__PURE__ */ jsx(AppLayout, { title: t("Online Auction Marketplace Pakistan | Bid & Sell on XpertBid"), children: /* @__PURE__ */ jsxs("div", { className: "home-page overflow-x-hidden", children: [
     /* @__PURE__ */ jsx(HeroSection, { sliders }),

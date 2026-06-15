@@ -65,6 +65,7 @@ Route::get('/categories', [AuctionController::class, 'categoriesPage'])->name('c
 Route::get('/brand-assets/{path}', [BrandPageController::class, 'asset'])
     ->where('path', '.*')
     ->name('brand.assets');
+Route::get('/brands', [BrandPageController::class, 'brands'])->name('brands.page');
 Route::get('/properties-brand/{brand:slug}', [BrandPageController::class, 'propertiesBrand'])->name('properties.brand');
 
 // Static/Info Pages

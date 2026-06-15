@@ -10,6 +10,18 @@ use Inertia\Inertia;
 
 class BrandPageController extends Controller
 {
+    public function brands()
+    {
+        $brands = Brand::query()
+            ->select(['id', 'name', 'slug', 'image'])
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('Brands/Index', [
+            'brands' => $brands,
+        ]);
+    }
+
     public function propertiesBrand(Brand $brand)
     {
         $listings = Listing::query()

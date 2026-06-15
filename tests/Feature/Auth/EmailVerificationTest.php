@@ -55,4 +55,21 @@ class EmailVerificationTest extends TestCase
 
         $this->assertFalse($user->fresh()->hasVerifiedEmail());
     }
+
+    public function test_phone_only_verified_users_are_treated_as_verified(): void
+    {
+        $user = User::factory()->create([
+            'email' => null,
+            'phone' => '03000000000',
+            'is_phone_verified' => true,
+            'phone_verified_at' => now(),
+            'email_verified_at' => null,
+        ]);
+
+        $this->assertTrue($user->fresh()->hasVerifiedEmail());
+
+        $response = $this->actingAs($user)->get('/verify-email');
+
+        $response->assertRedirect(route('dashboard', absolute: false));
+    }
 }
