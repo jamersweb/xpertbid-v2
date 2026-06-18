@@ -10,6 +10,8 @@ import 'react-quill/dist/quill.snow.css';
 export default function Form({ category, categories = [], mode = 'create' }) {
        const imageInputRef = useRef(null);
        const iconInputRef = useRef(null);
+       const imageInputId = 'category-image-input';
+       const iconInputId = 'category-icon-input';
 
        const [imagePreview, setImagePreview] = useState(null);
        const [iconPreview, setIconPreview] = useState(null);
@@ -220,13 +222,14 @@ export default function Form({ category, categories = [], mode = 'create' }) {
                                                                       <InputLabel value="Category Image" className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
                                                                       <div className="rounded-[1.5rem] border-2 border-dashed border-gray-100 bg-gray-50/40 p-4">
                                                                              <input
+                                                                                    id={imageInputId}
                                                                                     ref={imageInputRef}
                                                                                     type="file"
                                                                                     accept=".jpeg,.jpg,.png,.gif,image/jpeg,image/png,image/gif"
                                                                                     className="hidden"
                                                                                     onChange={handleImageChange}
                                                                              />
-                                                                             <label className="flex cursor-pointer items-center gap-3 rounded-[1.25rem] bg-white px-4 py-4 shadow-sm transition hover:shadow-md">
+                                                                             <label htmlFor={imageInputId} className="flex cursor-pointer items-center gap-3 rounded-[1.25rem] bg-white px-4 py-4 shadow-sm transition hover:shadow-md">
                                                                                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-black text-white">
                                                                                            <i className="fa-solid fa-cloud-arrow-up"></i>
                                                                                     </div>
@@ -260,13 +263,14 @@ export default function Form({ category, categories = [], mode = 'create' }) {
                                                                       <InputLabel value="Category Icon" className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
                                                                       <div className="rounded-[1.5rem] border-2 border-dashed border-gray-100 bg-gray-50/40 p-4">
                                                                              <input
+                                                                                    id={iconInputId}
                                                                                     ref={iconInputRef}
                                                                                     type="file"
                                                                                     accept=".jpeg,.jpg,.png,.svg,image/jpeg,image/png,image/svg+xml"
                                                                                     className="hidden"
                                                                                     onChange={handleIconChange}
                                                                              />
-                                                                             <label className="flex cursor-pointer items-center gap-3 rounded-[1.25rem] bg-white px-4 py-4 shadow-sm transition hover:shadow-md">
+                                                                             <label htmlFor={iconInputId} className="flex cursor-pointer items-center gap-3 rounded-[1.25rem] bg-white px-4 py-4 shadow-sm transition hover:shadow-md">
                                                                                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500 text-white">
                                                                                            <i className="fa-solid fa-icons"></i>
                                                                                     </div>
