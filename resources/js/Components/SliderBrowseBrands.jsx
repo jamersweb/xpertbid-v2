@@ -65,7 +65,7 @@ export default function SliderBrowseBrands({ brands = [] }) {
         }
 
         .browsebrands {
-          padding: 50px 70px;
+          padding: 38px 70px;
         }
 
         .brand-card-link {
@@ -76,9 +76,8 @@ export default function SliderBrowseBrands({ brands = [] }) {
           background: #fff;
           border-radius: 16px;
           border: 1px solid #eceff2;
-          padding: 14px 14px 16px;
+          padding: 12px 12px 12px;
           transition: transform 0.2s ease, box-shadow 0.2s ease;
-          min-height: 220px;
           height: 100%;
           max-width: 100%;
           display: flex;
@@ -92,9 +91,9 @@ export default function SliderBrowseBrands({ brands = [] }) {
 
         .brand-image {
           width: 100%;
-          max-width: 126px;
-          margin: 0 auto 10px;
-          aspect-ratio: 1 / 1;
+          max-width: 100%;
+          margin: 0 0 10px;
+          aspect-ratio: 4 / 3;
           border-radius: 12px;
           overflow: hidden;
           background: #f2f4f5;
@@ -135,12 +134,8 @@ export default function SliderBrowseBrands({ brands = [] }) {
             gap: 20px;
           }
 
-          .brand-card {
-            min-height: 226px;
-          }
-
           .brand-image {
-            max-width: 128px;
+            max-width: 100%;
           }
 
           .brand-name {
@@ -150,7 +145,7 @@ export default function SliderBrowseBrands({ brands = [] }) {
 
         @media (max-width: 767px) {
           .browsebrands {
-            padding: 50px 15px;
+            padding: 34px 15px;
           }
         }
       `}</style>

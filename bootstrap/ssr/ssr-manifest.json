@@ -1,12 +1,12 @@
 {
   "node_modules/laravel-vite-plugin/inertia-helpers/index.js": [],
   "node_modules/swiper/modules/autoplay.css": [
-    "/build/assets/Home-ByIb9Ycp.js",
+    "/build/assets/Home-CT-OM2VP.js",
     "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "node_modules/swiper/modules/effect-fade.css": [
-    "/build/assets/Home-ByIb9Ycp.js",
+    "/build/assets/Home-CT-OM2VP.js",
     "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
@@ -17,7 +17,7 @@
     "/build/assets/navigation-6AKkHmRK.css"
   ],
   "node_modules/swiper/modules/pagination.css": [
-    "/build/assets/Home-ByIb9Ycp.js",
+    "/build/assets/Home-CT-OM2VP.js",
     "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
@@ -42,7 +42,7 @@
     "/build/assets/AuctionCard-C-dvF-nJ.js"
   ],
   "resources/js/Components/AuctionSection.jsx": [
-    "/build/assets/Home-ByIb9Ycp.js",
+    "/build/assets/Home-CT-OM2VP.js",
     "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
@@ -77,7 +77,7 @@
     "/build/assets/FavoriteToggleButton-1jmbejDw.js"
   ],
   "resources/js/Components/FeaturedProducts.jsx": [
-    "/build/assets/Home-ByIb9Ycp.js",
+    "/build/assets/Home-CT-OM2VP.js",
     "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
@@ -88,7 +88,7 @@
     "/build/assets/AppLayout-CWZvIfaV.js"
   ],
   "resources/js/Components/HeroSection.jsx": [
-    "/build/assets/Home-ByIb9Ycp.js",
+    "/build/assets/Home-CT-OM2VP.js",
     "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
@@ -114,7 +114,7 @@
     "/build/assets/Modal-DHAPaXZd.js"
   ],
   "resources/js/Components/NormalListSection.jsx": [
-    "/build/assets/Home-ByIb9Ycp.js",
+    "/build/assets/Home-CT-OM2VP.js",
     "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
@@ -164,7 +164,7 @@
     "/build/assets/YoutubeLiveEmbed-BWS8zHJE.js"
   ],
   "resources/js/Components/PropertySection.jsx": [
-    "/build/assets/Home-ByIb9Ycp.js",
+    "/build/assets/Home-CT-OM2VP.js",
     "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
@@ -208,12 +208,17 @@
     "/build/assets/quill-D32Un0ak.css"
   ],
   "resources/js/Components/SeoContentSection.jsx": [
-    "/build/assets/Home-ByIb9Ycp.js",
+    "/build/assets/Home-CT-OM2VP.js",
+    "/build/assets/Home-D3Vc-qy3.css",
+    "/build/assets/swiper-C2J0D0kV.css"
+  ],
+  "resources/js/Components/SliderBrowseBrands.jsx": [
+    "/build/assets/Home-CT-OM2VP.js",
     "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/SliderBrowseCategories.jsx": [
-    "/build/assets/Home-ByIb9Ycp.js",
+    "/build/assets/Home-CT-OM2VP.js",
     "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
@@ -227,12 +232,12 @@
     "/build/assets/TextInput-DDsS-qQQ.js"
   ],
   "resources/js/Components/VehicleSection.jsx": [
-    "/build/assets/Home-ByIb9Ycp.js",
+    "/build/assets/Home-CT-OM2VP.js",
     "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
   "resources/js/Components/WhyChooseXpertBid.jsx": [
-    "/build/assets/Home-ByIb9Ycp.js",
+    "/build/assets/Home-CT-OM2VP.js",
     "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],
@@ -484,7 +489,7 @@
     "/build/assets/Index-2op99BJQ.js"
   ],
   "resources/js/Pages/Home.jsx": [
-    "/build/assets/Home-ByIb9Ycp.js",
+    "/build/assets/Home-CT-OM2VP.js",
     "/build/assets/Home-D3Vc-qy3.css",
     "/build/assets/swiper-C2J0D0kV.css"
   ],

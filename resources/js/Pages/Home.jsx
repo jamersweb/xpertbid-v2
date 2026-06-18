@@ -10,7 +10,7 @@ import WhyChooseXpertBid from '@/Components/WhyChooseXpertBid'; // Imported
 import SeoContentSection from '@/Components/SeoContentSection'; // Imported
 import useTranslate from '@/hooks/useTranslate';
 
-export default function Home({ auth, sliders, brands, categories, featuredAuctions, latestAuctions, latestLiveAuctions, latestVehicles, latestProperties, latestNormalLists, favoriteListingIds }) {
+export default function Home({ auth, sliders, categories, featuredAuctions, latestAuctions, latestLiveAuctions, latestVehicles, latestProperties, latestNormalLists, favoriteListingIds }) {
        const { t } = useTranslate();
 
        return (
