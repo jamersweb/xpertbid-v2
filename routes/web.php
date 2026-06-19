@@ -29,6 +29,7 @@ use App\Http\Controllers\LiveAuctionDemoController;
 use App\Http\Controllers\ListingLiveChatController;
 use App\Http\Controllers\BrandPageController;
 use App\Http\Controllers\Admin\BrandPageController as AdminBrandPageController;
+use App\Http\Controllers\Admin\OlxScraperController as AdminOlxScraperController;
 
 /*
 |--------------------------------------------------------------------------
@@ -238,6 +239,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/seo/{seo}/edit', [App\Http\Controllers\Admin\SeoController::class, 'edit'])->name('seo.edit');
     Route::put('/seo/{seo}', [App\Http\Controllers\Admin\SeoController::class, 'update'])->name('seo.update');
     Route::delete('/seo/{seo}', [App\Http\Controllers\Admin\SeoController::class, 'destroy'])->name('seo.destroy');
+    Route::get('/olx-scraper', [AdminOlxScraperController::class, 'index'])->name('olx-scraper.index');
+    Route::match(['get', 'post'], '/olx-scraper/preview', [AdminOlxScraperController::class, 'preview'])->name('olx-scraper.preview');
+    Route::get('/olx-scraper/image', [AdminOlxScraperController::class, 'image'])->name('olx-scraper.image');
+    Route::post('/olx-scraper/save', [AdminOlxScraperController::class, 'save'])->name('olx-scraper.save');
 
     // User Management
     Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
