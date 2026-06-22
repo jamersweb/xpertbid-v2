@@ -12,6 +12,54 @@ use Inertia\Inertia;
 
 class CartController extends Controller
 {
+    protected function groupSizeBounds(Listing $listing): array
+    {
+        $features = is_array($listing->category_features) ? $listing->category_features : [];
+        $min = null;
+        $max = null;
+
+        foreach ($features as $key => $value) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            $normalizedKey = strtolower(preg_replace('/[^a-z0-9]+/', '', (string) $key));
+            if (!str_contains($normalizedKey, 'group')) {
+                continue;
+            }
+
+            $numericValue = filter_var($value, FILTER_VALIDATE_INT);
+            if ($numericValue === false) {
+                continue;
+            }
+
+            if (str_contains($normalizedKey, 'min')) {
+                $min = $numericValue;
+            }
+
+            if (str_contains($normalizedKey, 'max')) {
+                $max = $numericValue;
+            }
+        }
+
+        $min = $min !== null && $min > 0 ? $min : 1;
+        $max = $max !== null && $max >= $min ? $max : null;
+
+        return [$min, $max];
+    }
+
+    protected function clampQuantity(int $quantity, Listing $listing): int
+    {
+        [$min, $max] = $this->groupSizeBounds($listing);
+        $quantity = max($min, $quantity);
+
+        if ($max !== null) {
+            $quantity = min($max, $quantity);
+        }
+
+        return $quantity;
+    }
+
     protected function wantsMobileJson(Request $request): bool
     {
         return $request->wantsJson() || $request->expectsJson();
@@ -37,12 +85,16 @@ class CartController extends Controller
         $cartItems = Cart::where('user_id', $user->id)
             ->with([
                 'listing' => function ($query) {
-                    $query->select('id', 'title', 'slug', 'image', 'status', 'description', 'user_id', 'listing_type', 'listing_data');
+                    $query->select('id', 'title', 'slug', 'image', 'status', 'description', 'user_id', 'listing_type', 'listing_data', 'category_features');
                 },
                 'variation'
             ])
             ->get()
             ->map(function ($cartItem) {
+                [$groupSizeMin, $groupSizeMax] = $cartItem->listing
+                    ? $this->groupSizeBounds($cartItem->listing)
+                    : [1, null];
+
                 return [
                     'id' => $cartItem->id,
                     'listing_id' => $cartItem->listing_id,
@@ -57,6 +109,8 @@ class CartController extends Controller
                     'description' => $cartItem->listing->description ?? null,
                     'list_type' => $cartItem->listing->list_type ?? 'auction',
                     'variation_name' => $cartItem->variation->name ?? null,
+                    'group_size_min' => $groupSizeMin,
+                    'group_size_max' => $groupSizeMax,
                 ];
             });
 
@@ -82,6 +136,7 @@ class CartController extends Controller
             'listing_id' => 'required|integer|exists:listings,id',
             'type' => 'nullable|string|in:product,featured',
             'variation_id' => 'nullable|integer|exists:product_variations,id',
+            'quantity' => 'nullable|integer|min:1',
         ]);
 
         if ($validator->fails()) {
@@ -106,6 +161,12 @@ class CartController extends Controller
             ->first();
 
         if ($existingCartItem) {
+            $minimumQuantity = $this->clampQuantity((int) $existingCartItem->quantity, $listing);
+            if ($minimumQuantity !== (int) $existingCartItem->quantity) {
+                $existingCartItem->quantity = $minimumQuantity;
+                $existingCartItem->save();
+            }
+
             if ($this->wantsMobileJson($request)) {
                 return response()->json([
                     'success' => true,
@@ -160,7 +221,7 @@ class CartController extends Controller
             'listing_id' => $listing->id,
             'variation_id' => $request->variation_id,
             'type' => $request->type ?? 'product',
-            'quantity' => 1,
+            'quantity' => $this->clampQuantity((int) $request->input('quantity', 1), $listing),
             'price' => $price,
         ]);
 
@@ -173,6 +234,42 @@ class CartController extends Controller
         }
 
         return redirect()->route('cart.index')->with('success', 'Product added to cart');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        if ($validator->fails()) {
+            if ($this->wantsMobileJson($request)) {
+                return response()->json([
+                    'message' => 'Validation failed.',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            return redirect()->back()->withErrors($validator);
+        }
+
+        $cartItem = Cart::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->with('listing')
+            ->firstOrFail();
+
+        $cartItem->quantity = $this->clampQuantity((int) $request->quantity, $cartItem->listing);
+        $cartItem->save();
+
+        if ($this->wantsMobileJson($request)) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cart updated successfully',
+                'cart_item' => $cartItem,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Cart updated successfully');
     }
 
     /**

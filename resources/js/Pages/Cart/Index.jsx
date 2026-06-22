@@ -36,10 +36,21 @@ export default function Index({ cart: propCart }) {
        };
 
        const handleQuantityChange = async (itemId, newQty) => {
-              if (newQty < 1) return;
+              const item = displayItems.find((cartItem) => cartItem.id === itemId);
+              const min = Number.parseInt(item?.group_size_min, 10) || 1;
+              const maxRaw = Number.parseInt(item?.group_size_max, 10);
+              const max = Number.isFinite(maxRaw) && maxRaw >= min ? maxRaw : null;
+
+              if (newQty < min) return;
+              if (max && newQty > max) return;
+
               setIsUpdating(prev => ({ ...prev, [itemId]: true }));
-              await updateCartItem(itemId, newQty);
+              const result = await updateCartItem(itemId, newQty);
               setIsUpdating(prev => ({ ...prev, [itemId]: false }));
+
+              if (!result.success) {
+                     Swal.fire('Error', result.message || 'Failed to update cart', 'error');
+              }
        };
 
        const totalPrice = displayItems.reduce((total, item) => total + (parseFloat(item.price || 0) * (item.quantity || 1)), 0);
@@ -224,9 +235,21 @@ export default function Index({ cart: propCart }) {
                                                                                                   />
                                                                                            </div>
                                                                                            <div className="d-flex align-items-center bg-light rounded-pill px-2 py-1 cart-qty-control">
-                                                                                                  <button onClick={() => handleQuantityChange(item.id, (item.quantity || 1) - 1)} className="btn btn-sm border-0"><i className="fa-solid fa-minus" style={{ fontSize: '10px' }}></i></button>
+                                                                                                  <button
+                                                                                                         onClick={() => handleQuantityChange(item.id, (item.quantity || 1) - 1)}
+                                                                                                         disabled={(item.quantity || 1) <= (Number.parseInt(item.group_size_min, 10) || 1)}
+                                                                                                         className="btn btn-sm border-0"
+                                                                                                  >
+                                                                                                         <i className="fa-solid fa-minus" style={{ fontSize: '10px' }}></i>
+                                                                                                  </button>
                                                                                                   <span className="mx-2 fw-bold small">{item.quantity || 1}</span>
-                                                                                                  <button onClick={() => handleQuantityChange(item.id, (item.quantity || 1) + 1)} className="btn btn-sm border-0"><i className="fa-solid fa-plus" style={{ fontSize: '10px' }}></i></button>
+                                                                                                  <button
+                                                                                                         onClick={() => handleQuantityChange(item.id, (item.quantity || 1) + 1)}
+                                                                                                         disabled={Number.isFinite(Number.parseInt(item.group_size_max, 10)) && (item.quantity || 1) >= Number.parseInt(item.group_size_max, 10)}
+                                                                                                         className="btn btn-sm border-0"
+                                                                                                  >
+                                                                                                         <i className="fa-solid fa-plus" style={{ fontSize: '10px' }}></i>
+                                                                                                  </button>
                                                                                            </div>
                                                                                     </div>
                                                                              </div>

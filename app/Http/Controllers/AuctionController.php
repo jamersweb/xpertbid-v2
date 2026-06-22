@@ -67,7 +67,7 @@ class AuctionController extends Controller
             ->where('listing_type', 'live_auction')
             ->whereIn('id', $ids->all())
             ->with($this->listingUserRelations())
-            ->with(['category:id,name'])
+            ->with(['category:id,name', 'subCategory:id,name', 'childCategory:id,name'])
             ->withMax('bids', 'bid_amount')
             ->withCount('bids')
             ->get()
@@ -675,7 +675,7 @@ class AuctionController extends Controller
         }
 
         $listing = $listingQuery
-            ->with(array_merge($this->listingUserRelations(), ['category', 'bids.user']))
+            ->with(array_merge($this->listingUserRelations(), ['category', 'subCategory', 'childCategory', 'bids.user']))
             ->firstOrFail();
 
         // 2. Increment view count
@@ -685,7 +685,7 @@ class AuctionController extends Controller
         $related = \App\Models\Listing::where('category_id', $listing->category_id)
             ->where('id', '!=', $listing->id)
             ->where('status', 'active')
-            ->with(array_merge($this->listingUserRelations(), ['category']))
+            ->with(array_merge($this->listingUserRelations(), ['category', 'subCategory', 'childCategory']))
             ->withMax('bids', 'bid_amount') // fast way to get highest bid for card display
             ->latest()
             ->take(8)

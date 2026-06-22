@@ -189,6 +189,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Cart
     Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+    Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/{id}', [CartController::class, 'remove'])->name('cart.remove');
     Route::get('/my-orders', [CheckoutController::class, 'myOrders'])->name('orders.index');
     Route::get('/order/{orderNumber}', [CheckoutController::class, 'show'])->name('orders.show');
