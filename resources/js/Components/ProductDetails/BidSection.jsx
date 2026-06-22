@@ -28,18 +28,14 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
               product?.category?.id,
               product?.sub_category_id,
               product?.subCategory?.id,
-              product?.sub_category?.id,
               product?.child_category_id,
               product?.childCategory?.id,
-              product?.child_category?.id,
        ].map((value) => String(value || ''));
        const categoryNames = [
               product?.category?.name,
               product?.category_name,
               product?.subCategory?.name,
-              product?.sub_category?.name,
               product?.childCategory?.name,
-              product?.child_category?.name,
        ].map((value) => String(value || '').toLowerCase());
        const isPropertyOrVehicle = categoryIds.some((id) => id === '222' || id === '311')
               || categoryNames.some((name) => name.includes('property') || name.includes('vehicle'));

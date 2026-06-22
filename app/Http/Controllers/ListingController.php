@@ -512,7 +512,7 @@ class ListingController extends Controller
     public function index(Request $request)
     {
         $listings = Listing::where('user_id', auth()->id())
-            ->with(['user', 'category', 'subCategory', 'childCategory'])
+            ->with(['user', 'category'])
             ->withMax('bids', 'bid_amount')
             ->latest()
             ->get()

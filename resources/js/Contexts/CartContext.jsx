@@ -73,37 +73,6 @@ export const CartProvider = ({ children }) => {
               }, 0);
        };
 
-       const getGroupSizeBounds = (listing = {}) => {
-              const features = listing?.category_features && typeof listing.category_features === 'object'
-                     ? listing.category_features
-                     : {};
-              let min = null;
-              let max = null;
-
-              Object.entries(features).forEach(([key, value]) => {
-                     const normalizedKey = String(key || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
-                     if (!normalizedKey.includes('group')) return;
-
-                     const numericValue = Number.parseInt(value, 10);
-                     if (!Number.isFinite(numericValue)) return;
-
-                     if (normalizedKey.includes('min')) min = numericValue;
-                     if (normalizedKey.includes('max')) max = numericValue;
-              });
-
-              min = min && min > 0 ? min : 1;
-              max = max && max >= min ? max : null;
-              return { min, max };
-       };
-
-       const clampQuantity = (quantity, bounds = {}) => {
-              const min = bounds.min && bounds.min > 0 ? bounds.min : 1;
-              const max = bounds.max && bounds.max >= min ? bounds.max : null;
-              let nextQuantity = Math.max(min, Number.parseInt(quantity, 10) || min);
-              if (max) nextQuantity = Math.min(max, nextQuantity);
-              return nextQuantity;
-       };
-
        // Add Item to Cart
        const addToCart = async (listingId, type = 'product', variationId = null, productDetails = null) => {
               if (!user) {
@@ -133,22 +102,18 @@ export const CartProvider = ({ children }) => {
                                    return { success: false, message: "Product details required for guest cart." };
                             }
 
-                            const groupSizeBounds = getGroupSizeBounds(listing);
-
                             let itemToAdd = {
                                    id: 'guest_' + Date.now(),
                                    listing_id: listingId,
                                    variation_id: variationId,
                                    type: type,
-                                   quantity: groupSizeBounds.min,
+                                   quantity: 1,
                                    price: price,
                                    title: listing.title || 'Product',
                                    slug: listing.slug || '',
                                    image: listing.image_url || (Array.isArray(listing.album) ? listing.album[0] : listing.album) || '',
                                    list_type: listing.list_type,
-                                   variation_name: variationName,
-                                   group_size_min: groupSizeBounds.min,
-                                   group_size_max: groupSizeBounds.max
+                                   variation_name: variationName
                             };
 
                             // Check duplicate
@@ -176,8 +141,7 @@ export const CartProvider = ({ children }) => {
                             router.post(route('cart.add'), {
                                    listing_id: listingId,
                                    type: type,
-                                   variation_id: variationId,
-                                   quantity: productDetails ? getGroupSizeBounds(productDetails).min : 1,
+                                   variation_id: variationId
                             }, {
                                    preserveScroll: true,
                                    onSuccess: () => resolve({ success: true, message: 'Product added to cart' }),
@@ -221,13 +185,7 @@ export const CartProvider = ({ children }) => {
                      const currentGuestCart = JSON.parse(localStorage.getItem('guestCart') || '[]');
                      const newCart = Array.isArray(currentGuestCart) ? currentGuestCart.map(item => {
                             if (item.id === cartItemId) {
-                                   return {
-                                          ...item,
-                                          quantity: clampQuantity(quantity, {
-                                                 min: item.group_size_min,
-                                                 max: item.group_size_max,
-                                          }),
-                                   };
+                                   return { ...item, quantity: Math.max(1, quantity) };
                             }
                             return item;
                      }) : [];

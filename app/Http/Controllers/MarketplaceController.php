@@ -240,8 +240,6 @@ class MarketplaceController extends Controller
             'user.individualVerification',
             'user.corporateVerification',
             'category',
-            'subCategory',
-            'childCategory',
             'bids',
         ])->withMax('bids', 'bid_amount');
         $categoryScopeIds = null;
@@ -513,8 +511,6 @@ class MarketplaceController extends Controller
             'user.individualVerification',
             'user.corporateVerification',
             'category',
-            'subCategory',
-            'childCategory',
             'bids',
         ])->withMax('bids', 'bid_amount');
 
@@ -607,7 +603,7 @@ class MarketplaceController extends Controller
         $query = Listing::query()
             ->whereIn('status', $this->browseStatuses())
             ->where('listing_type', '!=', 'live_auction')
-            ->with(['category', 'subCategory', 'childCategory', 'user'])
+            ->with(['category', 'user'])
             ->withMax('bids', 'bid_amount');
 
         $categoryScopeIds = $this->resolveMobileCategoryScopeIds($request->input('category'));
