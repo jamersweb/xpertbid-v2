@@ -1,0 +1,464 @@
+<?php
+
+namespace App\Services;
+
+use DOMDocument;
+use DOMXPath;
+use Illuminate\Support\Facades\Http;
+use Symfony\Component\Process\ExecutableFinder;
+use Symfony\Component\Process\Process;
+use RuntimeException;
+
+class DarazScraperService
+{
+    public function scrape(string $url): array
+    {
+        $response = Http::withHeaders([
+            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+            'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language' => 'en-US,en;q=0.9',
+            'Cache-Control' => 'no-cache',
+            'Pragma' => 'no-cache',
+        ])->timeout(30)->retry(1, 500)->get($url);
+
+        if (!$response->successful()) {
+            throw new RuntimeException('Daraz returned HTTP ' . $response->status());
+        }
+
+        $html = $response->body();
+        if (trim($html) === '') {
+            throw new RuntimeException('Daraz returned an empty response.');
+        }
+
+        $renderedHtml = $this->fetchRenderedHtml($url);
+
+        return $this->parseHtml($renderedHtml ?: $html, $url);
+    }
+
+    protected function fetchRenderedHtml(string $url): ?string
+    {
+        $browser = $this->findBrowserBinary();
+        if ($browser === null) {
+            return null;
+        }
+
+        $process = new Process([
+            $browser,
+            '--headless=new',
+            '--disable-gpu',
+            '--dump-dom',
+            '--virtual-time-budget=15000',
+            '--no-first-run',
+            '--no-default-browser-check',
+            '--lang=en-US',
+            $url,
+        ]);
+
+        $process->setTimeout(45);
+
+        try {
+            $process->mustRun();
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        $output = trim($process->getOutput());
+        return $output !== '' ? $output : null;
+    }
+
+    protected function findBrowserBinary(): ?string
+    {
+        $envBrowser = env('DARAZ_BROWSER_PATH');
+        if (is_string($envBrowser) && $envBrowser !== '' && file_exists($envBrowser)) {
+            return $envBrowser;
+        }
+
+        $candidates = [
+            'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+            'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+            'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+            'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (file_exists($candidate)) {
+                return $candidate;
+            }
+        }
+
+        $finder = new ExecutableFinder();
+        return $finder->find('chrome') ?: $finder->find('msedge');
+    }
+
+    protected function parseHtml(string $html, string $url): array
+    {
+        libxml_use_internal_errors(true);
+
+        $dom = new DOMDocument();
+        $dom->loadHTML($html, LIBXML_NOWARNING | LIBXML_NOERROR | LIBXML_NONET);
+        $xpath = new DOMXPath($dom);
+
+        $title = $this->cleanTitle($this->firstText($xpath, [
+            '//meta[@property="og:title"]/@content',
+            '//meta[@name="twitter:title"]/@content',
+            '//h1[contains(@class, "pdp-mod-product-badge-title")]',
+            '//title',
+        ]));
+
+        $price = $this->extractPrice($xpath, $html, $url);
+        $description = $this->extractDescription($xpath);
+        $images = $this->extractImages($xpath, $url);
+
+        return [
+            'title' => $this->normalizeText($title) ?: 'No title',
+            'description' => $this->normalizeMultilineText($description),
+            'images' => $images,
+            'price' => $this->normalizePrice($price) ?? $price,
+            'source_url' => $url,
+            'source_domain' => parse_url($url, PHP_URL_HOST),
+        ];
+    }
+
+    protected function firstText(DOMXPath $xpath, array $queries): ?string
+    {
+        foreach ($queries as $query) {
+            $nodes = $xpath->query($query);
+            if ($nodes && $nodes->length > 0) {
+                $text = trim($nodes->item(0)?->textContent ?? '');
+                $text = $this->normalizeText($text);
+                if ($text !== '') {
+                    return $text;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    protected function cleanTitle(?string $title): ?string
+    {
+        $title = $this->normalizeText($title);
+        if ($title === '') {
+            return null;
+        }
+
+        $title = preg_replace('/\s*\|\s*Daraz\.pk\s*$/i', '', $title) ?? $title;
+        $title = preg_replace('/\s*-\s*Daraz\.pk\s*$/i', '', $title) ?? $title;
+        $title = preg_replace('/\s+Daraz\.pk\s*$/i', '', $title) ?? $title;
+
+        return $this->normalizeText($title);
+    }
+
+    protected function extractPrice(DOMXPath $xpath, string $html, string $url): ?string
+    {
+        if ($price = $this->extractExactPrice($xpath, $html)) {
+            return $price;
+        }
+
+        if ($price = $this->extractPriceFromUrl($url)) {
+            return $price;
+        }
+
+        return null;
+    }
+
+    protected function extractExactPrice(DOMXPath $xpath, string $html): ?string
+    {
+        $queries = [
+            '//span[contains(concat(" ", normalize-space(@class), " "), " pdp-price_type_normal ") and contains(concat(" ", normalize-space(@class), " "), " pdp-price_color_orange ") and contains(concat(" ", normalize-space(@class), " "), " pdp-price_size_xl ")]',
+            '//div[@class="pdp-product-price"]//span[contains(concat(" ", normalize-space(@class), " "), " pdp-price_type_normal ") and contains(concat(" ", normalize-space(@class), " "), " pdp-price_color_orange ")]',
+        ];
+
+        foreach ($queries as $query) {
+            $nodes = $xpath->query($query);
+            if ($nodes && $nodes->length > 0) {
+                $text = $this->normalizeText($nodes->item(0)?->textContent ?? '');
+                if ($text !== '') {
+                    $price = $this->normalizePrice($text);
+                    if ($price !== null) {
+                        return $price;
+                    }
+                }
+            }
+        }
+
+        $patterns = [
+            '~<span[^>]*class="[^"]*\bpdp-price_type_normal\b[^"]*\bpdp-price_color_orange\b[^"]*\bpdp-price_size_xl\b[^"]*"[^>]*>\s*([^<]+?)\s*</span>~is',
+            '~<span[^>]*class="[^"]*\bpdp-price_type_normal\b[^"]*"[^>]*>\s*([^<]+?)\s*</span>~is',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $html, $matches)) {
+                $raw = trim((string) ($matches[1] ?? ''));
+                $price = $this->normalizePrice($raw);
+                if ($price !== null) {
+                    return $price;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    protected function extractPriceFromUrl(string $url): ?string
+    {
+        $query = parse_url($url, PHP_URL_QUERY);
+        if (!is_string($query) || $query === '') {
+            return null;
+        }
+
+        parse_str($query, $params);
+        $clickTrackInfo = $params['clickTrackInfo'] ?? null;
+        if (!is_string($clickTrackInfo) || $clickTrackInfo === '') {
+            return null;
+        }
+
+        $decoded = urldecode($clickTrackInfo);
+        if (preg_match('/__\d+__(\d+(?:\.\d+)?)__(?=\d{5,}|[0-9,]{10,})/', $decoded, $matches)) {
+            return $this->formatNumericPrice($matches[1]);
+        }
+
+        return null;
+    }
+
+    protected function formatNumericPrice(string $value): ?string
+    {
+        $value = str_replace(',', '', trim($value));
+        if ($value === '' || !is_numeric($value)) {
+            return null;
+        }
+
+        $float = (float) $value;
+        return fmod($float, 1.0) === 0.0
+            ? (string) (int) $float
+            : rtrim(rtrim(number_format($float, 2, '.', ''), '0'), '.');
+    }
+
+    protected function extractDescription(DOMXPath $xpath): ?string
+    {
+        $queries = [
+            '//meta[@property="og:description"]/@content',
+            '//meta[@name="description"]/@content',
+            '//div[contains(@class, "pdp-product-highlights")]',
+            '//div[contains(@class, "detail-content")]',
+            '//div[contains(@class, "pdp-product-desc")]',
+            '//div[contains(@class, "pdp-product-detail")]',
+            '//*[@id="module_product_detail"]//div[contains(@class, "html-content")]',
+            '//*[@id="module_product_detail"]',
+        ];
+
+        foreach ($queries as $query) {
+            $nodes = $xpath->query($query);
+            if ($nodes && $nodes->length > 0) {
+                $node = $nodes->item(0);
+                if ($node) {
+                    if ($node->nodeType === XML_ATTRIBUTE_NODE) {
+                        $text = $this->normalizeDescriptionHtml($node->nodeValue ?? '');
+                    } else {
+                        $html = $node->ownerDocument?->saveHTML($node) ?? '';
+                        $text = $this->normalizeDescriptionHtml($html);
+                    }
+                    if ($text !== '') {
+                        return $text;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    protected function normalizeDescriptionHtml(?string $value): string
+    {
+        $html = html_entity_decode((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $html = preg_replace('/^.*?<div[^>]*pdp-product-desc[^>]*>/is', '', $html) ?? $html;
+        $html = preg_replace('/^Product details of\s*/i', '', $html) ?? $html;
+        $html = preg_replace('/<li[^>]*>/i', "\n- ", $html) ?? $html;
+        $html = preg_replace('/<\/li>/i', "\n", $html) ?? $html;
+        $html = preg_replace('/<br\s*\/?>/i', "\n", $html) ?? $html;
+        $html = preg_replace('/<\/(p|div|article|ul|ol|h[1-6])>/i', "\n", $html) ?? $html;
+        $html = strip_tags($html);
+        $text = preg_replace("/\r\n|\r/", "\n", $html) ?? $html;
+        $text = preg_split('/\b(?:Specifications(?: of)?|What(?:’|\'|’)s in the box)\b/i', $text, 2)[0] ?? $text;
+        $text = preg_replace("/[ \t]+\n/", "\n", $text) ?? $text;
+        $text = preg_replace("/\n{3,}/", "\n\n", $text) ?? $text;
+        $lines = array_map('trim', explode("\n", $text));
+        $lines = array_values(array_filter($lines, fn ($line) => $line !== ''));
+
+        return implode("\n", $lines);
+    }
+
+    protected function extractImages(DOMXPath $xpath, string $baseUrl): array
+    {
+        $candidates = [];
+
+        foreach ([
+            '//img[contains(@class, "gallery-preview-panel__image")]/@src',
+            '//img[contains(@class, "item-gallery__thumbnail-image")]/@src',
+            '//img[contains(@class, "pdp-mod-common-image")]/@src',
+            '//div[contains(@class, "gallery-preview-panel")]//img/@src',
+        ] as $query) {
+            $nodes = $xpath->query($query);
+            if (!$nodes) {
+                continue;
+            }
+
+            foreach ($nodes as $node) {
+                $candidates[] = $node->nodeValue;
+            }
+        }
+
+        $images = [];
+        $seen = [];
+
+        foreach ($candidates as $candidate) {
+            $normalized = $this->normalizeUrl($candidate, $baseUrl);
+            if ($normalized === null) {
+                continue;
+            }
+
+            $key = $this->canonicalImageKey($normalized);
+            if (isset($seen[$key])) {
+                continue;
+            }
+
+            if ($this->looksLikeNoiseImage($normalized)) {
+                continue;
+            }
+
+            $seen[$key] = true;
+            $images[] = $normalized;
+
+            if (count($images) >= 10) {
+                break;
+            }
+        }
+
+        return array_values($images);
+    }
+
+    protected function normalizeUrl(?string $value, string $baseUrl): ?string
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        if (str_starts_with($value, 'data:')) {
+            return null;
+        }
+
+        if (str_starts_with($value, '//')) {
+            return 'https:' . $value;
+        }
+
+        if (str_starts_with($value, '/')) {
+            $base = parse_url($baseUrl);
+            if (!$base || empty($base['scheme']) || empty($base['host'])) {
+                return null;
+            }
+
+            return $base['scheme'] . '://' . $base['host'] . $value;
+        }
+
+        if (filter_var($value, FILTER_VALIDATE_URL)) {
+            return $value;
+        }
+
+        return null;
+    }
+
+    protected function canonicalImageKey(string $url): string
+    {
+        $host = strtolower(parse_url($url, PHP_URL_HOST) ?: '');
+        $path = strtolower(parse_url($url, PHP_URL_PATH) ?: $url);
+        $path = preg_replace('/_(?:\d+x\d+)?q\d+\.[a-z0-9]+_?\.(?:webp|jpg|jpeg|png)$/i', '', $path) ?? $path;
+        $path = preg_replace('/_\d+x\d+q\d+\.[a-z0-9]+_?$/i', '', $path) ?? $path;
+
+        return $host . ':' . preg_replace('~/+$~', '', $path);
+    }
+
+    protected function looksLikeNoiseImage(string $url): bool
+    {
+        $lowerUrl = strtolower($url);
+        if (preg_match('/\.(mp4|webm|mov|m3u8)(\?|$)/i', $url)) {
+            return true;
+        }
+
+        $path = parse_url($url, PHP_URL_PATH) ?: '';
+        $lowerPath = strtolower($path);
+        if (str_contains($lowerPath, '/g/tps/') || str_contains($lowerPath, '/tps/tfs/')) {
+            return true;
+        }
+
+        $noiseTerms = [
+            'logo',
+            'icon',
+            'sprite',
+            'avatar',
+            'banner',
+            'placeholder',
+            'favicon',
+            'analytics',
+            'pixel',
+            'tracking',
+            'video',
+            'play',
+            'vod',
+        ];
+
+        foreach ($noiseTerms as $term) {
+            if (str_contains($lowerUrl, $term)) {
+                return true;
+            }
+        }
+
+        if ($path === '') {
+            return true;
+        }
+
+        return !preg_match('/\.(jpe?g|png|gif|webp|avif|bmp)(\?|$)/i', $path);
+    }
+
+    protected function normalizeText(?string $value): string
+    {
+        return trim(preg_replace('/\s+/u', ' ', (string) $value) ?? '');
+    }
+
+    protected function normalizeMultilineText(?string $value): string
+    {
+        $text = (string) $value;
+        $text = preg_replace("/\r\n|\r/", "\n", $text) ?? $text;
+        $lines = array_map(
+            fn ($line) => trim(preg_replace('/\s+/u', ' ', $line) ?? ''),
+            explode("\n", $text)
+        );
+        $lines = array_values(array_filter($lines, fn ($line) => $line !== ''));
+
+        return implode("\n", $lines);
+    }
+
+    protected function normalizePrice(?string $value): ?string
+    {
+        $text = $this->normalizeText($value);
+        if ($text === '') {
+            return null;
+        }
+
+        if (preg_match('/Rs\.?\s*([\d,.]+)\s*Lac/i', $text, $matches)) {
+            return (string) ((float) str_replace(',', '', $matches[1]) * 100000);
+        }
+
+        if (preg_match('/Rs\.?\s*([\d,.]+)/i', $text, $matches)) {
+            return str_replace(',', '', $matches[1]);
+        }
+
+        if (preg_match('/\bPKR\b|\bRs\b|\bRs\.\b/i', $text)) {
+            if (preg_match('/([\d,.]+)/', $text, $matches)) {
+                return str_replace(',', '', $matches[1]);
+            }
+        }
+
+        return null;
+    }
+}

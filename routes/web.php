@@ -29,6 +29,7 @@ use App\Http\Controllers\LiveAuctionDemoController;
 use App\Http\Controllers\ListingLiveChatController;
 use App\Http\Controllers\BrandPageController;
 use App\Http\Controllers\Admin\BrandPageController as AdminBrandPageController;
+use App\Http\Controllers\Admin\DarazScraperController as AdminDarazScraperController;
 use App\Http\Controllers\Admin\OlxScraperController as AdminOlxScraperController;
 
 /*
@@ -243,6 +244,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::match(['get', 'post'], '/olx-scraper/preview', [AdminOlxScraperController::class, 'preview'])->name('olx-scraper.preview');
     Route::get('/olx-scraper/image', [AdminOlxScraperController::class, 'image'])->name('olx-scraper.image');
     Route::post('/olx-scraper/save', [AdminOlxScraperController::class, 'save'])->name('olx-scraper.save');
+    Route::get('/daraz-scraper', [AdminDarazScraperController::class, 'index'])->name('daraz-scraper.index');
+    Route::match(['get', 'post'], '/daraz-scraper/preview', [AdminDarazScraperController::class, 'preview'])->name('daraz-scraper.preview');
+    Route::get('/daraz-scraper/image', [AdminDarazScraperController::class, 'image'])->name('daraz-scraper.image');
+    Route::post('/daraz-scraper/save', [AdminDarazScraperController::class, 'save'])->name('daraz-scraper.save');
 
     // User Management
     Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');

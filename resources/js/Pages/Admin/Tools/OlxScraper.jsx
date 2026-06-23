@@ -105,8 +105,27 @@ function SearchableSelect({ value, options = [], placeholder = 'Search...', onCh
        );
 }
 
-export default function OlxScraper({ users = [], categories = [], preview = null, error = null, status = null, url = '' }) {
+export default function OlxScraper({
+       users = [],
+       categories = [],
+       preview = null,
+       preview_price = null,
+       error = null,
+       status = null,
+       url = '',
+       tool_name = 'OLX Scraper',
+       tool_short = 'OLX',
+       preview_route = 'admin.olx-scraper.preview',
+       save_route = 'admin.olx-scraper.save',
+       url_placeholder = 'https://www.olx.com.pk/...',
+       default_listing_type = 'auction',
+}) {
        const previewSyncRef = useRef('');
+       const formSyncRef = useRef('');
+       const previewPriceValue = preview_price ?? preview?.price ?? preview?.minimum_bid ?? preview?.reserve_price ?? '';
+       const previewPriceText = previewPriceValue === null || previewPriceValue === undefined || previewPriceValue === ''
+              ? 'Not found'
+              : `PKR ${String(previewPriceValue).trim()}`;
 
        const previewForm = useForm({
               url: url || '',
@@ -118,12 +137,12 @@ export default function OlxScraper({ users = [], categories = [], preview = null
               category_id: '',
               sub_category_id: '',
               child_category_id: '',
-              listing_type: 'auction',
+              listing_type: default_listing_type,
               title: preview?.title || '',
               description: preview?.description || '',
-              price: preview?.price || '',
-              minimum_bid: preview?.minimum_bid || preview?.price || '',
-              reserve_price: preview?.reserve_price || preview?.price || '',
+              price: previewPriceValue || '',
+              minimum_bid: preview?.minimum_bid || previewPriceValue || '',
+              reserve_price: preview?.reserve_price || previewPriceValue || '',
               stock: '',
               start_date: '',
               end_date: '',
@@ -164,17 +183,23 @@ export default function OlxScraper({ users = [], categories = [], preview = null
                      return;
               }
 
-              if (previewSyncRef.current === preview.source_url) {
+              const syncKey = `${preview.source_url}::${default_listing_type}`;
+
+              if (previewSyncRef.current === preview.source_url && formSyncRef.current === syncKey) {
                      return;
               }
 
               previewSyncRef.current = preview.source_url;
+              formSyncRef.current = syncKey;
               setSaveData('url', preview.source_url || saveData.url);
+              setSaveData('listing_type', default_listing_type);
               setSaveData('title', preview.title || '');
               setSaveData('description', preview.description || '');
-              setSaveData('minimum_bid', preview.minimum_bid || preview.price || '');
-              setSaveData('reserve_price', preview.reserve_price || preview.price || '');
-       }, [preview, saveData.url, setSaveData]);
+              setSaveData('price', default_listing_type === 'normal' || default_listing_type === 'business' ? (previewPriceValue || preview.minimum_bid || '') : '');
+              setSaveData('minimum_bid', default_listing_type === 'auction' || default_listing_type === 'live_auction' ? (preview.minimum_bid || previewPriceValue || '') : '');
+              setSaveData('reserve_price', default_listing_type === 'auction' || default_listing_type === 'live_auction' ? (preview.reserve_price || previewPriceValue || '') : '');
+              setSaveData('stock', default_listing_type === 'business' ? (saveForm.data.stock || '') : '');
+       }, [preview, saveData.url, setSaveData, default_listing_type, saveForm.data.stock]);
 
        useEffect(() => {
               if (!preview) {
@@ -183,17 +208,17 @@ export default function OlxScraper({ users = [], categories = [], preview = null
 
               if (isAuctionType) {
                      if (!saveForm.data.minimum_bid) {
-                            saveForm.setData('minimum_bid', preview.minimum_bid || preview.price || '');
+                            saveForm.setData('minimum_bid', preview.minimum_bid || previewPriceValue || '');
                      }
 
                      if (!saveForm.data.reserve_price) {
-                            saveForm.setData('reserve_price', preview.reserve_price || preview.price || '');
+                            saveForm.setData('reserve_price', preview.reserve_price || previewPriceValue || '');
                      }
               }
 
               if (isNormalType || isBusinessType) {
                      if (!saveForm.data.price) {
-                            saveForm.setData('price', preview.price || preview.minimum_bid || '');
+                            saveForm.setData('price', previewPriceValue || preview.minimum_bid || '');
                      }
               }
        }, [preview, isAuctionType, isNormalType, isBusinessType, saveForm.data.minimum_bid, saveForm.data.reserve_price, saveForm.data.price]);
@@ -209,8 +234,8 @@ export default function OlxScraper({ users = [], categories = [], preview = null
               const normalized = String(value || '').toLowerCase();
 
               if (normalized === 'auction' || normalized === 'live_auction') {
-                     saveForm.setData('minimum_bid', preview?.minimum_bid || preview?.price || saveForm.data.minimum_bid || '');
-                     saveForm.setData('reserve_price', preview?.reserve_price || preview?.price || saveForm.data.reserve_price || '');
+                     saveForm.setData('minimum_bid', preview?.minimum_bid || previewPriceValue || saveForm.data.minimum_bid || '');
+                     saveForm.setData('reserve_price', preview?.reserve_price || previewPriceValue || saveForm.data.reserve_price || '');
                      saveForm.setData('price', '');
                      saveForm.setData('stock', '');
                      saveForm.setData('start_date', '');
@@ -219,7 +244,7 @@ export default function OlxScraper({ users = [], categories = [], preview = null
               }
 
               if (normalized === 'business') {
-                     saveForm.setData('price', preview?.price || preview?.minimum_bid || saveForm.data.price || '');
+                     saveForm.setData('price', previewPriceValue || preview?.minimum_bid || saveForm.data.price || '');
                      saveForm.setData('minimum_bid', '');
                      saveForm.setData('reserve_price', '');
                      saveForm.setData('start_date', '');
@@ -227,7 +252,7 @@ export default function OlxScraper({ users = [], categories = [], preview = null
                      return;
               }
 
-              saveForm.setData('price', preview?.price || preview?.minimum_bid || saveForm.data.price || '');
+              saveForm.setData('price', previewPriceValue || preview?.minimum_bid || saveForm.data.price || '');
               saveForm.setData('minimum_bid', '');
               saveForm.setData('reserve_price', '');
               saveForm.setData('stock', '');
@@ -237,14 +262,14 @@ export default function OlxScraper({ users = [], categories = [], preview = null
 
        const submitPreview = (event) => {
               event.preventDefault();
-              previewForm.post(route('admin.olx-scraper.preview'), {
+              previewForm.post(route(preview_route), {
                      preserveScroll: true,
               });
        };
 
        const submitSave = (event) => {
               event.preventDefault();
-              saveForm.post(route('admin.olx-scraper.save'), {
+              saveForm.post(route(save_route), {
                      preserveScroll: true,
               });
        };
@@ -255,17 +280,17 @@ export default function OlxScraper({ users = [], categories = [], preview = null
               : imageList;
 
        return (
-              <AdminLayout title="OLX Scraper">
-                     <Head title="OLX Scraper" />
+              <AdminLayout title={tool_name}>
+                     <Head title={tool_name} />
 
                      <div className="mx-auto max-w-7xl space-y-6 pb-12">
                             <div className="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] md:p-8">
                                    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                                           <div>
                                                  <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-400">Admin Tool</p>
-                                                 <h1 className="mt-2 text-3xl font-black tracking-tight text-gray-900">OLX Scraper</h1>
+                                                 <h1 className="mt-2 text-3xl font-black tracking-tight text-gray-900">{tool_name}</h1>
                                                  <p className="mt-2 max-w-3xl text-sm text-gray-500">
-                                                        Extract title, description, images and location directly from OLX HTML attributes. Category, seller and publishing details stay manual for the admin.
+                                                        Extract title, description, images and price directly from {tool_short} HTML attributes. Category, seller and publishing details stay manual for the admin.
                                                  </p>
                                           </div>
 
@@ -276,13 +301,13 @@ export default function OlxScraper({ users = [], categories = [], preview = null
                                    </div>
 
                                           <form onSubmit={submitPreview} className="mt-6 space-y-3">
-                                          <InputLabel value="OLX URL" className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
+                                          <InputLabel value={`${tool_short} URL`} className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
                                           <div className="flex flex-col gap-3 lg:flex-row">
                                                  <TextInput
                                                         type="url"
                                                         value={previewData.url}
                                                         onChange={(event) => updateUrl(event.target.value)}
-                                                        placeholder="https://www.olx.com.pk/..."
+                                                        placeholder={url_placeholder}
                                                         className="w-full rounded-2xl border-gray-200 px-4 py-3 text-gray-900 shadow-sm focus:border-black focus:ring-black/10"
                                                         required
                                                  />
@@ -558,7 +583,7 @@ export default function OlxScraper({ users = [], categories = [], preview = null
                                                         </div>
                                                         <div>
                                                                <h2 className="text-sm font-black uppercase tracking-widest text-gray-900">Scraped Preview</h2>
-                                                               <p className="text-[11px] font-medium text-gray-400">Loaded from OLX HTML attributes and meta tags.</p>
+                                                               <p className="text-[11px] font-medium text-gray-400">Loaded from {tool_short} HTML attributes and meta tags.</p>
                                                         </div>
                                                  </div>
 
@@ -570,14 +595,14 @@ export default function OlxScraper({ users = [], categories = [], preview = null
                                                                       {preview.location_text && <p className="mt-2 text-sm text-gray-500">{preview.location_text}</p>}
                                                                </div>
 
-                                                               <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                                                                       <div className="rounded-[1.25rem] border border-gray-100 bg-white p-4">
                                                                              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Price</p>
-                                                                             <p className="mt-2 text-lg font-black text-gray-900">{preview.price ? `PKR ${preview.price}` : 'Not found'}</p>
+                                                                             <p className="mt-2 text-lg font-black text-gray-900">{previewPriceText}</p>
                                                                       </div>
                                                                       <div className="rounded-[1.25rem] border border-gray-100 bg-white p-4">
                                                                              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Source</p>
-                                                                             <p className="mt-2 break-all text-sm font-semibold text-gray-700">{preview.source_domain || 'OLX'}</p>
+                                                                             <p className="mt-2 break-all text-sm font-semibold text-gray-700">{preview.source_domain || tool_short}</p>
                                                                       </div>
                                                                </div>
 
@@ -600,7 +625,7 @@ export default function OlxScraper({ users = [], categories = [], preview = null
                                                                                            <a key={`${imageUrl}-${index}`} href={imageUrl} target="_blank" rel="noreferrer" className="group overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
                                                                                                   <img
                                                                                                         src={imageUrl}
-                                                                                                         alt={`OLX ${index + 1}`}
+                                                                                                         alt={`${tool_short} ${index + 1}`}
                                                                                                          className="h-36 w-full object-cover transition duration-300 group-hover:scale-105"
                                                                                                   />
                                                                                            </a>
@@ -615,16 +640,17 @@ export default function OlxScraper({ users = [], categories = [], preview = null
                                                         <div className="rounded-[1.5rem] border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
                                                                <i className="fa-regular fa-image text-3xl text-gray-300"></i>
                                                                <p className="mt-4 text-sm font-semibold text-gray-500">
-                                                                      Paste an OLX listing URL and click Preview to extract data.
+                                                                      Paste a {tool_short} listing URL and click Preview to extract data.
                                                                </p>
                                                         </div>
                                                  )}
                                           </section>
 
                                           <section className="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] md:p-8">
-                                                 <h2 className="text-sm font-black uppercase tracking-widest text-gray-900">Debug</h2>
-                                                 <p className="mt-1 text-[11px] font-medium text-gray-400">Useful only if extraction fails.</p>
-                                                 <pre className="mt-4 max-h-[320px] overflow-auto rounded-2xl bg-gray-950 p-4 text-[11px] leading-6 text-gray-100">
+                                                <h2 className="text-sm font-black uppercase tracking-widest text-gray-900">Debug</h2>
+                                                <p className="mt-1 text-[11px] font-medium text-gray-400">Useful only if extraction fails.</p>
+                                                <p className="mt-2 text-[11px] font-semibold text-gray-500">Raw preview price: {String(preview?.price ?? '') || 'empty'}</p>
+                                                <pre className="mt-4 max-h-[320px] overflow-auto rounded-2xl bg-gray-950 p-4 text-[11px] leading-6 text-gray-100">
 {error || 'No scraper error.'}
                                                  </pre>
                                           </section>
