@@ -155,7 +155,19 @@ class DarazScraperService
             return $price;
         }
 
+        if ($price = $this->extractMetaPrice($xpath)) {
+            return $price;
+        }
+
+        if ($price = $this->extractStructuredDataPrice($xpath)) {
+            return $price;
+        }
+
         if ($price = $this->extractPriceFromUrl($url)) {
+            return $price;
+        }
+
+        if ($price = $this->extractInlinePrice($html)) {
             return $price;
         }
 
@@ -200,6 +212,120 @@ class DarazScraperService
         return null;
     }
 
+    protected function extractMetaPrice(DOMXPath $xpath): ?string
+    {
+        $queries = [
+            '//meta[@property="product:price:amount"]/@content',
+            '//meta[@property="og:price:amount"]/@content',
+            '//meta[@property="product:price"]/@content',
+            '//meta[@name="product:price:amount"]/@content',
+            '//meta[@name="price"]/@content',
+            '//*[@itemprop="price"]/@content',
+            '//*[@data-price]/@data-price',
+        ];
+
+        foreach ($queries as $query) {
+            $nodes = $xpath->query($query);
+            if (!$nodes || $nodes->length === 0) {
+                continue;
+            }
+
+            $price = $this->normalizePriceValue($nodes->item(0)?->nodeValue ?? '', true);
+            if ($price !== null) {
+                return $price;
+            }
+        }
+
+        return null;
+    }
+
+    protected function extractStructuredDataPrice(DOMXPath $xpath): ?string
+    {
+        $scripts = $xpath->query('//script[@type="application/ld+json"]');
+        if (!$scripts) {
+            return null;
+        }
+
+        foreach ($scripts as $script) {
+            $json = trim($script->textContent ?? '');
+            if ($json === '') {
+                continue;
+            }
+
+            $decoded = json_decode($json, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                continue;
+            }
+
+            $price = $this->findStructuredPrice($decoded);
+            if ($price !== null) {
+                return $price;
+            }
+        }
+
+        return null;
+    }
+
+    protected function findStructuredPrice(mixed $value): ?string
+    {
+        if (!is_array($value)) {
+            return null;
+        }
+
+        $priceKeys = [
+            'saleprice',
+            'price',
+            'pricevalue',
+            'lowprice',
+            'highprice',
+        ];
+
+        foreach ($value as $key => $item) {
+            if (is_string($key) && in_array(strtolower($key), $priceKeys, true) && !is_array($item)) {
+                $price = $this->normalizePriceValue((string) $item, true);
+                if ($price !== null) {
+                    return $price;
+                }
+            }
+        }
+
+        foreach ($value as $item) {
+            $price = $this->findStructuredPrice($item);
+            if ($price !== null) {
+                return $price;
+            }
+        }
+
+        return null;
+    }
+
+    protected function extractInlinePrice(string $html): ?string
+    {
+        $patterns = [
+            '/"salePrice"\s*:\s*"?(?:Rs\.?\s*)?([\d,.]+)"?/i',
+            '/"discountPrice"\s*:\s*"?(?:Rs\.?\s*)?([\d,.]+)"?/i',
+            '/"offerPrice"\s*:\s*"?(?:Rs\.?\s*)?([\d,.]+)"?/i',
+            '/"priceValue"\s*:\s*"?(?:Rs\.?\s*)?([\d,.]+)"?/i',
+            '/"price"\s*:\s*"Rs\.?\s*([\d,.]+)"/i',
+            '/"pdt_price"\s*:\s*"?(?:Rs\.?\s*)?([\d,.]+)"?/i',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (!preg_match_all($pattern, $html, $matches)) {
+                continue;
+            }
+
+            foreach ($matches[1] as $match) {
+                $price = $this->normalizePriceValue((string) $match, true);
+                if ($price !== null) {
+                    return $price;
+                }
+            }
+        }
+
+        return null;
+    }
+
     protected function extractPriceFromUrl(string $url): ?string
     {
         $query = parse_url($url, PHP_URL_QUERY);
@@ -219,6 +345,29 @@ class DarazScraperService
         }
 
         return null;
+    }
+
+    protected function normalizePriceValue(string $value, bool $allowPlainNumber = false): ?string
+    {
+        $price = $this->normalizePrice($value);
+        if ($price !== null) {
+            return $this->formatNumericPrice($price);
+        }
+
+        if (!$allowPlainNumber) {
+            return null;
+        }
+
+        if (!preg_match('/([\d,.]+)/', $value, $matches)) {
+            return null;
+        }
+
+        $price = $this->formatNumericPrice($matches[1]);
+        if ($price === null || (float) $price <= 0) {
+            return null;
+        }
+
+        return $price;
     }
 
     protected function formatNumericPrice(string $value): ?string
