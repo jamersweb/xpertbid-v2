@@ -38,6 +38,7 @@ class PayFastService
         ];
 
         $response = Http::asForm()
+            ->acceptJson()
             ->timeout(20)
             ->post((string) config('services.payfast.token_url'), $payload);
 
@@ -51,11 +52,17 @@ class PayFastService
             throw new RuntimeException('Unable to start PayFast payment.');
         }
 
-        $token = Arr::get($response->json() ?: [], 'ACCESS_TOKEN');
+        $data = $response->json() ?: [];
+        $token = Arr::get($data, 'ACCESS_TOKEN')
+            ?? Arr::get($data, 'access_token')
+            ?? Arr::get($data, 'TOKEN')
+            ?? Arr::get($data, 'token');
 
         if (! filled($token)) {
             Log::error('PayFast token response did not include ACCESS_TOKEN', [
                 'order_number' => $order->order_number,
+                'status' => $response->status(),
+                'json' => $data,
                 'body' => $response->body(),
             ]);
 
