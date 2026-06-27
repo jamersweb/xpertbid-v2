@@ -38,7 +38,11 @@ class PayFastService
         ];
 
         $response = Http::asForm()
-            ->acceptJson()
+            ->withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/x-www-form-urlencoded',
+                'User-Agent' => 'XpertBid PayFast Checkout',
+            ])
             ->timeout(20)
             ->post((string) config('services.payfast.token_url'), $payload);
 
@@ -46,6 +50,7 @@ class PayFastService
             Log::error('PayFast token request failed', [
                 'order_number' => $order->order_number,
                 'status' => $response->status(),
+                'payload' => Arr::except($payload, ['SECURED_KEY']),
                 'body' => $response->body(),
             ]);
 
@@ -84,9 +89,9 @@ class PayFastService
             'BASKET_ID' => $order->order_number,
             'TXNAMT' => $this->formatAmount($order->total),
             'ORDER_DATE' => now()->format('Y-m-d H:i:s'),
-            'SUCCESS_URL' => route('payfast.success', $order->order_number),
-            'FAILURE_URL' => route('payfast.failure', $order->order_number),
-            'CHECKOUT_URL' => route('payfast.notify'),
+            'SUCCESS_URL' => $this->redirectUrl('success_url', 'payfast.success', $order),
+            'FAILURE_URL' => $this->redirectUrl('failure_url', 'payfast.failure', $order),
+            'CHECKOUT_URL' => $this->checkoutUrl(),
             'CUSTOMER_EMAIL_ADDRESS' => $order->billing_email,
             'CUSTOMER_MOBILE_NO' => $order->billing_phone,
             'SIGNATURE' => $this->orderSignature($order),
@@ -99,11 +104,12 @@ class PayFastService
 
     public function orderSignature(Order $order): string
     {
-        return hash_hmac(
-            'sha256',
-            implode('|', [$order->order_number, $this->formatAmount($order->total), $this->currency()]),
-            (string) config('services.payfast.secured_key')
-        );
+        return md5(implode(':', [
+            (string) config('services.payfast.merchant_id'),
+            (string) config('services.payfast.merchant_name'),
+            $this->formatAmount($order->total),
+            $order->order_number,
+        ]));
     }
 
     public function orderReference(array $payload): ?string
@@ -176,5 +182,31 @@ class PayFastService
     private function currency(): string
     {
         return (string) config('services.payfast.currency', 'PKR');
+    }
+
+    private function checkoutUrl(): string
+    {
+        return filled(config('services.payfast.checkout_url'))
+            ? (string) config('services.payfast.checkout_url')
+            : route('payfast.notify');
+    }
+
+    private function redirectUrl(string $configKey, string $routeName, Order $order): string
+    {
+        $configured = (string) config("services.payfast.{$configKey}", '');
+
+        if (! filled($configured)) {
+            return route($routeName, $order->order_number);
+        }
+
+        if (str_contains($configured, '{orderNumber}')) {
+            return str_replace('{orderNumber}', rawurlencode($order->order_number), $configured);
+        }
+
+        if (str_contains($configured, '{order_number}')) {
+            return str_replace('{order_number}', rawurlencode($order->order_number), $configured);
+        }
+
+        return rtrim($configured, '/') . '/' . rawurlencode($order->order_number);
     }
 }

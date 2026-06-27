@@ -55,10 +55,13 @@ return [
         'merchant_id' => env('PAYFAST_MERCHANT_ID'),
         'secured_key' => env('PAYFAST_SECURED_KEY'),
         'merchant_name' => env('PAYFAST_MERCHANT_NAME', env('APP_NAME', 'XpertBid')),
-        'currency' => env('PAYFAST_CURRENCY', 'PKR'),
+        'currency' => env('PAYFAST_CURRENCY', env('PAYFAST_CURRENCY_CODE', 'PKR')),
         'sandbox' => (bool) env('PAYFAST_SANDBOX', false),
         'token_url' => env('PAYFAST_TOKEN_URL', 'https://ipg1.apps.net.pk/Ecommerce/api/Transaction/GetAccessToken'),
         'post_url' => env('PAYFAST_POST_URL', 'https://ipg1.apps.net.pk/Ecommerce/api/Transaction/PostTransaction'),
+        'success_url' => env('PAYFAST_SUCCESS_URL'),
+        'failure_url' => env('PAYFAST_FAILURE_URL'),
+        'checkout_url' => env('PAYFAST_CHECKOUT_URL'),
     ],
 
 ];

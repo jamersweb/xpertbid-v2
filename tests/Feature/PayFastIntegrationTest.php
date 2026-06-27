@@ -59,6 +59,27 @@ class PayFastIntegrationTest extends TestCase
         $response->assertSee('name="TOKEN" value="token-123"', false);
     }
 
+    public function test_payfast_checkout_uses_configured_urls_and_hosted_signature(): void
+    {
+        Http::fake([
+            'https://payfast.test/token' => Http::response(['ACCESS_TOKEN' => 'token-123'], 200),
+        ]);
+
+        config([
+            'services.payfast.success_url' => 'https://xpertbid.com/payfast/success',
+            'services.payfast.failure_url' => 'https://xpertbid.com/payfast/failure/{orderNumber}',
+            'services.payfast.checkout_url' => 'https://xpertbid.com/payfast/notify',
+        ]);
+
+        $order = $this->payfastOrder(['order_number' => 'ORD-PF-CONFIG']);
+        $fields = app(PayFastService::class)->checkoutFields($order);
+
+        $this->assertSame('https://xpertbid.com/payfast/success/ORD-PF-CONFIG', $fields['SUCCESS_URL']);
+        $this->assertSame('https://xpertbid.com/payfast/failure/ORD-PF-CONFIG', $fields['FAILURE_URL']);
+        $this->assertSame('https://xpertbid.com/payfast/notify', $fields['CHECKOUT_URL']);
+        $this->assertSame(md5('250919:XpertBid:1200.00:ORD-PF-CONFIG'), $fields['SIGNATURE']);
+    }
+
     public function test_valid_payfast_notify_marks_order_paid(): void
     {
         $order = $this->payfastOrder();
