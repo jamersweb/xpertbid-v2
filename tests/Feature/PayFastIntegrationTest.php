@@ -3,10 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Order;
+use App\Models\Listing;
 use App\Models\User;
 use App\Services\PayFastService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -113,6 +116,69 @@ class PayFastIntegrationTest extends TestCase
         $response->assertOk();
 
         $this->assertSame('PF-original', $order->fresh()->transaction_id);
+    }
+
+    public function test_checkout_process_returns_payfast_redirect_url(): void
+    {
+        Mail::fake();
+
+        $categoryId = DB::table('auction_categories')->insertGetId([
+            'name' => 'Electronics',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $seller = User::factory()->create();
+
+        $listing = Listing::create([
+            'user_id' => $seller->id,
+            'category_id' => $categoryId,
+            'listing_type' => 'business',
+            'title' => 'Hybrid Inverter',
+            'description' => 'Test product',
+            'status' => 'active',
+            'listing_data' => ['buy_now_price' => 105000],
+        ]);
+
+        DB::table('auctions')->insert([
+            'id' => $listing->id,
+            'title' => 'Hybrid Inverter',
+            'user_id' => $seller->id,
+            'category_id' => $categoryId,
+            'reserve_price' => 105000,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->postJson(route('checkout.process'), [
+            'items' => [[
+                'listing_id' => $listing->id,
+                'quantity' => 1,
+                'price' => 105000,
+                'type' => 'product',
+            ]],
+            'payment_method' => 'payfast',
+            'billing_name' => 'Guest Buyer',
+            'billing_email' => 'buyer@example.com',
+            'billing_phone' => '03001234567',
+            'billing_address_line1' => 'Street 1',
+            'billing_city' => 'Karachi',
+            'billing_state' => 'Sindh',
+            'billing_country' => 'Pakistan',
+            'total' => 105000,
+            'subtotal' => 105000,
+            'shipping_cost' => 0,
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('success', true);
+        $this->assertStringContainsString('/payfast/redirect/', $response->json('redirect_url'));
+
+        $this->assertDatabaseHas('orders', [
+            'billing_email' => 'buyer@example.com',
+            'payment_method' => 'payfast',
+            'payment_status' => 'pending',
+        ]);
     }
 
     private function payfastOrder(array $overrides = []): Order

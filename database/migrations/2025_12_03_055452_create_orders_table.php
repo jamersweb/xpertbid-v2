@@ -45,7 +45,7 @@ return new class extends Migration
             $table->decimal('total', 15, 2);
             
             // Payment Details
-            $table->enum('payment_method', ['stripe', 'cod', 'bank_transfer', 'payfast'])->default('cod');
+            $table->string('payment_method', 50)->default('cod');
             $table->enum('payment_status', ['pending', 'paid', 'failed', 'approved', 'declined'])->default('pending');
             $table->string('transaction_id')->nullable();
             $table->string('receipt_image')->nullable();

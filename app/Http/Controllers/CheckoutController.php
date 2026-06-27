@@ -232,7 +232,13 @@ class CheckoutController extends Controller
             DB::commit();
 
             // 5. Notifications & Mails
-            Mail::to($order->billing_email)->send(new OrderPlacedMail($order));
+            try {
+                Mail::to($order->billing_email)->send(new OrderPlacedMail($order));
+            } catch (\Throwable $mailError) {
+                Log::error('Order placed email failed: ' . $mailError->getMessage(), [
+                    'order_number' => $order->order_number,
+                ]);
+            }
 
             if ($this->wantsMobileJson($request)) {
                 if ($data['payment_method'] === 'payfast') {

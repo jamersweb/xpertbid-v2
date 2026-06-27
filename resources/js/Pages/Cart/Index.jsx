@@ -11,7 +11,9 @@ export default function Index({ cart: propCart }) {
        const [isRemoving, setIsRemoving] = useState({});
        const [isUpdating, setIsUpdating] = useState({});
 
-       const displayItems = Array.isArray(propCart) ? propCart : (Array.isArray(cartItems) ? cartItems : []);
+       const serverCart = Array.isArray(propCart) ? propCart : [];
+       const contextCart = Array.isArray(cartItems) ? cartItems : [];
+       const displayItems = serverCart.length > 0 ? serverCart : contextCart;
 
        const handleRemove = async (itemId) => {
               Swal.fire({
