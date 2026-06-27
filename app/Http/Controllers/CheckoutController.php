@@ -246,6 +246,12 @@ class CheckoutController extends Controller
                         'success' => true,
                         'order_number' => $order->order_number,
                         'redirect_url' => route('payfast.redirect', $order->order_number),
+                        'payment' => [
+                            'provider' => 'payfast',
+                            'method' => 'hosted_form',
+                            'start_url' => route('payfast.mobile_start', $order->order_number),
+                            'redirect_url' => route('payfast.redirect', $order->order_number),
+                        ],
                         'message' => 'Redirecting to PayFast.'
                     ]);
                 }

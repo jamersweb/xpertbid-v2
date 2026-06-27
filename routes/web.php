@@ -141,6 +141,7 @@ Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
 Route::get('/payfast/redirect/{orderNumber}', [PayFastController::class, 'redirect'])->name('payfast.redirect');
+Route::get('/api/payfast/start/{orderNumber}', [PayFastController::class, 'startJson'])->name('payfast.mobile_start');
 Route::post('/payfast/notify', [PayFastController::class, 'notify'])->name('payfast.notify');
 Route::match(['get', 'post'], '/payfast/success/{orderNumber}', [PayFastController::class, 'success'])->name('payfast.success');
 Route::match(['get', 'post'], '/payfast/failure/{orderNumber}', [PayFastController::class, 'failure'])->name('payfast.failure');

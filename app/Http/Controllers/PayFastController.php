@@ -15,14 +15,27 @@ class PayFastController extends Controller
         $order = $this->findPayFastOrder($request, $orderNumber);
 
         if (! $order) {
-            abort(404);
+            return $this->notFoundResponse($request);
         }
 
         if ($order->payment_status === 'paid') {
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'success' => true,
+                    'order_number' => $order->order_number,
+                    'payment_status' => $order->payment_status,
+                    'message' => 'Order is already paid.',
+                ]);
+            }
+
             return redirect()->route('orders.show', $order->order_number);
         }
 
         try {
+            if ($this->wantsJson($request)) {
+                return $this->payFastJsonResponse($order, $payFast);
+            }
+
             return view('payfast.redirect', [
                 'postUrl' => $payFast->postUrl(),
                 'fields' => $payFast->checkoutFields($order),
@@ -34,9 +47,51 @@ class PayFastController extends Controller
                 'message' => $e->getMessage(),
             ]);
 
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unable to start PayFast payment. Please try again.',
+                ], 502);
+            }
+
             return redirect()
                 ->route('orders.show', $order->order_number)
                 ->with('error', 'Unable to start PayFast payment. Please try again.');
+        }
+    }
+
+    public function startJson(Request $request, string $orderNumber, PayFastService $payFast)
+    {
+        $order = $this->findPayFastOrder($request, $orderNumber);
+
+        if (! $order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PayFast order not found.',
+            ], 404);
+        }
+
+        if ($order->payment_status === 'paid') {
+            return response()->json([
+                'success' => true,
+                'order_number' => $order->order_number,
+                'payment_status' => $order->payment_status,
+                'message' => 'Order is already paid.',
+            ]);
+        }
+
+        try {
+            return $this->payFastJsonResponse($order, $payFast);
+        } catch (Throwable $e) {
+            Log::error('Unable to prepare PayFast mobile checkout', [
+                'order_number' => $order->order_number,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to start PayFast payment. Please try again.',
+            ], 502);
         }
     }
 
@@ -108,7 +163,16 @@ class PayFastController extends Controller
         $order = $this->findPayFastOrder($request, $orderNumber);
 
         if (! $order) {
-            abort(404);
+            return $this->notFoundResponse($request);
+        }
+
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'order_number' => $order->order_number,
+                'payment_status' => $order->payment_status,
+                'message' => 'PayFast payment received. Confirmation may take a few moments.',
+            ]);
         }
 
         return redirect()
@@ -121,7 +185,7 @@ class PayFastController extends Controller
         $order = $this->findPayFastOrder($request, $orderNumber);
 
         if (! $order) {
-            abort(404);
+            return $this->notFoundResponse($request);
         }
 
         if ($order->payment_status === 'pending') {
@@ -129,6 +193,15 @@ class PayFastController extends Controller
                 'payment_status' => 'failed',
                 'status' => 'cancelled',
             ])->save();
+        }
+
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => false,
+                'order_number' => $order->order_number,
+                'payment_status' => $order->payment_status,
+                'message' => 'PayFast payment was not completed.',
+            ]);
         }
 
         return redirect()
@@ -146,5 +219,40 @@ class PayFastController extends Controller
         }
 
         return $query->first();
+    }
+
+    private function payFastJsonResponse(Order $order, PayFastService $payFast)
+    {
+        return response()->json([
+            'success' => true,
+            'order_number' => $order->order_number,
+            'payment_status' => $order->payment_status,
+            'payment' => [
+                'provider' => 'payfast',
+                'method' => 'hosted_form',
+                'post_url' => $payFast->postUrl(),
+                'fields' => $payFast->checkoutFields($order),
+                'redirect_url' => route('payfast.redirect', $order->order_number),
+                'success_url' => route('payfast.success', $order->order_number),
+                'failure_url' => route('payfast.failure', $order->order_number),
+            ],
+        ]);
+    }
+
+    private function wantsJson(Request $request): bool
+    {
+        return $request->wantsJson() || $request->expectsJson();
+    }
+
+    private function notFoundResponse(Request $request)
+    {
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PayFast order not found.',
+            ], 404);
+        }
+
+        abort(404);
     }
 }

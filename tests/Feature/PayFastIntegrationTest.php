@@ -80,6 +80,28 @@ class PayFastIntegrationTest extends TestCase
         $this->assertSame(md5('250919:XpertBid:1200.00:ORD-PF-CONFIG'), $fields['SIGNATURE']);
     }
 
+    public function test_payfast_mobile_start_returns_hosted_checkout_payload(): void
+    {
+        Http::fake([
+            'https://payfast.test/token' => Http::response(['ACCESS_TOKEN' => 'mobile-token'], 200),
+        ]);
+
+        $user = User::factory()->create();
+        $order = $this->payfastOrder(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user)
+            ->getJson(route('payfast.mobile_start', $order->order_number));
+
+        $response->assertOk();
+        $response->assertJsonPath('success', true);
+        $response->assertJsonPath('order_number', $order->order_number);
+        $response->assertJsonPath('payment.provider', 'payfast');
+        $response->assertJsonPath('payment.method', 'hosted_form');
+        $response->assertJsonPath('payment.post_url', 'https://payfast.test/post');
+        $response->assertJsonPath('payment.fields.TOKEN', 'mobile-token');
+        $response->assertJsonPath('payment.fields.BASKET_ID', $order->order_number);
+    }
+
     public function test_valid_payfast_notify_marks_order_paid(): void
     {
         $order = $this->payfastOrder();
@@ -194,6 +216,9 @@ class PayFastIntegrationTest extends TestCase
         $response->assertOk();
         $response->assertJsonPath('success', true);
         $this->assertStringContainsString('/payfast/redirect/', $response->json('redirect_url'));
+        $this->assertSame('payfast', $response->json('payment.provider'));
+        $this->assertSame('hosted_form', $response->json('payment.method'));
+        $this->assertStringContainsString('/api/payfast/start/', $response->json('payment.start_url'));
 
         $this->assertDatabaseHas('orders', [
             'billing_email' => 'buyer@example.com',
