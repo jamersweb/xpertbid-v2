@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\CurrencyController;
 use App\Http\Controllers\Api\BuyNowInquiryController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\PayFastController;
 use App\Http\Controllers\VerificationCodeController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\MarketplaceController;
@@ -139,6 +140,10 @@ Route::middleware('auth')->get('/session/keepalive', function (Request $request)
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
+Route::get('/payfast/redirect/{orderNumber}', [PayFastController::class, 'redirect'])->name('payfast.redirect');
+Route::post('/payfast/notify', [PayFastController::class, 'notify'])->name('payfast.notify');
+Route::match(['get', 'post'], '/payfast/success/{orderNumber}', [PayFastController::class, 'success'])->name('payfast.success');
+Route::match(['get', 'post'], '/payfast/failure/{orderNumber}', [PayFastController::class, 'failure'])->name('payfast.failure');
 
 
 // --- Authenticated Routes (Inertia + Web Sessions) ---

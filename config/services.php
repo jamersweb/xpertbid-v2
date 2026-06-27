@@ -51,4 +51,14 @@ return [
         'url' => env('EXCHANGE_RATE_API_URL', 'https://open.er-api.com/v6/latest/USD'),
     ],
 
+    'payfast' => [
+        'merchant_id' => env('PAYFAST_MERCHANT_ID'),
+        'secured_key' => env('PAYFAST_SECURED_KEY'),
+        'merchant_name' => env('PAYFAST_MERCHANT_NAME', env('APP_NAME', 'XpertBid')),
+        'currency' => env('PAYFAST_CURRENCY', 'PKR'),
+        'sandbox' => (bool) env('PAYFAST_SANDBOX', false),
+        'token_url' => env('PAYFAST_TOKEN_URL', 'https://ipg1.apps.net.pk/Ecommerce/api/Transaction/GetAccessToken'),
+        'post_url' => env('PAYFAST_POST_URL', 'https://ipg1.apps.net.pk/Ecommerce/api/Transaction/PostTransaction'),
+    ],
+
 ];

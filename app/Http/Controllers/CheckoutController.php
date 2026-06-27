@@ -129,7 +129,7 @@ class CheckoutController extends Controller
         // Validation
         $validator = Validator::make($data, [
             'items' => 'required|array|min:1',
-            'payment_method' => 'required|in:stripe,cod,bank_transfer',
+            'payment_method' => 'required|in:stripe,cod,bank_transfer,payfast',
             'billing_name' => 'required|string|max:255',
             'billing_email' => 'required|email',
             'billing_phone' => 'required|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:7',
@@ -162,8 +162,9 @@ class CheckoutController extends Controller
             $order = Order::create([
                 'user_id' => $user ? $user->id : null, // Support guest checkout if needed
                 'order_number' => 'ORD-' . strtoupper(Str::random(10)),
-                'status' => ($data['payment_method'] === 'stripe') ? 'paid' : 'pending',
+                'status' => in_array($data['payment_method'], ['stripe'], true) ? 'paid' : 'pending',
                 'payment_method' => $data['payment_method'],
+                'payment_status' => in_array($data['payment_method'], ['stripe'], true) ? 'paid' : 'pending',
                 'subtotal' => $data['subtotal'] ?? $data['total'],
                 'tax' => $data['tax'] ?? 0,
                 'shipping_cost' => $data['shipping_cost'] ?? 0,
@@ -234,11 +235,24 @@ class CheckoutController extends Controller
             Mail::to($order->billing_email)->send(new OrderPlacedMail($order));
 
             if ($this->wantsMobileJson($request)) {
+                if ($data['payment_method'] === 'payfast') {
+                    return response()->json([
+                        'success' => true,
+                        'order_number' => $order->order_number,
+                        'redirect_url' => route('payfast.redirect', $order->order_number),
+                        'message' => 'Redirecting to PayFast.'
+                    ]);
+                }
+
                 return response()->json([
                     'success' => true,
                     'order_number' => $order->order_number,
                     'message' => 'Order placed successfully'
                 ]);
+            }
+
+            if ($data['payment_method'] === 'payfast') {
+                return redirect()->route('payfast.redirect', $order->order_number);
             }
 
             return redirect()->route('orders.show', $order->order_number)->with('success', 'Order placed successfully!');

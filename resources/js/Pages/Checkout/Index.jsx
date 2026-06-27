@@ -197,6 +197,12 @@ export default function Index({ cartItems: inertiaCartItems = [], user }) {
             });
 
             if (response.data.success) {
+                if (response.data.redirect_url) {
+                    clearCart();
+                    window.location.href = response.data.redirect_url;
+                    return;
+                }
+
                 setOrderNumber(response.data.order_number);
                 setShowSuccess(true);
                 clearCart();
@@ -490,6 +496,31 @@ export default function Index({ cartItems: inertiaCartItems = [], user }) {
                                                     }}
                                                 >
                                                     Cash on Delivery (COD)
+                                                </label>
+                                            </div>
+                                            <div className="form-check mb-3" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <input
+                                                    className="form-check-input"
+                                                    type="radio"
+                                                    name="paymentMethod"
+                                                    id="payfast"
+                                                    value="payfast"
+                                                    checked={paymentMethod === 'payfast'}
+                                                    onChange={(e) => setPaymentMethod(e.target.value)}
+                                                    style={{ margin: 0, flexShrink: 0, cursor: 'pointer' }}
+                                                />
+                                                <label
+                                                    className="form-check-label"
+                                                    htmlFor="payfast"
+                                                    style={{
+                                                        fontFamily: '"Inter", sans-serif',
+                                                        fontSize: "16px",
+                                                        color: "#23262F",
+                                                        margin: 0,
+                                                        cursor: 'pointer',
+                                                    }}
+                                                >
+                                                    PayFast
                                                 </label>
                                             </div>
                                             <div className="form-check" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

@@ -144,7 +144,7 @@ function Show({ order }) {
               /* @__PURE__ */ jsx("h6", { className: "fw-bold mb-2", style: { color: "#23262F" }, children: "Payment Information" }),
               /* @__PURE__ */ jsxs("p", { className: "mb-0", style: { color: "#777E90" }, children: [
                 "Method: ",
-                /* @__PURE__ */ jsx("span", { style: { color: "#23262F", fontWeight: "600" }, children: order.payment_method === "cod" ? "Cash on Delivery" : order.payment_method === "stripe" ? "Credit/Debit Card (Stripe)" : order.payment_method === "bank_transfer" ? "Bank Transfer" : order.payment_method })
+                /* @__PURE__ */ jsx("span", { style: { color: "#23262F", fontWeight: "600" }, children: order.payment_method === "cod" ? "Cash on Delivery" : order.payment_method === "stripe" ? "Credit/Debit Card (Stripe)" : order.payment_method === "bank_transfer" ? "Bank Transfer" : order.payment_method === "payfast" ? "PayFast" : order.payment_method })
               ] }),
               order.transaction_id && /* @__PURE__ */ jsxs("small", { className: "d-block mt-2", style: { color: "#777E90" }, children: [
                 "Transaction ID: ",

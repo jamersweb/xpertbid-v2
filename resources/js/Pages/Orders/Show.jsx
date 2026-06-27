@@ -158,7 +158,8 @@ export default function Show({ order }) {
                                                                                     Method: <span style={{ color: '#23262F', fontWeight: '600' }}>{
                                                                                            order.payment_method === 'cod' ? 'Cash on Delivery' :
                                                                                                   order.payment_method === 'stripe' ? 'Credit/Debit Card (Stripe)' :
-                                                                                                         order.payment_method === 'bank_transfer' ? 'Bank Transfer' : order.payment_method
+                                                                                                         order.payment_method === 'bank_transfer' ? 'Bank Transfer' :
+                                                                                                                order.payment_method === 'payfast' ? 'PayFast' : order.payment_method
                                                                                     }</span>
                                                                              </p>
                                                                              {order.transaction_id && <small className="d-block mt-2" style={{ color: '#777E90' }}>Transaction ID: {order.transaction_id}</small>}
