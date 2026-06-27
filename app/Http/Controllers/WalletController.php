@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Wallet;
 use App\Models\Transactions as Transaction;
+use App\Models\NewNotification;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Validator;
 
@@ -54,6 +55,18 @@ class WalletController extends Controller
             'type' => 'add',
             'description' => 'Added money via ' . ucfirst($request->payment_method),
             'status' => 'completed',
+        ]);
+
+        NewNotification::create([
+            'user_id' => $user->id,
+            'title' => 'Wallet Top-Up Added',
+            'message' => sprintf(
+                '%s has been added to your wallet via %s.',
+                number_format((float) $amount, 2),
+                str_replace('_', ' ', ucfirst($request->payment_method))
+            ),
+            'type' => 'wallet',
+            'image_url' => NewNotification::getImageForType('wallet'),
         ]);
 
         return redirect()->back()->with('success', 'Money added successfully.');

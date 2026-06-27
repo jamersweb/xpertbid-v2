@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\NewNotification;
 use App\Models\PaymentRequest;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
@@ -58,6 +59,30 @@ class PaymentRequestController extends Controller
                 $wallet = Wallet::firstOrCreate(['user_id' => $paymentRequest->user_id]);
                 $wallet->balance += $paymentRequest->amount;
                 $wallet->save();
+
+                NewNotification::create([
+                    'user_id' => $paymentRequest->user_id,
+                    'title' => 'Wallet Deposit Approved',
+                    'message' => sprintf(
+                        'Your wallet deposit request of %s has been approved and added to your balance.',
+                        number_format((float) $paymentRequest->amount, 2)
+                    ),
+                    'type' => 'wallet',
+                    'image_url' => NewNotification::getImageForType('wallet'),
+                ]);
+            }
+
+            if ($request->status === 'rejected') {
+                NewNotification::create([
+                    'user_id' => $paymentRequest->user_id,
+                    'title' => 'Wallet Deposit Rejected',
+                    'message' => sprintf(
+                        'Your wallet deposit request of %s was rejected.',
+                        number_format((float) $paymentRequest->amount, 2)
+                    ),
+                    'type' => 'wallet',
+                    'image_url' => NewNotification::getImageForType('wallet'),
+                ]);
             }
 
             DB::commit();
