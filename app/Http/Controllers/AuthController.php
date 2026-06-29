@@ -131,6 +131,8 @@ class AuthController extends Controller
     {
         $request->validate([
             'identity_token' => 'required|string',
+            'name' => 'nullable|string|max:255',
+            'display_name' => 'nullable|string|max:255',
         ]);
 
         try {
@@ -153,6 +155,10 @@ class AuthController extends Controller
 
             $appleId = $decoded->sub;
             $email = $decoded->email ?? null;
+            $displayName = trim((string) ($request->input('name') ?: $request->input('display_name') ?: ''));
+            if ($displayName === '') {
+                $displayName = 'Apple User';
+            }
 
             // 4️⃣ Find user by provider + provider_id
             $user = User::where('provider', 'apple')
@@ -185,7 +191,7 @@ class AuthController extends Controller
                 }
 
                 $user = User::create([
-                    'name' => 'Apple User',
+                    'name' => $displayName,
                     'email' => $email, // safe now
                     'provider' => 'apple',
                     'provider_id' => $appleId,
