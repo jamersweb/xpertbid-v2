@@ -5,10 +5,13 @@ import { Head, Link, router } from "@inertiajs/react";
 import { M as Modal } from "./Modal-DHAPaXZd.js";
 import { S as SecondaryButton } from "./SecondaryButton-C9TQBbBR.js";
 import { I as InputLabel } from "./InputLabel-CE_n4Upz.js";
+import { E as ExportCsvButton } from "./ExportCsvButton-0i79GLe1.js";
 import "./useSessionKeepAlive-BIm1aJlj.js";
 import "./useCurrencyList-Ce5tJXO9.js";
 import "axios";
 import "@headlessui/react";
+import "./TextInput-DDsS-qQQ.js";
+import "sweetalert2";
 function Auctions({ auctions }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
@@ -55,9 +58,19 @@ function Auctions({ auctions }) {
   return /* @__PURE__ */ jsxs(AdminLayout, { title: "Listing Approval", children: [
     /* @__PURE__ */ jsx(Head, { title: "Listing Approval" }),
     /* @__PURE__ */ jsxs("div", { className: "bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden", children: [
-      /* @__PURE__ */ jsxs("div", { className: "p-6 border-bottom border-gray-100", children: [
-        /* @__PURE__ */ jsx("h2", { className: "text-lg font-bold text-gray-800", children: "Listing Review Queue" }),
-        /* @__PURE__ */ jsx("p", { className: "text-xs text-gray-500", children: "Showing inactive, declined, resubmit, and active listings with pending edits" })
+      /* @__PURE__ */ jsxs("div", { className: "p-6 border-bottom border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4", children: [
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("h2", { className: "text-lg font-bold text-gray-800", children: "Listing Review Queue" }),
+          /* @__PURE__ */ jsx("p", { className: "text-xs text-gray-500", children: "Showing inactive, declined, resubmit, and active listings with pending edits" })
+        ] }),
+        /* @__PURE__ */ jsx(
+          ExportCsvButton,
+          {
+            routeName: "admin.verifications.auctions.export",
+            title: "Export Listing Approvals",
+            description: "Select a submission date range to download listing approvals as a CSV file."
+          }
+        )
       ] }),
       /* @__PURE__ */ jsx("div", { className: "overflow-x-auto", children: /* @__PURE__ */ jsxs("table", { className: "w-full text-left border-collapse", children: [
         /* @__PURE__ */ jsx("thead", { children: /* @__PURE__ */ jsxs("tr", { className: "bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider", children: [

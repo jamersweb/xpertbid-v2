@@ -2,9 +2,16 @@ import { jsxs, jsx } from "react/jsx-runtime";
 import "react";
 import { A as AdminLayout } from "./AdminLayout-DNCwhj5R.js";
 import { Head, router } from "@inertiajs/react";
+import { E as ExportCsvButton } from "./ExportCsvButton-0i79GLe1.js";
 import "./useSessionKeepAlive-BIm1aJlj.js";
 import "./useCurrencyList-Ce5tJXO9.js";
 import "axios";
+import "./Modal-DHAPaXZd.js";
+import "@headlessui/react";
+import "./TextInput-DDsS-qQQ.js";
+import "./InputLabel-CE_n4Upz.js";
+import "./SecondaryButton-C9TQBbBR.js";
+import "sweetalert2";
 function Index({ emailLogs, filters }) {
   const handleSearch = (e) => {
     router.get(route("admin.email-logs.index"), { search: e.target.value }, { preserveState: true, replace: true });
@@ -12,19 +19,30 @@ function Index({ emailLogs, filters }) {
   return /* @__PURE__ */ jsxs(AdminLayout, { title: "System Email Logs", children: [
     /* @__PURE__ */ jsx(Head, { title: "Email Logs" }),
     /* @__PURE__ */ jsxs("div", { className: "space-y-6", children: [
-      /* @__PURE__ */ jsx("div", { className: "flex items-center justify-between", children: /* @__PURE__ */ jsxs("div", { className: "relative flex-1 max-w-md", children: [
-        /* @__PURE__ */ jsx("i", { className: "fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm" }),
+      /* @__PURE__ */ jsxs("div", { className: "flex flex-col md:flex-row md:items-center justify-between gap-4", children: [
+        /* @__PURE__ */ jsxs("div", { className: "relative flex-1 max-w-md", children: [
+          /* @__PURE__ */ jsx("i", { className: "fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm" }),
+          /* @__PURE__ */ jsx(
+            "input",
+            {
+              type: "text",
+              className: "w-full pl-12 pr-4 py-3 bg-white border-none focus:ring-2 focus:ring-black rounded-2xl shadow-sm text-sm",
+              placeholder: "Search by email, subject or recipient...",
+              defaultValue: filters.search,
+              onChange: handleSearch
+            }
+          )
+        ] }),
         /* @__PURE__ */ jsx(
-          "input",
+          ExportCsvButton,
           {
-            type: "text",
-            className: "w-full pl-12 pr-4 py-3 bg-white border-none focus:ring-2 focus:ring-black rounded-2xl shadow-sm text-sm",
-            placeholder: "Search by email, subject or recipient...",
-            defaultValue: filters.search,
-            onChange: handleSearch
+            routeName: "admin.email-logs.export",
+            params: { search: filters.search },
+            title: "Export Email Logs",
+            description: "Select a sent date range to download email logs as a CSV file."
           }
         )
-      ] }) }),
+      ] }),
       /* @__PURE__ */ jsx("div", { className: "bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden", children: /* @__PURE__ */ jsx("div", { className: "overflow-x-auto", children: /* @__PURE__ */ jsxs("table", { className: "w-full text-left border-collapse", children: [
         /* @__PURE__ */ jsx("thead", { children: /* @__PURE__ */ jsxs("tr", { className: "bg-gray-50/50 text-gray-400 text-[10px] font-bold uppercase tracking-widest border-b border-gray-100", children: [
           /* @__PURE__ */ jsx("th", { className: "px-6 py-4", children: "Recipient" }),

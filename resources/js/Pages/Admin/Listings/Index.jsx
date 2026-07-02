@@ -3,6 +3,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import Price from '@/Components/Price';
 import Pagination from '@/Components/Pagination';
+import ExportCsvButton from '@/Components/Admin/ExportCsvButton';
 import Swal from 'sweetalert2';
 
 function LiveAuctionPreview({ videoId, title }) {
@@ -125,6 +126,14 @@ export default function Index({
                                                  <p className="text-sm text-gray-500 mt-1">{pageDescription}</p>
                                           </div>
                                           <div className="flex flex-wrap items-center gap-2">
+                                                 {!isLiveAuctionPage && (
+                                                        <ExportCsvButton
+                                                               routeName="admin.listings.export"
+                                                               params={{ search, status }}
+                                                               title="Export Listings"
+                                                               description="Select a listing creation date range to download listings as a CSV file."
+                                                        />
+                                                 )}
                                                  {isLiveAuctionPage && (
                                                         <button
                                                                type="button"

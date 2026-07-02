@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Admin\Concerns\StreamsCsvExports;
 use App\Models\Listing;
 use App\Models\User;
 use App\Mail\AuctionStatusUpdated;
@@ -13,20 +14,64 @@ use Inertia\Inertia;
 
 class AuctionStatusController extends Controller
 {
-    public function index()
+    use StreamsCsvExports;
+
+    protected function reviewQueue()
     {
-        $listings = Listing::with(['user', 'category'])
+        return Listing::with(['user', 'category'])
             ->with('pendingEdit')
             ->where(function ($query) {
                 $query->whereIn('status', ['inactive', 'declined', 'resubmit'])
                     ->orWhereHas('pendingEdit');
-            })
+            });
+    }
+
+    public function index()
+    {
+        $listings = $this->reviewQueue()
             ->latest()
             ->paginate(15);
 
         return Inertia::render('Admin/Verifications/Auctions', [
             'auctions' => $listings
         ]);
+    }
+
+    public function export(Request $request)
+    {
+        $validated = $this->validateExportDateRange($request);
+
+        $listings = $this->reviewQueue()
+            ->whereDate('created_at', '>=', $validated['from'])
+            ->whereDate('created_at', '<=', $validated['to'])
+            ->latest()
+            ->get();
+
+        $filename = 'listing_approvals_' . $validated['from'] . '_to_' . $validated['to'] . '.csv';
+
+        return $this->streamCsv($filename, [
+            'ID',
+            'Title',
+            'Seller',
+            'Seller Email',
+            'Category',
+            'Listing Type',
+            'Status',
+            'Has Pending Edit',
+            'Decline Reason',
+            'Created At',
+        ], $listings->map(fn ($listing) => [
+            $listing->id,
+            $listing->title,
+            $listing->user?->name,
+            $listing->user?->email,
+            $listing->category?->name,
+            $listing->listing_type,
+            $listing->status,
+            $listing->pendingEdit ? 'Yes' : 'No',
+            $listing->decline_reason,
+            optional($listing->created_at)->format('Y-m-d H:i:s'),
+        ]));
     }
 
     public function accept($id)

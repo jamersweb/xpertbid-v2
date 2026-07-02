@@ -4,6 +4,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
 import InputLabel from '@/Components/InputLabel';
+import ExportCsvButton from '@/Components/Admin/ExportCsvButton';
 
 export default function Auctions({ auctions }) {
        const [isModalOpen, setIsModalOpen] = useState(false);
@@ -66,9 +67,16 @@ export default function Auctions({ auctions }) {
                      <Head title="Listing Approval" />
 
                      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="p-6 border-bottom border-gray-100">
-                                   <h2 className="text-lg font-bold text-gray-800">Listing Review Queue</h2>
-                                   <p className="text-xs text-gray-500">Showing inactive, declined, resubmit, and active listings with pending edits</p>
+                            <div className="p-6 border-bottom border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                   <div>
+                                          <h2 className="text-lg font-bold text-gray-800">Listing Review Queue</h2>
+                                          <p className="text-xs text-gray-500">Showing inactive, declined, resubmit, and active listings with pending edits</p>
+                                   </div>
+                                   <ExportCsvButton
+                                          routeName="admin.verifications.auctions.export"
+                                          title="Export Listing Approvals"
+                                          description="Select a submission date range to download listing approvals as a CSV file."
+                                   />
                             </div>
 
                             <div className="overflow-x-auto">

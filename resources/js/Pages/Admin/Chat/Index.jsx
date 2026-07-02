@@ -3,6 +3,7 @@ import { Head, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import ChatList from '@/Pages/Chat/Partials/ChatList';
 import ChatWindow from '@/Pages/Chat/Partials/ChatWindow';
+import ExportCsvButton from '@/Components/Admin/ExportCsvButton';
 
 export default function AdminChatIndex() {
     const { auth } = usePage().props;
@@ -16,7 +17,14 @@ export default function AdminChatIndex() {
             <Head title="Admin Chat" />
             <div className="bg-gray-50 min-h-[calc(100vh-110px)]">
                 <div className="mx-auto w-full">
-                    <h1 className="text-2xl font-bold mb-6 text-gray-800">Chat Inbox</h1>
+                    <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <h1 className="text-2xl font-bold text-gray-800">Chat Inbox</h1>
+                        <ExportCsvButton
+                            routeName="admin.chat.export"
+                            title="Export Chat Messages"
+                            description="Select a message date range to download chat messages as a CSV file."
+                        />
+                    </div>
                     <div className="flex flex-col xl:flex-row gap-6 h-[calc(100vh-220px)] min-h-[620px]">
                         <div className={`w-full xl:w-[360px] ${selectedConversationId ? 'hidden xl:block' : 'block'}`}>
                             <ChatList

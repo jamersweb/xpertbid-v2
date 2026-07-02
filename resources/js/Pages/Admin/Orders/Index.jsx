@@ -3,6 +3,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import Price from '@/Components/Price';
 import Pagination from '@/Components/Pagination';
+import ExportCsvButton from '@/Components/Admin/ExportCsvButton';
 
 export default function Index({ orders, filters }) {
        const [search, setSearch] = useState(filters.search || '');
@@ -50,6 +51,12 @@ export default function Index({ orders, filters }) {
                                           </select>
                                           <button type="submit" className="px-6 py-2 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors">Search</button>
                                    </form>
+                                   <ExportCsvButton
+                                          routeName="admin.orders.export"
+                                          params={{ search, status }}
+                                          title="Export Orders"
+                                          description="Select an order date range to download orders as a CSV file."
+                                   />
                             </div>
 
                             <div className="overflow-x-auto">

@@ -1,6 +1,7 @@
 import React from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
+import ExportCsvButton from '@/Components/Admin/ExportCsvButton';
 
 export default function Index({ emailLogs, filters }) {
        const handleSearch = (e) => {
@@ -12,7 +13,7 @@ export default function Index({ emailLogs, filters }) {
                      <Head title="Email Logs" />
 
                      <div className="space-y-6">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                    <div className="relative flex-1 max-w-md">
                                           <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                                           <input
@@ -23,6 +24,12 @@ export default function Index({ emailLogs, filters }) {
                                                  onChange={handleSearch}
                                           />
                                    </div>
+                                   <ExportCsvButton
+                                          routeName="admin.email-logs.export"
+                                          params={{ search: filters.search }}
+                                          title="Export Email Logs"
+                                          description="Select a sent date range to download email logs as a CSV file."
+                                   />
                             </div>
 
                             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">

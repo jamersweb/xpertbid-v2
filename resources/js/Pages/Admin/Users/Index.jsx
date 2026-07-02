@@ -8,15 +8,13 @@ import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import SecondaryButton from '@/Components/SecondaryButton';
+import ExportCsvButton from '@/Components/Admin/ExportCsvButton';
 import Swal from 'sweetalert2';
 
 export default function Index({ users, filters }) {
        const [isModalOpen, setIsModalOpen] = useState(false);
-       const [isExportModalOpen, setIsExportModalOpen] = useState(false);
        const [editingUser, setEditingUser] = useState(null);
        const [search, setSearch] = useState(filters.search || '');
-       const [exportFrom, setExportFrom] = useState('');
-       const [exportTo, setExportTo] = useState('');
 
        const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
               name: '',
@@ -29,35 +27,6 @@ export default function Index({ users, filters }) {
        const handleSearch = (e) => {
               e.preventDefault();
               router.get(route('admin.users.index'), { search }, { preserveState: true });
-       };
-
-       const handleExport = (e) => {
-              e.preventDefault();
-
-              if (!exportFrom || !exportTo) {
-                     Swal.fire({
-                            title: 'Date range required',
-                            text: 'Please select both from and to dates before exporting.',
-                            icon: 'warning',
-                            confirmButtonColor: '#000000',
-                     });
-                     return;
-              }
-
-              const params = new URLSearchParams({
-                     from: exportFrom,
-                     to: exportTo,
-              });
-
-              if (search) {
-                     params.set('search', search);
-              }
-
-              window.location.href = `${route('admin.users.export')}?${params.toString()}`;
-       };
-
-       const closeExportModal = () => {
-              setIsExportModalOpen(false);
        };
 
        const openModal = (user = null) => {
@@ -142,14 +111,12 @@ export default function Index({ users, filters }) {
                                           </button>
                                    </form>
                                           <div className="flex flex-col lg:flex-row lg:items-center gap-3">
-                                                 <button
-                                                        type="button"
-                                                        onClick={() => setIsExportModalOpen(true)}
-                                                        className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/10 flex items-center justify-center gap-2"
-                                                 >
-                                                        <i className="fa-solid fa-file-csv"></i>
-                                                        Export CSV
-                                                 </button>
+                                                 <ExportCsvButton
+                                                        routeName="admin.users.export"
+                                                        params={{ search }}
+                                                        title="Export Users"
+                                                        description="Select a signup date range to download users as a CSV file."
+                                                 />
                                                  <PrimaryButton onClick={() => openModal()}>
                                                         <i className="fa-solid fa-plus me-2"></i> Add New User
                                                  </PrimaryButton>
@@ -241,48 +208,6 @@ export default function Index({ users, filters }) {
                                    <Pagination links={users.links} />
                             </div>
                      </div>
-
-                     <Modal show={isExportModalOpen} onClose={closeExportModal} maxWidth="md">
-                            <form onSubmit={handleExport} className="p-6">
-                                   <h2 className="text-lg font-bold text-gray-800 mb-1">Export Users</h2>
-                                   <p className="text-sm text-gray-500 mb-6">Select a signup date range to download users as a CSV file.</p>
-
-                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                          <div>
-                                                 <InputLabel htmlFor="export_from" value="From Date" />
-                                                 <TextInput
-                                                        id="export_from"
-                                                        type="date"
-                                                        className="mt-1 block w-full text-gray-900"
-                                                        value={exportFrom}
-                                                        onChange={(e) => setExportFrom(e.target.value)}
-                                                        required
-                                                 />
-                                          </div>
-
-                                          <div>
-                                                 <InputLabel htmlFor="export_to" value="To Date" />
-                                                 <TextInput
-                                                        id="export_to"
-                                                        type="date"
-                                                        className="mt-1 block w-full text-gray-900"
-                                                        value={exportTo}
-                                                        onChange={(e) => setExportTo(e.target.value)}
-                                                        min={exportFrom || undefined}
-                                                        required
-                                                 />
-                                          </div>
-                                   </div>
-
-                                   <div className="mt-8 flex justify-end gap-3">
-                                          <SecondaryButton onClick={closeExportModal}>Cancel</SecondaryButton>
-                                          <button type="submit" className="inline-flex items-center rounded-md border border-transparent bg-emerald-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 gap-2">
-                                                 <i className="fa-solid fa-file-csv"></i>
-                                                 Export CSV
-                                          </button>
-                                   </div>
-                            </form>
-                     </Modal>
 
                      <Modal show={isModalOpen} onClose={closeModal} maxWidth="xl">
                             <form onSubmit={submit} className="p-6">

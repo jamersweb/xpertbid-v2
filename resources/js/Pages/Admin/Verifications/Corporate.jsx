@@ -5,6 +5,7 @@ import Pagination from '@/Components/Pagination';
 import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
 import InputLabel from '@/Components/InputLabel';
+import ExportCsvButton from '@/Components/Admin/ExportCsvButton';
 
 export default function Corporate({ verifications, filters }) {
        const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,6 +71,12 @@ export default function Corporate({ verifications, filters }) {
                                                  Search
                                           </button>
                                    </form>
+                                   <ExportCsvButton
+                                          routeName="admin.verifications.corporate.export"
+                                          params={{ search }}
+                                          title="Export Corporate Verifications"
+                                          description="Select a submission date range to download corporate verifications as a CSV file."
+                                   />
                             </div>
 
                             <div className="overflow-x-auto">

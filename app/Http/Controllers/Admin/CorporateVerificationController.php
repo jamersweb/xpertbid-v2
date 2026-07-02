@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Admin\Concerns\StreamsCsvExports;
 use Illuminate\Http\Request;
 use App\Support\LoggedMail as Mail;
 use App\Models\CorporateVerification;
@@ -14,6 +15,8 @@ use Inertia\Inertia;
 
 class CorporateVerificationController extends Controller
 {
+    use StreamsCsvExports;
+
     public function index(Request $request)
     {
         $query = CorporateVerification::with('user');
@@ -36,6 +39,53 @@ class CorporateVerificationController extends Controller
             'verifications' => $verifications,
             'filters' => $request->only(['search'])
         ]);
+    }
+
+    public function export(Request $request)
+    {
+        $validated = $this->validateExportDateRange($request);
+        $query = CorporateVerification::with('user')
+            ->whereDate('created_at', '>=', $validated['from'])
+            ->whereDate('created_at', '<=', $validated['to']);
+
+        if (!empty($validated['search'])) {
+            $search = $validated['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('legal_entity_name', 'LIKE', "%{$search}%")
+                    ->orWhere('registered_address', 'LIKE', "%{$search}%")
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'LIKE', "%{$search}%")
+                            ->orWhere('email', 'LIKE', "%{$search}%");
+                    });
+            });
+        }
+
+        $verifications = $query->orderBy('created_at', 'desc')->get();
+        $filename = 'corporate_verifications_' . $validated['from'] . '_to_' . $validated['to'] . '.csv';
+
+        return $this->streamCsv($filename, [
+            'ID',
+            'Legal Entity',
+            'Entity Type',
+            'Country',
+            'Registered Address',
+            'Applicant',
+            'Applicant Email',
+            'Status',
+            'Decline Reason',
+            'Submitted At',
+        ], $verifications->map(fn ($verification) => [
+            $verification->id,
+            $verification->legal_entity_name,
+            $verification->entity_type,
+            $verification->country,
+            $verification->registered_address,
+            $verification->user?->name,
+            $verification->user?->email,
+            $verification->status,
+            $verification->decline_reason,
+            optional($verification->created_at)->format('Y-m-d H:i:s'),
+        ]));
     }
 
     public function accept($id)

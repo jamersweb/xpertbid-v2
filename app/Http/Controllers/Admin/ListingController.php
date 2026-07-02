@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Admin\Concerns\StreamsCsvExports;
 use App\Support\YoutubeVideoId;
 use App\Models\AuctionCategory;
 use App\Models\Bid;
@@ -25,6 +26,8 @@ use Intervention\Image\ImageManager;
 
 class ListingController extends Controller
 {
+    use StreamsCsvExports;
+
     protected function storeOptimizedListingImage($file): string
     {
         $directory = public_path('assets/images/listing_images');
@@ -204,6 +207,61 @@ class ListingController extends Controller
             'createRouteName' => 'admin.listings.create',
             'createButtonLabel' => 'Create Listing',
         ]);
+    }
+
+    public function export(Request $request)
+    {
+        $validated = $this->validateExportDateRange($request);
+
+        $query = Listing::query()
+            ->with(['user', 'category'])
+            ->whereDate('created_at', '>=', $validated['from'])
+            ->whereDate('created_at', '<=', $validated['to']);
+
+        if (!empty($validated['search'])) {
+            $search = $validated['search'];
+            $query->where(function ($innerQuery) use ($search) {
+                $innerQuery->where('title', 'like', "%{$search}%")
+                    ->orWhere('id', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if (!empty($validated['status'])) {
+            $query->where('status', $validated['status']);
+        }
+
+        $listings = $query->latest()->get();
+        $filename = 'admin_listings_' . $validated['from'] . '_to_' . $validated['to'] . '.csv';
+
+        return $this->streamCsv($filename, [
+            'ID',
+            'Title',
+            'Seller',
+            'Seller Email',
+            'Category',
+            'Listing Type',
+            'Status',
+            'Price',
+            'Source',
+            'Views',
+            'Created At',
+        ], $listings->map(fn ($listing) => [
+            $listing->id,
+            $listing->title,
+            $listing->user?->name,
+            $listing->user?->email,
+            $listing->category?->name,
+            $listing->listing_type,
+            $listing->status,
+            $listing->listing_type === 'auction' ? $listing->minimum_bid : ($listing->buy_now_price ?? $listing->minimum_bid),
+            $listing->listing_source,
+            $listing->views,
+            optional($listing->created_at)->format('Y-m-d H:i:s'),
+        ]));
     }
 
     public function liveAuctions(Request $request)

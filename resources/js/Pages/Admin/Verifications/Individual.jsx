@@ -6,6 +6,7 @@ import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
 import PrimaryButton from '@/Components/PrimaryButton';
 import InputLabel from '@/Components/InputLabel';
+import ExportCsvButton from '@/Components/Admin/ExportCsvButton';
 
 export default function Individual({ verifications, filters }) {
        const [isModalOpen, setIsModalOpen] = useState(false);
@@ -78,7 +79,13 @@ export default function Individual({ verifications, filters }) {
                                           </button>
                                    </form>
 
-                                   <div className="flex gap-2">
+                                   <div className="flex flex-wrap gap-2">
+                                          <ExportCsvButton
+                                                 routeName="admin.verifications.individual.export"
+                                                 params={{ search, status: statusFilter }}
+                                                 title="Export Individual Verifications"
+                                                 description="Select a submission date range to download individual verifications as a CSV file."
+                                          />
                                           {['', 'pending', 'verified', 'declined'].map((status) => (
                                                  <button
                                                         key={status}

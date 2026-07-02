@@ -4,10 +4,17 @@ import { usePage, Head } from "@inertiajs/react";
 import { A as AdminLayout } from "./AdminLayout-DNCwhj5R.js";
 import ChatList from "./ChatList-smROB9-O.js";
 import ChatWindow from "./ChatWindow-BTPm5A84.js";
+import { E as ExportCsvButton } from "./ExportCsvButton-0i79GLe1.js";
 import "./useSessionKeepAlive-BIm1aJlj.js";
 import "./useCurrencyList-Ce5tJXO9.js";
 import "axios";
 import "./Price-CF5NSPt0.js";
+import "./Modal-DHAPaXZd.js";
+import "@headlessui/react";
+import "./TextInput-DDsS-qQQ.js";
+import "./InputLabel-CE_n4Upz.js";
+import "./SecondaryButton-C9TQBbBR.js";
+import "sweetalert2";
 function AdminChatIndex() {
   const { auth } = usePage().props;
   const queryParams = new URLSearchParams(window.location.search);
@@ -18,7 +25,17 @@ function AdminChatIndex() {
   return /* @__PURE__ */ jsxs(AdminLayout, { title: "Chat", children: [
     /* @__PURE__ */ jsx(Head, { title: "Admin Chat" }),
     /* @__PURE__ */ jsx("div", { className: "bg-gray-50 min-h-[calc(100vh-110px)]", children: /* @__PURE__ */ jsxs("div", { className: "mx-auto w-full", children: [
-      /* @__PURE__ */ jsx("h1", { className: "text-2xl font-bold mb-6 text-gray-800", children: "Chat Inbox" }),
+      /* @__PURE__ */ jsxs("div", { className: "mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4", children: [
+        /* @__PURE__ */ jsx("h1", { className: "text-2xl font-bold text-gray-800", children: "Chat Inbox" }),
+        /* @__PURE__ */ jsx(
+          ExportCsvButton,
+          {
+            routeName: "admin.chat.export",
+            title: "Export Chat Messages",
+            description: "Select a message date range to download chat messages as a CSV file."
+          }
+        )
+      ] }),
       /* @__PURE__ */ jsxs("div", { className: "flex flex-col xl:flex-row gap-6 h-[calc(100vh-220px)] min-h-[620px]", children: [
         /* @__PURE__ */ jsx("div", { className: `w-full xl:w-[360px] ${selectedConversationId ? "hidden xl:block" : "block"}`, children: /* @__PURE__ */ jsx(
           ChatList,

@@ -3,6 +3,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import Pagination from '@/Components/Pagination';
 import Price from '@/Components/Price';
+import ExportCsvButton from '@/Components/Admin/ExportCsvButton';
 import Swal from 'sweetalert2';
 
 export default function Index({ bids, filters = {} }) {
@@ -102,6 +103,12 @@ export default function Index({ bids, filters = {} }) {
                                           </select>
                                           <button type="submit" className="px-6 py-2 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors">Filter</button>
                                    </form>
+                                   <ExportCsvButton
+                                          routeName="admin.bids.export"
+                                          params={{ search, sort }}
+                                          title="Export Bids"
+                                          description="Select a bid date range to download bids as a CSV file."
+                                   />
                             </div>
 
                             <div className="overflow-x-auto">

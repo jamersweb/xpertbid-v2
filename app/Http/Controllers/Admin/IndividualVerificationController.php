@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Admin\Concerns\StreamsCsvExports;
 use Illuminate\Http\Request;
 use App\Support\LoggedMail as Mail;
 use App\Models\IndividualVerification;
@@ -15,6 +16,8 @@ use Inertia\Inertia;
 
 class IndividualVerificationController extends Controller
 {
+    use StreamsCsvExports;
+
     public function index(Request $request)
     {
         $query = IndividualVerification::with('user');
@@ -43,6 +46,57 @@ class IndividualVerificationController extends Controller
             'verifications' => $verifications,
             'filters' => $request->only(['search', 'status'])
         ]);
+    }
+
+    public function export(Request $request)
+    {
+        $validated = $this->validateExportDateRange($request);
+        $query = IndividualVerification::with('user')
+            ->whereDate('created_at', '>=', $validated['from'])
+            ->whereDate('created_at', '<=', $validated['to']);
+
+        if (!empty($validated['search'])) {
+            $search = $validated['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('full_legal_name', 'LIKE', "%{$search}%")
+                    ->orWhere('id', 'LIKE', "%{$search}%")
+                    ->orWhere('contact_number', 'LIKE', "%{$search}%")
+                    ->orWhere('email_address', 'LIKE', "%{$search}%")
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'LIKE', "%{$search}%")
+                            ->orWhere('email', 'LIKE', "%{$search}%");
+                    });
+            });
+        }
+
+        if (!empty($validated['status'])) {
+            $query->where('status', $validated['status']);
+        }
+
+        $verifications = $query->orderBy('created_at', 'desc')->get();
+        $filename = 'individual_verifications_' . $validated['from'] . '_to_' . $validated['to'] . '.csv';
+
+        return $this->streamCsv($filename, [
+            'ID',
+            'Applicant',
+            'Email',
+            'Phone',
+            'User',
+            'User Email',
+            'Status',
+            'Decline Reason',
+            'Submitted At',
+        ], $verifications->map(fn ($verification) => [
+            $verification->id,
+            $verification->full_legal_name,
+            $verification->email_address,
+            $verification->contact_number,
+            $verification->user?->name,
+            $verification->user?->email,
+            $verification->status,
+            $verification->decline_reason,
+            optional($verification->created_at)->format('Y-m-d H:i:s'),
+        ]));
     }
 
     public function accept($id)

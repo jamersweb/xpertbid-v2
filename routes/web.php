@@ -267,10 +267,12 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     // Verifications
     Route::prefix('verifications')->name('verifications.')->group(function () {
         Route::get('/individual', [App\Http\Controllers\Admin\IndividualVerificationController::class, 'index'])->name('individual.index');
+        Route::get('/individual/export', [App\Http\Controllers\Admin\IndividualVerificationController::class, 'export'])->name('individual.export');
         Route::post('/individual/{id}/accept', [App\Http\Controllers\Admin\IndividualVerificationController::class, 'accept'])->name('individual.accept');
         Route::post('/individual/{id}/decline', [App\Http\Controllers\Admin\IndividualVerificationController::class, 'decline'])->name('individual.decline');
 
         Route::get('/corporate', [App\Http\Controllers\Admin\CorporateVerificationController::class, 'index'])->name('corporate.index');
+        Route::get('/corporate/export', [App\Http\Controllers\Admin\CorporateVerificationController::class, 'export'])->name('corporate.export');
         Route::post('/corporate/{id}/accept', [App\Http\Controllers\Admin\CorporateVerificationController::class, 'accept'])->name('corporate.accept');
         Route::post('/corporate/{id}/decline', [App\Http\Controllers\Admin\CorporateVerificationController::class, 'decline'])->name('corporate.decline');
 
@@ -284,6 +286,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
         // Auction Verification (Publish Approval)
         Route::get('/auctions', [App\Http\Controllers\Admin\AuctionStatusController::class, 'index'])->name('auctions.index');
+        Route::get('/auctions/export', [App\Http\Controllers\Admin\AuctionStatusController::class, 'export'])->name('auctions.export');
         Route::post('/auctions/{id}/accept', [App\Http\Controllers\Admin\AuctionStatusController::class, 'accept'])->name('auctions.accept');
         Route::post('/auctions/{id}/decline', [App\Http\Controllers\Admin\AuctionStatusController::class, 'decline'])->name('auctions.decline');
     });
@@ -291,12 +294,14 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     // Auction Management
     Route::resource('auctions', App\Http\Controllers\Admin\AuctionController::class)->names('auctions');
     Route::get('/bids', [App\Http\Controllers\Admin\BidController::class, 'index'])->name('bids.index');
+    Route::get('/bids/export', [App\Http\Controllers\Admin\BidController::class, 'export'])->name('bids.export');
     Route::get('/bids/{id}', [App\Http\Controllers\Admin\BidController::class, 'show'])->name('bids.show');
     Route::patch('/bids/{id}', [App\Http\Controllers\Admin\BidController::class, 'update'])->name('bids.update');
     Route::delete('/bids/{id}', [App\Http\Controllers\Admin\BidController::class, 'destroy'])->name('bids.destroy');
 
     // Order Management
     Route::get('/orders', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/export', [App\Http\Controllers\Admin\OrderController::class, 'export'])->name('orders.export');
     Route::get('/orders/{id}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{id}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('orders.update-status');
 
@@ -325,6 +330,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::patch('/live-auctions/{id}/close', [App\Http\Controllers\Admin\ListingController::class, 'closeLiveAuction'])->name('live-auctions.close');
     Route::patch('/live-auctions/{id}/award', [App\Http\Controllers\Admin\ListingController::class, 'awardLiveAuction'])->name('live-auctions.award');
     Route::get('/listings', [App\Http\Controllers\Admin\ListingController::class, 'index'])->name('listings.index');
+    Route::get('/listings/export', [App\Http\Controllers\Admin\ListingController::class, 'export'])->name('listings.export');
     Route::resource('listings', App\Http\Controllers\Admin\ListingController::class)->except(['index'])->names('listings');
     Route::patch('/listings/{id}/status', [App\Http\Controllers\Admin\ListingController::class, 'updateStatus'])->name('listings.update-status');
     Route::post('/listings/{id}/approve-edit', [App\Http\Controllers\Admin\ListingController::class, 'approveEdit'])->name('listings.approve-edit');
@@ -359,14 +365,14 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/bidder-communication/bidders', [App\Http\Controllers\Admin\BidderCommunicationController::class, 'getBidders'])->name('bidder-communication.get-bidders');
     Route::get('/bidder-communication/search-users', [App\Http\Controllers\Admin\BidderCommunicationController::class, 'searchUsers'])->name('bidder-communication.search-users');
     Route::post('/bidder-communication/send', [App\Http\Controllers\Admin\BidderCommunicationController::class, 'send'])->name('bidder-communication.send');
-    Route::get('/chat', function () {
-        return Inertia::render('Admin/Chat/Index');
-    })->name('chat.index');
+    Route::get('/chat', [App\Http\Controllers\Admin\ChatController::class, 'index'])->name('chat.index');
+    Route::get('/chat/export', [App\Http\Controllers\Admin\ChatController::class, 'export'])->name('chat.export');
 
     // CRM & Secondary Tools
     Route::get('/crm', [App\Http\Controllers\Admin\CustomerOutreachController::class, 'index'])->name('crm.index');
     Route::put('/crm/{id}', [App\Http\Controllers\Admin\CustomerOutreachController::class, 'update'])->name('crm.update');
     Route::get('/email-logs', [App\Http\Controllers\Admin\EmailLogController::class, 'index'])->name('email-logs.index');
+    Route::get('/email-logs/export', [App\Http\Controllers\Admin\EmailLogController::class, 'export'])->name('email-logs.export');
     Route::resource('roles', App\Http\Controllers\Admin\RoleController::class)->names('roles');
 });
 

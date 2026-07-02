@@ -6,23 +6,21 @@ import { P as Pagination } from "./Pagination-yoJpev1-.js";
 import { M as Modal } from "./Modal-DHAPaXZd.js";
 import { S as SecondaryButton } from "./SecondaryButton-C9TQBbBR.js";
 import { I as InputLabel } from "./InputLabel-CE_n4Upz.js";
+import { E as ExportCsvButton } from "./ExportCsvButton-0i79GLe1.js";
 import "./useSessionKeepAlive-BIm1aJlj.js";
 import "./useCurrencyList-Ce5tJXO9.js";
 import "axios";
 import "@headlessui/react";
-function Individual({ verifications, filters }) {
+import "./TextInput-DDsS-qQQ.js";
+import "sweetalert2";
+function Corporate({ verifications, filters }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVerification, setSelectedVerification] = useState(null);
   const [declineReason, setDeclineReason] = useState("");
   const [search, setSearch] = useState(filters.search || "");
-  const [statusFilter, setStatusFilter] = useState(filters.status || "");
   const handleSearch = (e) => {
     e.preventDefault();
-    router.get(route("admin.verifications.individual.index"), { search, status: statusFilter }, { preserveState: true });
-  };
-  const handleStatusFilterChange = (status) => {
-    setStatusFilter(status);
-    router.get(route("admin.verifications.individual.index"), { search, status }, { preserveState: true });
+    router.get(route("admin.verifications.corporate.index"), { search }, { preserveState: true });
   };
   const openDeclineModal = (verification) => {
     setSelectedVerification(verification);
@@ -30,7 +28,7 @@ function Individual({ verifications, filters }) {
   };
   const confirmDecline = () => {
     if (!declineReason) return alert("Please provide a reason.");
-    router.post(route("admin.verifications.individual.decline", selectedVerification.id), {
+    router.post(route("admin.verifications.corporate.decline", selectedVerification.id), {
       decline_reason: declineReason
     }, {
       onSuccess: () => {
@@ -41,7 +39,7 @@ function Individual({ verifications, filters }) {
   };
   const acceptVerification = (id) => {
     if (confirm("Are you sure you want to accept this verification?")) {
-      router.post(route("admin.verifications.individual.accept", id));
+      router.post(route("admin.verifications.corporate.accept", id));
     }
   };
   const statusBadges = {
@@ -51,8 +49,8 @@ function Individual({ verifications, filters }) {
     not_verified: "bg-gray-100 text-gray-700",
     resubmit: "bg-blue-100 text-blue-700"
   };
-  return /* @__PURE__ */ jsxs(AdminLayout, { title: "Individual Verifications", children: [
-    /* @__PURE__ */ jsx(Head, { title: "Individual Verifications" }),
+  return /* @__PURE__ */ jsxs(AdminLayout, { title: "Corporate Verifications", children: [
+    /* @__PURE__ */ jsx(Head, { title: "Corporate Verifications" }),
     /* @__PURE__ */ jsxs("div", { className: "bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden", children: [
       /* @__PURE__ */ jsxs("div", { className: "p-6 border-bottom border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4", children: [
         /* @__PURE__ */ jsxs("form", { onSubmit: handleSearch, className: "flex-1 max-w-md flex gap-2", children: [
@@ -63,7 +61,7 @@ function Individual({ verifications, filters }) {
               {
                 type: "text",
                 className: "w-full pl-11 pr-4 py-2 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm transition-all text-gray-900",
-                placeholder: "Search by name, ID, phone or email...",
+                placeholder: "Search by entity name...",
                 value: search,
                 onChange: (e) => setSearch(e.target.value)
               }
@@ -74,95 +72,64 @@ function Individual({ verifications, filters }) {
             "Search"
           ] })
         ] }),
-        /* @__PURE__ */ jsx("div", { className: "flex gap-2", children: ["", "pending", "verified", "declined"].map((status) => /* @__PURE__ */ jsx(
-          "button",
+        /* @__PURE__ */ jsx(
+          ExportCsvButton,
           {
-            onClick: () => handleStatusFilterChange(status),
-            className: `px-4 py-2 rounded-xl text-xs font-bold transition-all ${statusFilter === status ? "bg-black text-white shadow-lg shadow-black/20" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`,
-            children: status === "" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)
-          },
-          status
-        )) })
+            routeName: "admin.verifications.corporate.export",
+            params: { search },
+            title: "Export Corporate Verifications",
+            description: "Select a submission date range to download corporate verifications as a CSV file."
+          }
+        )
       ] }),
       /* @__PURE__ */ jsx("div", { className: "overflow-x-auto", children: /* @__PURE__ */ jsxs("table", { className: "w-full text-left border-collapse", children: [
         /* @__PURE__ */ jsx("thead", { children: /* @__PURE__ */ jsxs("tr", { className: "bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider", children: [
+          /* @__PURE__ */ jsx("th", { className: "px-6 py-4", children: "Entity Details" }),
           /* @__PURE__ */ jsx("th", { className: "px-6 py-4", children: "Applicant" }),
           /* @__PURE__ */ jsx("th", { className: "px-6 py-4", children: "Documents" }),
           /* @__PURE__ */ jsx("th", { className: "px-6 py-4", children: "Status" }),
-          /* @__PURE__ */ jsx("th", { className: "px-6 py-4", children: "Submitted" }),
           /* @__PURE__ */ jsx("th", { className: "px-6 py-4 text-right", children: "Actions" })
         ] }) }),
         /* @__PURE__ */ jsx("tbody", { className: "divide-y divide-gray-100", children: verifications.data.map((verification) => /* @__PURE__ */ jsxs("tr", { className: "hover:bg-gray-50/50 transition-colors", children: [
-          /* @__PURE__ */ jsx("td", { className: "px-6 py-4", children: /* @__PURE__ */ jsxs("div", { className: "flex flex-col", children: [
-            /* @__PURE__ */ jsx("span", { className: "text-sm font-bold text-gray-800", children: verification.full_legal_name }),
-            /* @__PURE__ */ jsx("span", { className: "text-[11px] text-gray-500", children: verification.email_address }),
-            /* @__PURE__ */ jsx("span", { className: "text-[11px] text-gray-500", children: verification.contact_number })
-          ] }) }),
-          /* @__PURE__ */ jsx("td", { className: "px-6 py-4", children: /* @__PURE__ */ jsxs("div", { className: "flex gap-2", children: [
-            verification.id_front_path && /* @__PURE__ */ jsx("a", { href: asset(verification.id_front_path), target: "_blank", className: "text-xs bg-gray-100 text-gray-900 hover:bg-gray-200 px-2 py-1 rounded transition-colors", children: "Front" }),
-            verification.id_back_path && /* @__PURE__ */ jsx("a", { href: asset(verification.id_back_path), target: "_blank", className: "text-xs bg-gray-100 text-gray-900 hover:bg-gray-200 px-2 py-1 rounded transition-colors", children: "Back" })
-          ] }) }),
+          /* @__PURE__ */ jsxs("td", { className: "px-6 py-4", children: [
+            /* @__PURE__ */ jsx("p", { className: "text-sm font-bold text-gray-800", children: verification.legal_entity_name }),
+            /* @__PURE__ */ jsxs("p", { className: "text-[11px] text-gray-500", children: [
+              verification.entity_type,
+              " (",
+              verification.country,
+              ")"
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxs("td", { className: "px-6 py-4", children: [
+            /* @__PURE__ */ jsx("p", { className: "text-sm text-gray-800", children: verification.user?.name }),
+            /* @__PURE__ */ jsx("p", { className: "text-[11px] text-gray-500", children: verification.user?.email })
+          ] }),
+          /* @__PURE__ */ jsx("td", { className: "px-6 py-4", children: /* @__PURE__ */ jsx("div", { className: "flex gap-1 flex-wrap max-w-[150px]", children: (verification.business_documents || []).map((doc, idx) => /* @__PURE__ */ jsxs("a", { href: "/" + doc, target: "_blank", className: "text-[10px] bg-gray-100 text-gray-900 hover:bg-gray-200 px-2 py-1 rounded", children: [
+            "Doc ",
+            idx + 1
+          ] }, idx)) }) }),
           /* @__PURE__ */ jsx("td", { className: "px-6 py-4", children: /* @__PURE__ */ jsx("span", { className: `px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBadges[verification.status] || "bg-gray-100"}`, children: verification.status.replace("_", " ") }) }),
-          /* @__PURE__ */ jsx("td", { className: "px-6 py-4 text-xs text-gray-500", children: new Date(verification.created_at).toLocaleDateString() }),
           /* @__PURE__ */ jsx("td", { className: "px-6 py-4 text-right", children: verification.status !== "verified" && /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-end gap-2", children: [
-            /* @__PURE__ */ jsx(
-              "button",
-              {
-                onClick: () => acceptVerification(verification.id),
-                className: "p-2 hover:bg-emerald-50 rounded-lg text-emerald-600 transition-colors",
-                title: "Accept",
-                children: /* @__PURE__ */ jsx("i", { className: "fa-solid fa-circle-check" })
-              }
-            ),
-            /* @__PURE__ */ jsx(
-              "button",
-              {
-                onClick: () => openDeclineModal(verification),
-                className: "p-2 hover:bg-rose-50 rounded-lg text-rose-600 transition-colors",
-                title: "Decline",
-                children: /* @__PURE__ */ jsx("i", { className: "fa-solid fa-circle-xmark" })
-              }
-            )
+            /* @__PURE__ */ jsx("button", { onClick: () => acceptVerification(verification.id), className: "p-2 hover:bg-emerald-50 rounded-lg text-emerald-600 transition-colors", title: "Accept", children: /* @__PURE__ */ jsx("i", { className: "fa-solid fa-circle-check" }) }),
+            /* @__PURE__ */ jsx("button", { onClick: () => openDeclineModal(verification), className: "p-2 hover:bg-rose-50 rounded-lg text-rose-600 transition-colors", title: "Decline", children: /* @__PURE__ */ jsx("i", { className: "fa-solid fa-circle-xmark" }) })
           ] }) })
         ] }, verification.id)) })
       ] }) }),
       /* @__PURE__ */ jsx("div", { className: "p-6 border-top border-gray-100", children: /* @__PURE__ */ jsx(Pagination, { links: verifications.links }) })
     ] }),
     /* @__PURE__ */ jsx(Modal, { show: isModalOpen, onClose: () => setIsModalOpen(false), maxWidth: "md", children: /* @__PURE__ */ jsxs("div", { className: "p-6", children: [
-      /* @__PURE__ */ jsx("h2", { className: "text-lg font-bold text-gray-800 mb-4", children: "Decline Verification" }),
-      /* @__PURE__ */ jsxs("p", { className: "text-sm text-gray-500 mb-6", children: [
-        "Are you sure you want to decline verification for ",
-        /* @__PURE__ */ jsx("strong", { children: selectedVerification?.full_legal_name }),
-        "? Please provide a reason."
-      ] }),
+      /* @__PURE__ */ jsx("h2", { className: "text-lg font-bold text-gray-800 mb-4", children: "Decline Corporate Verification" }),
       /* @__PURE__ */ jsxs("div", { className: "mb-6", children: [
         /* @__PURE__ */ jsx(InputLabel, { value: "Reason for Decline" }),
-        /* @__PURE__ */ jsx(
-          "textarea",
-          {
-            className: "mt-1 block w-full border-gray-300 focus:border-rose-500 focus:ring-rose-500 rounded-md shadow-sm text-gray-900",
-            rows: "4",
-            value: declineReason,
-            onChange: (e) => setDeclineReason(e.target.value),
-            placeholder: "e.g. ID documents are blurred..."
-          }
-        )
+        /* @__PURE__ */ jsx("textarea", { className: "mt-1 block w-full border-gray-300 focus:border-rose-500 focus:ring-rose-500 rounded-md shadow-sm text-gray-900", rows: "4", value: declineReason, onChange: (e) => setDeclineReason(e.target.value) })
       ] }),
       /* @__PURE__ */ jsxs("div", { className: "flex justify-end gap-3", children: [
         /* @__PURE__ */ jsx(SecondaryButton, { onClick: () => setIsModalOpen(false), children: "Cancel" }),
-        /* @__PURE__ */ jsx(
-          "button",
-          {
-            onClick: confirmDecline,
-            className: "px-4 py-2 bg-rose-600 text-white rounded-xl text-sm font-bold hover:bg-rose-700 transition-colors",
-            children: "Confirm Decline"
-          }
-        )
+        /* @__PURE__ */ jsx("button", { onClick: confirmDecline, className: "px-4 py-2 bg-rose-600 text-white rounded-xl text-sm font-bold hover:bg-rose-700 transition-colors", children: "Confirm Decline" })
       ] })
     ] }) })
   ] });
 }
-const asset = (path) => "/" + path;
 export {
-  Individual as default
+  Corporate as default
 };
