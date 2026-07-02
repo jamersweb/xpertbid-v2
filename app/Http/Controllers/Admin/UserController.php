@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
-use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -31,6 +31,80 @@ class UserController extends Controller
             'users' => $users,
             'filters' => $request->only(['search'])
         ]);
+    }
+
+    public function export(Request $request)
+    {
+        $validated = $request->validate([
+            'from' => ['required', 'date'],
+            'to' => ['required', 'date', 'after_or_equal:from'],
+            'search' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $query = User::query()
+            ->with(['roles', 'referrer'])
+            ->whereDate('created_at', '>=', $validated['from'])
+            ->whereDate('created_at', '<=', $validated['to']);
+
+        if (!empty($validated['search'])) {
+            $search = $validated['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%")
+                    ->orWhere('phone', 'LIKE', "%{$search}%")
+                    ->orWhere('id', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $hasStatusColumn = Schema::hasColumn('users', 'status');
+        $users = $query->orderBy('created_at', 'desc')->get();
+        $filename = 'admin_users_' . $validated['from'] . '_to_' . $validated['to'] . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $columns = [
+            'ID',
+            'Name',
+            'Email',
+            'Phone',
+            'Role',
+            'Signup Source',
+            'Referral Code',
+            'Referred By',
+            'Status',
+            'Created At',
+        ];
+
+        $callback = function () use ($users, $columns, $hasStatusColumn) {
+            $file = fopen('php://output', 'w');
+            fwrite($file, "\xEF\xBB\xBF");
+            fputcsv($file, $columns);
+
+            foreach ($users as $user) {
+                fputcsv($file, [
+                    $user->id,
+                    $user->name,
+                    $user->email,
+                    $user->phone,
+                    $user->getRoleNames()->first() ?? $user->role ?? 'N/A',
+                    $user->signup_source ?? 'web',
+                    $user->referral_code,
+                    $user->referrer?->name ?? 'N/A',
+                    $hasStatusColumn ? ($user->status ?? 'N/A') : ($user->approved ? 'Approved' : 'Pending'),
+                    optional($user->created_at)->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function show(User $user)

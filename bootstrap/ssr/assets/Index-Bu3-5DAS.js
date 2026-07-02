@@ -16,8 +16,11 @@ import "axios";
 import "@headlessui/react";
 function Index({ users, filters }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [search, setSearch] = useState(filters.search || "");
+  const [exportFrom, setExportFrom] = useState("");
+  const [exportTo, setExportTo] = useState("");
   const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
     name: "",
     email: "",
@@ -28,6 +31,29 @@ function Index({ users, filters }) {
   const handleSearch = (e) => {
     e.preventDefault();
     router.get(route("admin.users.index"), { search }, { preserveState: true });
+  };
+  const handleExport = (e) => {
+    e.preventDefault();
+    if (!exportFrom || !exportTo) {
+      Swal.fire({
+        title: "Date range required",
+        text: "Please select both from and to dates before exporting.",
+        icon: "warning",
+        confirmButtonColor: "#000000"
+      });
+      return;
+    }
+    const params = new URLSearchParams({
+      from: exportFrom,
+      to: exportTo
+    });
+    if (search) {
+      params.set("search", search);
+    }
+    window.location.href = `${route("admin.users.export")}?${params.toString()}`;
+  };
+  const closeExportModal = () => {
+    setIsExportModalOpen(false);
   };
   const openModal = (user = null) => {
     setEditingUser(user);
@@ -85,7 +111,7 @@ function Index({ users, filters }) {
   return /* @__PURE__ */ jsxs(AdminLayout, { title: "User Management", children: [
     /* @__PURE__ */ jsx(Head, { title: "User Management" }),
     /* @__PURE__ */ jsxs("div", { className: "bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden", children: [
-      /* @__PURE__ */ jsxs("div", { className: "p-6 border-bottom border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4", children: [
+      /* @__PURE__ */ jsx("div", { className: "p-6 border-bottom border-gray-100 flex flex-col gap-4", children: /* @__PURE__ */ jsxs("div", { className: "flex flex-col xl:flex-row xl:items-center justify-between gap-4", children: [
         /* @__PURE__ */ jsxs("form", { onSubmit: handleSearch, className: "flex-1 max-w-md flex gap-2", children: [
           /* @__PURE__ */ jsxs("div", { className: "relative flex-1", children: [
             /* @__PURE__ */ jsx("i", { className: "fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" }),
@@ -105,11 +131,25 @@ function Index({ users, filters }) {
             "Search"
           ] })
         ] }),
-        /* @__PURE__ */ jsxs(PrimaryButton, { onClick: () => openModal(), children: [
-          /* @__PURE__ */ jsx("i", { className: "fa-solid fa-plus me-2" }),
-          " Add New User"
+        /* @__PURE__ */ jsxs("div", { className: "flex flex-col lg:flex-row lg:items-center gap-3", children: [
+          /* @__PURE__ */ jsxs(
+            "button",
+            {
+              type: "button",
+              onClick: () => setIsExportModalOpen(true),
+              className: "px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/10 flex items-center justify-center gap-2",
+              children: [
+                /* @__PURE__ */ jsx("i", { className: "fa-solid fa-file-csv" }),
+                "Export CSV"
+              ]
+            }
+          ),
+          /* @__PURE__ */ jsxs(PrimaryButton, { onClick: () => openModal(), children: [
+            /* @__PURE__ */ jsx("i", { className: "fa-solid fa-plus me-2" }),
+            " Add New User"
+          ] })
         ] })
-      ] }),
+      ] }) }),
       /* @__PURE__ */ jsx("div", { className: "overflow-x-auto", children: /* @__PURE__ */ jsxs("table", { className: "w-full text-left border-collapse", children: [
         /* @__PURE__ */ jsx("thead", { children: /* @__PURE__ */ jsxs("tr", { className: "bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider", children: [
           /* @__PURE__ */ jsx("th", { className: "px-6 py-4", children: "User Details" }),
@@ -175,6 +215,48 @@ function Index({ users, filters }) {
       ] }) }),
       /* @__PURE__ */ jsx("div", { className: "p-6 border-top border-gray-100", children: /* @__PURE__ */ jsx(Pagination, { links: users.links }) })
     ] }),
+    /* @__PURE__ */ jsx(Modal, { show: isExportModalOpen, onClose: closeExportModal, maxWidth: "md", children: /* @__PURE__ */ jsxs("form", { onSubmit: handleExport, className: "p-6", children: [
+      /* @__PURE__ */ jsx("h2", { className: "text-lg font-bold text-gray-800 mb-1", children: "Export Users" }),
+      /* @__PURE__ */ jsx("p", { className: "text-sm text-gray-500 mb-6", children: "Select a signup date range to download users as a CSV file." }),
+      /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-4", children: [
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx(InputLabel, { htmlFor: "export_from", value: "From Date" }),
+          /* @__PURE__ */ jsx(
+            TextInput,
+            {
+              id: "export_from",
+              type: "date",
+              className: "mt-1 block w-full text-gray-900",
+              value: exportFrom,
+              onChange: (e) => setExportFrom(e.target.value),
+              required: true
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx(InputLabel, { htmlFor: "export_to", value: "To Date" }),
+          /* @__PURE__ */ jsx(
+            TextInput,
+            {
+              id: "export_to",
+              type: "date",
+              className: "mt-1 block w-full text-gray-900",
+              value: exportTo,
+              onChange: (e) => setExportTo(e.target.value),
+              min: exportFrom || void 0,
+              required: true
+            }
+          )
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "mt-8 flex justify-end gap-3", children: [
+        /* @__PURE__ */ jsx(SecondaryButton, { onClick: closeExportModal, children: "Cancel" }),
+        /* @__PURE__ */ jsxs("button", { type: "submit", className: "inline-flex items-center rounded-md border border-transparent bg-emerald-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 gap-2", children: [
+          /* @__PURE__ */ jsx("i", { className: "fa-solid fa-file-csv" }),
+          "Export CSV"
+        ] })
+      ] })
+    ] }) }),
     /* @__PURE__ */ jsx(Modal, { show: isModalOpen, onClose: closeModal, maxWidth: "xl", children: /* @__PURE__ */ jsxs("form", { onSubmit: submit, className: "p-6", children: [
       /* @__PURE__ */ jsx("h2", { className: "text-lg font-bold text-gray-800 mb-6", children: editingUser ? "Edit User" : "Add New User" }),
       /* @__PURE__ */ jsxs("div", { className: "space-y-4", children: [
