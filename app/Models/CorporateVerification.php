@@ -15,6 +15,7 @@ class CorporateVerification extends Model
         'business_documents',
         'country',
         'status',
+        'decline_reason',
     ];
 
     protected $casts = [

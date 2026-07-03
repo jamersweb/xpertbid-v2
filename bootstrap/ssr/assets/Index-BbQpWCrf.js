@@ -15,16 +15,20 @@ import "./useSessionKeepAlive-BIm1aJlj.js";
 import "./useCurrencyList-Ce5tJXO9.js";
 import "axios";
 import "@headlessui/react";
-function Index({ users, filters }) {
+function Index({ users, filters, roles = [] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [search, setSearch] = useState(filters.search || "");
+  const defaultRole = roles.includes("User") ? "User" : roles[0] || "User";
   const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
     name: "",
     email: "",
     password: "",
     phone: "",
-    role: "user"
+    role: defaultRole,
+    is_email_verified: false,
+    is_individual_verified: false,
+    is_corporate_verified: false
   });
   const handleSearch = (e) => {
     e.preventDefault();
@@ -38,11 +42,23 @@ function Index({ users, filters }) {
         email: user.email,
         password: "",
         phone: user.phone || "",
-        role: "user"
-        // Needs dynamic role fetching
+        role: user.role_name || defaultRole,
+        is_email_verified: Boolean(user.is_email_verified),
+        is_individual_verified: user.individual_verification_status === "verified",
+        is_corporate_verified: user.corporate_verification_status === "verified"
       });
     } else {
-      reset();
+      setData({
+        name: "",
+        email: "",
+        password: "",
+        phone: "",
+        role: defaultRole,
+        is_email_verified: false,
+        is_individual_verified: false,
+        is_corporate_verified: false
+      });
+      clearErrors();
     }
     setIsModalOpen(true);
   };
@@ -249,19 +265,57 @@ function Index({ users, filters }) {
         ] }),
         /* @__PURE__ */ jsxs("div", { children: [
           /* @__PURE__ */ jsx(InputLabel, { htmlFor: "role", value: "User Role" }),
-          /* @__PURE__ */ jsxs(
+          /* @__PURE__ */ jsx(
             "select",
             {
               className: "mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-gray-900",
               value: data.role,
               onChange: (e) => setData("role", e.target.value),
-              children: [
-                /* @__PURE__ */ jsx("option", { value: "user", children: "User" }),
-                /* @__PURE__ */ jsx("option", { value: "admin", children: "Admin" })
-              ]
+              children: roles.length > 0 ? roles.map((role) => /* @__PURE__ */ jsx("option", { value: role, children: role }, role)) : /* @__PURE__ */ jsx("option", { value: defaultRole, children: defaultRole })
             }
           ),
           /* @__PURE__ */ jsx(InputError, { message: errors.role, className: "mt-2" })
+        ] }),
+        /* @__PURE__ */ jsxs("div", { className: "rounded-xl border border-gray-200 bg-gray-50 p-4", children: [
+          /* @__PURE__ */ jsx("p", { className: "text-xs font-bold uppercase tracking-wider text-gray-500 mb-3", children: "Admin Verification" }),
+          /* @__PURE__ */ jsxs("div", { className: "space-y-3", children: [
+            /* @__PURE__ */ jsxs("label", { className: "flex items-center gap-3 text-sm font-medium text-gray-800", children: [
+              /* @__PURE__ */ jsx(
+                "input",
+                {
+                  type: "checkbox",
+                  className: "rounded border-gray-300 text-black focus:ring-black",
+                  checked: data.is_email_verified,
+                  onChange: (e) => setData("is_email_verified", e.target.checked)
+                }
+              ),
+              "Email verified"
+            ] }),
+            /* @__PURE__ */ jsxs("label", { className: "flex items-center gap-3 text-sm font-medium text-gray-800", children: [
+              /* @__PURE__ */ jsx(
+                "input",
+                {
+                  type: "checkbox",
+                  className: "rounded border-gray-300 text-black focus:ring-black",
+                  checked: data.is_individual_verified,
+                  onChange: (e) => setData("is_individual_verified", e.target.checked)
+                }
+              ),
+              "Individual verification approved"
+            ] }),
+            /* @__PURE__ */ jsxs("label", { className: "flex items-center gap-3 text-sm font-medium text-gray-800", children: [
+              /* @__PURE__ */ jsx(
+                "input",
+                {
+                  type: "checkbox",
+                  className: "rounded border-gray-300 text-black focus:ring-black",
+                  checked: data.is_corporate_verified,
+                  onChange: (e) => setData("is_corporate_verified", e.target.checked)
+                }
+              ),
+              "Corporate verification approved"
+            ] })
+          ] })
         ] })
       ] }),
       /* @__PURE__ */ jsxs("div", { className: "mt-8 flex justify-end gap-3", children: [

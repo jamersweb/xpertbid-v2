@@ -18,6 +18,7 @@ class IndividualVerification extends Model
         'email_address',
         'country',
         'status',
+        'decline_reason',
         'document_type',
     ];
 
@@ -26,4 +27,3 @@ class IndividualVerification extends Model
         return $this->belongsTo(User::class);
     }
 }
-
