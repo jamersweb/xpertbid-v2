@@ -33,6 +33,10 @@ export default function Index({ users, filters, roles = [] }) {
               router.get(route('admin.users.index'), { search }, { preserveState: true });
        };
 
+       const getUserPhone = (user) => {
+              return user.phone || user.individual_verification?.contact_number || 'No phone';
+       };
+
        const openModal = (user = null) => {
               setEditingUser(user);
               if (user) {
@@ -170,10 +174,10 @@ export default function Index({ users, filters, roles = [] }) {
                                                                              </div>
                                                                       </div>
                                                                </td>
-                                                               <td className="px-6 py-4">
-                                                                      <p className="text-sm text-gray-800">{user.email}</p>
-                                                                      <p className="text-xs text-gray-500">{user.phone || 'No phone'}</p>
-                                                               </td>
+                                                                       <td className="px-6 py-4">
+                                                                              <p className="text-sm text-gray-800">{user.email}</p>
+                                                                      <p className="text-xs text-gray-500">{getUserPhone(user)}</p>
+                                                                       </td>
                                                                <td className="px-6 py-4">
                                                                       <span className="inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-100 text-sky-700">
                                                                              {user.signup_source || 'web'}

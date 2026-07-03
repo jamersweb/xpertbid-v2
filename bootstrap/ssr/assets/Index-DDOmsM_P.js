@@ -34,6 +34,9 @@ function Index({ users, filters, roles = [] }) {
     e.preventDefault();
     router.get(route("admin.users.index"), { search }, { preserveState: true });
   };
+  const getUserPhone = (user) => {
+    return user.phone || user.individual_verification?.contact_number || "No phone";
+  };
   const openModal = (user = null) => {
     setEditingUser(user);
     if (user) {
@@ -159,7 +162,7 @@ function Index({ users, filters, roles = [] }) {
           ] }) }),
           /* @__PURE__ */ jsxs("td", { className: "px-6 py-4", children: [
             /* @__PURE__ */ jsx("p", { className: "text-sm text-gray-800", children: user.email }),
-            /* @__PURE__ */ jsx("p", { className: "text-xs text-gray-500", children: user.phone || "No phone" })
+            /* @__PURE__ */ jsx("p", { className: "text-xs text-gray-500", children: getUserPhone(user) })
           ] }),
           /* @__PURE__ */ jsx("td", { className: "px-6 py-4", children: /* @__PURE__ */ jsx("span", { className: "inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-100 text-sky-700", children: user.signup_source || "web" }) }),
           /* @__PURE__ */ jsx("td", { className: "px-6 py-4", children: /* @__PURE__ */ jsx(
