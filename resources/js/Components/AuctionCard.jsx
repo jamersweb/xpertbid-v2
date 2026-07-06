@@ -5,7 +5,7 @@ import OwnerInfoRow from "@/Components/OwnerInfoRow";
 import Price from "@/Components/Price";
 import FavoriteToggleButton from "@/Components/FavoriteToggleButton";
 import { useCart } from "@/Contexts/CartContext";
-import { getDiscountMeta, isDirectBuyListing, isSoldOutListing } from "@/Utils/listingPricing";
+import { getBaseListingPrice, getDiscountMeta, isDirectBuyListing, isSoldOutListing } from "@/Utils/listingPricing";
 import { buildProductHref } from "@/Utils/productUrl";
 
 const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }) => {
@@ -66,7 +66,8 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
        const maxBid = Number(auction?.current_highest_bid || auction?.bids_max_bid_amount || 0);
        const minBid = Number(auction?.minimum_bid || auction?.price || 0);
        const hasMaxBid = Number.isFinite(maxBid) && maxBid > 0;
-       const displayAmount = isWonAuction ? winningBidAmount : (hasMaxBid ? maxBid : minBid);
+       const directBuyAmount = discountMeta.hasDiscount ? discountMeta.finalPrice : getBaseListingPrice(auction);
+       const displayAmount = isWonAuction ? winningBidAmount : (directBuyListing ? directBuyAmount : (hasMaxBid ? maxBid : minBid));
        const displayLabel = isWonAuction
               ? "Winning Bid"
               : (directBuyListing ? "Price" : (isLiveAuction ? (hasMaxBid ? "Live Bid" : "Start Price") : (hasMaxBid ? "Current Bid" : "Minimum Bid")));
