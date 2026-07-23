@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import 'leaflet/dist/leaflet.css';
 import { extractMapCoordinates } from '@/Utils/mapLocation';
 
 export default function PropertyLocationMap({ categoryFeatures }) {
@@ -10,6 +9,26 @@ export default function PropertyLocationMap({ categoryFeatures }) {
 
        useEffect(() => {
               let isMounted = true;
+
+              const ensureLeafletStyles = () => {
+                     if (typeof document === 'undefined') {
+                            return;
+                     }
+
+                     const existingLink = document.querySelector('link[data-leaflet-styles="true"]');
+                     if (existingLink) {
+                            return;
+                     }
+
+                     const link = document.createElement('link');
+                     link.rel = 'stylesheet';
+                     link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                     link.crossOrigin = '';
+                     link.setAttribute('data-leaflet-styles', 'true');
+                     document.head.appendChild(link);
+              };
+
+              ensureLeafletStyles();
 
               const loadMapModules = async () => {
                      if (typeof window === 'undefined') {
