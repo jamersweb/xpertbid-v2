@@ -7,11 +7,13 @@ import BidHistory from '@/Components/ProductDetails/BidHistory';
 import RelatedItems from '@/Components/ProductDetails/RelatedItems';
 import ListingLiveChat from '@/Components/ProductDetails/ListingLiveChat';
 import YoutubeLiveEmbed from '@/Components/ProductDetails/YoutubeLiveEmbed';
+import PropertyLocationMap from '@/Components/ProductDetails/PropertyLocationMap';
 import Price from '@/Components/Price';
 import { CartProvider } from '@/Contexts/CartContext';
 import { AuthModalProvider } from '@/Contexts/AuthModalContext';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { isGoogleMapsUrl } from '@/Utils/mapLocation';
 
 const AccordionItem = ({ title, children, defaultOpen = false }) => {
        const [open, setOpen] = useState(defaultOpen);
@@ -152,7 +154,7 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
                      const value = categoryFeatures[idKey] ?? categoryFeatures[featureKey] ?? categoryFeatures[base] ?? '';
                      const formatted = formatFeatureValue(value);
 
-                     if (!formatted) return null;
+                     if (!formatted || isGoogleMapsUrl(value)) return null;
 
                      mappedKeys.add(idKey);
                      if (base) mappedKeys.add(base);
@@ -167,7 +169,7 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
               .filter(Boolean);
 
        const fallbackRows = Object.entries(categoryFeatures)
-              .filter(([key, value]) => !mappedKeys.has(key) && formatFeatureValue(value))
+              .filter(([key, value]) => !mappedKeys.has(key) && formatFeatureValue(value) && !isGoogleMapsUrl(value))
               .map(([key, value]) => ({
                      key,
                      label: prettifyKey(key),
@@ -1107,6 +1109,7 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
                                                                              {auction.description && (
                                                                                     <div className="mb-3" dangerouslySetInnerHTML={{ __html: auction.description }} />
                                                                              )}
+                                                                             <PropertyLocationMap categoryFeatures={auction.category_features} />
                                                                       </AccordionItem>
                                                                )}
 
