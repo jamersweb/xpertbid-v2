@@ -2,7 +2,7 @@ import { jsxs, jsx } from "react/jsx-runtime";
 import "react";
 import { Head } from "@inertiajs/react";
 import { A as AppLayout } from "./AppLayout-CWZvIfaV.js";
-import { A as AuctionCard } from "./AuctionCard-C-dvF-nJ.js";
+import { A as AuctionCard } from "./AuctionCard-Cg35nH1x.js";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 /* empty css                */

@@ -1491,3 +1491,135 @@ button.signUpContinueIcon {
     opacity: 0;
   }
 }
+
+@media (max-width: 575px) {
+  .listing {
+    padding: 24px 18px 88px;
+  }
+
+  .listing .row {
+    margin-inline: 0;
+  }
+
+  .listing-main-heading {
+    margin-bottom: 18px;
+  }
+
+  .listing-main-heading h2 {
+    font-size: 26px;
+    line-height: 1.2;
+  }
+
+  .listing-card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .listing-card > .row {
+    margin-left: 0;
+    margin-right: 0;
+    row-gap: 14px;
+  }
+
+  .listing-card > .row > [class*='col-'] {
+    padding-left: 0;
+    padding-right: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .listing-detail > .row {
+    row-gap: 12px;
+  }
+
+  .listing-detail > .row > [class*='col-'] {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .listing-img {
+    height: 190px !important;
+    border-radius: 12px;
+  }
+
+  .listing-img img {
+    border-radius: 12px;
+  }
+
+  .listing-product-title {
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 8px;
+    font-size: 20px;
+    line-height: 1.25;
+    margin-bottom: 0;
+    word-break: break-word;
+  }
+
+  .listing-product-title .badge {
+    align-self: flex-start;
+    font-size: 11px !important;
+    padding: 4px 10px !important;
+    margin-bottom: 6px;
+  }
+
+  .listing-product-bid-time {
+    padding: 14px 0px;
+    border-radius: 12px;
+  }
+
+  .listing-bid-label,
+  .listing-bid-end-label {
+    margin-bottom: 8px;
+  }
+
+  .listing-bid-end-label {
+    text-align: left;
+  }
+
+  .listingPrice,
+  .listingTime {
+    font-size: 14px;
+    line-height: 18px;
+  }
+
+  .listingTime {
+    text-align: left;
+  }
+
+  .edit-promote {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .edit-promote .listingPromote {
+    margin-right: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .edit-promote > .ms-2,
+  .edit-promote > .button-style-1,
+  .edit-promote > a {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+
+  .edit-promote .editListing {
+    width: 100%;
+    min-height: 46px;
+  }
+
+  .edit-promote .editListing + .editListing {
+    margin-left: 0 !important;
+  }
+
+  .button-style-1 {
+    font-size: 15px;
+    line-height: 18px;
+    border-radius: 10px;
+  }
+}

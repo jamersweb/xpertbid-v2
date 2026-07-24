@@ -8,14 +8,14 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode, Navigation, Thumbs } from "swiper/modules";
 import { C as CountdownTimer } from "./CountdownTimer-BG03Al8T.js";
 import { Y as YoutubeLiveEmbed, B as BidSection, a as BidHistory } from "./YoutubeLiveEmbed-BWS8zHJE.js";
-import { A as AuctionCard } from "./AuctionCard-C-dvF-nJ.js";
+import { A as AuctionCard } from "./AuctionCard-Cg35nH1x.js";
 import { L as ListingLiveChat } from "./ListingLiveChat-DrCA7khS.js";
+import axios from "axios";
 import { P as Price } from "./Price-CF5NSPt0.js";
 import { C as CartProvider } from "./productUrl-SijKnuS_.js";
 import "ziggy-js";
 import "react-loader-spinner";
 import "sweetalert2";
-import "axios";
 import "./useSessionKeepAlive-BIm1aJlj.js";
 import "./useCurrencyList-Ce5tJXO9.js";
 import "./listingPricing-C5UuJtWm.js";
@@ -481,6 +481,304 @@ function RelatedItems({ items }) {
     ) })
   ] }) });
 }
+const MAP_URL_PATTERNS = [
+  /google\.com\/maps/i,
+  /maps\.google\.com/i,
+  /goo\.gl\/maps/i,
+  /maps\.app\.goo\.gl/i
+];
+const SHORT_MAP_URL_PATTERNS = [
+  /goo\.gl\/maps/i,
+  /maps\.app\.goo\.gl/i
+];
+const COORDINATE_PATTERN = /(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/;
+const isValidCoordinate = (lat, lng) => Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+const normalizeCategoryFeatures = (categoryFeatures) => {
+  if (!categoryFeatures) {
+    return null;
+  }
+  if (typeof categoryFeatures === "string") {
+    try {
+      return JSON.parse(categoryFeatures);
+    } catch (error) {
+      return null;
+    }
+  }
+  if (typeof categoryFeatures === "object") {
+    return categoryFeatures;
+  }
+  return null;
+};
+const isGoogleMapsUrl = (value) => {
+  if (typeof value !== "string") {
+    return false;
+  }
+  return MAP_URL_PATTERNS.some((pattern) => pattern.test(value));
+};
+const isShortGoogleMapsUrl = (value) => {
+  if (typeof value !== "string") {
+    return false;
+  }
+  return SHORT_MAP_URL_PATTERNS.some((pattern) => pattern.test(value));
+};
+const findGoogleMapsUrl = (categoryFeatures) => {
+  const parsedFeatures = normalizeCategoryFeatures(categoryFeatures);
+  if (!parsedFeatures) {
+    return null;
+  }
+  const values = Array.isArray(parsedFeatures) ? parsedFeatures : Object.values(parsedFeatures);
+  for (const value of values) {
+    if (isGoogleMapsUrl(value)) {
+      return value.trim();
+    }
+  }
+  return null;
+};
+const coordinatesFromMatch = (match) => {
+  if (!match) {
+    return null;
+  }
+  const lat = Number.parseFloat(match[1]);
+  const lng = Number.parseFloat(match[2]);
+  return isValidCoordinate(lat, lng) ? { lat, lng } : null;
+};
+const parseGoogleMapsCoordinates = (url) => {
+  if (typeof url !== "string" || !url.trim()) {
+    return null;
+  }
+  const trimmedUrl = url.trim();
+  try {
+    const parsedUrl = new URL(trimmedUrl);
+    const queryValue = parsedUrl.searchParams.get("q");
+    if (queryValue) {
+      const fromQuery = coordinatesFromMatch(decodeURIComponent(queryValue).match(COORDINATE_PATTERN));
+      if (fromQuery) {
+        return fromQuery;
+      }
+    }
+  } catch (error) {
+  }
+  const fromAtPattern = coordinatesFromMatch(trimmedUrl.match(/@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)(?:,|z|$)/i));
+  if (fromAtPattern) {
+    return fromAtPattern;
+  }
+  return coordinatesFromMatch(trimmedUrl.match(/[?&]q=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/i));
+};
+const resolveShortMapUrl = async (shortUrl) => {
+  const response = await axios.post("/api/resolve-map-url", { url: shortUrl });
+  const data = response?.data || {};
+  return data.resolved_url || data.resolvedUrl || data.final_url || data.finalUrl || data.url || null;
+};
+const extractMapCoordinates = async (categoryFeatures) => {
+  const mapUrl = findGoogleMapsUrl(categoryFeatures);
+  if (!mapUrl) {
+    return null;
+  }
+  const directCoordinates = parseGoogleMapsCoordinates(mapUrl);
+  if (directCoordinates) {
+    return directCoordinates;
+  }
+  if (!isShortGoogleMapsUrl(mapUrl)) {
+    return null;
+  }
+  try {
+    const resolvedUrl = await resolveShortMapUrl(mapUrl);
+    return parseGoogleMapsCoordinates(resolvedUrl);
+  } catch (error) {
+    return null;
+  }
+};
+function PropertyLocationMap({ categoryFeatures }) {
+  const [coordinates, setCoordinates] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasTriedResolving, setHasTriedResolving] = useState(false);
+  const [leafletModules, setLeafletModules] = useState(null);
+  useEffect(() => {
+    let isMounted = true;
+    const ensureLeafletStyles = () => {
+      if (typeof document === "undefined") {
+        return;
+      }
+      const existingLink = document.querySelector('link[data-leaflet-styles="true"]');
+      if (existingLink) {
+        return;
+      }
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      link.crossOrigin = "";
+      link.setAttribute("data-leaflet-styles", "true");
+      document.head.appendChild(link);
+    };
+    ensureLeafletStyles();
+    const loadMapModules = async () => {
+      if (typeof window === "undefined") {
+        return;
+      }
+      const [reactLeaflet, leaflet] = await Promise.all([
+        import("react-leaflet"),
+        import("leaflet")
+      ]);
+      const locationIcon2 = leaflet.divIcon({
+        className: "property-location-marker",
+        html: `
+                                   <span class="property-location-marker__pin">
+                                          <span class="property-location-marker__core"></span>
+                                   </span>
+                            `,
+        iconSize: [28, 36],
+        iconAnchor: [14, 36],
+        popupAnchor: [0, -34]
+      });
+      if (isMounted) {
+        setLeafletModules({
+          MapContainer: reactLeaflet.MapContainer,
+          TileLayer: reactLeaflet.TileLayer,
+          Marker: reactLeaflet.Marker,
+          Popup: reactLeaflet.Popup,
+          locationIcon: locationIcon2
+        });
+      }
+    };
+    loadMapModules().catch(() => {
+      if (isMounted) {
+        setLeafletModules(null);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+  useEffect(() => {
+    let isMounted = true;
+    const resolveCoordinates = async () => {
+      setIsLoading(true);
+      setHasTriedResolving(false);
+      const parsedCoordinates = await extractMapCoordinates(categoryFeatures);
+      if (isMounted) {
+        setCoordinates(parsedCoordinates);
+        setHasTriedResolving(true);
+        setIsLoading(false);
+      }
+    };
+    resolveCoordinates().catch(() => {
+      if (isMounted) {
+        setCoordinates(null);
+        setHasTriedResolving(true);
+        setIsLoading(false);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [categoryFeatures]);
+  const showLoading = isLoading || coordinates && !leafletModules;
+  if (showLoading) {
+    return /* @__PURE__ */ jsxs("div", { className: "property-location-map property-location-map--state", children: [
+      /* @__PURE__ */ jsx("div", { className: "property-location-spinner", "aria-label": "Loading location" }),
+      /* @__PURE__ */ jsx("span", { children: "Loading location..." }),
+      /* @__PURE__ */ jsx("style", { children: propertyLocationMapStyles })
+    ] });
+  }
+  if (!coordinates || !leafletModules || !hasTriedResolving) {
+    return /* @__PURE__ */ jsxs("div", { className: "property-location-map property-location-map--state", children: [
+      /* @__PURE__ */ jsx("span", { children: "Location not available" }),
+      /* @__PURE__ */ jsx("style", { children: propertyLocationMapStyles })
+    ] });
+  }
+  const { MapContainer, TileLayer, Marker, Popup, locationIcon } = leafletModules;
+  const position = [coordinates.lat, coordinates.lng];
+  return /* @__PURE__ */ jsxs("div", { className: "property-location-map", children: [
+    /* @__PURE__ */ jsxs(
+      MapContainer,
+      {
+        center: position,
+        zoom: 15,
+        scrollWheelZoom: false,
+        style: { width: "100%", height: "100%" },
+        children: [
+          /* @__PURE__ */ jsx(
+            TileLayer,
+            {
+              attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+              url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            }
+          ),
+          /* @__PURE__ */ jsx(Marker, { position, icon: locationIcon, children: /* @__PURE__ */ jsx(Popup, { children: "Property location" }) })
+        ]
+      }
+    ),
+    /* @__PURE__ */ jsx("style", { children: propertyLocationMapStyles })
+  ] });
+}
+const propertyLocationMapStyles = `
+       .property-location-map {
+              width: 100%;
+              height: 360px;
+              min-height: 300px;
+              border: 1px solid #e5e7eb;
+              border-radius: 8px;
+              overflow: hidden;
+              background: #f8fafc;
+       }
+
+       .property-location-map--state {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 10px;
+              color: #6b7280;
+              font-size: 14px;
+              font-weight: 600;
+       }
+
+       .property-location-marker {
+              background: transparent;
+              border: 0;
+       }
+
+       .property-location-marker__pin {
+              position: relative;
+              display: block;
+              width: 22px;
+              height: 22px;
+              margin: 0 auto;
+              background: #ef4444;
+              border: 3px solid #ffffff;
+              border-radius: 50% 50% 50% 0;
+              transform: rotate(-45deg);
+              box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);
+       }
+
+       .property-location-marker__core {
+              position: absolute;
+              inset: 5px;
+              border-radius: 50%;
+              background: #ffffff;
+       }
+
+       .property-location-spinner {
+              width: 18px;
+              height: 18px;
+              border: 2px solid #d1d5db;
+              border-top-color: #43ace9;
+              border-radius: 999px;
+              animation: property-location-spin 0.7s linear infinite;
+       }
+
+       @keyframes property-location-spin {
+              to {
+                     transform: rotate(360deg);
+              }
+       }
+
+       @media (max-width: 767px) {
+              .property-location-map {
+                     height: 280px;
+                     min-height: 260px;
+              }
+       }
+`;
 const AccordionItem = ({ title, children, defaultOpen = false }) => {
   const [open, setOpen] = useState(defaultOpen);
   return /* @__PURE__ */ jsxs("div", { className: `xb-accordion ${open ? "open" : ""}`, children: [
@@ -596,7 +894,7 @@ function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, d
     const featureKey = fieldNameCounts[base] > 1 ? `${base}__${field.id}` : base;
     const value = categoryFeatures[idKey] ?? categoryFeatures[featureKey] ?? categoryFeatures[base] ?? "";
     const formatted = formatFeatureValue(value);
-    if (!formatted) return null;
+    if (!formatted || isGoogleMapsUrl(value)) return null;
     mappedKeys.add(idKey);
     if (base) mappedKeys.add(base);
     if (featureKey) mappedKeys.add(featureKey);
@@ -606,7 +904,7 @@ function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, d
       value: formatted
     };
   }).filter(Boolean);
-  const fallbackRows = Object.entries(categoryFeatures).filter(([key, value]) => !mappedKeys.has(key) && formatFeatureValue(value)).map(([key, value]) => ({
+  const fallbackRows = Object.entries(categoryFeatures).filter(([key, value]) => !mappedKeys.has(key) && formatFeatureValue(value) && !isGoogleMapsUrl(value)).map(([key, value]) => ({
     key,
     label: prettifyKey(key),
     value: formatFeatureValue(value)
@@ -1486,7 +1784,10 @@ function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, d
     ] }) }) }) }),
     /* @__PURE__ */ jsx("section", { className: "product-detailed-info", children: /* @__PURE__ */ jsx("div", { className: "container-fluid", children: /* @__PURE__ */ jsx("div", { className: "product-detailed-info-parent", children: /* @__PURE__ */ jsxs("div", { className: "row justify-content-between", children: [
       /* @__PURE__ */ jsx("div", { className: "col-lg-7 col-md-6", children: /* @__PURE__ */ jsxs("div", { className: "x-accordions", children: [
-        (auction.description || auction.product_location) && /* @__PURE__ */ jsx(AccordionItem, { title: "Key Information", defaultOpen: true, children: auction.description && /* @__PURE__ */ jsx("div", { className: "mb-3", dangerouslySetInnerHTML: { __html: auction.description } }) }),
+        (auction.description || auction.product_location) && /* @__PURE__ */ jsxs(AccordionItem, { title: "Key Information", defaultOpen: true, children: [
+          auction.description && /* @__PURE__ */ jsx("div", { className: "mb-3", dangerouslySetInnerHTML: { __html: auction.description } }),
+          /* @__PURE__ */ jsx(PropertyLocationMap, { categoryFeatures: auction.category_features })
+        ] }),
         allFeatureRows.length > 0 && /* @__PURE__ */ jsx(AccordionItem, { title: "Additional Details", defaultOpen: true, children: /* @__PURE__ */ jsx("div", { className: "row gx-3 gy-2", children: allFeatureRows.map((item) => /* @__PURE__ */ jsx("div", { className: "col-md-6", children: /* @__PURE__ */ jsxs("div", { className: "d-flex justify-content-between align-items-center border rounded px-3 py-2", children: [
           /* @__PURE__ */ jsx("span", { className: "text-muted small", children: item.label }),
           /* @__PURE__ */ jsx("strong", { className: "small text-dark", children: item.value })

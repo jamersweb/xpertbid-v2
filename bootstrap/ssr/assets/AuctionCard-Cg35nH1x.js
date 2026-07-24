@@ -5,7 +5,7 @@ import { C as CountdownTimer, O as OwnerInfoRow } from "./CountdownTimer-BG03Al8
 import { P as Price } from "./Price-CF5NSPt0.js";
 import { F as FavoriteToggleButton } from "./FavoriteToggleButton-1jmbejDw.js";
 import { u as useCart, b as buildProductHref } from "./productUrl-SijKnuS_.js";
-import { i as isSoldOutListing, a as isDirectBuyListing, g as getDiscountMeta } from "./listingPricing-C5UuJtWm.js";
+import { i as isSoldOutListing, a as isDirectBuyListing, g as getDiscountMeta, b as getBaseListingPrice } from "./listingPricing-C5UuJtWm.js";
 const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }) => {
   const { addToCart } = useCart();
   const isWonAuction = activeTab === "won";
@@ -50,7 +50,8 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
   const maxBid = Number(auction?.current_highest_bid || auction?.bids_max_bid_amount || 0);
   const minBid = Number(auction?.minimum_bid || auction?.price || 0);
   const hasMaxBid = Number.isFinite(maxBid) && maxBid > 0;
-  const displayAmount = isWonAuction ? winningBidAmount : hasMaxBid ? maxBid : minBid;
+  const directBuyAmount = discountMeta.hasDiscount ? discountMeta.finalPrice : getBaseListingPrice(auction);
+  const displayAmount = isWonAuction ? winningBidAmount : directBuyListing ? directBuyAmount : hasMaxBid ? maxBid : minBid;
   const displayLabel = isWonAuction ? "Winning Bid" : directBuyListing ? "Price" : isLiveAuction ? hasMaxBid ? "Live Bid" : "Start Price" : hasMaxBid ? "Current Bid" : "Minimum Bid";
   return /* @__PURE__ */ jsxs("div", { className: "product-card-wrapper h-100", children: [
     /* @__PURE__ */ jsxs("div", { className: "pro-image m-0", style: { position: "relative" }, children: [

@@ -6,7 +6,7 @@ import { P as PrimaryButton } from "./PrimaryButton-DgVfVBwo.js";
 import { S as SecondaryButton } from "./SecondaryButton-C9TQBbBR.js";
 import { I as InputLabel } from "./InputLabel-CE_n4Upz.js";
 import { I as InputError } from "./InputError-CBvD_6aD.js";
-import { A as AuctionCard } from "./AuctionCard-C-dvF-nJ.js";
+import { A as AuctionCard } from "./AuctionCard-Cg35nH1x.js";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 /* empty css                */
