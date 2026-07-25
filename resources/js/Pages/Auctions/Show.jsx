@@ -168,15 +168,7 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
               })
               .filter(Boolean);
 
-       const fallbackRows = Object.entries(categoryFeatures)
-              .filter(([key, value]) => !mappedKeys.has(key) && formatFeatureValue(value) && !isGoogleMapsUrl(value))
-              .map(([key, value]) => ({
-                     key,
-                     label: prettifyKey(key),
-                     value: formatFeatureValue(value),
-              }));
-
-       const allFeatureRows = [...dynamicFeatureRows, ...fallbackRows];
+       const allFeatureRows = dynamicFeatureRows;
 
        useEffect(() => {
               if (listingType !== 'live_auction') {

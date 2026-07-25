@@ -589,6 +589,7 @@ const extractMapCoordinates = async (categoryFeatures) => {
   }
 };
 function PropertyLocationMap({ categoryFeatures }) {
+  const mapUrl = findGoogleMapsUrl(categoryFeatures);
   const [coordinates, setCoordinates] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasTriedResolving, setHasTriedResolving] = useState(false);
@@ -650,6 +651,12 @@ function PropertyLocationMap({ categoryFeatures }) {
     };
   }, []);
   useEffect(() => {
+    if (!mapUrl) {
+      setCoordinates(null);
+      setHasTriedResolving(false);
+      setIsLoading(false);
+      return;
+    }
     let isMounted = true;
     const resolveCoordinates = async () => {
       setIsLoading(true);
@@ -671,7 +678,10 @@ function PropertyLocationMap({ categoryFeatures }) {
     return () => {
       isMounted = false;
     };
-  }, [categoryFeatures]);
+  }, [categoryFeatures, mapUrl]);
+  if (!mapUrl) {
+    return null;
+  }
   const showLoading = isLoading || coordinates && !leafletModules;
   if (showLoading) {
     return /* @__PURE__ */ jsxs("div", { className: "property-location-map property-location-map--state", children: [

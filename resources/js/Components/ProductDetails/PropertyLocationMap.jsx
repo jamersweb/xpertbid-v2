@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { extractMapCoordinates } from '@/Utils/mapLocation';
+import { extractMapCoordinates, findGoogleMapsUrl } from '@/Utils/mapLocation';
 
 export default function PropertyLocationMap({ categoryFeatures }) {
+       const mapUrl = findGoogleMapsUrl(categoryFeatures);
        const [coordinates, setCoordinates] = useState(null);
        const [isLoading, setIsLoading] = useState(true);
        const [hasTriedResolving, setHasTriedResolving] = useState(false);
@@ -74,6 +75,13 @@ export default function PropertyLocationMap({ categoryFeatures }) {
        }, []);
 
        useEffect(() => {
+              if (!mapUrl) {
+                     setCoordinates(null);
+                     setHasTriedResolving(false);
+                     setIsLoading(false);
+                     return;
+              }
+
               let isMounted = true;
 
               const resolveCoordinates = async () => {
@@ -100,7 +108,11 @@ export default function PropertyLocationMap({ categoryFeatures }) {
               return () => {
                      isMounted = false;
               };
-       }, [categoryFeatures]);
+       }, [categoryFeatures, mapUrl]);
+
+       if (!mapUrl) {
+              return null;
+       }
 
        const showLoading = isLoading || (coordinates && !leafletModules);
 
