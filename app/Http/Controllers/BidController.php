@@ -253,9 +253,14 @@ class BidController extends Controller
 
         $query = Listing::whereHas('bids', function ($q) use ($userId) {
             $q->where('user_id', $userId);
-        })->with(['bids' => function ($q) {
-            $q->orderBy('bid_amount', 'desc');
-        }, 'category']);
+        })->with([
+            'bids' => function ($q) {
+                $q->orderBy('bid_amount', 'desc');
+            },
+            'category',
+            'user.individualVerification',
+            'user.corporateVerification',
+        ]);
 
         if ($activeTab === 'active') {
             $query->where('status', 'active');
