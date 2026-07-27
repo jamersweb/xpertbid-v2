@@ -73,6 +73,7 @@ Route::get('/properties-brand/{brand:slug}', [BrandPageController::class, 'prope
 
 // Static/Info Pages
 Route::get('/about', [App\Http\Controllers\StaticPageController::class, 'about'])->name('about');
+Route::get('/about-our-partner', [App\Http\Controllers\StaticPageController::class, 'aboutOurPartner'])->name('about.partners');
 Route::get('/contact', [App\Http\Controllers\StaticPageController::class, 'contact'])->name('contact');
 Route::get('/faq', [App\Http\Controllers\StaticPageController::class, 'faq'])->name('faq');
 Route::get('/privacy-policy', [App\Http\Controllers\StaticPageController::class, 'privacy'])->name('privacy.policy');

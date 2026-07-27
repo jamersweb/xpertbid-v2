@@ -69,6 +69,7 @@ export default function Footer() {
                                                         <li><Link href={route('faq')}>{t('FAQ')}</Link></li>
                                                         <li><Link href={route('blogs.index')}>{t('Blogs')}</Link></li>
                                                         <li><Link href={route('about')}>{t('About Us')}</Link></li>
+                                                        <li><Link href={route('about.partners')}>{t('About Our Partners')}</Link></li>
                                                         <li><Link href={route('contact')}>{t('Contact Us')}</Link></li>
 
                                                  </ul>

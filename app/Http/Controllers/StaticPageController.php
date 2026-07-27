@@ -18,6 +18,14 @@ class StaticPageController extends Controller
     }
 
     /**
+     * Display the About Our Partners page.
+     */
+    public function aboutOurPartner(): Response
+    {
+        return Inertia::render('Static/AboutOurPartner');
+    }
+
+    /**
      * Display the Contact Us page.
      */
     public function contact(): Response
