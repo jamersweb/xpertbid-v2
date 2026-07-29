@@ -493,7 +493,7 @@ function IndividualForm({ initialData, auth, countries }) {
 
 // ─── Corporate Verification Form ──────────────────────────────────────────────
 
-function CorporateForm({ initialData, countries }) {
+function CorporateForm({ initialData, countries, malls = [] }) {
     const initStatus = initialData?.status;
     // Show form only when there is NO existing submission at all
     const [showForm, setShowForm] = useState(!initStatus);
@@ -509,6 +509,7 @@ function CorporateForm({ initialData, countries }) {
     const [incorporationDate, setIncorporationDate] = useState(initialData?.date_of_incorporation || '');
     const [entityType, setEntityType] = useState(initialData?.entity_type || '');
     const [country, setCountry] = useState(initialData?.country || '');
+    const [mallId, setMallId] = useState(initialData?.mall_id ? String(initialData.mall_id) : '');
 
     const [businessDocuments, setBusinessDocuments] = useState([]);
     const [businessPreview, setBusinessPreview] = useState(
@@ -543,6 +544,9 @@ function CorporateForm({ initialData, countries }) {
         fd.append('date_of_incorporation', incorporationDate);
         fd.append('entity_type', entityType);
         fd.append('country', country);
+        if (mallId) {
+            fd.append('mall_id', mallId);
+        }
         businessDocuments.forEach(file => fd.append('business_documents[]', file));
 
         router.post(route('corporate-verifications.store'), fd, {
@@ -696,6 +700,19 @@ function CorporateForm({ initialData, countries }) {
                 {errors.country && <div className="text-danger">{errors.country}</div>}
             </div>
 
+            {/* Mall (optional) */}
+            <div className="mb-4 form-child position-relative">
+                <label className="form-label fw-bold">Mall <span className="text-muted fw-normal">(optional)</span></label>
+                <select className="form-control verify_input" value={mallId}
+                    onChange={e => setMallId(e.target.value)}>
+                    <option value="">Select Mall</option>
+                    {malls.map(mall => (
+                        <option key={mall.id} value={mall.id}>{mall.name}</option>
+                    ))}
+                </select>
+                {errors.mall_id && <div className="text-danger">{errors.mall_id}</div>}
+            </div>
+
             <button type="submit" className="button-style-2" disabled={loading}>
                 {loading ? 'Submitting...' : 'Submit'}
             </button>
@@ -706,7 +723,7 @@ function CorporateForm({ initialData, countries }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function IdentityVerificationSection() {
-    const { individualVerification, corporateVerification, auth } = usePage().props;
+    const { individualVerification, corporateVerification, auth, malls = [] } = usePage().props;
     const [tab, setTab] = useState('individual');
     const [countries, setCountries] = useState([]);
 
@@ -772,6 +789,7 @@ export default function IdentityVerificationSection() {
                 <CorporateForm
                     initialData={corporateVerification}
                     countries={countries}
+                    malls={malls}
                 />
             )}
         </div>

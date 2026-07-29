@@ -219,6 +219,11 @@ export default function Header() {
                                                         <li className="nav-item">
                                                                <Link href="/live-auctions" className="nav-link" onClick={closeMobileMenu}>{t('Live Auctions')}</Link>
                                                         </li>
+                                                        {/* Temporarily hidden — restore when malls go live
+                                                        <li className="nav-item">
+                                                               <Link href={route('malls.index')} className="nav-link" onClick={closeMobileMenu}>{t('Malls')}</Link>
+                                                        </li>
+                                                        */}
                                                         <li className="nav-item">
                                                                <Link href={route('about')} className="nav-link" onClick={closeMobileMenu}>{t('About')}</Link>
                                                         </li>

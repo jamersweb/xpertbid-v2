@@ -24,7 +24,7 @@ class RolePermissionSeeder extends Seeder
             'user-list', 'user-create', 'user-edit', 'user-delete',
             'dashboard-list', 'scraper-list', 'olx-scraper-list',
             'auction-list', 'auction-verification-list',
-            'slider-list', 'category-list', 'referral-list',
+            'slider-list', 'category-list', 'mall-list', 'referral-list',
             'buy-now-inquiry-list', 'utm-user-list',
             'seo-list', 'wallet-list', 'transaction-list',
             'promotion-list', 'individual-verification-list',

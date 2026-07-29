@@ -14,6 +14,7 @@ class CorporateVerification extends Model
         'entity_type',
         'business_documents',
         'country',
+        'mall_id',
         'status',
         'decline_reason',
     ];
@@ -26,5 +27,10 @@ class CorporateVerification extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function mall()
+    {
+        return $this->belongsTo(Mall::class);
     }
 }

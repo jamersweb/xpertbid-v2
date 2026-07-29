@@ -19,7 +19,7 @@ class CorporateVerificationController extends Controller
 
     public function index(Request $request)
     {
-        $query = CorporateVerification::with('user');
+        $query = CorporateVerification::with(['user', 'mall']);
 
         if ($request->search) {
             $search = $request->search;
@@ -29,6 +29,9 @@ class CorporateVerificationController extends Controller
                   ->orWhereHas('user', function($uq) use ($search) {
                       $uq->where('name', 'LIKE', "%$search%")
                         ->orWhere('email', 'LIKE', "%$search%");
+                  })
+                  ->orWhereHas('mall', function ($mq) use ($search) {
+                      $mq->where('name', 'LIKE', "%$search%");
                   });
             });
         }
@@ -44,7 +47,7 @@ class CorporateVerificationController extends Controller
     public function export(Request $request)
     {
         $validated = $this->validateExportDateRange($request);
-        $query = CorporateVerification::with('user')
+        $query = CorporateVerification::with(['user', 'mall'])
             ->whereDate('created_at', '>=', $validated['from'])
             ->whereDate('created_at', '<=', $validated['to']);
 
@@ -56,6 +59,9 @@ class CorporateVerificationController extends Controller
                     ->orWhereHas('user', function ($uq) use ($search) {
                         $uq->where('name', 'LIKE', "%{$search}%")
                             ->orWhere('email', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('mall', function ($mq) use ($search) {
+                        $mq->where('name', 'LIKE', "%{$search}%");
                     });
             });
         }
@@ -68,6 +74,7 @@ class CorporateVerificationController extends Controller
             'Legal Entity',
             'Entity Type',
             'Country',
+            'Mall',
             'Registered Address',
             'Applicant',
             'Applicant Email',
@@ -79,6 +86,7 @@ class CorporateVerificationController extends Controller
             $verification->legal_entity_name,
             $verification->entity_type,
             $verification->country,
+            $verification->mall?->name,
             $verification->registered_address,
             $verification->user?->name,
             $verification->user?->email,

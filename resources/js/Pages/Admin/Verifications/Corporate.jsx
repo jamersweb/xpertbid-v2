@@ -96,6 +96,12 @@ export default function Corporate({ verifications, filters }) {
                                                                <td className="px-6 py-4">
                                                                       <p className="text-sm font-bold text-gray-800">{verification.legal_entity_name}</p>
                                                                       <p className="text-[11px] text-gray-500">{verification.entity_type} ({verification.country})</p>
+                                                                      {verification.mall?.name && (
+                                                                             <p className="text-[11px] text-gray-500 mt-0.5">
+                                                                                    <i className="fa-solid fa-store mr-1"></i>
+                                                                                    {verification.mall.name}
+                                                                             </p>
+                                                                      )}
                                                                </td>
                                                                <td className="px-6 py-4">
                                                                       <p className="text-sm text-gray-800">{verification.user?.name}</p>

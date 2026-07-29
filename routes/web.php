@@ -29,6 +29,7 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\LiveAuctionDemoController;
 use App\Http\Controllers\ListingLiveChatController;
 use App\Http\Controllers\BrandPageController;
+use App\Http\Controllers\MallPageController;
 use App\Http\Controllers\Admin\BrandPageController as AdminBrandPageController;
 use App\Http\Controllers\Admin\DarazScraperController as AdminDarazScraperController;
 use App\Http\Controllers\Admin\OlxScraperController as AdminOlxScraperController;
@@ -70,6 +71,9 @@ Route::get('/brand-assets/{path}', [BrandPageController::class, 'asset'])
     ->name('brand.assets');
 Route::get('/brands', [BrandPageController::class, 'brands'])->name('brands.page');
 Route::get('/properties-brand/{brand:slug}', [BrandPageController::class, 'propertiesBrand'])->name('properties.brand');
+Route::get('/malls', [MallPageController::class, 'index'])->name('malls.index');
+Route::get('/malls/{mall:slug}', [MallPageController::class, 'show'])->name('malls.show');
+Route::get('/malls/{mall:slug}/sellers/{user}', [MallPageController::class, 'seller'])->name('malls.seller');
 
 // Static/Info Pages
 Route::get('/about', [App\Http\Controllers\StaticPageController::class, 'about'])->name('about');
@@ -339,6 +343,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     // Unified Category Management (Refactored to legacy system)
     Route::resource('categories', App\Http\Controllers\Admin\AuctionCategoryController::class)->names('categories');
     Route::resource('brands', App\Http\Controllers\Admin\BrandController::class)->names('brands')->except(['create', 'edit']);
+    Route::resource('malls', App\Http\Controllers\Admin\MallController::class)->names('malls')->except(['create', 'edit', 'show']);
     Route::get('/brand-pages', [AdminBrandPageController::class, 'index'])->name('brand-pages.index');
     Route::put('/brand-pages/{brand}', [AdminBrandPageController::class, 'update'])->name('brand-pages.update');
     Route::resource('dynamic-fields', App\Http\Controllers\Admin\DynamicFieldController::class)->names('dynamic-fields');

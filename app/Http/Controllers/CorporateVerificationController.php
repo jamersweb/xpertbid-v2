@@ -88,6 +88,10 @@ class CorporateVerificationController extends Controller
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
+        $request->merge([
+            'mall_id' => $request->filled('mall_id') ? $request->input('mall_id') : null,
+        ]);
+
         $data = $request->validate([
             'legal_entity_name' => 'required|string',
             'registered_address' => 'required|string',
@@ -96,6 +100,7 @@ class CorporateVerificationController extends Controller
             'business_documents' => 'required|array|min:1|max:3',
             'business_documents.*' => 'file|mimes:jpg,jpeg,png,pdf|max:10240',
             'country' => 'required|string',
+            'mall_id' => 'nullable|integer|exists:malls,id',
         ]);
 
         // Ensure public folder exists
@@ -118,6 +123,7 @@ class CorporateVerificationController extends Controller
             'date_of_incorporation' => $data['date_of_incorporation'],
             'entity_type' => $data['entity_type'],
             'country' => $data['country'],
+            'mall_id' => $data['mall_id'] ?? null,
             'status' => 'not_verified',
             'decline_reason' => null,
         ];
@@ -151,6 +157,10 @@ class CorporateVerificationController extends Controller
     {
         $cv = CorporateVerification::findOrFail($id);
 
+        $request->merge([
+            'mall_id' => $request->filled('mall_id') ? $request->input('mall_id') : null,
+        ]);
+
         $data = $request->validate([
             'legal_entity_name' => 'required|string',
             'registered_address' => 'required|string',
@@ -159,6 +169,7 @@ class CorporateVerificationController extends Controller
             'business_documents' => 'sometimes|array|min:1|max:3',
             'business_documents.*' => 'file|mimes:jpg,jpeg,png,pdf|max:10240',
             'country' => 'required|string',
+            'mall_id' => 'nullable|integer|exists:malls,id',
         ]);
 
         $oldStatus = (string) ($cv->status ?? '');
@@ -186,6 +197,7 @@ class CorporateVerificationController extends Controller
             'date_of_incorporation' => $data['date_of_incorporation'],
             'entity_type' => $data['entity_type'],
             'country' => $data['country'],
+            'mall_id' => $data['mall_id'] ?? null,
         ]);
 
         // Mark for resubmit & clear decline reason

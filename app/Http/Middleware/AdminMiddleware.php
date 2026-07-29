@@ -33,6 +33,7 @@ class AdminMiddleware
             'admin.verifications.corporate.*' => 'corporate-verification-list',
             'admin.categories.*' => 'category-list',
             'admin.dynamic-fields.*' => 'category-list',
+            'admin.malls.*' => 'mall-list',
             'admin.blogs.*' => 'blog-list',
             'admin.sliders.*' => 'slider-list',
             'admin.seo.*' => 'seo-list',
