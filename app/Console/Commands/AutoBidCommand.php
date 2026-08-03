@@ -39,14 +39,16 @@ class AutoBidCommand extends Command
         $this->info('Starting listing auto-bid process...');
 
         $dummyUsers = User::query()
-            ->whereBetween('id', [328, 347])
+            ->where('email', 'like', 'dummy_user_%@xpertbid.com')
             ->where('status', 'active')
             ->get();
 
         if ($dummyUsers->isEmpty()) {
-            $this->error('No active dummy users found in ID range 328-347.');
+            $this->error('No active dummy users found (email like dummy_user_%@xpertbid.com).');
             return self::FAILURE;
         }
+
+        $this->info("Loaded {$dummyUsers->count()} dummy users for auto-bid.");
 
         $activeListings = Listing::query()
             ->where('listing_type', 'auction')
