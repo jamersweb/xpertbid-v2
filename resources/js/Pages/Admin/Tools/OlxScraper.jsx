@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactQuill from 'react-quill';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -122,6 +122,13 @@ export default function OlxScraper({
 }) {
        const previewSyncRef = useRef('');
        const formSyncRef = useRef('');
+       const imageInputRef = useRef(null);
+       const [managedImages, setManagedImages] = useState([]);
+       const [isSaving, setIsSaving] = useState(false);
+       const [saveBannerError, setSaveBannerError] = useState(null);
+       const { flash } = usePage().props;
+       const bannerStatus = status || flash?.success || null;
+       const bannerError = error || flash?.error || saveBannerError || null;
        const previewPriceValue = preview_price ?? preview?.price ?? preview?.minimum_bid ?? preview?.reserve_price ?? '';
        const previewPriceText = previewPriceValue === null || previewPriceValue === undefined || previewPriceValue === ''
               ? 'Not found'
@@ -202,6 +209,38 @@ export default function OlxScraper({
        }, [preview, saveData.url, setSaveData, default_listing_type, saveForm.data.stock]);
 
        useEffect(() => {
+              if (!preview?.source_url) {
+                     setManagedImages((prev) => {
+                            prev.forEach((img) => {
+                                   if (img.type === 'local' && img.url?.startsWith('blob:')) {
+                                          URL.revokeObjectURL(img.url);
+                                   }
+                            });
+                            return [];
+                     });
+                     return;
+              }
+
+              const urls = toArray(preview?.images).length > 0
+                     ? toArray(preview.images)
+                     : toArray(preview?.preview_images);
+
+              setManagedImages((prev) => {
+                     prev.forEach((img) => {
+                            if (img.type === 'local' && img.url?.startsWith('blob:')) {
+                                   URL.revokeObjectURL(img.url);
+                            }
+                     });
+
+                     return urls.map((imageUrl, index) => ({
+                            id: `remote-${index}-${imageUrl}`,
+                            type: 'remote',
+                            url: imageUrl,
+                     }));
+              });
+       }, [preview?.source_url, preview?.images, preview?.preview_images]);
+
+       useEffect(() => {
               if (!preview) {
                      return;
               }
@@ -267,17 +306,75 @@ export default function OlxScraper({
               });
        };
 
-       const submitSave = (event) => {
-              event.preventDefault();
-              saveForm.post(route(save_route), {
-                     preserveScroll: true,
+       const removeManagedImage = (imageId) => {
+              setManagedImages((prev) => {
+                     const target = prev.find((img) => img.id === imageId);
+                     if (target?.type === 'local' && target.url?.startsWith('blob:')) {
+                            URL.revokeObjectURL(target.url);
+                     }
+                     return prev.filter((img) => img.id !== imageId);
               });
        };
 
-       const imageList = toArray(preview?.images);
-       const previewImageList = toArray(preview?.preview_images).length > 0
-              ? toArray(preview?.preview_images)
-              : imageList;
+       const onUploadImages = (event) => {
+              const files = Array.from(event.target.files || []);
+              if (!files.length) {
+                     return;
+              }
+
+              const next = files.map((file, index) => ({
+                     id: `local-${Date.now()}-${index}-${file.name}`,
+                     type: 'local',
+                     url: URL.createObjectURL(file),
+                     file,
+              }));
+
+              setManagedImages((prev) => [...prev, ...next]);
+              event.target.value = '';
+       };
+
+       const submitSave = (event) => {
+              event.preventDefault();
+              saveForm.clearErrors();
+              setSaveBannerError(null);
+
+              const formData = new FormData();
+              Object.entries(saveForm.data).forEach(([key, value]) => {
+                     if (value === null || value === undefined) {
+                            return;
+                     }
+                     formData.append(key, value);
+              });
+
+              formData.append('images_managed', '1');
+              managedImages
+                     .filter((img) => img.type === 'remote' && img.url)
+                     .forEach((img) => formData.append('kept_images[]', img.url));
+              managedImages
+                     .filter((img) => img.type === 'local' && img.file)
+                     .forEach((img) => formData.append('new_images[]', img.file));
+
+              router.post(route(save_route), formData, {
+                     forceFormData: true,
+                     preserveScroll: false,
+                     onStart: () => setIsSaving(true),
+                     onFinish: () => setIsSaving(false),
+                     onError: (errors) => {
+                            if (errors && typeof errors === 'object') {
+                                   Object.entries(errors).forEach(([key, message]) => {
+                                          saveForm.setError(key, Array.isArray(message) ? message[0] : message);
+                                   });
+
+                                   const firstError = Object.values(errors)[0];
+                                   setSaveBannerError(
+                                          Array.isArray(firstError) ? firstError[0] : String(firstError || 'Save failed. Please check the form.')
+                                   );
+                            } else {
+                                   setSaveBannerError('Save failed. Please try again.');
+                            }
+                     },
+              });
+       };
 
        return (
               <AdminLayout title={tool_name}>
@@ -323,13 +420,13 @@ export default function OlxScraper({
                                    </form>
                             </div>
 
-                            {(status || error) && (
-                                   <div className={`rounded-[1.5rem] border px-5 py-4 shadow-sm ${error ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+                            {(bannerStatus || bannerError) && (
+                                   <div className={`rounded-[1.5rem] border px-5 py-4 shadow-sm ${bannerError ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
                                           <div className="flex items-start gap-3">
-                                                 <i className={`fa-solid ${error ? 'fa-triangle-exclamation' : 'fa-circle-check'} mt-0.5`}></i>
+                                                 <i className={`fa-solid ${bannerError ? 'fa-triangle-exclamation' : 'fa-circle-check'} mt-0.5`}></i>
                                                  <div className="min-w-0">
-                                                        <p className="font-bold">{error ? 'Scrape Error' : 'Success'}</p>
-                                                        <p className="text-sm">{error || status}</p>
+                                                        <p className="font-bold">{bannerError ? 'Error' : 'Success'}</p>
+                                                        <p className="text-sm">{bannerError || bannerStatus}</p>
                                                  </div>
                                           </div>
                                    </div>
@@ -557,10 +654,10 @@ export default function OlxScraper({
                                                         <div className="flex flex-wrap gap-3 pt-2">
                                                                <PrimaryButton
                                                                       type="submit"
-                                                                      disabled={saveForm.processing}
+                                                                      disabled={saveForm.processing || isSaving}
                                                                       className="rounded-2xl bg-black px-6 py-3 text-sm font-black uppercase tracking-widest hover:bg-gray-800"
                                                                >
-                                                                      {saveForm.processing ? 'Saving...' : 'Save Listing'}
+                                                                      {(saveForm.processing || isSaving) ? 'Saving...' : 'Save Listing'}
                                                                </PrimaryButton>
 
                                                                <SecondaryButton
@@ -614,26 +711,70 @@ export default function OlxScraper({
                                                                </div>
 
                                                                <div className="rounded-[1.5rem] border border-gray-100 bg-white p-4">
-                                                                      <div className="flex items-center justify-between">
-                                                                             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Images</p>
-                                                                      <span className="text-xs font-bold text-gray-500">{imageList.length}</span>
-                                                              </div>
+                                                                      <div className="flex flex-wrap items-center justify-between gap-3">
+                                                                             <div>
+                                                                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Images</p>
+                                                                                    <p className="mt-1 text-xs text-gray-500">Remove scraped images or upload new ones before save.</p>
+                                                                             </div>
+                                                                             <div className="flex items-center gap-2">
+                                                                                    <span className="text-xs font-bold text-gray-500">{managedImages.length}</span>
+                                                                                    <button
+                                                                                           type="button"
+                                                                                           onClick={() => imageInputRef.current?.click()}
+                                                                                           className="inline-flex items-center gap-2 rounded-xl bg-black px-3 py-2 text-[11px] font-black uppercase tracking-wider text-white hover:bg-gray-800"
+                                                                                    >
+                                                                                           <i className="fa-solid fa-plus"></i>
+                                                                                           Upload
+                                                                                    </button>
+                                                                                    <input
+                                                                                           ref={imageInputRef}
+                                                                                           type="file"
+                                                                                           accept="image/jpeg,image/png,image/jpg,image/webp,image/gif"
+                                                                                           multiple
+                                                                                           className="hidden"
+                                                                                           onChange={onUploadImages}
+                                                                                    />
+                                                                             </div>
+                                                                      </div>
 
-                                                                      {previewImageList.length > 0 ? (
+                                                                      {managedImages.length > 0 ? (
                                                                              <div className="mt-3 grid grid-cols-2 gap-3">
-                                                                                    {previewImageList.map((imageUrl, index) => (
-                                                                                           <a key={`${imageUrl}-${index}`} href={imageUrl} target="_blank" rel="noreferrer" className="group overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
+                                                                                    {managedImages.map((imageItem) => (
+                                                                                           <div key={imageItem.id} className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
                                                                                                   <img
-                                                                                                        src={imageUrl}
-                                                                                                         alt={`${tool_short} ${index + 1}`}
-                                                                                                         className="h-36 w-full object-cover transition duration-300 group-hover:scale-105"
+                                                                                                         src={imageItem.url}
+                                                                                                         alt={`${tool_short} preview`}
+                                                                                                         className="h-36 w-full object-cover"
                                                                                                   />
-                                                                                           </a>
+                                                                                                  <div className="absolute inset-x-0 top-0 flex items-start justify-between p-2">
+                                                                                                         <span className="rounded-full bg-black/70 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+                                                                                                                {imageItem.type === 'local' ? 'New' : 'Scraped'}
+                                                                                                         </span>
+                                                                                                         <button
+                                                                                                                type="button"
+                                                                                                                onClick={() => removeManagedImage(imageItem.id)}
+                                                                                                                className="rounded-full bg-rose-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow hover:bg-rose-700"
+                                                                                                                title="Remove image"
+                                                                                                         >
+                                                                                                                <i className="fa-solid fa-trash"></i>
+                                                                                                         </button>
+                                                                                                  </div>
+                                                                                           </div>
                                                                                     ))}
                                                                              </div>
                                                                       ) : (
-                                                                             <p className="mt-3 text-sm text-gray-500">No images found in the page HTML.</p>
+                                                                             <div className="mt-3 rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-6 text-center">
+                                                                                    <p className="text-sm text-gray-500">No images selected. Upload at least one if needed.</p>
+                                                                                    <button
+                                                                                           type="button"
+                                                                                           onClick={() => imageInputRef.current?.click()}
+                                                                                           className="mt-3 text-xs font-black uppercase tracking-wider text-black underline"
+                                                                                    >
+                                                                                           Upload images
+                                                                                    </button>
+                                                                             </div>
                                                                       )}
+                                                                      <InputError message={saveForm.errors.new_images || saveForm.errors.kept_images} className="mt-2" />
                                                                </div>
                                                         </div>
                                                  ) : (

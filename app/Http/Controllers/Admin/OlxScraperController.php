@@ -99,7 +99,7 @@ class OlxScraperController extends Controller
             'sub_category_id' => ['nullable', 'exists:auction_categories,id'],
             'child_category_id' => ['nullable', 'exists:auction_categories,id'],
             'listing_type' => ['nullable', 'in:auction,normal,business,live_auction'],
-            'title' => ['nullable', 'string', 'max:255'],
+            'title' => ['required', 'string'],
             'description' => ['nullable', 'string'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'minimum_bid' => ['nullable', 'numeric', 'min:0'],
@@ -107,67 +107,68 @@ class OlxScraperController extends Controller
             'stock' => ['nullable', 'integer', 'min:0'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date'],
+            'images_managed' => ['nullable', 'boolean'],
+            'kept_images' => ['nullable', 'array'],
+            'kept_images.*' => ['nullable', 'string', 'max:5000'],
+            'new_images' => ['nullable', 'array'],
+            'new_images.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,gif', 'max:5120'],
         ]);
 
+        $title = Str::limit(trim((string) $validated['title']), 255, '');
+        $description = (string) ($validated['description'] ?? '');
+        $listingType = $validated['listing_type'] ?? 'auction';
+        $minimumBid = $this->normalizeNumeric($validated['minimum_bid'] ?? null);
+        $reservePrice = $this->normalizeNumeric($validated['reserve_price'] ?? null);
+        $price = $this->normalizeNumeric($validated['price'] ?? null);
+        $stock = array_key_exists('stock', $validated) && $validated['stock'] !== null
+            ? (int) $validated['stock']
+            : null;
+        $startDate = $validated['start_date'] ?? null;
+        $endDate = $validated['end_date'] ?? null;
+        $sourceDomain = parse_url($validated['url'], PHP_URL_HOST) ?: null;
+
         try {
-            $scraped = $this->scraper->scrape($validated['url']);
+            $downloadedImages = $this->resolveListingImages($request, [], $validated['url']);
+            $coverImage = $downloadedImages[0] ?? null;
+
+            $listingData = [
+                'price' => $price,
+                'minimum_bid' => $minimumBid ?? 0,
+                'reserve_price' => $reservePrice ?? 0,
+                'stock' => $stock,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'source_url' => $validated['url'],
+                'source_domain' => $sourceDomain,
+                'scraped_title' => $title,
+                'scraped_description' => $description,
+            ];
+
+            $listing = Listing::create([
+                'title' => $title,
+                'description' => $description,
+                'user_id' => $validated['user_id'],
+                'category_id' => $validated['category_id'],
+                'sub_category_id' => $validated['sub_category_id'] ?: null,
+                'child_category_id' => $validated['child_category_id'] ?: null,
+                'listing_type' => $listingType,
+                'image' => $coverImage,
+                'album' => $downloadedImages,
+                'listing_source' => 'olx',
+                'listing_data' => $listingData,
+                'status' => 'active',
+                'is_autobidder_on' => $listingType === 'auction',
+            ]);
         } catch (\Throwable $e) {
-            Log::error('OLX save scrape failed', [
+            Log::error('OLX save failed', [
                 'url' => $validated['url'],
                 'message' => $e->getMessage(),
             ]);
 
-            return back()
-                ->withInput()
-                ->with('error', 'Scrape failed: ' . $e->getMessage());
+            return redirect()
+                ->route('admin.olx-scraper.index', ['url' => $validated['url']])
+                ->with('error', 'Save failed: ' . $e->getMessage());
         }
-
-        $title = trim((string) ($validated['title'] ?? '')) ?: ($scraped['title'] ?? 'No title');
-        $description = trim((string) ($validated['description'] ?? '')) ?: ($scraped['description'] ?? '');
-        $listingType = $validated['listing_type'] ?? 'auction';
-        $minimumBid = $this->numericOrFallback($validated['minimum_bid'] ?? null, $scraped['minimum_bid'] ?? null);
-        $reservePrice = $this->numericOrFallback($validated['reserve_price'] ?? null, $scraped['reserve_price'] ?? null);
-        $price = $this->numericOrFallback($validated['price'] ?? null, $scraped['price'] ?? null);
-        $stock = isset($validated['stock']) && $validated['stock'] !== '' ? (int) $validated['stock'] : null;
-        $startDate = $validated['start_date'] ?? null;
-        $endDate = $validated['end_date'] ?? null;
-
-        if ($title === '' || $title === 'No title') {
-            return back()->withInput()->with('error', 'OLX title could not be detected. Please enter it manually.');
-        }
-
-        $downloadedImages = $this->downloadImages($scraped['images'] ?? []);
-        $coverImage = $downloadedImages[0] ?? null;
-
-        $listingData = [
-            'price' => $price,
-            'minimum_bid' => $minimumBid ?? 0,
-            'reserve_price' => $reservePrice ?? 0,
-            'stock' => $stock,
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'source_url' => $validated['url'],
-            'source_domain' => $scraped['source_domain'] ?? null,
-            'scraped_title' => $scraped['title'] ?? null,
-            'scraped_description' => $scraped['description'] ?? null,
-            'scraped_location' => $scraped['location_text'] ?? null,
-        ];
-
-        $listing = Listing::create([
-            'title' => $title,
-            'description' => $description,
-            'user_id' => $validated['user_id'],
-            'category_id' => $validated['category_id'],
-            'sub_category_id' => $validated['sub_category_id'] ?: null,
-            'child_category_id' => $validated['child_category_id'] ?: null,
-            'listing_type' => $listingType,
-            'image' => $coverImage,
-            'album' => $downloadedImages,
-            'listing_source' => 'olx',
-            'listing_data' => $listingData,
-            'status' => 'active',
-            'is_autobidder_on' => $listingType === 'auction',
-        ]);
 
         return redirect()
             ->route('admin.olx-scraper.index', ['url' => $validated['url']])
@@ -205,11 +206,57 @@ class OlxScraperController extends Controller
         ], $overrides);
     }
 
-    protected function downloadImages(array $imageUrls): array
+    protected function resolveListingImages(Request $request, array $scrapedImages, ?string $sourceUrl = null): array
+    {
+        if (!$request->boolean('images_managed')) {
+            return $this->downloadImages($scrapedImages, $sourceUrl);
+        }
+
+        $keptUrls = array_values(array_filter((array) $request->input('kept_images', [])));
+        $downloaded = $this->downloadImages($keptUrls, $sourceUrl);
+        $uploaded = $this->storeUploadedImages($request->file('new_images', []) ?: []);
+
+        return array_values(array_merge($downloaded, $uploaded));
+    }
+
+    protected function storeUploadedImages(array $files): array
     {
         $savedImages = [];
         $directory = public_path('assets/images/auction');
         File::ensureDirectoryExists($directory);
+
+        foreach (array_values(array_filter($files)) as $index => $file) {
+            if (!$file || !$file->isValid()) {
+                continue;
+            }
+
+            $extension = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+            $extension = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true) ? $extension : 'jpg';
+            $filename = time() . '_olx_upload_' . Str::random(12) . '_' . $index . '.' . $extension;
+            $file->move($directory, $filename);
+            $savedImages[] = '/assets/images/auction/' . $filename;
+        }
+
+        return $savedImages;
+    }
+
+    protected function downloadImages(array $imageUrls, ?string $sourceUrl = null): array
+    {
+        $savedImages = [];
+        $directory = public_path('assets/images/auction');
+        File::ensureDirectoryExists($directory);
+
+        $headers = [
+            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+            'Accept' => 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+        ];
+
+        if ($sourceUrl) {
+            $headers['Referer'] = $this->imageReferer($sourceUrl);
+            if ($origin = $this->originFromUrl($sourceUrl)) {
+                $headers['Origin'] = $origin;
+            }
+        }
 
         foreach (array_values(array_filter($imageUrls)) as $index => $imageUrl) {
             try {
@@ -217,7 +264,7 @@ class OlxScraperController extends Controller
                     continue;
                 }
 
-                $response = Http::timeout(30)->retry(1, 500)->get($imageUrl);
+                $response = Http::withHeaders($headers)->timeout(12)->get($imageUrl);
                 if (!$response->successful()) {
                     continue;
                 }
@@ -268,5 +315,21 @@ class OlxScraperController extends Controller
         }
 
         return null;
+    }
+
+    protected function imageReferer(string $url): string
+    {
+        $origin = $this->originFromUrl($url);
+        return $origin ?: $url;
+    }
+
+    protected function originFromUrl(string $url): ?string
+    {
+        $parts = parse_url($url);
+        if (!$parts || empty($parts['scheme']) || empty($parts['host'])) {
+            return null;
+        }
+
+        return $parts['scheme'] . '://' . $parts['host'];
     }
 }
