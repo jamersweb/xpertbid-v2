@@ -34,6 +34,7 @@ class AdminMiddleware
             'admin.categories.*' => 'category-list',
             'admin.dynamic-fields.*' => 'category-list',
             'admin.malls.*' => 'mall-list',
+            'admin.mall-sellers.*' => 'mall-seller-list',
             'admin.blogs.*' => 'blog-list',
             'admin.sliders.*' => 'slider-list',
             'admin.seo.*' => 'seo-list',

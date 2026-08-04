@@ -269,6 +269,12 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::patch('/users/{user}/status', [App\Http\Controllers\Admin\UserController::class, 'updateStatus'])->name('users.update-status');
     Route::delete('/users/{user}', [App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('users.destroy');
 
+    Route::get('/mall-sellers', [App\Http\Controllers\Admin\MallSellerController::class, 'index'])->name('mall-sellers.index');
+    Route::post('/mall-sellers', [App\Http\Controllers\Admin\MallSellerController::class, 'store'])->name('mall-sellers.store');
+    Route::put('/mall-sellers/{user}', [App\Http\Controllers\Admin\MallSellerController::class, 'update'])->name('mall-sellers.update');
+    Route::patch('/mall-sellers/{user}/status', [App\Http\Controllers\Admin\MallSellerController::class, 'updateStatus'])->name('mall-sellers.update-status');
+    Route::delete('/mall-sellers/{user}', [App\Http\Controllers\Admin\MallSellerController::class, 'destroy'])->name('mall-sellers.destroy');
+
     // Verifications
     Route::prefix('verifications')->name('verifications.')->group(function () {
         Route::get('/individual', [App\Http\Controllers\Admin\IndividualVerificationController::class, 'index'])->name('individual.index');

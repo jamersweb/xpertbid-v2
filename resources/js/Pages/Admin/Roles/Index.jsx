@@ -102,7 +102,7 @@ export default function Index({ roles, permissions }) {
                                                         <label className="block text-[10px] font-bold text-gray-400 uppercase mb-2">Role Name</label>
                                                         <input
                                                                type="text"
-                                                               className="w-full px-4 py-3 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm"
+                                                               className="w-full px-4 py-3 bg-gray-50 border-none focus:ring-2 focus:ring-black rounded-xl text-sm text-gray-900 placeholder:text-gray-400"
                                                                placeholder="Editor, Manager..."
                                                                value={data.name}
                                                                onChange={e => setData('name', e.target.value)}

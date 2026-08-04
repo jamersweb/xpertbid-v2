@@ -78,9 +78,29 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('admin.seo.index');
         }
 
+        $roleName = strtolower((string) $user->role);
+        if (
+            (str_contains($roleName, 'mall') || $roleName === 'mall')
+            && Route::has('admin.malls.index')
+            && ($user->can('mall-list') || in_array('mall-list', $rolePermissions, true))
+        ) {
+            return redirect()->route('admin.malls.index');
+        }
+
+        if (
+            (str_contains($roleName, 'mall') || $roleName === 'mall')
+            && Route::has('admin.mall-sellers.index')
+            && ($user->can('mall-seller-list') || in_array('mall-seller-list', $rolePermissions, true))
+            && ! ($user->can('mall-list') || in_array('mall-list', $rolePermissions, true))
+        ) {
+            return redirect()->route('admin.mall-sellers.index');
+        }
+
         // Define permission-to-route mapping in order of priority
         $permissionRoutes = [
             'dashboard-list' => 'admin.dashboard',
+            'mall-list' => 'admin.malls.index',
+            'mall-seller-list' => 'admin.mall-sellers.index',
             'user-list' => 'admin.users.index',
             'role-list' => 'admin.roles.index',
             'auction-list' => 'admin.listings.index',

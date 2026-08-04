@@ -22,6 +22,7 @@ const menuItems = [
        { name: 'Categories', icon: 'fa-layer-group', route: 'admin.categories.index', permission: 'category-list' },
        { name: 'Brands', icon: 'fa-tags', route: 'admin.brands.index', permission: 'category-list' },
        { name: 'Malls', icon: 'fa-store', route: 'admin.malls.index', permission: 'mall-list' },
+       { name: 'Mall Sellers', icon: 'fa-shop', route: 'admin.mall-sellers.index', permission: 'mall-seller-list' },
        { name: 'Brand Pages', icon: 'fa-pen-ruler', route: 'admin.brand-pages.index', permission: 'category-list' },
        { name: 'Dynamic Fields', icon: 'fa-wand-magic-sparkles', route: 'admin.dynamic-fields.index', permission: 'category-list' },
        { name: 'Blogs', icon: 'fa-newspaper', route: 'admin.blogs.index', permission: 'blog-list' },
