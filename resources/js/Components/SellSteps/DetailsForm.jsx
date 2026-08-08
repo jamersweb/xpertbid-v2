@@ -147,31 +147,93 @@ export default function DetailsForm({
 
        const validate = () => {
               const newErrors = {};
-              if (!formData.title) newErrors.title = "Title is required";
-              if (!formData.description || formData.description === '<p><br></p>') newErrors.description = "Description is required";
+              const isBlank = (value) => value === null || value === undefined || String(value).trim() === '';
+              const isValidNumber = (value) => {
+                     if (isBlank(value)) return false;
+                     const n = Number(value);
+                     return Number.isFinite(n);
+              };
+              const isPositiveNumber = (value) => isValidNumber(value) && Number(value) >= 0;
+
+              if (isBlank(formData.title)) newErrors.title = 'Title is required';
+              if (isBlank(formData.description) || formData.description === '<p><br></p>') {
+                     newErrors.description = 'Description is required';
+              }
 
               if (listType === 'auction') {
-                     if (!formData.minimum_bid) newErrors.minimum_bid = "Starting bid is required";
-                     if (!formData.reserve_price) newErrors.reserve_price = "Market price is required";
-                     if (!formData.start_date) newErrors.start_date = "Start date is required";
-                     if (!formData.end_date) newErrors.end_date = "End date is required";
+                     if (!isPositiveNumber(formData.minimum_bid)) {
+                            newErrors.minimum_bid = 'Starting bid must be a valid number';
+                     }
+                     if (!isPositiveNumber(formData.reserve_price)) {
+                            newErrors.reserve_price = 'Market price must be a valid number';
+                     }
+                     if (isBlank(formData.start_date)) newErrors.start_date = 'Start date is required';
+                     if (isBlank(formData.end_date)) newErrors.end_date = 'End date is required';
+                     if (formData.start_date && formData.end_date && new Date(formData.end_date) <= new Date(formData.start_date)) {
+                            newErrors.end_date = 'End date must be after start date';
+                     }
               }
 
               if (listType === 'normal_list' || listType === 'business_list') {
                      if (!formData.variations || formData.variations.length === 0) {
-                            if (!formData.minimum_bid) newErrors.minimum_bid = "Price is required";
+                            if (!isPositiveNumber(formData.minimum_bid)) {
+                                   newErrors.minimum_bid = 'Price must be a valid number';
+                            }
+                     } else {
+                            formData.variations.forEach((variation, index) => {
+                                   if (isBlank(variation?.name)) {
+                                          newErrors[`variation_${index}_name`] = 'Variation name is required';
+                                   }
+                                   if (!isPositiveNumber(variation?.price)) {
+                                          newErrors[`variation_${index}_price`] = 'Variation price must be a valid number';
+                                   }
+                            });
+                     }
+
+                     if (!isBlank(formData.discount_value) && !isPositiveNumber(formData.discount_value)) {
+                            newErrors.discount_value = 'Discount must be a valid number';
                      }
               }
 
               if (listType === 'business_list') {
-                     if (!formData.stock) newErrors.stock = "Stock is required";
-                     if (!formData.quantity) newErrors.quantity = "Quantity is required";
+                     if (!isValidNumber(formData.stock) || Number(formData.stock) < 0 || !Number.isInteger(Number(formData.stock))) {
+                            newErrors.stock = 'Stock must be a whole number';
+                     }
+                     if (!isValidNumber(formData.quantity) || Number(formData.quantity) < 1 || !Number.isInteger(Number(formData.quantity))) {
+                            newErrors.quantity = 'Quantity must be a whole number (min 1)';
+                     }
               }
 
-              // Dynamic fields validation
-              dynamicFields.forEach(field => {
-                     if (field.is_required && !getFeatureValue(field)) {
-                            newErrors[`field_${field.id}`] = `${field.label} is required`;
+              // Dynamic fields validation (type-aware)
+              (dynamicFields || []).forEach((field) => {
+                     const inputType = String(field.input_type || 'text').trim().toLowerCase();
+                     const value = getFeatureValue(field);
+                     const key = `field_${field.id}`;
+
+                     if (field.is_required && (value === null || value === undefined || String(value).trim() === '' || value === false)) {
+                            newErrors[key] = `${field.label} is required`;
+                            return;
+                     }
+
+                     if (isBlank(value) && value !== false) {
+                            return;
+                     }
+
+                     if (inputType === 'number' && !isValidNumber(value)) {
+                            newErrors[key] = `${field.label} must be a valid number`;
+                     }
+
+                     if (inputType === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value))) {
+                            newErrors[key] = `${field.label} must be a valid email`;
+                     }
+
+                     if (inputType === 'url' && value) {
+                            try {
+                                   // eslint-disable-next-line no-new
+                                   new URL(String(value));
+                            } catch {
+                                   newErrors[key] = `${field.label} must be a valid URL`;
+                            }
                      }
               });
 
@@ -228,6 +290,12 @@ export default function DetailsForm({
 
                      <form className="details-form" onSubmit={handleNext} noValidate>
                             <div className="sell-form-inner">
+                                   {Object.keys(errors).length > 0 && (
+                                          <div className="alert alert-danger mb-4" role="alert">
+                                                 Please fix the highlighted fields before continuing.
+                                          </div>
+                                   )}
+
                                    <SummaryCard
                                           type="List Type"
                                           title={summaryData.listType}
@@ -595,7 +663,7 @@ export default function DetailsForm({
                                                                              </div>
                                                                       ) : (
                                                                              <input
-                                                                                    type={inputType || "text"}
+                                                                                    type={['number', 'email', 'url', 'tel', 'date', 'datetime-local'].includes(inputType) ? inputType : 'text'}
                                                                                     className="form-control verify_input"
                                                                                     value={getFeatureValue(field)}
                                                                                     onChange={(e) => updateFeatureValue(field, e.target.value)}
@@ -618,7 +686,7 @@ export default function DetailsForm({
                                                  Back
                                           </button>
                                           <button type="submit" className="btn btn-black px-5">
-                                                 Continue
+                                                 Confirm
                                           </button>
                                    </div>
                             </div>

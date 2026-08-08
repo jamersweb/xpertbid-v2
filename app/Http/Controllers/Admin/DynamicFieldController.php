@@ -36,7 +36,7 @@ class DynamicFieldController extends Controller
     {
         $request->validate([
             'listing_type' => 'required|in:normal,auction,business,all',
-            'category_id' => 'nullable|exists:auction_categories,id',
+            'category_id' => 'nullable|integer|exists:auction_categories,id',
             'field_name' => [
                 'required',
                 'string',
@@ -48,12 +48,20 @@ class DynamicFieldController extends Controller
                     ),
             ],
             'label' => 'required|string|max:255',
-            'input_type' => 'required|string',
+            'input_type' => 'required|string|in:text,number,email,url,tel,date,datetime-local,textarea,select,radio,checkbox',
             'options' => 'nullable|array',
             'is_required' => 'boolean'
         ]);
 
-        DynamicField::create($request->all());
+        DynamicField::create([
+            'listing_type' => $request->listing_type,
+            'category_id' => $request->filled('category_id') ? (int) $request->category_id : null,
+            'field_name' => (string) $request->field_name,
+            'label' => (string) $request->label,
+            'input_type' => (string) $request->input_type,
+            'options' => $request->options,
+            'is_required' => $request->boolean('is_required'),
+        ]);
 
         return redirect()->back()->with('success', 'Dynamic field created successfully.');
     }
@@ -67,7 +75,7 @@ class DynamicFieldController extends Controller
 
         $request->validate([
             'listing_type' => 'required|in:normal,auction,business,all',
-            'category_id' => 'nullable|exists:auction_categories,id',
+            'category_id' => 'nullable|integer|exists:auction_categories,id',
             'field_name' => [
                 'required',
                 'string',
@@ -80,12 +88,20 @@ class DynamicFieldController extends Controller
                     ),
             ],
             'label' => 'required|string|max:255',
-            'input_type' => 'required|string',
+            'input_type' => 'required|string|in:text,number,email,url,tel,date,datetime-local,textarea,select,radio,checkbox',
             'options' => 'nullable|array',
             'is_required' => 'boolean'
         ]);
 
-        $field->update($request->all());
+        $field->update([
+            'listing_type' => $request->listing_type,
+            'category_id' => $request->filled('category_id') ? (int) $request->category_id : null,
+            'field_name' => (string) $request->field_name,
+            'label' => (string) $request->label,
+            'input_type' => (string) $request->input_type,
+            'options' => $request->options,
+            'is_required' => $request->boolean('is_required'),
+        ]);
 
         return redirect()->back()->with('success', 'Dynamic field updated successfully.');
     }

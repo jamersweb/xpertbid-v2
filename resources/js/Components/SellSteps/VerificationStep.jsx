@@ -27,17 +27,27 @@ export default function VerificationStep({ categoryId, formData, setFormData, su
 
        const validate = () => {
               const newErrors = {};
+              const year = formData.year_of_manufacture;
+
               if (isProperty) {
-                     if (!formData.property_type) newErrors.property_type = "Required";
-                     if (!formData.property_address) newErrors.property_address = "Required";
-                     if (!formData.title_deed_number) newErrors.title_deed_number = "Required";
-                     if (!formData.property_documents?.length && !existingPropertyDocs.length) newErrors.property_documents = "Upload documents";
+                     if (!formData.property_type) newErrors.property_type = 'Required';
+                     if (!formData.property_address) newErrors.property_address = 'Required';
+                     if (!formData.title_deed_number) newErrors.title_deed_number = 'Required';
+                     if (!formData.property_documents?.length && !existingPropertyDocs.length) {
+                            newErrors.property_documents = 'Upload documents';
+                     }
               }
               if (isVehicle) {
-                     if (!formData.vehicle_make_model) newErrors.vehicle_make_model = "Required";
-                     if (!formData.year_of_manufacture) newErrors.year_of_manufacture = "Required";
-                     if (!formData.chassis_vin) newErrors.chassis_vin = "Required";
-                     if (!formData.vehicle_documents?.length && !existingVehicleDocs.length) newErrors.vehicle_documents = "Upload documents";
+                     if (!formData.vehicle_make_model) newErrors.vehicle_make_model = 'Required';
+                     if (!year) {
+                            newErrors.year_of_manufacture = 'Required';
+                     } else if (!/^\d{4}$/.test(String(year)) || Number(year) < 1900 || Number(year) > new Date().getFullYear() + 1) {
+                            newErrors.year_of_manufacture = 'Enter a valid 4-digit year';
+                     }
+                     if (!formData.chassis_vin) newErrors.chassis_vin = 'Required';
+                     if (!formData.vehicle_documents?.length && !existingVehicleDocs.length) {
+                            newErrors.vehicle_documents = 'Upload documents';
+                     }
               }
               setErrors(newErrors);
               return Object.keys(newErrors).length === 0;
@@ -47,6 +57,8 @@ export default function VerificationStep({ categoryId, formData, setFormData, su
               e.preventDefault();
               if (validate()) {
                      onContinue();
+              } else {
+                     window.scrollTo({ top: 0, behavior: 'smooth' });
               }
        };
 
@@ -109,6 +121,12 @@ export default function VerificationStep({ categoryId, formData, setFormData, su
 
                      <form className="verification-form" onSubmit={handleNext} noValidate>
                             <div className="sell-form-inner">
+
+                            {Object.keys(errors).length > 0 && (
+                                   <div className="alert alert-danger mb-4" role="alert">
+                                          Please fix the highlighted fields before continuing.
+                                   </div>
+                            )}
 
                             <SummaryCard
                                    type="List Type"
@@ -348,7 +366,7 @@ export default function VerificationStep({ categoryId, formData, setFormData, su
                                           Back
                                    </button>
                                    <button type="submit" className="btn btn-black px-5">
-                                          Continue
+                                          Confirm
                                    </button>
                             </div>
                             </div>

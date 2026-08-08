@@ -36,6 +36,7 @@ export default function CategorySelection({ categories: initialCategories, onSel
               sub: "",
               child: ""
        });
+       const [error, setError] = useState('');
 
        // Helpers similar to sell.js
        const buildAbsoluteMediaUrl = (path) => {
@@ -77,6 +78,7 @@ export default function CategorySelection({ categories: initialCategories, onSel
        };
 
        const handleGridCategoryClick = (cat) => {
+              setError('');
               setSelectedCategory(cat);
               setViewMode('list');
 
@@ -92,6 +94,7 @@ export default function CategorySelection({ categories: initialCategories, onSel
        };
 
        const handleSubCategoryClick = (sub) => {
+              setError('');
               setSelectedSubCategory(sub);
               setSelectedChildCategory(null);
 
@@ -103,33 +106,57 @@ export default function CategorySelection({ categories: initialCategories, onSel
        };
 
        const handleChildCategoryClick = (child) => {
+              setError('');
               setSelectedChildCategory(child);
        };
 
        // Custom input handler
        const handleCustomInputChange = (e, level) => {
+              setError('');
               setCustomCategoryBase(prev => ({ ...prev, [level]: e.target.value }));
        };
 
-       const canProceed = () => {
-              if (!selectedCategory) return false;
-              // Add logic: if subcategories exist, must select one. etc.
-              // For sync purposes, we allow proceed if leaf is reached or no children exist
-              if (selectedCategory.id === 'other_category') return !!customCategoryBase.category;
-
-              if (subCategories.length > 0) {
-                     if (!selectedSubCategory) return false;
-                     if (selectedSubCategory.id === 'other_subcategory') return !!customCategoryBase.sub;
-
-                     if (childCategories.length > 0) {
-                            if (!selectedChildCategory) return false;
-                            if (selectedChildCategory.id === 'other_childcategory') return !!customCategoryBase.child;
-                     }
+       const validate = () => {
+              if (!selectedCategory) {
+                     setError('Please select a category.');
+                     return false;
               }
+
+              if (selectedCategory.id === 'other_category' && !String(customCategoryBase.category || '').trim()) {
+                     setError('Please enter your custom category name.');
+                     return false;
+              }
+
+              if (subCategories.length > 0 && !selectedSubCategory) {
+                     setError('Please select a sub-category.');
+                     return false;
+              }
+
+              if (selectedSubCategory?.id === 'other_subcategory' && !String(customCategoryBase.sub || '').trim()) {
+                     setError('Please enter your custom sub-category name.');
+                     return false;
+              }
+
+              if (childCategories.length > 0 && !selectedChildCategory) {
+                     setError('Please select a child category.');
+                     return false;
+              }
+
+              if (selectedChildCategory?.id === 'other_childcategory' && !String(customCategoryBase.child || '').trim()) {
+                     setError('Please enter your custom child category name.');
+                     return false;
+              }
+
+              setError('');
               return true;
        };
 
        const handleContinue = () => {
+              if (!validate()) {
+                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                     return;
+              }
+
               onSelect({
                      category: selectedCategory,
                      subCategory: selectedSubCategory,
@@ -247,6 +274,12 @@ export default function CategorySelection({ categories: initialCategories, onSel
                                    </div>
                             </div>
                      </div>
+
+                     {error && (
+                            <div className="alert alert-danger mx-3 mb-3" role="alert">
+                                   {error}
+                            </div>
+                     )}
 
                      <div className="category-list-wrapper">
                             <div className="category-columns">
@@ -382,10 +415,9 @@ export default function CategorySelection({ categories: initialCategories, onSel
                                    <button
                                           type="button"
                                           className="btn btn-black"
-                                          disabled={!canProceed()}
                                           onClick={handleContinue}
                                    >
-                                          Continue
+                                          Confirm
                                    </button>
                             </div>
                      </div>

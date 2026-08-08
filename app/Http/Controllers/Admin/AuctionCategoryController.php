@@ -96,10 +96,15 @@ class AuctionCategoryController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge([
+            'parent_id' => $this->nullableIntId($request->input('parent_id')),
+            'sub_category_id' => $this->nullableIntId($request->input('sub_category_id')),
+        ]);
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:auction_categories,id',
-            'sub_category_id' => 'nullable|exists:auction_categories,id',
+            'parent_id' => 'nullable|integer|exists:auction_categories,id',
+            'sub_category_id' => 'nullable|integer|exists:auction_categories,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'icon' => 'nullable|file|max:2048',
             'meta_title' => 'nullable|string|max:255',
@@ -121,9 +126,9 @@ class AuctionCategoryController extends Controller
         $iconPath = $this->storeCategoryUpload($request, 'icon');
 
         AuctionCategory::create([
-            'name' => $request->name,
-            'parent_id' => $request->parent_id,
-            'sub_category_id' => $request->sub_category_id,
+            'name' => (string) $request->name,
+            'parent_id' => $this->nullableIntId($request->parent_id),
+            'sub_category_id' => $this->nullableIntId($request->sub_category_id),
             'image' => $imagePath,
             'icon' => $iconPath,
             'meta_title' => $request->meta_title,
@@ -131,7 +136,7 @@ class AuctionCategoryController extends Controller
             'seo_content' => $request->seo_content,
             'seo_short_content' => $request->seo_short_content,
             'schema_markup' => $request->schema_markup,
-            'slug' => Str::slug($request->slug ?? $request->name),
+            'slug' => Str::slug((string) ($request->slug ?? $request->name)),
         ]);
 
         return redirect()->back()->with('success', 'Category added successfully!');
@@ -141,10 +146,15 @@ class AuctionCategoryController extends Controller
     {
         $category = AuctionCategory::findOrFail($id);
 
+        $request->merge([
+            'parent_id' => $this->nullableIntId($request->input('parent_id')),
+            'sub_category_id' => $this->nullableIntId($request->input('sub_category_id')),
+        ]);
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:auction_categories,id',
-            'sub_category_id' => 'nullable|exists:auction_categories,id',
+            'parent_id' => 'nullable|integer|exists:auction_categories,id',
+            'sub_category_id' => 'nullable|integer|exists:auction_categories,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'icon' => 'nullable|file|max:2048',
             'meta_title' => 'nullable|string|max:255',
@@ -157,7 +167,7 @@ class AuctionCategoryController extends Controller
 
         $this->validateUploadExtension($request, 'icon', ['jpeg', 'jpg', 'png', 'svg']);
 
-        $nextSlug = Str::slug($request->slug ?: $request->name);
+        $nextSlug = Str::slug((string) ($request->slug ?: $request->name));
         if ($nextSlug !== $category->slug) {
             $slugExists = AuctionCategory::query()
                 ->where('slug', $nextSlug)
@@ -187,9 +197,9 @@ class AuctionCategoryController extends Controller
         }
 
         $updateData = [
-            'name' => $request->name,
-            'parent_id' => $request->parent_id,
-            'sub_category_id' => $request->sub_category_id,
+            'name' => (string) $request->name,
+            'parent_id' => $this->nullableIntId($request->parent_id),
+            'sub_category_id' => $this->nullableIntId($request->sub_category_id),
             'meta_title' => $request->meta_title,
             'meta_description' => $request->meta_description,
             'seo_content' => $request->seo_content,
@@ -236,5 +246,22 @@ class AuctionCategoryController extends Controller
     {
         $subs = AuctionCategory::where('sub_category_id', $id)->get();
         return response()->json(['subcategories' => $subs]);
+    }
+
+    protected function nullableIntId(mixed $value): ?int
+    {
+        if ($value === null || $value === '' || $value === false) {
+            return null;
+        }
+
+        if (is_string($value) && ! preg_match('/^-?\d+$/', trim($value))) {
+            return null;
+        }
+
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        return (int) $value;
     }
 }

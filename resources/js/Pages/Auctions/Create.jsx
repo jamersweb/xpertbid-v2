@@ -62,6 +62,9 @@ export default function Create({ categories, countries = [], profileLocation = n
               category_id: listing?.category_id || '',
               sub_category_id: listing?.sub_category_id || '',
               child_category_id: listing?.child_category_id || '',
+              custom_category_name: '',
+              custom_sub_category_name: '',
+              custom_child_category_name: '',
 
               title: listing?.title || '',
               description: listing?.description || '',
@@ -506,7 +509,7 @@ export default function Create({ categories, countries = [], profileLocation = n
               setStep('category');
        };
 
-       const handleCategorySelect = ({ category, subCategory, childCategory }) => {
+       const handleCategorySelect = ({ category, subCategory, childCategory, customInputs }) => {
               setSelectedCategory(category);
               setSelectedSubCategory(subCategory);
               setSelectedChildCategory(childCategory);
@@ -516,6 +519,9 @@ export default function Create({ categories, countries = [], profileLocation = n
                      category_id: category?.id,
                      sub_category_id: subCategory?.id || '',
                      child_category_id: childCategory?.id || '',
+                     custom_category_name: customInputs?.category || '',
+                     custom_sub_category_name: customInputs?.sub || '',
+                     custom_child_category_name: customInputs?.child || '',
               }));
               setStep('details');
        };
@@ -598,14 +604,33 @@ export default function Create({ categories, countries = [], profileLocation = n
                      ? 'web'
                      : null;
               data.append('listing_type', listing_type);
-              data.append('category_id', formData.category_id);
-              data.append('sub_category_id', formData.sub_category_id);
-              data.append('child_category_id', formData.child_category_id);
+              data.append('category_id', formData.category_id || '');
+              if (formData.sub_category_id) {
+                     data.append('sub_category_id', String(formData.sub_category_id));
+              }
+              if (formData.child_category_id) {
+                     data.append('child_category_id', String(formData.child_category_id));
+              }
+              if (formData.custom_category_name) {
+                     data.append('custom_category_name', formData.custom_category_name);
+              }
+              if (formData.custom_sub_category_name) {
+                     data.append('custom_sub_category_name', formData.custom_sub_category_name);
+              }
+              if (formData.custom_child_category_name) {
+                     data.append('custom_child_category_name', formData.custom_child_category_name);
+              }
               data.append('title', formData.title);
               data.append('description', formData.description);
-              data.append('country_id', formData.country_id || '');
-              data.append('state_id', formData.state_id || '');
-              data.append('city_id', formData.city_id || '');
+              if (formData.country_id) {
+                     data.append('country_id', String(formData.country_id));
+              }
+              if (formData.state_id) {
+                     data.append('state_id', String(formData.state_id));
+              }
+              if (formData.city_id) {
+                     data.append('city_id', String(formData.city_id));
+              }
               data.append('status', status);
               data.append('selected_currency', selectedCurrency);
               if (sourcePlatform) {

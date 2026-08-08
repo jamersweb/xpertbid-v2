@@ -407,6 +407,163 @@ class ListingController extends Controller
 
             $request->merge(['category_features' => $features]);
         }
+
+        // Integer FK columns reject empty strings / non-numeric values — normalize first.
+        // Keep special "other_*" tokens so store() can create real category rows.
+        $request->merge([
+            'category_id' => $this->normalizeRelationToken($request->input('category_id'), ['other_category']),
+            'sub_category_id' => $this->normalizeRelationToken($request->input('sub_category_id'), ['other_subcategory']),
+            'child_category_id' => $this->normalizeRelationToken($request->input('child_category_id'), ['other_childcategory']),
+            'country_id' => $this->nullableIntId($request->input('country_id')),
+            'state_id' => $this->nullableIntId($request->input('state_id')),
+            'city_id' => $this->nullableIntId($request->input('city_id')),
+            'brand_id' => $this->nullableIntId($request->input('brand_id')),
+        ]);
+    }
+
+    /**
+     * Keep allowed other_* tokens; otherwise cast to int or null.
+     */
+    protected function normalizeRelationToken(mixed $value, array $allowedTokens = []): mixed
+    {
+        if ($value === null || $value === '' || $value === false) {
+            return null;
+        }
+
+        if (in_array($value, $allowedTokens, true)) {
+            return $value;
+        }
+
+        return $this->nullableIntId($value);
+    }
+
+    /**
+     * @deprecated Use normalizeRelationToken()
+     */
+    protected function normalizeCategoryId(mixed $value): mixed
+    {
+        return $this->normalizeRelationToken($value, ['other_category']);
+    }
+
+    protected function nullableIntId(mixed $value): ?int
+    {
+        if ($value === null || $value === '' || $value === false) {
+            return null;
+        }
+
+        if (is_string($value) && ! preg_match('/^-?\d+$/', trim($value))) {
+            return null;
+        }
+
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        return (int) $value;
+    }
+
+    protected function assertCategoryRelationId(array $allowedTokens, string $failMessage): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail) use ($allowedTokens, $failMessage) {
+            if ($value === null || $value === '') {
+                return;
+            }
+
+            if (in_array($value, $allowedTokens, true)) {
+                return;
+            }
+
+            if (! is_numeric($value) || ! \App\Models\AuctionCategory::query()->where('id', (int) $value)->exists()) {
+                $fail($failMessage);
+            }
+        };
+    }
+
+    protected function listingRelationValidationRules(): array
+    {
+        return [
+            'category_id' => [
+                'required',
+                $this->assertCategoryRelationId(['other_category'], 'The selected category is invalid.'),
+            ],
+            'sub_category_id' => [
+                'nullable',
+                $this->assertCategoryRelationId(['other_subcategory'], 'The selected sub category is invalid.'),
+            ],
+            'child_category_id' => [
+                'nullable',
+                $this->assertCategoryRelationId(['other_childcategory'], 'The selected child category is invalid.'),
+            ],
+            'custom_category_name' => ['nullable', 'string', 'max:255'],
+            'custom_sub_category_name' => ['nullable', 'string', 'max:255'],
+            'custom_child_category_name' => ['nullable', 'string', 'max:255'],
+            'country_id' => ['nullable', 'integer', 'exists:countries,id'],
+            'state_id' => ['nullable', 'integer', 'exists:states,id'],
+            'city_id' => ['nullable', 'integer', 'exists:cities,id'],
+            'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
+        ];
+    }
+
+    protected function resolveListingCategoryIds(Request $request): array
+    {
+        $categoryId = $request->input('category_id');
+        $subCategoryId = $request->input('sub_category_id');
+        $childCategoryId = $request->input('child_category_id');
+
+        if ($categoryId === 'other_category') {
+            $name = trim((string) $request->input('custom_category_name', 'Other')) ?: 'Other';
+            $category = \App\Models\AuctionCategory::query()->firstOrCreate(
+                ['slug' => Str::slug($name) ?: 'other'],
+                [
+                    'name' => $name,
+                    'parent_id' => null,
+                    'sub_category_id' => null,
+                ]
+            );
+            $categoryId = $category->id;
+        }
+
+        $categoryId = $this->nullableIntId($categoryId);
+
+        if ($subCategoryId === 'other_subcategory') {
+            $name = trim((string) $request->input('custom_sub_category_name', 'Other')) ?: 'Other';
+            $slugBase = Str::slug($name) ?: 'other-sub';
+            $subCategory = \App\Models\AuctionCategory::query()->firstOrCreate(
+                [
+                    'slug' => $slugBase . '-p' . ($categoryId ?: 0),
+                    'parent_id' => $categoryId,
+                ],
+                [
+                    'name' => $name,
+                    'sub_category_id' => null,
+                ]
+            );
+            $subCategoryId = $subCategory->id;
+        }
+
+        $subCategoryId = $this->nullableIntId($subCategoryId);
+
+        if ($childCategoryId === 'other_childcategory') {
+            $name = trim((string) $request->input('custom_child_category_name', 'Other')) ?: 'Other';
+            $slugBase = Str::slug($name) ?: 'other-child';
+            $childCategory = \App\Models\AuctionCategory::query()->firstOrCreate(
+                [
+                    'slug' => $slugBase . '-s' . ($subCategoryId ?: 0),
+                    'parent_id' => $categoryId,
+                    'sub_category_id' => $subCategoryId,
+                ],
+                [
+                    'name' => $name,
+                ]
+            );
+            $childCategoryId = $childCategory->id;
+        }
+
+        return [
+            'category_id' => $categoryId,
+            'sub_category_id' => $this->nullableIntId($subCategoryId),
+            'child_category_id' => $this->nullableIntId($childCategoryId),
+        ];
     }
 
     protected function buildDraftPayload(Request $request, ?ListingDraft $draft = null): array
@@ -435,10 +592,12 @@ class ListingController extends Controller
         $listingData['album'] = $album;
         $listingData['image'] = $imagePath;
 
+        $categoryIds = $this->resolveListingCategoryIds($request);
+
         return [
-            'category_id' => $request->category_id ?: $draft?->category_id,
-            'sub_category_id' => $request->sub_category_id ?: $draft?->sub_category_id,
-            'child_category_id' => $request->child_category_id ?: $draft?->child_category_id,
+            'category_id' => $categoryIds['category_id'] ?: $draft?->category_id,
+            'sub_category_id' => $categoryIds['sub_category_id'] ?: $draft?->sub_category_id,
+            'child_category_id' => $categoryIds['child_category_id'] ?: $draft?->child_category_id,
             'listing_type' => $request->listing_type ?: $draft?->listing_type ?: 'auction',
             'listing_source' => $draft?->listing_source ?: $this->resolveSource($request, 'listing_source'),
             'title' => $request->title ?: $draft?->title ?: 'Untitled Draft',
@@ -592,12 +751,7 @@ class ListingController extends Controller
  
         // 1. Base Validation
         $validator = Validator::make($request->all(), [
-            'category_id' => 'required',
-            'sub_category_id' => 'nullable',
-            'child_category_id' => 'nullable',
-            'country_id' => 'nullable|exists:countries,id',
-            'state_id' => 'nullable|exists:states,id',
-            'city_id' => 'nullable|exists:cities,id',
+            ...$this->listingRelationValidationRules(),
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'listing_type' => 'required|in:normal,auction,business',
@@ -651,26 +805,18 @@ class ListingController extends Controller
         $imagePath = $albumPaths[0] ?? null;
         $listingData['album'] = $albumPaths;
         $listingData['image'] = $imagePath;
- 
-        // Handle 'other_category' lookup or creation for AuctionCategory
-        $categoryId = $request->category_id;
-        if ($categoryId === 'other_category') {
-            $otherCat = \App\Models\AuctionCategory::firstOrCreate(
-                ['slug' => 'other'],
-                ['name' => 'Other', 'parent_id' => null]
-            );
-            $categoryId = $otherCat->id;
-        }
- 
+
+        $categoryIds = $this->resolveListingCategoryIds($request);
+
         // 3. Create Listing
         $listing = Listing::create([
             'user_id' => auth()->id() ?? 1,
-            'category_id' => $categoryId,
-            'sub_category_id' => $request->sub_category_id,
-            'child_category_id' => $request->child_category_id,
-            'country_id' => $request->country_id,
-            'state_id' => $request->state_id,
-            'city_id' => $request->city_id,
+            'category_id' => $categoryIds['category_id'],
+            'sub_category_id' => $categoryIds['sub_category_id'],
+            'child_category_id' => $categoryIds['child_category_id'],
+            'country_id' => $this->nullableIntId($request->country_id),
+            'state_id' => $this->nullableIntId($request->state_id),
+            'city_id' => $this->nullableIntId($request->city_id),
             'listing_type' => $request->listing_type,
             'listing_source' => $this->resolveSource($request, 'listing_source'),
             'title' => $request->title,
@@ -756,9 +902,17 @@ class ListingController extends Controller
     {
         $this->parseIncomingPayload($request);
         $request->validate([
-            'country_id' => 'nullable|exists:countries,id',
-            'state_id' => 'nullable|exists:states,id',
-            'city_id' => 'nullable|exists:cities,id',
+            ...$this->listingRelationValidationRules(),
+            'title' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'listing_type' => 'nullable|in:normal,auction,business',
+            'category_features' => 'nullable|array',
+            'listing_data' => 'nullable|array',
+            'listing_data.price' => 'nullable|numeric',
+            'listing_data.start_price' => 'nullable|numeric',
+            'listing_data.reserve_price' => 'nullable|numeric',
+            'listing_data.stock' => 'nullable|integer|min:0',
+            'listing_data.quantity' => 'nullable|integer|min:1',
             ...$this->listingMediaValidationRules(),
         ]);
 
@@ -835,13 +989,25 @@ class ListingController extends Controller
                 ->with('success', 'Your changes have been submitted for admin approval. The current live listing will remain visible until approved.');
         }
  
+        $categoryIds = $this->resolveListingCategoryIds($request);
+
         $listing->update([
-            'category_id' => $request->category_id ?? $listing->category_id,
-            'sub_category_id' => $request->sub_category_id ?? $listing->sub_category_id,
-            'child_category_id' => $request->child_category_id ?? $listing->child_category_id,
-            'country_id' => $request->country_id ?? $listing->country_id,
-            'state_id' => $request->state_id ?? $listing->state_id,
-            'city_id' => $request->city_id ?? $listing->city_id,
+            'category_id' => $categoryIds['category_id'] ?? $listing->category_id,
+            'sub_category_id' => $request->has('sub_category_id')
+                ? $categoryIds['sub_category_id']
+                : $listing->sub_category_id,
+            'child_category_id' => $request->has('child_category_id')
+                ? $categoryIds['child_category_id']
+                : $listing->child_category_id,
+            'country_id' => $request->has('country_id')
+                ? $this->nullableIntId($request->country_id)
+                : $listing->country_id,
+            'state_id' => $request->has('state_id')
+                ? $this->nullableIntId($request->state_id)
+                : $listing->state_id,
+            'city_id' => $request->has('city_id')
+                ? $this->nullableIntId($request->city_id)
+                : $listing->city_id,
             'listing_type' => $request->listing_type ?? $listing->listing_type,
             'listing_source' => $listing->listing_source ?: $this->resolveSource($request, 'listing_source'),
             'title' => $request->title ?? $listing->title,

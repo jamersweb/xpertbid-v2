@@ -44,6 +44,19 @@ export default function MediaUpload({ files, setFiles, existingFiles = [], setEx
 
        const handleNext = (e) => {
               e.preventDefault();
+
+              if (!canPublish) {
+                     setError(publishBlockedMessage || 'Verification required to publish.');
+                     return;
+              }
+
+              if (files.length === 0 && existingFiles.length === 0) {
+                     setError('Please upload at least one image or video before continuing.');
+                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                     return;
+              }
+
+              setError('');
               onContinue();
        };
 
@@ -222,10 +235,9 @@ export default function MediaUpload({ files, setFiles, existingFiles = [], setEx
                                    <button
                                           type="submit"
                                           className="btn btn-black px-5"
-                                          disabled={!canPublish || (files.length === 0 && existingFiles.length === 0)}
                                           title={!canPublish ? publishBlockedMessage : undefined}
                                    >
-                                          {canPublish ? 'Continue' : 'Verification Required'}
+                                          {canPublish ? 'Confirm' : 'Verification Required'}
                                    </button>
                             </div>
                             </div>
