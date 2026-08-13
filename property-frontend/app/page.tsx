@@ -5,7 +5,7 @@ import {
   getProperties,
   getPropertyCategories,
 } from "@/lib/api/client";
-import type { CategoryNode, PropertyCard } from "@/types/property";
+import type { CategoryNode, PropertyCard, PropertyFilters } from "@/types/property";
 
 export const revalidate = 120;
 
@@ -64,7 +64,7 @@ function findChildCategory(
 }
 
 async function safeProperties(
-  filters: Parameters<typeof getProperties>[0]
+  filters: PropertyFilters = {}
 ): Promise<PropertyCard[]> {
   try {
     const result = await getProperties({
