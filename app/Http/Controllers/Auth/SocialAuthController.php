@@ -9,8 +9,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use App\Support\LoggedMail as Mail;
 use Illuminate\Support\Str;
+use App\Support\AuthBridge;
+use App\Support\LoggedMail as Mail;
 use App\Support\SignupWelcomeMessageSender;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -41,10 +42,14 @@ class SocialAuthController extends Controller
 
     public function redirectToGoogle()
     {
-        session(['signup_source' => $this->resolveSignupSource(request())]);
+        $request = request();
+        session([
+            'signup_source' => $this->resolveSignupSource($request),
+            'oauth_return_to' => $this->resolveReturnTo($request),
+        ]);
 
         return Socialite::driver('google')
-            ->redirectUrl(route('auth.google.callback')) // Explicitly set redirect URI
+            ->redirectUrl($this->googleRedirectUri())
             ->redirect();
     }
 
@@ -52,7 +57,7 @@ class SocialAuthController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')
-                ->redirectUrl(route('auth.google.callback')) // Must match the redirect URI
+                ->redirectUrl($this->googleRedirectUri())
                 ->user();
             
             $user = User::where('email', $googleUser->getEmail())->first();
@@ -108,7 +113,16 @@ class SocialAuthController extends Controller
 
             $this->ensureEmailVerified($user);
             Auth::login($user);
-            session()->forget('signup_source');
+
+            $returnTo = session('oauth_return_to');
+            session()->forget(['signup_source', 'oauth_return_to']);
+
+            if ($returnTo) {
+                $plain = $user->createToken('property_web')->plainTextToken;
+                $separator = str_contains($returnTo, '?') ? '&' : '?';
+
+                return redirect()->away($returnTo.$separator.'auth_token='.urlencode($plain));
+            }
 
             return redirect()->route('dashboard');
 
@@ -178,5 +192,34 @@ class SocialAuthController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('login')->with('error', 'Apple login failed.');
         }
+    }
+
+    protected function googleRedirectUri(): string
+    {
+        return (string) (config('services.google.redirect') ?: route('auth.google.callback'));
+    }
+
+    protected function resolveReturnTo($request): ?string
+    {
+        $returnTo = $request->input('return_to')
+            ?? $request->query('return_to')
+            ?? null;
+
+        if (! is_string($returnTo) || $returnTo === '') {
+            return null;
+        }
+
+        $parts = parse_url($returnTo);
+        if (! is_array($parts) || empty($parts['scheme']) || empty($parts['host'])) {
+            return null;
+        }
+
+        $origin = strtolower($parts['scheme'].'://'.$parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : ''));
+
+        if (! in_array($origin, AuthBridge::allowedOrigins(), true)) {
+            return null;
+        }
+
+        return $returnTo;
     }
 }

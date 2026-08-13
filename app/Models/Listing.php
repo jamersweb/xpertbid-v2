@@ -244,6 +244,62 @@ class Listing extends Model
         return 'slug';
     }
 
+    /**
+     * Category IDs in the property tree (root + sub + child).
+     *
+     * @return list<int>
+     */
+    public static function propertyCategoryIds(?int $rootId = null): array
+    {
+        $rootId = $rootId ?? (int) config('property.root_category_id', 222);
+        $ids = [$rootId];
+
+        $subIds = AuctionCategory::query()
+            ->where('parent_id', $rootId)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $ids = array_merge($ids, $subIds);
+
+        if ($subIds !== []) {
+            $childIds = AuctionCategory::query()
+                ->whereIn('sub_category_id', $subIds)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $ids = array_merge($ids, $childIds);
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    public function scopeBrowseable($query)
+    {
+        return $query->whereIn('status', ['active', 'sold_out']);
+    }
+
+    /**
+     * Public property listings under the configured root category tree.
+     */
+    public function scopeProperties($query)
+    {
+        $ids = static::propertyCategoryIds();
+
+        return $query
+            ->browseable()
+            ->where(function ($q) {
+                $q->whereNull('listing_type')
+                    ->orWhere('listing_type', '!=', 'live_auction');
+            })
+            ->where(function ($q) use ($ids) {
+                $q->whereIn('category_id', $ids)
+                    ->orWhereIn('sub_category_id', $ids)
+                    ->orWhereIn('child_category_id', $ids);
+            });
+    }
+
     protected static function booted()
     {
         static::creating(function ($listing) {

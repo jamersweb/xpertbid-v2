@@ -245,7 +245,6 @@ export default function Index({
        const [searchTerm, setSearchTerm] = useState(filters?.search || '');
        const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
        const [isFilterDrawerMounted, setIsFilterDrawerMounted] = useState(false);
-       const [isFilterDrawerClosing, setIsFilterDrawerClosing] = useState(false);
        const [selectedCountryId, setSelectedCountryId] = useState(filters?.country_id ? String(filters.country_id) : '');
        const [selectedStateId, setSelectedStateId] = useState(filters?.state_id ? String(filters.state_id) : '');
        const [selectedCityId, setSelectedCityId] = useState(filters?.city_id ? String(filters.city_id) : '');
@@ -289,7 +288,6 @@ export default function Index({
               }
 
               setIsFilterDrawerMounted(true);
-              setIsFilterDrawerClosing(false);
               setIsFilterDrawerOpen(false);
 
               filterDrawerOpenRafRef.current = requestAnimationFrame(() => {
@@ -301,7 +299,6 @@ export default function Index({
        };
 
        const closeFilterDrawer = () => {
-              setIsFilterDrawerClosing(true);
               setIsFilterDrawerOpen(false);
        };
 
@@ -320,9 +317,8 @@ export default function Index({
               if (isFilterDrawerMounted) {
                      filterDrawerCloseTimerRef.current = setTimeout(() => {
                             setIsFilterDrawerMounted(false);
-                            setIsFilterDrawerClosing(false);
                             filterDrawerCloseTimerRef.current = null;
-                     }, 820);
+                     }, 350);
               }
        }, [isFilterDrawerOpen, isFilterDrawerMounted]);
 
@@ -857,7 +853,7 @@ export default function Index({
                                                  className={`marketplace-filter-backdrop ${isFilterDrawerOpen ? 'is-open' : ''}`}
                                                  onClick={closeFilterDrawer}
                                           />
-                                          <aside className={`marketplace-filter-drawer ${isFilterDrawerOpen ? 'is-open' : ''} ${isFilterDrawerClosing ? 'is-closing' : ''}`}>
+                                          <aside className={`marketplace-filter-drawer ${isFilterDrawerOpen ? 'is-open' : ''}`}>
                                                  <div className="marketplace-filter-header">
                                                         <h3>Filters</h3>
                                                         <button type="button" onClick={closeFilterDrawer} aria-label="Close filters">
@@ -1263,14 +1259,11 @@ export default function Index({
                                    display: flex;
                                    flex-direction: column;
                                    transform: translateX(-100%);
-                                   transition: transform 1.05s cubic-bezier(0.22, 1, 0.36, 1);
+                                   transition: transform 0.35s ease;
                                    will-change: transform;
                             }
                             .marketplace-filter-drawer.is-open {
                                    transform: translateX(0);
-                            }
-                            .marketplace-filter-drawer.is-closing {
-                                   transform: translateX(100%);
                             }
                             .marketplace-filter-header {
                                    display: flex;

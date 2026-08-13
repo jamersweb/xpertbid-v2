@@ -46,6 +46,11 @@ Route::middleware('guest')->group(function () {
     Route::post('/api/auth/verify-otp', [App\Http\Controllers\PhoneAuthController::class, 'verifyOtp'])->name('auth.phone.verify');
 });
 
+// Available to guests AND already-authenticated users (property frontend deep-links).
+Route::get('auth/bridge/{token}', App\Http\Controllers\Auth\AuthBridgeController::class)
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('auth.bridge');
+
 Route::middleware('auth')->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');

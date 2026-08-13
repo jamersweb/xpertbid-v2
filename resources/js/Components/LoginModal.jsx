@@ -381,28 +381,25 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                                         </button>
                                                  </div>
 
-                                                 <div className="d-flex justify-content-between align-items-center mb-3">
-                                                        <div className="form-check mb-0">
-                                                               <input
-                                                                      className="form-check-input"
-                                                                      type="checkbox"
-                                                                      id="rememberMe"
-                                                                      checked={emailData.remember}
-                                                                      onChange={(e) => setEmailData('remember', e.target.checked)}
-                                                                      style={{ marginTop: '0.2rem' }}
-                                                               />
-                                                               <label className="form-check-label small text-muted ms-2" htmlFor="rememberMe" style={{ paddingTop: '1px' }}>
-                                                                      {t('auth.remember_me')}
+                                                        <div className="d-flex justify-content-between align-items-center mb-3">
+                                                               <label className="login-remember mb-0 d-inline-flex align-items-center gap-2" htmlFor="rememberMe" style={{ cursor: 'pointer' }}>
+                                                                      <input
+                                                                             type="checkbox"
+                                                                             id="rememberMe"
+                                                                             checked={emailData.remember}
+                                                                             onChange={(e) => setEmailData('remember', e.target.checked)}
+                                                                             style={{ width: 16, height: 16, margin: 0, flexShrink: 0 }}
+                                                                      />
+                                                                      <span className="small text-muted">{t('auth.remember_me')}</span>
                                                                </label>
+                                                               <button
+                                                                      type="button"
+                                                                      className="btn btn-link small text-dark fw-bold text-decoration-none p-0"
+                                                                      onClick={() => setCurrentStep("forgotPassword")}
+                                                               >
+                                                                      {t('auth.forgot_password')}
+                                                               </button>
                                                         </div>
-                                                        <button
-                                                               type="button"
-                                                               className="btn btn-link small text-dark fw-bold text-decoration-none p-0"
-                                                               onClick={() => setCurrentStep("forgotPassword")}
-                                                        >
-                                                               {t('auth.forgot_password')}
-                                                        </button>
-                                                 </div>
 
                                                  {errorMessage && <div className="alert alert-danger py-2 small mb-3">{errorMessage}</div>}
 
