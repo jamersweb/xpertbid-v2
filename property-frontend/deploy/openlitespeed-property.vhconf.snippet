@@ -1,0 +1,22 @@
+# Snippet for OpenLiteSpeed vhost: property.xpertbid.com
+# Merge into: /usr/local/lsws/conf/vhosts/property.xpertbid.com/vhconf.conf
+# Then: /usr/local/lsws/bin/lswsctrl restart
+#
+# NOTE: CyberPanel may regenerate parts of vhconf — prefer WebAdmin UI (External App + Context)
+# if this file gets overwritten.
+
+extprocessor nodejs-property {
+  type                    proxy
+  address                 127.0.0.1:3000
+  maxConns                100
+  pcKeepAliveTimeout      60
+  initTimeout             60
+  retryTimeout            0
+  respBuffer              0
+}
+
+context / {
+  type                    proxy
+  handler                 nodejs-property
+  addDefaultCharset       off
+}
