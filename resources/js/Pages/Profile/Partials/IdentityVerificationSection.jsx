@@ -407,12 +407,12 @@ function IndividualForm({ initialData, auth, countries }) {
             <div className="identity-upload-section">
                 {selectedDocument && (
                     <h4 className="form-label fw-bold mb-3">
-                        Verify your identity with {selectedDocument === 'Passport' ? 'a Passport' : 'an NIC'} document
+                        Verify your identity with a valid identity document (NIC, Passport, Student Card, etc.)
                     </h4>
                 )}
                 {selectedDocument && (
                     <ul className="liss mb-3">
-                        <li>A valid {selectedDocument} document in the issuing country.</li>
+                        <li>Upload any valid identity document issued in the issuing country (NIC, passport, student card, etc.).</li>
                         <li>A clear picture where all four corners are visible.</li>
                         <li>Include the back if it has identifying information.</li>
                         <li>Certified by a witness if required.</li>
