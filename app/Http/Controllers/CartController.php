@@ -56,7 +56,7 @@ class CartController extends Controller
                     'image' => $cartItem->listing->image_url ?? null,
                     'description' => $cartItem->listing->description ?? null,
                     'list_type' => $cartItem->listing->list_type ?? 'auction',
-                    'variation_name' => $cartItem->variation->name ?? null,
+                    'variation_name' => $cartItem->variation->name ?? $cartItem->variation_name,
                 ];
             });
 
@@ -81,7 +81,7 @@ class CartController extends Controller
         $validator = Validator::make($request->all(), [
             'listing_id' => 'required|integer|exists:listings,id',
             'type' => 'nullable|string|in:product,featured',
-            'variation_id' => 'nullable|integer|exists:product_variations,id',
+            'variation_id' => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -97,12 +97,44 @@ class CartController extends Controller
 
         $user = $request->user();
         $listing = Listing::findOrFail($request->listing_id ?? $request->auction_id);
+        $listingVariations = $listing->variations;
+        $requestedVariationId = $request->variation_id;
+        $listingVariation = $requestedVariationId !== null ? $listing->variationByIndex($requestedVariationId) : null;
+        $productVariation = null;
+        $variationName = null;
+
+        if ($requestedVariationId !== null && !$listingVariation) {
+            $productVariation = ProductVariation::find($requestedVariationId);
+            if ($productVariation) {
+                $variationName = $productVariation->name;
+            }
+        } elseif ($listingVariation) {
+            $variationName = $listingVariation['name'] ?? null;
+        }
+
+        if ($listingVariations !== [] && $listingVariation === null && $productVariation === null) {
+            $message = 'Please select a product variation';
+            if ($this->wantsMobileJson($request)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 422);
+            }
+
+            return redirect()->back()->with('error', $message);
+        }
 
         // Check if product is already in cart
         $existingCartItem = Cart::where('user_id', $user->id)
             ->where('listing_id', $listing->id)
             ->where('type', $request->type ?? 'product')
-            ->where('variation_id', $request->variation_id)
+            ->when(
+                $variationName,
+                fn ($query) => $query->where('variation_name', $variationName),
+                fn ($query) => $query->where(function ($inner) {
+                    $inner->whereNull('variation_name')->orWhere('variation_name', '');
+                })
+            )
             ->first();
 
         if ($existingCartItem) {
@@ -121,44 +153,46 @@ class CartController extends Controller
         if ($request->type === 'featured') {
             $price = 15000;
         } else {
-            if ($request->variation_id) {
-                $variation = ProductVariation::find($request->variation_id);
-                if ($variation && $variation->listing_id == $listing->id) {
-                    $originalPrice = $variation->price;
-                    $discountType = $variation->discount_type;
-                    $discountValue = $variation->discount_value;
-                } else {
-                    if ($this->wantsMobileJson($request)) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Invalid variation selected',
-                        ], 422);
+            if ($listingVariation) {
+                $price = $listing->variationSalePrice($listingVariation);
+            } elseif ($productVariation) {
+                $originalPrice = $productVariation->price;
+                $discountType = $productVariation->discount_type;
+                $discountValue = $productVariation->discount_value;
+                $price = $originalPrice;
+                if ($discountType && $discountValue > 0) {
+                    if ($discountType === 'percent') {
+                        $price = $originalPrice - ($originalPrice * ($discountValue / 100));
+                    } elseif ($discountType === 'flat') {
+                        $price = $originalPrice - $discountValue;
                     }
-
-                    return redirect()->back()->with('error', 'Invalid variation selected');
+                }
+                if ($price < 0) {
+                    $price = 0;
                 }
             } else {
                 $originalPrice = $listing->buy_now_price ?? $listing->minimum_bid ?? 0;
                 $discountType = $listing->discount_type;
                 $discountValue = $listing->discount_value;
-            }
-
-            // Calculate Discount
-            $price = $originalPrice;
-            if ($discountType && $discountValue > 0) {
-                if ($discountType === 'percent') {
-                     $price = $originalPrice - ($originalPrice * ($discountValue / 100));
-                } elseif ($discountType === 'flat') {
-                    $price = $originalPrice - $discountValue;
+                $price = $originalPrice;
+                if ($discountType && $discountValue > 0) {
+                    if ($discountType === 'percent') {
+                        $price = $originalPrice - ($originalPrice * ($discountValue / 100));
+                    } elseif ($discountType === 'flat') {
+                        $price = $originalPrice - $discountValue;
+                    }
+                }
+                if ($price < 0) {
+                    $price = 0;
                 }
             }
-            if ($price < 0) $price = 0;
         }
 
         $cartItem = Cart::create([
             'user_id' => $user->id,
             'listing_id' => $listing->id,
-            'variation_id' => $request->variation_id,
+            'variation_id' => $productVariation?->id,
+            'variation_name' => $variationName,
             'type' => $request->type ?? 'product',
             'quantity' => 1,
             'price' => $price,

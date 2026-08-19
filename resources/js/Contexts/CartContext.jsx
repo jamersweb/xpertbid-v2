@@ -88,10 +88,11 @@ export const CartProvider = ({ children }) => {
                                    listing = productDetails;
                                    price = listing.buy_now_price || listing.minimum_bid || 0;
 
-                                   if (variationId && listing.variations) {
-                                          const foundVar = listing.variations.find(v => v.id == variationId);
+                                   if (variationId !== null && variationId !== undefined && listing.variations) {
+                                          const foundVar = listing.variations.find(v => String(v.id) == String(variationId))
+                                                 || listing.listing_data?.variations?.[variationId];
                                           if (foundVar) {
-                                                 price = foundVar.price;
+                                                 price = foundVar.price ?? price;
                                                  variationName = foundVar.name;
                                                  variationPrice = foundVar.price;
                                           }

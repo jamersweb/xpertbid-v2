@@ -97,7 +97,7 @@ class CheckoutController extends Controller
                     'image' => $cartItem->listing->image_url ?? null,
                     'description' => $cartItem->listing->description ?? null,
                     'list_type' => $cartItem->listing->list_type ?? 'auction',
-                    'variation_name' => $cartItem->variation->name ?? null,
+                    'variation_name' => $cartItem->variation->name ?? $cartItem->variation_name,
                 ];
             });
             

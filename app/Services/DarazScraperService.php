@@ -5,6 +5,7 @@ namespace App\Services;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\Process;
 use RuntimeException;
@@ -28,6 +29,10 @@ class DarazScraperService
         $html = $response->body();
         if (trim($html) === '') {
             throw new RuntimeException('Daraz returned an empty response.');
+        }
+
+        if (str_contains($html, '__moduleData__') && str_contains($html, '"skuBase"')) {
+            return $this->parseHtml($html, $url);
         }
 
         $renderedHtml = $this->fetchRenderedHtml($url);
@@ -105,18 +110,312 @@ class DarazScraperService
             '//title',
         ]));
 
-        $price = $this->extractPrice($xpath, $html, $url);
+        $moduleFields = $this->extractModuleFields($html);
+        $price = $this->extractPrice($xpath, $html, $url)
+            ?: $this->extractModulePrice($moduleFields);
         $description = $this->extractDescription($xpath);
+        if ($description === null || $description === '') {
+            $moduleDescription = $moduleFields['product']['desc'] ?? $moduleFields['product']['highlights'] ?? null;
+            if (is_string($moduleDescription) && trim($moduleDescription) !== '') {
+                $description = $this->normalizeDescriptionHtml($moduleDescription);
+            }
+        }
         $images = $this->extractImages($xpath, $url);
+        if ($images === []) {
+            $images = $this->extractImagesFromModule($moduleFields, $url);
+        }
+        $normalizedPrice = $this->normalizePrice($price) ?? $price;
 
         return [
             'title' => $this->normalizeText($title) ?: 'No title',
             'description' => $this->normalizeMultilineText($description),
             'images' => $images,
-            'price' => $this->normalizePrice($price) ?? $price,
+            'price' => $normalizedPrice,
+            'variations' => $this->extractVariations($moduleFields, $normalizedPrice),
             'source_url' => $url,
             'source_domain' => parse_url($url, PHP_URL_HOST),
         ];
+    }
+
+    protected function extractModuleFields(string $html): array
+    {
+        if (!preg_match('/(?:var|window\.)\s*__moduleData__\s*=\s*(\{.*?\});\s*(?:var\s+|window\.|<\/script>)/s', $html, $matches)) {
+            return [];
+        }
+
+        $decoded = json_decode($matches[1], true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+
+        $fields = $decoded['data']['root']['fields'] ?? [];
+        return is_array($fields) ? $fields : [];
+    }
+
+    protected function extractModulePrice(array $moduleFields): ?string
+    {
+        $candidates = [
+            $moduleFields['tracking']['pdt_price'] ?? null,
+            $moduleFields['skuInfos']['0']['price']['salePrice']['text'] ?? null,
+            $moduleFields['skuInfos']['0']['price']['salePrice'] ?? null,
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (is_array($candidate)) {
+                $candidate = $candidate['text'] ?? $candidate['value'] ?? null;
+            }
+
+            $price = $this->normalizePriceValue((string) $candidate, true);
+            if ($price !== null) {
+                return $price;
+            }
+        }
+
+        return null;
+    }
+
+    protected function extractImagesFromModule(array $moduleFields, string $baseUrl): array
+    {
+        $gallery = $moduleFields['skuGalleries']['0'] ?? [];
+        if (!is_array($gallery)) {
+            return [];
+        }
+
+        $images = [];
+        $seen = [];
+        foreach ($gallery as $item) {
+            if (!is_array($item) || strtolower((string) ($item['type'] ?? '')) === 'video') {
+                continue;
+            }
+
+            $normalized = $this->normalizeUrl($item['src'] ?? $item['poster'] ?? null, $baseUrl);
+            if ($normalized === null || $this->looksLikeNoiseImage($normalized)) {
+                continue;
+            }
+
+            $key = $this->canonicalImageKey($normalized);
+            if (isset($seen[$key])) {
+                continue;
+            }
+
+            $seen[$key] = true;
+            $images[] = $normalized;
+            if (count($images) >= 10) {
+                break;
+            }
+        }
+
+        return $images;
+    }
+
+    protected function extractVariations(array $moduleFields, mixed $fallbackPrice): array
+    {
+        $skuBase = $moduleFields['productOption']['skuBase'] ?? $moduleFields['skuBase'] ?? [];
+        $skus = is_array($skuBase['skus'] ?? null) ? $skuBase['skus'] : [];
+        $properties = is_array($skuBase['properties'] ?? null) ? $skuBase['properties'] : [];
+        $skuInfos = is_array($moduleFields['skuInfos'] ?? null) ? $moduleFields['skuInfos'] : [];
+
+        if ($skus === [] || $properties === []) {
+            return [];
+        }
+
+        $propertyMaps = [];
+        foreach ($properties as $property) {
+            if (!is_array($property)) {
+                continue;
+            }
+
+            $pid = (string) ($property['pid'] ?? '');
+            if ($pid === '') {
+                continue;
+            }
+
+            $propertyMaps[$pid] = $this->flattenPropertyValues($property);
+        }
+
+        $variations = [];
+        $seenNames = [];
+        $fallback = $this->formatNumericPrice((string) ($this->normalizePriceValue((string) $fallbackPrice, true) ?? ''));
+
+        foreach ($skus as $sku) {
+            if (!is_array($sku)) {
+                continue;
+            }
+
+            $name = $this->buildVariationNameFromSku($sku, $propertyMaps, $properties);
+            if ($name === '' || isset($seenNames[mb_strtolower($name)])) {
+                continue;
+            }
+
+            $skuId = (string) ($sku['skuId'] ?? $sku['cartSkuId'] ?? '');
+            $skuInfo = $skuInfos[$skuId] ?? [];
+            [$price, $discountType, $discountValue] = $this->extractVariationPricing($skuInfo, $fallback);
+
+            $seenNames[mb_strtolower($name)] = true;
+            $variations[] = [
+                'name' => Str::limit($name, 255, ''),
+                'price' => $price ?? '',
+                'discount_type' => $discountType,
+                'discount_value' => $discountValue,
+            ];
+
+            if (count($variations) >= 60) {
+                break;
+            }
+        }
+
+        if ($this->shouldDropGenericVariations($variations)) {
+            return [];
+        }
+
+        return $variations;
+    }
+
+    protected function flattenPropertyValues(array $property): array
+    {
+        $map = [];
+        $groupFallback = trim((string) ($property['name'] ?? ''));
+
+        foreach ($property['values'] ?? [] as $value) {
+            if (!is_array($value)) {
+                continue;
+            }
+
+            if (isset($value['value']) && is_array($value['value'])) {
+                $groupName = trim((string) ($value['name'] ?? $groupFallback));
+                foreach ($value['value'] as $child) {
+                    if (!is_array($child)) {
+                        continue;
+                    }
+
+                    $vid = (string) ($child['vid'] ?? '');
+                    $childName = trim((string) ($child['name'] ?? ''));
+                    if ($vid === '' || $childName === '') {
+                        continue;
+                    }
+
+                    if ($groupName !== '' && !str_contains(mb_strtolower($childName), mb_strtolower($groupName))) {
+                        $childName = $groupName . ' ' . $childName;
+                    }
+
+                    $map[$vid] = $childName;
+                }
+
+                continue;
+            }
+
+            $vid = (string) ($value['vid'] ?? '');
+            $name = trim((string) ($value['name'] ?? ''));
+            if ($vid !== '' && $name !== '') {
+                $map[$vid] = $name;
+            }
+        }
+
+        return $map;
+    }
+
+    protected function buildVariationNameFromSku(array $sku, array $propertyMaps, array $properties): string
+    {
+        $propPath = trim((string) ($sku['propPath'] ?? ''));
+        $selected = [];
+        if ($propPath !== '') {
+            foreach (explode(';', $propPath) as $pair) {
+                $parts = explode(':', $pair, 2);
+                if (count($parts) !== 2) {
+                    continue;
+                }
+
+                $selected[trim($parts[0])] = trim($parts[1]);
+            }
+        }
+
+        $nameParts = [];
+        foreach ($properties as $property) {
+            if (!is_array($property)) {
+                continue;
+            }
+
+            $pid = (string) ($property['pid'] ?? '');
+            $vid = $selected[$pid] ?? null;
+            if ($vid === null || !isset($propertyMaps[$pid][$vid])) {
+                continue;
+            }
+
+            $nameParts[] = $propertyMaps[$pid][$vid];
+        }
+
+        return $this->composeVariationName($nameParts);
+    }
+
+    protected function composeVariationName(array $parts): string
+    {
+        $cleaned = [];
+        foreach ($parts as $part) {
+            $part = $this->normalizeText((string) $part);
+            if ($part === '') {
+                continue;
+            }
+
+            foreach ($cleaned as $existing) {
+                $pattern = '/^' . preg_quote($existing, '/') . '\s*[,:\/|-]\s*(.+)$/iu';
+                if (preg_match($pattern, $part, $matches)) {
+                    $part = $this->normalizeText($matches[1] ?? '');
+                    break;
+                }
+            }
+
+            if ($part !== '' && !in_array($part, $cleaned, true)) {
+                $cleaned[] = $part;
+            }
+        }
+
+        return implode(' / ', $cleaned);
+    }
+
+    protected function extractVariationPricing(array $skuInfo, ?string $fallbackPrice): array
+    {
+        $priceNode = $skuInfo['price'] ?? [];
+        $sale = null;
+        $original = null;
+
+        if (is_array($priceNode)) {
+            $sale = $this->normalizePriceValue((string) ($priceNode['salePrice']['text'] ?? $priceNode['salePrice']['value'] ?? $priceNode['salePrice'] ?? ''), true);
+            $original = $this->normalizePriceValue((string) ($priceNode['originalPrice']['text'] ?? $priceNode['originalPrice']['value'] ?? $priceNode['originalPrice'] ?? ''), true);
+        }
+
+        $price = $sale ?? $fallbackPrice;
+        $discountType = '';
+        $discountValue = '';
+
+        if ($original !== null && $price !== null && (float) $original > (float) $price) {
+            $discountType = 'flat';
+            $discountValue = $this->formatNumericPrice((string) ((float) $original - (float) $price)) ?? '';
+        }
+
+        return [$price ?? '', $discountType, $discountValue];
+    }
+
+    protected function shouldDropGenericVariations(array $variations): bool
+    {
+        if ($variations === []) {
+            return true;
+        }
+
+        if (count($variations) > 1) {
+            return false;
+        }
+
+        $name = mb_strtolower(trim((string) ($variations[0]['name'] ?? '')));
+        $generic = [
+            '',
+            'default',
+            'as shown',
+            'multiple color',
+            'multiple colours',
+            'متعدد رنگ',
+        ];
+
+        return in_array($name, $generic, true);
     }
 
     protected function firstText(DOMXPath $xpath, array $queries): ?string

@@ -153,6 +153,9 @@ export default function OlxScraper({
               stock: '',
               start_date: '',
               end_date: '',
+              discount_type: '',
+              discount_value: '',
+              variations: Array.isArray(preview?.variations) ? preview.variations : [],
        });
 
        const { data: saveData, setData: setSaveData } = saveForm;
@@ -206,6 +209,19 @@ export default function OlxScraper({
               setSaveData('minimum_bid', default_listing_type === 'auction' || default_listing_type === 'live_auction' ? (preview.minimum_bid || previewPriceValue || '') : '');
               setSaveData('reserve_price', default_listing_type === 'auction' || default_listing_type === 'live_auction' ? (preview.reserve_price || previewPriceValue || '') : '');
               setSaveData('stock', default_listing_type === 'business' ? (saveForm.data.stock || '') : '');
+              setSaveData('discount_type', default_listing_type === 'normal' || default_listing_type === 'business' ? (preview.discount_type || '') : '');
+              setSaveData('discount_value', default_listing_type === 'normal' || default_listing_type === 'business' ? (preview.discount_value || '') : '');
+              setSaveData(
+                     'variations',
+                     default_listing_type === 'normal' || default_listing_type === 'business'
+                            ? toArray(preview.variations).map((variation) => ({
+                                   name: variation?.name || '',
+                                   price: variation?.price || previewPriceValue || '',
+                                   discount_type: variation?.discount_type || '',
+                                   discount_value: variation?.discount_value || '',
+                            }))
+                            : [],
+              );
        }, [preview, saveData.url, setSaveData, default_listing_type, saveForm.data.stock]);
 
        useEffect(() => {
@@ -279,8 +295,18 @@ export default function OlxScraper({
                      saveForm.setData('stock', '');
                      saveForm.setData('start_date', '');
                      saveForm.setData('end_date', '');
+                     saveForm.setData('discount_type', '');
+                     saveForm.setData('discount_value', '');
+                     saveForm.setData('variations', []);
                      return;
               }
+
+              const scrapedVariations = toArray(preview?.variations).map((variation) => ({
+                     name: variation?.name || '',
+                     price: variation?.price || previewPriceValue || '',
+                     discount_type: variation?.discount_type || '',
+                     discount_value: variation?.discount_value || '',
+              }));
 
               if (normalized === 'business') {
                      saveForm.setData('price', previewPriceValue || preview?.minimum_bid || saveForm.data.price || '');
@@ -288,6 +314,7 @@ export default function OlxScraper({
                      saveForm.setData('reserve_price', '');
                      saveForm.setData('start_date', '');
                      saveForm.setData('end_date', '');
+                     saveForm.setData('variations', scrapedVariations);
                      return;
               }
 
@@ -297,6 +324,29 @@ export default function OlxScraper({
               saveForm.setData('stock', '');
               saveForm.setData('start_date', '');
               saveForm.setData('end_date', '');
+              saveForm.setData('variations', scrapedVariations);
+       };
+
+       const addVariation = () => {
+              saveForm.setData('variations', [
+                     ...(saveForm.data.variations || []),
+                     { name: '', price: previewPriceValue || saveForm.data.price || '', discount_type: '', discount_value: '' },
+              ]);
+       };
+
+       const removeVariation = (index) => {
+              const nextVariations = [...(saveForm.data.variations || [])];
+              nextVariations.splice(index, 1);
+              saveForm.setData('variations', nextVariations);
+       };
+
+       const updateVariation = (index, field, value) => {
+              const nextVariations = [...(saveForm.data.variations || [])];
+              nextVariations[index] = {
+                     ...(nextVariations[index] || {}),
+                     [field]: value,
+              };
+              saveForm.setData('variations', nextVariations);
        };
 
        const submitPreview = (event) => {
@@ -343,6 +393,17 @@ export default function OlxScraper({
                      if (value === null || value === undefined) {
                             return;
                      }
+
+                     if (key === 'variations' && Array.isArray(value)) {
+                            value.forEach((variation, index) => {
+                                   formData.append(`variations[${index}][name]`, variation?.name ?? '');
+                                   formData.append(`variations[${index}][price]`, variation?.price ?? '');
+                                   formData.append(`variations[${index}][discount_type]`, variation?.discount_type ?? '');
+                                   formData.append(`variations[${index}][discount_value]`, variation?.discount_value ?? '');
+                            });
+                            return;
+                     }
+
                      formData.append(key, value);
               });
 
@@ -651,6 +712,122 @@ export default function OlxScraper({
                                                                </div>
                                                         )}
 
+                                                        {(isNormalType || isBusinessType) && (
+                                                               <div className="space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-5">
+                                                                      <div className="flex items-center justify-between gap-3">
+                                                                             <div>
+                                                                                    <h3 className="text-sm font-black uppercase tracking-widest text-gray-900">Discount & Variations</h3>
+                                                                                    <p className="mt-1 text-xs text-gray-500">Scraped size/color options fill here. You can edit, remove, or add more before save.</p>
+                                                                             </div>
+                                                                             <button
+                                                                                    type="button"
+                                                                                    onClick={addVariation}
+                                                                                    className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-black uppercase tracking-wider text-gray-700 hover:bg-gray-50"
+                                                                             >
+                                                                                    Add Variation
+                                                                             </button>
+                                                                      </div>
+
+                                                                      <div className="grid gap-4 md:grid-cols-2">
+                                                                             <div>
+                                                                                    <InputLabel value="Discount Type" className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
+                                                                                    <select
+                                                                                           value={saveForm.data.discount_type || ''}
+                                                                                           onChange={(event) => saveForm.setData('discount_type', event.target.value)}
+                                                                                           className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm focus:border-black focus:ring-black/10"
+                                                                                    >
+                                                                                           <option value="">No discount</option>
+                                                                                           <option value="percent">Percent</option>
+                                                                                           <option value="flat">Flat</option>
+                                                                                    </select>
+                                                                                    <InputError message={saveForm.errors.discount_type} className="mt-2" />
+                                                                             </div>
+                                                                             <div>
+                                                                                    <InputLabel value="Discount Value" className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
+                                                                                    <TextInput
+                                                                                           type="number"
+                                                                                           step="0.01"
+                                                                                           min="0"
+                                                                                           value={saveForm.data.discount_value || ''}
+                                                                                           onChange={(event) => saveForm.setData('discount_value', event.target.value)}
+                                                                                           disabled={!saveForm.data.discount_type}
+                                                                                           className="w-full rounded-2xl border-gray-200 px-4 py-3 text-gray-900 shadow-sm focus:border-black focus:ring-black/10"
+                                                                                    />
+                                                                                    <InputError message={saveForm.errors.discount_value} className="mt-2" />
+                                                                             </div>
+                                                                      </div>
+
+                                                                      {(saveForm.data.variations || []).length > 0 ? (
+                                                                             <div className="space-y-3">
+                                                                                    {(saveForm.data.variations || []).map((variation, index) => (
+                                                                                           <div key={`variation-${index}`} className="space-y-4 rounded-2xl border border-gray-200 bg-white p-4">
+                                                                                                  <div className="flex items-center justify-between gap-3">
+                                                                                                         <h4 className="text-sm font-bold text-gray-800">Variation {index + 1}</h4>
+                                                                                                         <button
+                                                                                                                type="button"
+                                                                                                                onClick={() => removeVariation(index)}
+                                                                                                                className="text-sm font-semibold text-rose-600 hover:text-rose-700"
+                                                                                                         >
+                                                                                                                Remove
+                                                                                                         </button>
+                                                                                                  </div>
+                                                                                                  <div className="grid gap-4 md:grid-cols-2">
+                                                                                                         <div>
+                                                                                                                <InputLabel value="Variation Name" className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
+                                                                                                                <TextInput
+                                                                                                                       value={variation?.name || ''}
+                                                                                                                       onChange={(event) => updateVariation(index, 'name', event.target.value)}
+                                                                                                                       placeholder="Black / 7-8 Years"
+                                                                                                                       className="w-full rounded-2xl border-gray-200 px-4 py-3 text-gray-900 shadow-sm focus:border-black focus:ring-black/10"
+                                                                                                                />
+                                                                                                                <InputError message={saveForm.errors[`variations.${index}.name`]} className="mt-2" />
+                                                                                                         </div>
+                                                                                                         <div>
+                                                                                                                <InputLabel value="Variation Price" className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
+                                                                                                                <TextInput
+                                                                                                                       type="number"
+                                                                                                                       step="0.01"
+                                                                                                                       min="0"
+                                                                                                                       value={variation?.price || ''}
+                                                                                                                       onChange={(event) => updateVariation(index, 'price', event.target.value)}
+                                                                                                                       className="w-full rounded-2xl border-gray-200 px-4 py-3 text-gray-900 shadow-sm focus:border-black focus:ring-black/10"
+                                                                                                                />
+                                                                                                                <InputError message={saveForm.errors[`variations.${index}.price`]} className="mt-2" />
+                                                                                                         </div>
+                                                                                                         <div>
+                                                                                                                <InputLabel value="Variation Discount Type" className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
+                                                                                                                <select
+                                                                                                                       value={variation?.discount_type || ''}
+                                                                                                                       onChange={(event) => updateVariation(index, 'discount_type', event.target.value)}
+                                                                                                                       className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm focus:border-black focus:ring-black/10"
+                                                                                                                >
+                                                                                                                       <option value="">No discount</option>
+                                                                                                                       <option value="percent">Percent</option>
+                                                                                                                       <option value="flat">Flat</option>
+                                                                                                                </select>
+                                                                                                         </div>
+                                                                                                         <div>
+                                                                                                                <InputLabel value="Variation Discount Value" className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2" />
+                                                                                                                <TextInput
+                                                                                                                       type="number"
+                                                                                                                       step="0.01"
+                                                                                                                       min="0"
+                                                                                                                       value={variation?.discount_value || ''}
+                                                                                                                       onChange={(event) => updateVariation(index, 'discount_value', event.target.value)}
+                                                                                                                       disabled={!variation?.discount_type}
+                                                                                                                       className="w-full rounded-2xl border-gray-200 px-4 py-3 text-gray-900 shadow-sm focus:border-black focus:ring-black/10"
+                                                                                                                />
+                                                                                                         </div>
+                                                                                                  </div>
+                                                                                           </div>
+                                                                                    ))}
+                                                                             </div>
+                                                                      ) : (
+                                                                             <p className="text-xs text-gray-500">No variations yet. Click Add Variation for size/color options.</p>
+                                                                      )}
+                                                               </div>
+                                                        )}
+
                                                         <div className="flex flex-wrap gap-3 pt-2">
                                                                <PrimaryButton
                                                                       type="submit"
@@ -709,6 +886,23 @@ export default function OlxScraper({
                                                                              {preview.description || 'No description found'}
                                                                       </p>
                                                                </div>
+
+                                                               {toArray(preview.variations).length > 0 && (
+                                                                      <div className="rounded-[1.5rem] border border-gray-100 bg-white p-4">
+                                                                             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Variations</p>
+                                                                             <p className="mt-1 text-xs text-gray-500">{toArray(preview.variations).length} size/color options scraped</p>
+                                                                             <div className="mt-3 max-h-56 space-y-2 overflow-auto">
+                                                                                    {toArray(preview.variations).map((variation, index) => (
+                                                                                           <div key={`preview-variation-${index}`} className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 px-3 py-2">
+                                                                                                  <span className="text-sm font-semibold text-gray-800">{variation?.name || `Variation ${index + 1}`}</span>
+                                                                                                  <span className="text-sm font-black text-gray-900">
+                                                                                                         {variation?.price ? `PKR ${variation.price}` : '—'}
+                                                                                                  </span>
+                                                                                           </div>
+                                                                                    ))}
+                                                                             </div>
+                                                                      </div>
+                                                               )}
 
                                                                <div className="rounded-[1.5rem] border border-gray-100 bg-white p-4">
                                                                       <div className="flex flex-wrap items-center justify-between gap-3">

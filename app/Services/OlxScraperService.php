@@ -68,18 +68,102 @@ class OlxScraperService
         ]);
 
         $images = $this->extractImages($xpath, $html, $url);
+        $normalizedPrice = $this->normalizePrice($price);
 
         return [
             'title' => $this->normalizeTitle($title),
             'description' => $this->normalizeDescription($description),
             'images' => $images,
             'location_text' => $this->normalizeText($location),
-            'price' => $this->normalizePrice($price),
+            'price' => $normalizedPrice,
+            'variations' => $this->extractVariations($xpath, $normalizedPrice),
             'minimum_bid' => 0,
             'reserve_price' => 0,
             'source_url' => $url,
             'source_domain' => parse_url($url, PHP_URL_HOST),
         ];
+    }
+
+    protected function extractVariations(DOMXPath $xpath, ?string $fallbackPrice): array
+    {
+        $parameters = $this->extractParameters($xpath);
+        if ($parameters === []) {
+            return [];
+        }
+
+        $nameParts = [];
+        foreach (['color', 'colour', 'size', 'variant', 'storage', 'ram', 'memory'] as $key) {
+            if (!empty($parameters[$key])) {
+                $nameParts[] = $parameters[$key];
+            }
+        }
+
+        $name = implode(' / ', array_values(array_unique(array_filter($nameParts))));
+        if ($name === '') {
+            return [];
+        }
+
+        return [[
+            'name' => $name,
+            'price' => $fallbackPrice ?? '',
+            'discount_type' => '',
+            'discount_value' => '',
+        ]];
+    }
+
+    protected function extractParameters(DOMXPath $xpath): array
+    {
+        $parameters = [];
+        $queries = [
+            '//*[@data-aut-id="itemParameters"]//li',
+            '//*[@data-aut-id="itemParams"]//li',
+            '//ul[contains(@class, "parameters")]//li',
+        ];
+
+        foreach ($queries as $query) {
+            $nodes = $xpath->query($query);
+            if (!$nodes || $nodes->length === 0) {
+                continue;
+            }
+
+            foreach ($nodes as $node) {
+                $text = $this->normalizeText($node->textContent ?? '');
+                if ($text === '') {
+                    continue;
+                }
+
+                $label = '';
+                $value = '';
+                if (preg_match('/^(.+?)[:\-]\s*(.+)$/u', $text, $matches)) {
+                    $label = $this->normalizeText($matches[1]);
+                    $value = $this->normalizeText($matches[2]);
+                } else {
+                    $spans = [];
+                    foreach ($node->childNodes as $child) {
+                        $childText = $this->normalizeText($child->textContent ?? '');
+                        if ($childText !== '') {
+                            $spans[] = $childText;
+                        }
+                    }
+
+                    if (count($spans) >= 2) {
+                        $label = $spans[0];
+                        $value = $spans[count($spans) - 1];
+                    }
+                }
+
+                $key = strtolower(preg_replace('/[^a-z]+/i', '', $label) ?? '');
+                if ($key !== '' && $value !== '') {
+                    $parameters[$key] = $value;
+                }
+            }
+
+            if ($parameters !== []) {
+                break;
+            }
+        }
+
+        return $parameters;
     }
 
     protected function firstText(DOMXPath $xpath, array $queries): ?string

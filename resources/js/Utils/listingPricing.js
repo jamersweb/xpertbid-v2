@@ -66,3 +66,56 @@ export function getDiscountMeta(item) {
               badgeText: discountType === "percent" ? `${Math.round(discountValue)}% OFF` : "SALE",
        };
 }
+
+export function getListingVariations(item) {
+       const raw = Array.isArray(item?.variations) && item.variations.length > 0
+              ? item.variations
+              : (Array.isArray(item?.listing_data?.variations) ? item.listing_data.variations : []);
+
+       return raw
+              .map((variation, index) => {
+                     const name = String(variation?.name || "").trim();
+                     if (!name) {
+                            return null;
+                     }
+
+                     const parts = name.split(" / ").map((part) => part.trim()).filter(Boolean);
+                     const hasSplit = parts.length >= 2;
+
+                     return {
+                            id: variation?.id ?? index,
+                            name,
+                            price: variation?.price ?? "",
+                            discount_type: variation?.discount_type || "",
+                            discount_value: variation?.discount_value ?? "",
+                            color: hasSplit ? parts[0] : "",
+                            size: hasSplit ? parts.slice(1).join(" / ") : name,
+                     };
+              })
+              .filter(Boolean);
+}
+
+export function getVariationPriceMeta(variation, item) {
+       const originalPrice = Number(variation?.price ?? getBaseListingPrice(item) ?? 0);
+       const discountType = String(variation?.discount_type || item?.discount_type || "").trim().toLowerCase();
+       const discountValue = Number(variation?.discount_value ?? item?.discount_value ?? 0);
+       const hasDiscount = originalPrice > 0 && discountValue > 0 && ["percent", "flat"].includes(discountType);
+       let finalPrice = originalPrice;
+
+       if (hasDiscount && discountType === "percent") {
+              finalPrice = originalPrice - (originalPrice * (discountValue / 100));
+       } else if (hasDiscount && discountType === "flat") {
+              finalPrice = originalPrice - discountValue;
+       }
+
+       return {
+              hasDiscount,
+              discountType: hasDiscount ? discountType : "",
+              discountValue: hasDiscount ? discountValue : 0,
+              originalPrice,
+              finalPrice: Math.max(0, Number.isFinite(finalPrice) ? finalPrice : 0),
+              badgeText: hasDiscount
+                     ? (discountType === "percent" ? `${Math.round(discountValue)}% OFF` : "SALE")
+                     : "",
+       };
+}

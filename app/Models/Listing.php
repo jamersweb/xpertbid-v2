@@ -69,7 +69,8 @@ class Listing extends Model
         'reserve_price',
         'album_urls',
         'vehicle_verification',
-        'property_verification'
+        'property_verification',
+        'variations',
     ];
 
     /**
@@ -172,6 +173,69 @@ class Listing extends Model
     public function getDiscountValueAttribute()
     {
         return $this->listing_data['discount_value'] ?? null;
+    }
+
+    public function getVariationsAttribute(): array
+    {
+        $raw = $this->listing_data['variations'] ?? [];
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $variations = [];
+        foreach (array_values($raw) as $index => $variation) {
+            if (!is_array($variation)) {
+                continue;
+            }
+
+            $name = trim((string) ($variation['name'] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+
+            $variations[] = [
+                'id' => $index,
+                'name' => $name,
+                'price' => $variation['price'] ?? null,
+                'discount_type' => $variation['discount_type'] ?? null,
+                'discount_value' => $variation['discount_value'] ?? null,
+            ];
+        }
+
+        return $variations;
+    }
+
+    public function variationByIndex(mixed $index): ?array
+    {
+        if ($index === null || $index === '') {
+            return null;
+        }
+
+        foreach ($this->variations as $variation) {
+            if ((string) $variation['id'] === (string) $index) {
+                return $variation;
+            }
+        }
+
+        return null;
+    }
+
+    public function variationSalePrice(?array $variation): float
+    {
+        $original = (float) ($variation['price'] ?? $this->buy_now_price ?? $this->minimum_bid ?? 0);
+        $discountType = $variation['discount_type'] ?? $this->discount_type;
+        $discountValue = (float) ($variation['discount_value'] ?? $this->discount_value ?? 0);
+        $price = $original;
+
+        if ($discountType && $discountValue > 0) {
+            if ($discountType === 'percent') {
+                $price = $original - ($original * ($discountValue / 100));
+            } elseif ($discountType === 'flat') {
+                $price = $original - $discountValue;
+            }
+        }
+
+        return max(0, $price);
     }
 
     public function getImageAttribute($value)

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { usePage, router } from '@inertiajs/react';
 import Price from '@/Components/Price';
 import { useCart } from '@/Contexts/CartContext';
-import { isSoldOutListing } from '@/Utils/listingPricing';
+import { isSoldOutListing, getListingVariations, getVariationPriceMeta, getDiscountMeta } from '@/Utils/listingPricing';
 
 export default function BidSection({ product, highestBidProp, onBidPlaced, winnerDetails, isFavoriteProp }) {
        const { auth, flash } = usePage().props;
@@ -16,6 +16,16 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
        const [showConfirm, setShowConfirm] = useState(false);
        const [isFavorite, setIsFavorite] = useState(isFavoriteProp || false);
        const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+       const variations = getListingVariations(product);
+       const [selectedVariationId, setSelectedVariationId] = useState(variations[0]?.id ?? null);
+       const selectedVariation = variations.find((variation) => String(variation.id) === String(selectedVariationId)) || variations[0] || null;
+       const variationColors = [...new Set(variations.map((variation) => variation.color).filter(Boolean))];
+       const hasVariationMatrix = variationColors.length > 0 && variations.some((variation) => variation.size);
+       const sizesForSelectedColor = variations
+              .filter((variation) => !selectedVariation?.color || variation.color === selectedVariation.color)
+              .map((variation) => variation.size)
+              .filter(Boolean);
+       const uniqueSizesForSelectedColor = [...new Set(sizesForSelectedColor)];
 
        const normalizedListType = String(product?.list_type || product?.listing_type || '').toLowerCase();
        const isAuctionSale = normalizedListType === 'auction' || normalizedListType === 'live_auction';
@@ -41,19 +51,10 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
               || categoryNames.some((name) => name.includes('property') || name.includes('vehicle'));
        const shouldContactSupport = isDirectSale && isPropertyOrVehicle;
        const winnerName = winnerDetails?.[0]?.name || winnerDetails?.name || product?.winner_details?.name || product?.winner_details?.[0]?.name || 'the highest bidder';
-       const baseSalePrice = Number(product.buy_now_price || product.minimum_bid || 0);
-       const discountValue = Number(product.discount_value || 0);
-       const hasDiscount = isDirectSale && discountValue > 0;
-       const finalSalePrice = (() => {
-              if (!hasDiscount) return baseSalePrice;
-              if (product.discount_type === 'percent') {
-                     return Math.max(0, baseSalePrice - (baseSalePrice * (discountValue / 100)));
-              }
-              if (product.discount_type === 'flat') {
-                     return Math.max(0, baseSalePrice - discountValue);
-              }
-              return baseSalePrice;
-       })();
+       const variationPriceMeta = selectedVariation ? getVariationPriceMeta(selectedVariation, product) : getDiscountMeta(product);
+       const baseSalePrice = variationPriceMeta.originalPrice;
+       const hasDiscount = variationPriceMeta.hasDiscount;
+       const finalSalePrice = variationPriceMeta.finalPrice;
 
        useEffect(() => {
               if (flash?.success) {
@@ -78,6 +79,30 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
        useEffect(() => {
               setIsFavorite(isFavoriteProp);
        }, [isFavoriteProp]);
+
+       useEffect(() => {
+              const nextVariations = getListingVariations(product);
+              if (!nextVariations.length) {
+                     setSelectedVariationId(null);
+                     return;
+              }
+
+              setSelectedVariationId((current) => {
+                     const stillValid = nextVariations.some((variation) => String(variation.id) === String(current));
+                     return stillValid ? current : nextVariations[0].id;
+              });
+       }, [product?.id]);
+
+       const selectVariationByColor = (color) => {
+              const matchingSize = variations.find((variation) => variation.color === color && variation.size === selectedVariation?.size);
+              const fallback = variations.find((variation) => variation.color === color);
+              setSelectedVariationId((matchingSize || fallback)?.id ?? selectedVariationId);
+       };
+
+       const selectVariationBySize = (size) => {
+              const matching = variations.find((variation) => variation.size === size && (!selectedVariation?.color || variation.color === selectedVariation.color));
+              setSelectedVariationId(matching?.id ?? selectedVariationId);
+       };
 
        const handleToggleFavorite = () => {
               if (!auth.user) {
@@ -163,8 +188,13 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                      return;
               }
 
+              if (isDirectSale && variations.length > 0 && selectedVariation == null) {
+                     showNotification('Please select a size or color', 'error');
+                     return;
+              }
+
               setIsAddingToCart(true);
-              const result = await addToCart(product.id, 'product', null, product);
+              const result = await addToCart(product.id, 'product', selectedVariation?.id ?? null, product);
               setIsAddingToCart(false);
 
               if (result.success) {
@@ -180,8 +210,13 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                      return;
               }
 
+              if (isDirectSale && variations.length > 0 && selectedVariation == null) {
+                     showNotification('Please select a size or color', 'error');
+                     return;
+              }
+
               setIsAddingToCart(true);
-              const result = await addToCart(product.id, 'product', null, product);
+              const result = await addToCart(product.id, 'product', selectedVariation?.id ?? null, product);
               if (result.success || result.message === 'Product already in cart') {
                      router.visit(route('checkout.index'));
               } else {
@@ -373,6 +408,77 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                                                  )}
                                           </div>
 
+                                          {variations.length > 0 && (
+                                                 <div className="product-variations mb-3">
+                                                        {hasVariationMatrix ? (
+                                                               <>
+                                                                      {variationColors.length > 0 && (
+                                                                             <div className="mb-3">
+                                                                                    <span className="rank text-muted small fw-semibold d-block mb-2">Color</span>
+                                                                                    <div className="d-flex flex-wrap gap-2">
+                                                                                           {variationColors.map((color) => {
+                                                                                                  const isActive = selectedVariation?.color === color;
+                                                                                                  return (
+                                                                                                         <button
+                                                                                                                key={color}
+                                                                                                                type="button"
+                                                                                                                className={`btn btn-sm ${isActive ? 'btn-dark' : 'btn-outline-secondary'}`}
+                                                                                                                style={{ borderRadius: '20px', padding: '6px 14px' }}
+                                                                                                                onClick={() => selectVariationByColor(color)}
+                                                                                                         >
+                                                                                                                {color}
+                                                                                                         </button>
+                                                                                                  );
+                                                                                           })}
+                                                                                    </div>
+                                                                             </div>
+                                                                      )}
+                                                                      {uniqueSizesForSelectedColor.length > 0 && (
+                                                                             <div className="mb-3">
+                                                                                    <span className="rank text-muted small fw-semibold d-block mb-2">Size</span>
+                                                                                    <div className="d-flex flex-wrap gap-2">
+                                                                                           {uniqueSizesForSelectedColor.map((size) => {
+                                                                                                  const isActive = selectedVariation?.size === size;
+                                                                                                  return (
+                                                                                                         <button
+                                                                                                                key={size}
+                                                                                                                type="button"
+                                                                                                                className={`btn btn-sm ${isActive ? 'btn-dark' : 'btn-outline-secondary'}`}
+                                                                                                                style={{ borderRadius: '20px', padding: '6px 14px' }}
+                                                                                                                onClick={() => selectVariationBySize(size)}
+                                                                                                         >
+                                                                                                                {size}
+                                                                                                         </button>
+                                                                                                  );
+                                                                                           })}
+                                                                                    </div>
+                                                                             </div>
+                                                                      )}
+                                                               </>
+                                                        ) : (
+                                                               <div className="mb-3">
+                                                                      <span className="rank text-muted small fw-semibold d-block mb-2">Variations</span>
+                                                                      <div className="d-flex flex-wrap gap-2">
+                                                                             {variations.map((variation) => {
+                                                                                    const isActive = String(selectedVariation?.id) === String(variation.id);
+                                                                                    return (
+                                                                                           <button
+                                                                                                  key={variation.id}
+                                                                                                  type="button"
+                                                                                                  className={`btn btn-sm ${isActive ? 'btn-dark' : 'btn-outline-secondary'}`}
+                                                                                                  style={{ borderRadius: '20px', padding: '6px 14px' }}
+                                                                                                  onClick={() => setSelectedVariationId(variation.id)}
+                                                                                           >
+                                                                                                  {variation.name}
+                                                                                           </button>
+                                                                                    );
+                                                                             })}
+                                                                      </div>
+                                                               </div>
+                                                        )}
+                                                 </div>
+                                          )}
+
                                           <div className="bid-rank-and-time bg-light p-3 rounded-3 mb-3 d-flex justify-content-between align-items-center">
                                                  <div className="bid-price-and-rank d-flex flex-column">
                                                         <span className="rank text-muted small fw-semibold">Price</span>
@@ -387,7 +493,7 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                                                                </span>
                                                                {hasDiscount && (
                                                                       <span className="badge bg-danger">
-                                                                             {product.discount_type === 'percent' ? `${discountValue}% OFF` : 'SALE'}
+                                                                             {variationPriceMeta.badgeText}
                                                                       </span>
                                                                )}
                                                         </div>

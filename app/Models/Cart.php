@@ -10,6 +10,7 @@ class Cart extends Model
         'user_id',
         'listing_id',
         'variation_id',
+        'variation_name',
         'type',
         'quantity',
         'price',

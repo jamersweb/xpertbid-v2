@@ -127,6 +127,13 @@ class DarazScraperController extends Controller
             'stock' => ['nullable', 'integer', 'min:0'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date'],
+            'discount_type' => ['nullable', 'in:percent,flat'],
+            'discount_value' => ['nullable', 'numeric', 'min:0'],
+            'variations' => ['nullable', 'array'],
+            'variations.*.name' => ['nullable', 'string', 'max:255'],
+            'variations.*.price' => ['nullable', 'numeric', 'min:0'],
+            'variations.*.discount_type' => ['nullable', 'in:percent,flat'],
+            'variations.*.discount_value' => ['nullable', 'numeric', 'min:0'],
             'images_managed' => ['nullable', 'boolean'],
             'kept_images' => ['nullable', 'array'],
             'kept_images.*' => ['nullable', 'string', 'max:5000'],
@@ -146,6 +153,10 @@ class DarazScraperController extends Controller
         $startDate = $validated['start_date'] ?? null;
         $endDate = $validated['end_date'] ?? null;
         $sourceDomain = parse_url($validated['url'], PHP_URL_HOST) ?: null;
+        $supportsVariations = !in_array($listingType, ['auction', 'live_auction'], true);
+        $variations = $supportsVariations ? $this->normalizeVariations($validated['variations'] ?? []) : [];
+        $discountType = $supportsVariations ? ($validated['discount_type'] ?? null) : null;
+        $discountValue = $supportsVariations ? $this->normalizeNumeric($validated['discount_value'] ?? null) : null;
 
         try {
             $downloadedImages = $this->resolveListingImages($request, [], $validated['url']);
@@ -158,6 +169,9 @@ class DarazScraperController extends Controller
                 'stock' => $stock,
                 'start_date' => $startDate,
                 'end_date' => $endDate,
+                'discount_type' => $discountType,
+                'discount_value' => $discountValue,
+                'variations' => $variations,
                 'source_url' => $validated['url'],
                 'source_domain' => $sourceDomain,
                 'scraped_title' => $title,
@@ -308,6 +322,35 @@ class DarazScraperController extends Controller
         }
 
         return $savedImages;
+    }
+
+    protected function normalizeVariations(array $variations): array
+    {
+        $normalized = [];
+
+        foreach ($variations as $variation) {
+            if (!is_array($variation)) {
+                continue;
+            }
+
+            $name = trim((string) ($variation['name'] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+
+            $discountType = in_array($variation['discount_type'] ?? '', ['percent', 'flat'], true)
+                ? $variation['discount_type']
+                : null;
+
+            $normalized[] = [
+                'name' => Str::limit($name, 255, ''),
+                'price' => $this->normalizeNumeric($variation['price'] ?? null),
+                'discount_type' => $discountType,
+                'discount_value' => $discountType ? $this->normalizeNumeric($variation['discount_value'] ?? null) : null,
+            ];
+        }
+
+        return $normalized;
     }
 
     protected function numericOrFallback(mixed $primary, mixed $fallback): ?float
