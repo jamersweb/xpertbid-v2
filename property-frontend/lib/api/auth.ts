@@ -1,8 +1,7 @@
 import { MAIN_SITE_URL } from "@/lib/site";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ||
-  "http://localhost/api/v1";
+/** Same-origin Next proxy → Laravel `/api/v1` (avoids browser CORS). */
+const API_BASE = "/api";
 
 const TOKEN_KEY = "property_auth_token";
 

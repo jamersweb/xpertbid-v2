@@ -5,9 +5,7 @@ import { getStoredToken } from "@/lib/api/auth";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { assetImage } from "@/lib/site";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ||
-  "http://localhost/api/v1";
+const API_BASE = "/api";
 
 type NotificationItem = {
   id: number;

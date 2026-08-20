@@ -32,6 +32,10 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const LOGGED_OUT_KEY = "xb_property_logged_out";
+const HANDOFF_PENDING_KEY = "xb_main_handoff_pending";
+const HANDOFF_RETRY_KEY = "xb_main_handoff_retry";
+
 function clearMainSyncFlags() {
   if (typeof window === "undefined") return;
   const keys: string[] = [];
@@ -40,8 +44,8 @@ function clearMainSyncFlags() {
     if (key?.startsWith("xb_main_synced_")) keys.push(key);
   }
   keys.forEach((key) => window.sessionStorage.removeItem(key));
-  window.sessionStorage.removeItem("xb_main_handoff_done");
-  window.sessionStorage.removeItem("xb_main_handoff_retry");
+  window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
+  window.sessionStorage.removeItem(HANDOFF_RETRY_KEY);
 }
 
 function profileImageUrl(src?: string | null) {
@@ -56,6 +60,14 @@ function profileImageUrl(src?: string | null) {
 
 export function resolveProfileImage(user: AuthUser | null) {
   return profileImageUrl(user?.profile_pic);
+}
+
+function currentPageUrl() {
+  return `${window.location.pathname}${window.location.search}${window.location.hash}` || "/";
+}
+
+function absoluteReturnUrl() {
+  return `${window.location.origin}${currentPageUrl()}`;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -86,26 +98,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const url = new URL(window.location.href);
       const authToken = url.searchParams.get("auth_token");
       const authChecked = url.searchParams.get("auth_checked") === "1";
+      const loggedOutParam = url.searchParams.get("logged_out") === "1";
       const hadAuthToken = Boolean(authToken);
 
-      if (authToken) {
-        storeToken(authToken);
+      if (loggedOutParam) {
+        clearStoredToken();
+        window.sessionStorage.setItem(LOGGED_OUT_KEY, "1");
+        window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
+        url.searchParams.delete("logged_out");
         url.searchParams.delete("auth_token");
         url.searchParams.delete("auth_checked");
         window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
-        window.sessionStorage.setItem("xb_main_handoff_done", "1");
-      } else if (authChecked) {
-        url.searchParams.delete("auth_checked");
-        window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
-        window.sessionStorage.setItem("xb_main_handoff_done", "1");
+        if (!cancelled) {
+          setUser(null);
+          setLoading(false);
+        }
+        return;
       }
 
-      // Logged in on xpertbid.com but no property token yet → one-time handoff.
-      if (!getStoredToken() && window.sessionStorage.getItem("xb_main_handoff_done") !== "1") {
-        window.sessionStorage.setItem("xb_main_handoff_done", "1");
-        const returnTo = encodeURIComponent(window.location.href);
-        window.location.replace(`${MAIN_SITE_URL}/auth/property-handoff?return_to=${returnTo}`);
-        return;
+      if (authToken) {
+        storeToken(authToken);
+        window.sessionStorage.removeItem(LOGGED_OUT_KEY);
+        window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
+        url.searchParams.delete("auth_token");
+        url.searchParams.delete("auth_checked");
+        window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+      } else if (authChecked) {
+        window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
+        url.searchParams.delete("auth_checked");
+        window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+      }
+
+      const explicitlyLoggedOut = window.sessionStorage.getItem(LOGGED_OUT_KEY) === "1";
+
+      // Sync from main-site session when property has no token yet.
+      if (!getStoredToken() && !explicitlyLoggedOut) {
+        if (window.sessionStorage.getItem(HANDOFF_PENDING_KEY) === "1") {
+          // Came back without a token — stay guest for this load.
+          window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
+        } else {
+          window.sessionStorage.setItem(HANDOFF_PENDING_KEY, "1");
+          const returnTo = encodeURIComponent(absoluteReturnUrl());
+          window.location.replace(`${MAIN_SITE_URL}/auth/property-handoff?return_to=${returnTo}`);
+          return;
+        }
       }
 
       if (!getStoredToken()) {
@@ -120,12 +156,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const me = await fetchMe();
         if (cancelled) return;
         setUser(me);
+        window.sessionStorage.removeItem(LOGGED_OUT_KEY);
 
         const syncedKey = `xb_main_synced_${me.id}`;
         if (hadAuthToken) {
           window.sessionStorage.setItem(syncedKey, "1");
         } else if (window.sessionStorage.getItem(syncedKey) !== "1") {
-          // Already logged in on property but main-site cookie may be missing.
           window.sessionStorage.setItem(syncedKey, "1");
           try {
             await establishMainSiteSession();
@@ -136,13 +172,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch {
         clearStoredToken();
-        // Allow one re-handoff if the stored token was stale.
-        if (window.sessionStorage.getItem("xb_main_handoff_retry") !== "1") {
-          window.sessionStorage.setItem("xb_main_handoff_retry", "1");
-          window.sessionStorage.removeItem("xb_main_handoff_done");
-          const returnTo = encodeURIComponent(
-            `${url.pathname}${url.search}${url.hash}` || window.location.href
-          );
+        if (
+          !explicitlyLoggedOut &&
+          window.sessionStorage.getItem(HANDOFF_RETRY_KEY) !== "1"
+        ) {
+          window.sessionStorage.setItem(HANDOFF_RETRY_KEY, "1");
+          window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
+          const returnTo = encodeURIComponent(absoluteReturnUrl());
           window.location.replace(`${MAIN_SITE_URL}/auth/property-handoff?return_to=${returnTo}`);
           return;
         }
@@ -161,14 +197,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const setSession = useCallback(async (token: string, nextUser: AuthUser, redirectUrl?: string) => {
     storeToken(token);
     setUser(nextUser);
+    window.sessionStorage.removeItem(LOGGED_OUT_KEY);
     clearMainSyncFlags();
     await establishMainSiteSession(redirectUrl);
   }, []);
 
   const logout = useCallback(async () => {
-    await logoutApi();
+    // Always clear local session first (even if API CORS fails).
+    try {
+      await logoutApi();
+    } catch {
+      clearStoredToken();
+    }
     clearMainSyncFlags();
     setUser(null);
+    window.sessionStorage.setItem(LOGGED_OUT_KEY, "1");
+
+    // Also end the main-site cookie session, then return here.
+    const returnTo = encodeURIComponent(`${window.location.origin}/`);
+    window.location.replace(`${MAIN_SITE_URL}/auth/property-logout?return_to=${returnTo}`);
   }, []);
 
   const openMainPath = useCallback(async (path: string) => {

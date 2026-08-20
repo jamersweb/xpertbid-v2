@@ -55,6 +55,10 @@ Route::get('auth/bridge/{token}', App\Http\Controllers\Auth\AuthBridgeController
 Route::get('auth/property-handoff', App\Http\Controllers\Auth\PropertyHandoffController::class)
     ->name('auth.property.handoff');
 
+// Property logout → clear main-site session, return to property.
+Route::get('auth/property-logout', App\Http\Controllers\Auth\PropertyLogoutController::class)
+    ->name('auth.property.logout');
+
 Route::middleware('auth')->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');
