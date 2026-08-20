@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PropertyCardView } from "@/components/PropertyCard";
-import { Pagination } from "@/components/Pagination";
+import { LoadMoreProperties } from "@/components/LoadMoreProperties";
 import { getProperties } from "@/lib/api/client";
 
 export const revalidate = 180;
 
 type Props = {
   params: Promise<{ city: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -21,11 +19,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function LocationPage({ params, searchParams }: Props) {
+export default async function LocationPage({ params }: Props) {
   const { city } = await params;
-  const sp = await searchParams;
-  const page = Number(Array.isArray(sp.page) ? sp.page[0] : sp.page) || 1;
   const cityName = decodeURIComponent(city).replace(/-/g, " ");
+  const filters = { city: cityName, page: 1, per_page: 12 };
 
   let result: Awaited<ReturnType<typeof getProperties>> = {
     data: [],
@@ -33,7 +30,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
   };
 
   try {
-    result = await getProperties({ city: cityName, page, per_page: 12 });
+    result = await getProperties(filters);
   } catch {
     // empty
   }
@@ -57,20 +54,14 @@ export default async function LocationPage({ params, searchParams }: Props) {
         <p className="text-muted mb-4">Active listings matching this city.</p>
 
         {result.data.length ? (
-          <>
-            <div className="row g-4">
-              {result.data.map((property) => (
-                <div key={property.id} className="col-md-6 col-xl-4">
-                  <PropertyCardView property={property} />
-                </div>
-              ))}
-            </div>
-            <Pagination
-              current={result.meta.current_page}
-              last={result.meta.last_page}
-              basePath={`/locations/${city}`}
-            />
-          </>
+          <LoadMoreProperties
+            key={city}
+            initialItems={result.data}
+            initialMeta={result.meta}
+            filters={filters}
+            gridClassName="row g-4"
+            itemClassName="col-md-6 col-xl-4"
+          />
         ) : (
           <div className="property-empty">No properties found for {cityName}.</div>
         )}

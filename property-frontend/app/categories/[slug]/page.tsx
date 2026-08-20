@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PropertyCardView } from "@/components/PropertyCard";
-import { Pagination } from "@/components/Pagination";
+import { LoadMoreProperties } from "@/components/LoadMoreProperties";
 import { getProperties, getPropertyCategories } from "@/lib/api/client";
 import type { CategoryNode } from "@/types/property";
 
@@ -10,7 +9,6 @@ export const revalidate = 180;
 
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 function findCategory(node: CategoryNode, slug: string): CategoryNode | null {
@@ -41,10 +39,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function CategoryPage({ params, searchParams }: Props) {
+export default async function CategoryPage({ params }: Props) {
   const { slug } = await params;
-  const sp = await searchParams;
-  const page = Number(Array.isArray(sp.page) ? sp.page[0] : sp.page) || 1;
 
   let tree: CategoryNode;
   try {
@@ -58,10 +54,10 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
   const isTopLevel = tree.slug === slug;
   const filters = isTopLevel
-    ? { page, per_page: 12 }
+    ? { page: 1, per_page: 12 }
     : isChildOf(tree, slug)
-      ? { page, per_page: 12, sub_category: slug }
-      : { page, per_page: 12, child_category: slug };
+      ? { page: 1, per_page: 12, sub_category: slug }
+      : { page: 1, per_page: 12, child_category: slug };
 
   let result: Awaited<ReturnType<typeof getProperties>> = {
     data: [],
@@ -108,20 +104,14 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         ) : null}
 
         {result.data.length ? (
-          <>
-            <div className="row g-4">
-              {result.data.map((property) => (
-                <div key={property.id} className="col-md-6 col-xl-4">
-                  <PropertyCardView property={property} />
-                </div>
-              ))}
-            </div>
-            <Pagination
-              current={result.meta.current_page}
-              last={result.meta.last_page}
-              basePath={`/categories/${slug}`}
-            />
-          </>
+          <LoadMoreProperties
+            key={slug}
+            initialItems={result.data}
+            initialMeta={result.meta}
+            filters={filters}
+            gridClassName="row g-4"
+            itemClassName="col-md-6 col-xl-4"
+          />
         ) : (
           <div className="property-empty">No listings in this category yet.</div>
         )}

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useAuthModal } from "@/components/auth/AuthModalProvider";
 import { resolveProfileImage, useAuth } from "@/components/auth/AuthProvider";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
@@ -113,7 +114,12 @@ function ProfileMenu({
 export function SiteHeader({ purposes = [] }: HeaderProps) {
   const { openLogin, openRegister } = useAuthModal();
   const { user, loading, logout, openMainPath } = useAuth();
+  const pathname = usePathname();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const closeMobileMenu = () => setMenuOpen(false);
 
   useEffect(() => {
     const onClick = (event: Event) => {
@@ -121,13 +127,27 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
       if (!target.closest(".header-profile-root")) {
         setProfileOpen(false);
       }
+      if (
+        menuOpen &&
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(target) &&
+        !target.closest(".navbar-toggler")
+      ) {
+        setMenuOpen(false);
+      }
     };
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
-  }, []);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    setMenuOpen(false);
+    setProfileOpen(false);
+  }, [pathname]);
 
   const handleSellClick = (e: ReactMouseEvent) => {
     e.preventDefault();
+    closeMobileMenu();
     if (!user) {
       openLogin();
       return;
@@ -137,6 +157,7 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
 
   const handleLogout = async () => {
     setProfileOpen(false);
+    closeMobileMenu();
     await logout();
   };
 
@@ -206,8 +227,23 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
             ) : null}
           </div>
 
-          <div className="navbar-collapse xpert-mobile-menu show" id="navbarSupportedContent">
-            <PropertyPurposeNav purposes={purposes} />
+          <button
+            className="navbar-toggler d-lg-none"
+            type="button"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-controls="navbarSupportedContent"
+            aria-expanded={menuOpen}
+            aria-label="Toggle navigation"
+          >
+            <i className={`fa-solid ${menuOpen ? "fa-xmark" : "fa-bars"}`} aria-hidden="true" />
+          </button>
+
+          <div
+            ref={mobileMenuRef}
+            className={`navbar-collapse xpert-mobile-menu ${menuOpen ? "show" : ""}`}
+            id="navbarSupportedContent"
+          >
+            <PropertyPurposeNav purposes={purposes} onNavigate={closeMobileMenu} />
 
             <div className="d-flex align-items-center mt-3 mt-lg-0 header-account-cluster">
               {!user && !loading ? (
@@ -237,6 +273,16 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
                   </button>
                 </div>
               ) : null}
+
+              <div className="d-flex d-lg-none flex-column w-100 gap-2 mt-2 mobile-menu-extra">
+                <button
+                  type="button"
+                  className="sellnow w-100 justify-content-center"
+                  onClick={handleSellClick}
+                >
+                  Sell Now
+                </button>
+              </div>
 
               {user ? (
                 <div

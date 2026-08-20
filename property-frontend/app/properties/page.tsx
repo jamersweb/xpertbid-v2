@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PropertyCardView } from "@/components/PropertyCard";
+import { LoadMoreProperties } from "@/components/LoadMoreProperties";
 import { MarketplaceBrowseChrome } from "@/components/MarketplaceBrowseChrome";
-import { Pagination } from "@/components/Pagination";
 import { getProperties, getPropertyCategories, getCountries } from "@/lib/api/client";
 import type { CategoryNode, PropertyFilters } from "@/types/property";
 
@@ -26,7 +25,7 @@ function parseFilters(sp: SearchParams): PropertyFilters {
   const listingType = first(sp.listing_type) || "normal";
 
   return {
-    page: num("page") || 1,
+    page: 1,
     per_page: 12,
     q: first(sp.q),
     city: first(sp.city),
@@ -145,23 +144,6 @@ export default async function PropertiesPage({
     // empty
   }
 
-  const queryStrings: Record<string, string | undefined> = {
-    q: filters.q,
-    city: filters.city,
-    city_id: filters.city_id != null ? String(filters.city_id) : undefined,
-    state_id: filters.state_id != null ? String(filters.state_id) : undefined,
-    country_id: filters.country_id != null ? String(filters.country_id) : undefined,
-    type: filters.type,
-    bedrooms: filters.bedrooms != null ? String(filters.bedrooms) : undefined,
-    price_min: filters.price_min != null ? String(filters.price_min) : undefined,
-    price_max: filters.price_max != null ? String(filters.price_max) : undefined,
-    sub_category: filters.sub_category,
-    child_category: filters.child_category,
-    listing_type: filters.listing_type,
-    featured: filters.featured ? "1" : undefined,
-    sort: filters.sort,
-  };
-
   const title = selectedChild?.name || purpose?.name || "Properties";
   const heroImage =
     selectedChild?.image_url || purpose?.image_url || tree?.image_url || FALLBACK_HERO;
@@ -172,6 +154,21 @@ export default async function PropertiesPage({
   ] as const;
 
   const currentListing = filters.listing_type || "normal";
+  const loadMoreKey = [
+    filters.q,
+    filters.city,
+    filters.city_id,
+    filters.state_id,
+    filters.country_id,
+    filters.sub_category,
+    filters.child_category,
+    filters.listing_type,
+    filters.bedrooms,
+    filters.price_min,
+    filters.price_max,
+    filters.sort,
+    filters.featured,
+  ].join("|");
 
   return (
     <div className="pb-5 bg-light min-vh-100">
@@ -290,18 +287,11 @@ export default async function PropertiesPage({
               <p className="text-muted mb-3">
                 {result.meta.total} result{result.meta.total === 1 ? "" : "s"}
               </p>
-              <div className="row g-4 makt-parent">
-                {result.data.map((property) => (
-                  <div key={property.id} className="col-md-6 col-xl-4 mkt-child">
-                    <PropertyCardView property={property} />
-                  </div>
-                ))}
-              </div>
-              <Pagination
-                current={result.meta.current_page}
-                last={result.meta.last_page}
-                basePath="/properties"
-                query={queryStrings}
+              <LoadMoreProperties
+                key={loadMoreKey}
+                initialItems={result.data}
+                initialMeta={result.meta}
+                filters={filters}
               />
             </>
           ) : (
