@@ -13,10 +13,6 @@ type Props = {
   showPropertyMeta?: boolean;
 };
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ||
-  "http://localhost/api/v1";
-
 function buildQuery(filters: PropertyFilters, page: number) {
   const qs = new URLSearchParams();
   const payload: Record<string, string | number | undefined | null> = {
@@ -70,8 +66,10 @@ export function LoadMoreProperties({
 
     try {
       const nextPage = meta.current_page + 1;
-      const res = await fetch(`${API_BASE}/properties${buildQuery(filters, nextPage)}`, {
+      // Same-origin proxy avoids browser CORS (http vs https / www mismatches).
+      const res = await fetch(`/api/properties${buildQuery(filters, nextPage)}`, {
         headers: { Accept: "application/json" },
+        cache: "no-store",
       });
       if (!res.ok) {
         throw new Error(`Failed to load more (${res.status})`);

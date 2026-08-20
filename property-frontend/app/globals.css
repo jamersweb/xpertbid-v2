@@ -673,10 +673,6 @@ button.login {
   --bs-gutter-y: 1.25rem;
 }
 
-.home-page .product-card-wrapper {
-  background: transparent;
-}
-
 @media (max-width: 767px) {
   .home-page .home-property-section.featured-product {
     padding: 24px 0 !important;
