@@ -40,6 +40,8 @@ function clearMainSyncFlags() {
     if (key?.startsWith("xb_main_synced_")) keys.push(key);
   }
   keys.forEach((key) => window.sessionStorage.removeItem(key));
+  window.sessionStorage.removeItem("xb_main_handoff_done");
+  window.sessionStorage.removeItem("xb_main_handoff_retry");
 }
 
 function profileImageUrl(src?: string | null) {
@@ -83,11 +85,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const url = new URL(window.location.href);
       const authToken = url.searchParams.get("auth_token");
+      const authChecked = url.searchParams.get("auth_checked") === "1";
       const hadAuthToken = Boolean(authToken);
+
       if (authToken) {
         storeToken(authToken);
         url.searchParams.delete("auth_token");
+        url.searchParams.delete("auth_checked");
         window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+        window.sessionStorage.setItem("xb_main_handoff_done", "1");
+      } else if (authChecked) {
+        url.searchParams.delete("auth_checked");
+        window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+        window.sessionStorage.setItem("xb_main_handoff_done", "1");
+      }
+
+      // Logged in on xpertbid.com but no property token yet → one-time handoff.
+      if (!getStoredToken() && window.sessionStorage.getItem("xb_main_handoff_done") !== "1") {
+        window.sessionStorage.setItem("xb_main_handoff_done", "1");
+        const returnTo = encodeURIComponent(window.location.href);
+        window.location.replace(`${MAIN_SITE_URL}/auth/property-handoff?return_to=${returnTo}`);
+        return;
       }
 
       if (!getStoredToken()) {
@@ -118,6 +136,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch {
         clearStoredToken();
+        // Allow one re-handoff if the stored token was stale.
+        if (window.sessionStorage.getItem("xb_main_handoff_retry") !== "1") {
+          window.sessionStorage.setItem("xb_main_handoff_retry", "1");
+          window.sessionStorage.removeItem("xb_main_handoff_done");
+          const returnTo = encodeURIComponent(
+            `${url.pathname}${url.search}${url.hash}` || window.location.href
+          );
+          window.location.replace(`${MAIN_SITE_URL}/auth/property-handoff?return_to=${returnTo}`);
+          return;
+        }
         if (!cancelled) setUser(null);
       } finally {
         if (!cancelled) setLoading(false);

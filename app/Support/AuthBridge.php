@@ -71,7 +71,12 @@ class AuthBridge
             'http://127.0.0.1:8000',
             'https://xpertbid.com',
             'https://www.xpertbid.com',
+            'http://xpertbid.com',
+            'http://www.xpertbid.com',
             'https://property.xpertbid.com',
+            'http://property.xpertbid.com',
+            'https://www.property.xpertbid.com',
+            'http://www.property.xpertbid.com',
         ])));
     }
 

@@ -73,6 +73,9 @@ class AuthBridgeController extends Controller
             'http://localhost:3000',
             'http://127.0.0.1:3000',
             'https://property.xpertbid.com',
+            'http://property.xpertbid.com',
+            'https://www.property.xpertbid.com',
+            'http://www.property.xpertbid.com',
         ]), true);
     }
 }

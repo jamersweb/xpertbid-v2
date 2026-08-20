@@ -51,6 +51,10 @@ Route::get('auth/bridge/{token}', App\Http\Controllers\Auth\AuthBridgeController
     ->where('token', '[A-Za-z0-9]+')
     ->name('auth.bridge');
 
+// Main-site session → property Sanctum token handoff.
+Route::get('auth/property-handoff', App\Http\Controllers\Auth\PropertyHandoffController::class)
+    ->name('auth.property.handoff');
+
 Route::middleware('auth')->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');
