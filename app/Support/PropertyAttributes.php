@@ -72,6 +72,15 @@ class PropertyAttributes
         return null;
     }
 
+    public static function numericOrNull(mixed $value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return is_numeric($value) ? (float) $value : null;
+    }
+
     public static function sellerAvatarUrl(?\App\Models\User $user): ?string
     {
         if (!$user || !$user->profile_pic) {

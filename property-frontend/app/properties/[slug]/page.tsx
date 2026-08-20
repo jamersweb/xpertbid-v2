@@ -1,24 +1,56 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AccordionItem } from "@/components/AccordionItem";
 import { Gallery } from "@/components/Gallery";
-import { PropertyCardView } from "@/components/PropertyCard";
-import { OwnerInfoRow } from "@/components/OwnerInfoRow";
+import { ProductBrief } from "@/components/ProductBrief";
+import { ProductDetailHeader } from "@/components/ProductDetailHeader";
+import { RelatedProperties } from "@/components/RelatedProperties";
 import { getProperty, getRelatedProperties } from "@/lib/api/client";
 import {
+  absoluteUrl,
   breadcrumbJsonLd,
-  formatPrice,
-  locationLabel,
   propertyMetadata,
   realEstateJsonLd,
 } from "@/lib/seo";
-import { mainUrl } from "@/lib/site";
 
 export const revalidate = 60;
 
 type Props = {
   params: Promise<{ slug: string }>;
 };
+
+const monthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+function formatHuman(value?: string | null) {
+  if (!value) return "";
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return value;
+  const dd = String(dt.getDate()).padStart(2, "0");
+  const mm = String(dt.getMonth() + 1).padStart(2, "0");
+  const mon = monthNames[dt.getMonth()];
+  return `${dd}/${mm}/${mon}`;
+}
+
+function prettifyKey(rawKey: string) {
+  return String(rawKey || "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -38,21 +70,30 @@ export default async function PropertyDetailPage({ params }: Props) {
   const images = [
     ...(property.image_url ? [property.image_url] : []),
     ...(property.album_urls || []),
-  ].filter((v, i, arr) => arr.indexOf(v) === i);
+  ].filter((value, index, arr) => arr.indexOf(value) === index);
 
-  const breadcrumbs = [
-    { name: "Home", path: "/" },
-    { name: "Properties", path: "/properties" },
-    { name: property.title, path: `/properties/${property.slug}` },
-  ];
-
-  const directBuy = ["normal", "normal_list", "business", "business_list"].includes(
-    String(property.listing_type || "").toLowerCase()
+  const attributeEntries = Object.entries(property.attributes || {}).filter(
+    ([key, value]) =>
+      value !== null &&
+      value !== undefined &&
+      String(value).trim() !== "" &&
+      !["map_url", "latitude", "longitude"].includes(key)
   );
-  const soldOut = property.status === "sold_out";
+
+  const hasKeyInfo = Boolean(property.description || property.product_location || property.map_url);
+  const hasProject = Boolean(
+    property.developer ||
+      property.delivery_date ||
+      property.sale_starts ||
+      property.payment_plan ||
+      property.number_of_buildings ||
+      property.government_fee
+  );
+  const isFeaturedListing =
+    property.featured || property.featured_name === "home_featured" || property.featured_name === "realstate_featured";
 
   return (
-    <div className="property-browse-wrap py-4">
+    <div>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -62,131 +103,183 @@ export default async function PropertyDetailPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbJsonLd(breadcrumbs)),
+          __html: JSON.stringify(
+            breadcrumbJsonLd([
+              { name: "Home", path: "/" },
+              { name: "Properties", path: "/properties" },
+              { name: property.title, path: `/properties/${property.slug}` },
+            ])
+          ),
         }}
       />
 
-      <div className="container-fluid px-3 px-lg-5">
-        <nav aria-label="breadcrumb" className="mb-3">
-          <ol className="breadcrumb mb-0">
-            {breadcrumbs.map((item, index) => (
-              <li
-                key={item.path}
-                className={`breadcrumb-item${index === breadcrumbs.length - 1 ? " active" : ""}`}
-              >
-                {index === breadcrumbs.length - 1 ? (
-                  item.name
-                ) : (
-                  <Link href={item.path}>{item.name}</Link>
-                )}
-              </li>
-            ))}
-          </ol>
-        </nav>
+      <ProductDetailHeader
+        views={property.views}
+        slug={property.slug}
+        shareUrl={absoluteUrl(`/properties/${property.slug}`)}
+      />
 
-        <div className="row g-4">
-          <div className="col-lg-7">
-            <Gallery images={images} title={property.title} />
-          </div>
-
-          <div className="col-lg-5">
-            <aside className="property-detail-panel">
-              <OwnerInfoRow
-                name={property.seller?.name}
-                avatarUrl={property.seller?.avatar_url}
-                isFeatured={property.featured}
-              />
-              <h1 className="mt-3">{property.title}</h1>
-              <p className="text-muted mb-2">{locationLabel(property)}</p>
-              <div className="pro-price mb-3">
-                <span className="text-muted small d-block">
-                  {directBuy ? "Price" : "Minimum Bid"}
-                </span>
-                <div className="price" style={{ color: "#23262F", fontSize: "1.5rem", fontWeight: 700 }}>
-                  {formatPrice(property.price?.amount, property.price?.currency)}
-                </div>
+      <section className="product-image-and-brief">
+        <div className="container-fluid">
+          <div className={`products-brief-parent${isFeaturedListing ? " listing_promoted" : ""}`}>
+            <div className="row">
+              <div className="col-md-6">
+                <Gallery
+                  images={images}
+                  title={property.title}
+                  status={property.status}
+                  listingType={property.listing_type}
+                  startDate={property.start_date}
+                  endDate={property.end_date}
+                  youtubeVideoId={property.youtube_video_id}
+                />
               </div>
 
-              {Object.keys(property.attributes || {}).length ? (
-                <div className="d-flex flex-wrap gap-2 mb-3">
-                  {property.attributes.bedrooms != null ? (
-                    <span className="badge rounded-pill text-bg-light border text-dark px-3 py-2">
-                      <i className="fa-solid fa-bed text-primary me-1" />
-                      {String(property.attributes.bedrooms)} Beds
-                    </span>
-                  ) : null}
-                  {property.attributes.bathrooms != null ? (
-                    <span className="badge rounded-pill text-bg-light border text-dark px-3 py-2">
-                      <i className="fa-solid fa-bath text-primary me-1" />
-                      {String(property.attributes.bathrooms)} Baths
-                    </span>
-                  ) : null}
-                  {(property.attributes.area || property.attributes.size_sqft) != null ? (
-                    <span className="badge rounded-pill text-bg-light border text-dark px-3 py-2">
-                      <i className="fa-solid fa-ruler-combined text-primary me-1" />
-                      {[property.attributes.area || property.attributes.size_sqft, property.attributes.area_unit]
-                        .filter(Boolean)
-                        .join(" ")}
-                    </span>
-                  ) : null}
-                </div>
-              ) : null}
+              <div className="col-md-6">
+                {isFeaturedListing ? (
+                  <div style={{ display: "block" }}>
+                    <button type="button" className="pro_feature" disabled>
+                      <i className="fa-solid fa-bolt me-2" />
+                      Featured
+                    </button>
+                  </div>
+                ) : null}
 
-              <div className="pro-bid-btn">
-                {soldOut ? (
-                  <span
-                    style={{
-                      display: "inline-flex",
-                      borderRadius: "12px",
-                      padding: "14px 22px",
-                      background: "#9ca3af",
-                      color: "#fff",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Sold Out
-                  </span>
-                ) : (
-                  <a href={mainUrl(`/product/${property.slug}`)}>
-                    {directBuy ? "Buy Now" : "Place Bid"}
-                  </a>
-                )}
+                <ProductBrief property={property} />
               </div>
-            </aside>
+            </div>
           </div>
         </div>
+      </section>
 
-        {property.description ? (
-          <section className="mt-4">
-            <div className="property-detail-panel">
-              <h2 className="h4 mb-3" style={{ color: "#23262F" }}>
-                About this property
-              </h2>
-              <div
-                className="text-muted"
-                dangerouslySetInnerHTML={{ __html: property.description }}
-              />
-            </div>
-          </section>
-        ) : null}
+      <section className="product-detailed-info">
+        <div className="container-fluid">
+          <div className="product-detailed-info-parent">
+            <div className="row justify-content-between">
+              <div className="col-lg-7 col-md-6">
+                <div className="x-accordions">
+                  {hasKeyInfo ? (
+                    <AccordionItem title="Key Information" defaultOpen>
+                      {property.description ? (
+                        <div
+                          className="mb-3"
+                          dangerouslySetInnerHTML={{ __html: property.description }}
+                        />
+                      ) : null}
+                      {property.product_location ? (
+                        <div className="mb-3">
+                          <h6 className="mb-1">Location</h6>
+                          <div>{property.product_location}</div>
+                        </div>
+                      ) : null}
+                      {property.map_url ? (
+                        <div className="mt-3">
+                          {String(property.map_url).includes("<iframe") ? (
+                            <div dangerouslySetInnerHTML={{ __html: property.map_url }} />
+                          ) : (
+                            <a
+                              href={String(property.map_url)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="btn btn-outline-secondary btn-sm"
+                            >
+                              View on map
+                            </a>
+                          )}
+                        </div>
+                      ) : null}
+                    </AccordionItem>
+                  ) : null}
 
-        {related.length ? (
-          <section className="featured-product mt-4" style={{ background: "transparent", padding: "24px 0" }}>
-            <div className="home-section-header">
-              <div className="featured-heading mb-0">
-                <h2>Related Properties</h2>
+                  {attributeEntries.length > 0 ? (
+                    <AccordionItem title="Additional Details" defaultOpen>
+                      <div className="row gx-3 gy-2">
+                        {attributeEntries.map(([key, value]) => (
+                          <div className="col-md-6" key={key}>
+                            <div className="d-flex justify-content-between align-items-center border rounded px-3 py-2">
+                              <span className="text-muted small">{prettifyKey(key)}</span>
+                              <strong className="small text-dark">{String(value)}</strong>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionItem>
+                  ) : null}
+
+                  {hasProject ? (
+                    <AccordionItem title="Project by">
+                      {property.developer ? (
+                        <div className="mb-3">
+                          <div>{property.developer}</div>
+                        </div>
+                      ) : null}
+                      {property.delivery_date ? (
+                        <div className="mb-3">
+                          <h6 className="mb-1">Delivery Date</h6>
+                          <div>{formatHuman(property.delivery_date)}</div>
+                        </div>
+                      ) : null}
+                      {property.sale_starts ? (
+                        <div className="mb-3">
+                          <h6 className="mb-1">Sale Starts</h6>
+                          <div>{formatHuman(property.sale_starts)}</div>
+                        </div>
+                      ) : null}
+                      {property.payment_plan ? (
+                        <div className="mb-3">
+                          <h6 className="mb-1">Payment Plan</h6>
+                          <div dangerouslySetInnerHTML={{ __html: property.payment_plan }} />
+                        </div>
+                      ) : null}
+                      {property.number_of_buildings ? (
+                        <div className="mb-3">
+                          <h6 className="mb-1">Number of Buildings</h6>
+                          <div>{property.number_of_buildings}</div>
+                        </div>
+                      ) : null}
+                      {property.government_fee ? (
+                        <div className="mb-1">
+                          <h6 className="mb-1">Government Fee</h6>
+                          <div dangerouslySetInnerHTML={{ __html: property.government_fee }} />
+                        </div>
+                      ) : null}
+                    </AccordionItem>
+                  ) : null}
+
+                  {property.location_url ? (
+                    <AccordionItem title="Location">
+                      <div
+                        dangerouslySetInnerHTML={{ __html: property.location_url }}
+                        style={{ width: "100%", display: "flex", justifyContent: "center", marginTop: 10 }}
+                      />
+                    </AccordionItem>
+                  ) : null}
+
+                  {property.amenities ? (
+                    <AccordionItem title="Amenities">
+                      <div dangerouslySetInnerHTML={{ __html: property.amenities }} />
+                    </AccordionItem>
+                  ) : null}
+
+                  {property.facilities ? (
+                    <AccordionItem title="Facilities">
+                      <div dangerouslySetInnerHTML={{ __html: property.facilities }} />
+                    </AccordionItem>
+                  ) : null}
+
+                  {property.nearby_location ? (
+                    <AccordionItem title="Location & Nearby Attractions">
+                      <div dangerouslySetInnerHTML={{ __html: property.nearby_location }} />
+                    </AccordionItem>
+                  ) : null}
+                </div>
               </div>
             </div>
-            <div className="row g-4">
-              {related.map((item) => (
-                <div key={item.id} className="col-12 col-sm-6 col-lg-4">
-                  <PropertyCardView property={item} />
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : null}
-      </div>
+          </div>
+        </div>
+      </section>
+
+      <RelatedProperties items={related} />
     </div>
   );
 }

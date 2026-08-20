@@ -46,6 +46,24 @@ export type PropertyDetail = PropertyCard & {
   map_url: string | null;
   canonical_path: string;
   views: number;
+  start_date?: string | null;
+  end_date?: string | null;
+  minimum_bid?: number | null;
+  reserve_price?: number | null;
+  highest_bid?: number | null;
+  youtube_video_id?: string | null;
+  featured_name?: string | null;
+  product_location?: string | null;
+  developer?: string | null;
+  delivery_date?: string | null;
+  sale_starts?: string | null;
+  payment_plan?: string | null;
+  number_of_buildings?: string | number | null;
+  government_fee?: string | null;
+  location_url?: string | null;
+  nearby_location?: string | null;
+  amenities?: string | null;
+  facilities?: string | null;
 };
 
 export type PaginationMeta = {
