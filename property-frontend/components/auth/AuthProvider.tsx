@@ -33,8 +33,16 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const LOGGED_OUT_KEY = "xb_property_logged_out";
+/** Mid-flight redirect to main handoff */
 const HANDOFF_PENDING_KEY = "xb_main_handoff_pending";
-const HANDOFF_RETRY_KEY = "xb_main_handoff_retry";
+/** Already asked main this tab — do not ask again */
+const HANDOFF_DONE_KEY = "xb_main_handoff_done";
+
+function clearHandoffFlags() {
+  if (typeof window === "undefined") return;
+  window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
+  window.sessionStorage.removeItem(HANDOFF_DONE_KEY);
+}
 
 function clearMainSyncFlags() {
   if (typeof window === "undefined") return;
@@ -44,8 +52,7 @@ function clearMainSyncFlags() {
     if (key?.startsWith("xb_main_synced_")) keys.push(key);
   }
   keys.forEach((key) => window.sessionStorage.removeItem(key));
-  window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
-  window.sessionStorage.removeItem(HANDOFF_RETRY_KEY);
+  clearHandoffFlags();
 }
 
 function profileImageUrl(src?: string | null) {
@@ -62,12 +69,13 @@ export function resolveProfileImage(user: AuthUser | null) {
   return profileImageUrl(user?.profile_pic);
 }
 
-function currentPageUrl() {
-  return `${window.location.pathname}${window.location.search}${window.location.hash}` || "/";
-}
-
-function absoluteReturnUrl() {
-  return `${window.location.origin}${currentPageUrl()}`;
+/** Clean URL for handoff return_to (no auth query noise). */
+function cleanReturnUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("auth_token");
+  url.searchParams.delete("auth_checked");
+  url.searchParams.delete("logged_out");
+  return url.toString();
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -101,14 +109,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const loggedOutParam = url.searchParams.get("logged_out") === "1";
       const hadAuthToken = Boolean(authToken);
 
+      const stripAuthParams = () => {
+        url.searchParams.delete("auth_token");
+        url.searchParams.delete("auth_checked");
+        url.searchParams.delete("logged_out");
+        window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+      };
+
       if (loggedOutParam) {
         clearStoredToken();
         window.sessionStorage.setItem(LOGGED_OUT_KEY, "1");
-        window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
-        url.searchParams.delete("logged_out");
-        url.searchParams.delete("auth_token");
-        url.searchParams.delete("auth_checked");
-        window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+        clearHandoffFlags();
+        stripAuthParams();
         if (!cancelled) {
           setUser(null);
           setLoading(false);
@@ -119,26 +131,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (authToken) {
         storeToken(authToken);
         window.sessionStorage.removeItem(LOGGED_OUT_KEY);
+        window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
         window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
-        url.searchParams.delete("auth_token");
-        url.searchParams.delete("auth_checked");
-        window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+        stripAuthParams();
       } else if (authChecked) {
+        // Main said "not logged in" — stop. Do NOT handoff again this tab.
+        window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
         window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
-        url.searchParams.delete("auth_checked");
-        window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+        stripAuthParams();
       }
 
       const explicitlyLoggedOut = window.sessionStorage.getItem(LOGGED_OUT_KEY) === "1";
+      const handoffDone = window.sessionStorage.getItem(HANDOFF_DONE_KEY) === "1";
+      const handoffPending = window.sessionStorage.getItem(HANDOFF_PENDING_KEY) === "1";
 
-      // Sync from main-site session when property has no token yet.
-      if (!getStoredToken() && !explicitlyLoggedOut) {
-        if (window.sessionStorage.getItem(HANDOFF_PENDING_KEY) === "1") {
-          // Came back without a token — stay guest for this load.
+      // One handoff attempt per tab unless user explicitly logs in later.
+      if (!getStoredToken() && !explicitlyLoggedOut && !handoffDone) {
+        if (handoffPending) {
+          // Returned without params — treat as done/guest, never loop.
+          window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
           window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
         } else {
           window.sessionStorage.setItem(HANDOFF_PENDING_KEY, "1");
-          const returnTo = encodeURIComponent(absoluteReturnUrl());
+          const returnTo = encodeURIComponent(cleanReturnUrl());
           window.location.replace(`${MAIN_SITE_URL}/auth/property-handoff?return_to=${returnTo}`);
           return;
         }
@@ -157,6 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         setUser(me);
         window.sessionStorage.removeItem(LOGGED_OUT_KEY);
+        window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
 
         const syncedKey = `xb_main_synced_${me.id}`;
         if (hadAuthToken) {
@@ -172,16 +188,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch {
         clearStoredToken();
-        if (
-          !explicitlyLoggedOut &&
-          window.sessionStorage.getItem(HANDOFF_RETRY_KEY) !== "1"
-        ) {
-          window.sessionStorage.setItem(HANDOFF_RETRY_KEY, "1");
-          window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
-          const returnTo = encodeURIComponent(absoluteReturnUrl());
-          window.location.replace(`${MAIN_SITE_URL}/auth/property-handoff?return_to=${returnTo}`);
-          return;
-        }
+        // Do not bounce to handoff again — that caused auth_checked loops.
+        window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
         if (!cancelled) setUser(null);
       } finally {
         if (!cancelled) setLoading(false);
@@ -199,11 +207,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(nextUser);
     window.sessionStorage.removeItem(LOGGED_OUT_KEY);
     clearMainSyncFlags();
+    window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
     await establishMainSiteSession(redirectUrl);
   }, []);
 
   const logout = useCallback(async () => {
-    // Always clear local session first (even if API CORS fails).
     try {
       await logoutApi();
     } catch {
@@ -212,8 +220,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearMainSyncFlags();
     setUser(null);
     window.sessionStorage.setItem(LOGGED_OUT_KEY, "1");
+    window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
 
-    // Also end the main-site cookie session, then return here.
     const returnTo = encodeURIComponent(`${window.location.origin}/`);
     window.location.replace(`${MAIN_SITE_URL}/auth/property-logout?return_to=${returnTo}`);
   }, []);
