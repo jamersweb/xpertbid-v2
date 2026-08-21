@@ -120,10 +120,10 @@ class DarazScraperService
                 $description = $this->normalizeDescriptionHtml($moduleDescription);
             }
         }
-        $images = $this->extractImages($xpath, $url);
-        if ($images === []) {
-            $images = $this->extractImagesFromModule($moduleFields, $url);
-        }
+        $moduleImages = $this->extractImagesFromModule($moduleFields, $url);
+        $domImages = $this->extractImages($xpath, $url);
+        // Prefer module gallery (full originals). DOM often mixes one 720px main + many 80px thumbs.
+        $images = $moduleImages !== [] ? $moduleImages : $domImages;
         $normalizedPrice = $this->normalizePrice($price) ?? $price;
 
         return [
@@ -192,6 +192,8 @@ class DarazScraperService
             if ($normalized === null || $this->looksLikeNoiseImage($normalized)) {
                 continue;
             }
+
+            $normalized = $this->upgradeImageUrl($normalized);
 
             $key = $this->canonicalImageKey($normalized);
             if (isset($seen[$key])) {
@@ -740,11 +742,11 @@ class DarazScraperService
     {
         $candidates = [];
 
+        // Prefer main preview panel first; skip tiny thumbnail strip classes.
         foreach ([
             '//img[contains(@class, "gallery-preview-panel__image")]/@src',
-            '//img[contains(@class, "item-gallery__thumbnail-image")]/@src',
-            '//img[contains(@class, "pdp-mod-common-image")]/@src',
             '//div[contains(@class, "gallery-preview-panel")]//img/@src',
+            '//img[contains(@class, "pdp-mod-common-image")]/@src',
         ] as $query) {
             $nodes = $xpath->query($query);
             if (!$nodes) {
@@ -756,6 +758,16 @@ class DarazScraperService
             }
         }
 
+        // Thumbnail strip only as fallback when no main images found.
+        if ($candidates === []) {
+            $nodes = $xpath->query('//img[contains(@class, "item-gallery__thumbnail-image")]/@src');
+            if ($nodes) {
+                foreach ($nodes as $node) {
+                    $candidates[] = $node->nodeValue;
+                }
+            }
+        }
+
         $images = [];
         $seen = [];
 
@@ -764,6 +776,8 @@ class DarazScraperService
             if ($normalized === null) {
                 continue;
             }
+
+            $normalized = $this->upgradeImageUrl($normalized);
 
             $key = $this->canonicalImageKey($normalized);
             if (isset($seen[$key])) {
@@ -783,6 +797,28 @@ class DarazScraperService
         }
 
         return array_values($images);
+    }
+
+    /**
+     * Strip Daraz/Lazada CDN resize suffixes so we keep the original asset.
+     * e.g. file.jpg_80x80q80.jpg_.webp → file.jpg
+     */
+    protected function upgradeImageUrl(string $url): string
+    {
+        $upgraded = preg_replace(
+            '/_\d+x\d+q\d+\.[a-z0-9]+_?(?:\.(?:webp|jpe?g|png))?$/i',
+            '',
+            $url
+        );
+
+        if (!is_string($upgraded) || $upgraded === '') {
+            return $url;
+        }
+
+        // Drop trailing resize crumbs like "_.webp" left on some CDN URLs.
+        $upgraded = preg_replace('/_\.(?:webp|jpe?g|png)$/i', '', $upgraded) ?? $upgraded;
+
+        return $upgraded !== '' ? $upgraded : $url;
     }
 
     protected function normalizeUrl(?string $value, string $baseUrl): ?string

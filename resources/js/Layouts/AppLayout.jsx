@@ -10,13 +10,14 @@ import useTranslate from '@/hooks/useTranslate';
 import useSessionKeepAlive from '@/hooks/useSessionKeepAlive';
 
 export default function AppLayout({ children, title }) {
-       const { flash, auth, ziggy, locale } = usePage().props;
+       const { flash, auth, ziggy, locale, propertyFrontendUrl: propertyUrlProp } = usePage().props;
        const { t } = useTranslate();
        const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
        const [isHiding, setIsHiding] = useState(false);
        const currentLocale = locale?.current || 'en';
        const currentDirection = locale?.supported?.[currentLocale]?.direction || (currentLocale === 'ur' ? 'rtl' : 'ltr');
        const supportedLocales = Object.entries(locale?.supported || {});
+       const propertyFrontendUrl = propertyUrlProp || 'https://property.xpertbid.com';
 
        const individualVerificationStatus =
               auth?.user?.individual_verification?.status || auth?.user?.individualVerification?.status;
@@ -92,9 +93,13 @@ export default function AppLayout({ children, title }) {
 
                                    <section className="xp-brand-top-banner" aria-label="XpertBid brand banner">
                                           <div className="xp-brand-links">
-                                                 <Link className="xp-brand-link" href="/marketplace/real-estate-property-auction?type=auction" aria-label="View property marketplace">
+                                                 <a
+                                                        className="xp-brand-link"
+                                                        href={propertyFrontendUrl}
+                                                        aria-label="View XpertBid Property"
+                                                 >
                                                         <img className="xp-brand-logo xp-brand-logo-prop" src="/assets/images/xp-prop-logo-clean.png" alt="XpertBid Property" />
-                                                 </Link>
+                                                 </a>
                                                  <Link className="xp-brand-link" href="/marketplace/vehicles?type=auction" aria-label="View vehicle marketplace">
                                                         <img className="xp-brand-logo xp-brand-logo-vehicle" src="/assets/images/xp-vehicle-logo-clean.png" alt="XpertBid Vehicle" />
                                                  </Link>

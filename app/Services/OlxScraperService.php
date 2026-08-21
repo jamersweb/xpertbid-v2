@@ -219,6 +219,8 @@ class OlxScraperService
                 continue;
             }
 
+            $normalized = $this->upgradeImageUrl($normalized);
+
             $key = $this->canonicalImageKey($normalized);
             if (isset($seen[$key])) {
                 continue;
@@ -254,7 +256,7 @@ class OlxScraperService
                 $candidate = null;
 
                 if ($node->nodeName === 'srcset') {
-                    $candidate = $this->firstFromSrcset($node->nodeValue);
+                    $candidate = $this->bestFromSrcset($node->nodeValue);
                 } else {
                     $candidate = $node->nodeValue;
                 }
@@ -371,16 +373,66 @@ class OlxScraperService
         return !preg_match('/\.(jpe?g|png|gif|webp|avif|bmp|svg)(\?|$)/i', $path);
     }
 
-    protected function firstFromSrcset(?string $srcset): ?string
+    /**
+     * Pick the largest width candidate from a srcset (not the first/smallest).
+     */
+    protected function bestFromSrcset(?string $srcset): ?string
     {
         $srcset = trim((string) $srcset);
         if ($srcset === '') {
             return null;
         }
 
-        $first = trim(explode(',', $srcset)[0]);
-        $parts = preg_split('/\s+/', $first);
-        return $parts[0] ?? null;
+        $bestUrl = null;
+        $bestScore = -1;
+
+        foreach (explode(',', $srcset) as $entry) {
+            $entry = trim($entry);
+            if ($entry === '') {
+                continue;
+            }
+
+            $parts = preg_split('/\s+/', $entry) ?: [];
+            $url = $parts[0] ?? null;
+            if (!$url) {
+                continue;
+            }
+
+            $score = 0;
+            $descriptor = $parts[1] ?? '';
+            if (preg_match('/(\d+)w/i', $descriptor, $matches)) {
+                $score = (int) $matches[1];
+            } elseif (preg_match('/([\d.]+)x/i', $descriptor, $matches)) {
+                $score = (int) round(((float) $matches[1]) * 1000);
+            }
+
+            if ($score >= $bestScore) {
+                $bestScore = $score;
+                $bestUrl = $url;
+            }
+        }
+
+        return $bestUrl;
+    }
+
+    /**
+     * Prefer full OLX asset over sized thumbnail variants.
+     * e.g. /thumbnails/123-300x225.jpg → /thumbnails/123.jpg
+     */
+    protected function upgradeImageUrl(string $url): string
+    {
+        $upgraded = preg_replace(
+            '~/thumbnails/(\d+)-\d+x\d+\.(jpe?g|webp|png)~i',
+            '/thumbnails/$1.$2',
+            $url
+        );
+
+        return is_string($upgraded) && $upgraded !== '' ? $upgraded : $url;
+    }
+
+    protected function firstFromSrcset(?string $srcset): ?string
+    {
+        return $this->bestFromSrcset($srcset);
     }
 
     protected function normalizeUrl(?string $value, string $baseUrl): ?string
