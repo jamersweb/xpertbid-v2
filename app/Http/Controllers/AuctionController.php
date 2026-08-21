@@ -283,48 +283,8 @@ class AuctionController extends Controller
             ->latest()
             ->take(8)
             ->get();
-            
-        // Latest Vehicles (using category filter for now, or listing_type if applicable)
-        $latestVehicles = \App\Models\Listing::where('category_id', 311)
-            ->whereIn('status', $this->browseStatuses())
-            ->withMax('bids', 'bid_amount')
-            ->with($this->listingUserRelations())
-            ->latest()
-            ->take(12)
-            ->get();
 
-        // Latest Properties
-        $latestProperties = \App\Models\Listing::where('category_id', 222)
-            ->whereIn('status', $this->browseStatuses())
-            ->withMax('bids', 'bid_amount')
-            ->with($this->listingUserRelations())
-            ->latest()
-            ->take(12)
-            ->get();
-            
-        $latestAuctions = \App\Models\Listing::whereIn('status', $this->browseStatuses())
-            ->where('listing_type', 'auction')
-            ->with($this->listingUserRelations())
-            ->withMax('bids', 'bid_amount')
-            ->latest()
-            ->take(8)
-            ->get();
-
-        $latestLiveAuctions = \App\Models\Listing::whereIn('status', $this->browseStatuses())
-            ->where('listing_type', 'live_auction')
-            ->with($this->listingUserRelations())
-            ->withMax('bids', 'bid_amount')
-            ->latest()
-            ->take(8)
-            ->get();
-
-        // Latest Normal Lists
-        $latestNormalLists = \App\Models\Listing::whereIn('listing_type', ['normal_list', 'normal', 'business_list', 'business'])
-            ->whereIn('status', $this->browseStatuses())
-            ->with($this->listingUserRelations())
-            ->latest()
-            ->take(12)
-            ->get();
+        $categorySections = $this->buildRandomHomeCategorySections(6);
 
         $brands = Brand::query()
             ->select(['id', 'name', 'slug', 'image'])
@@ -337,15 +297,126 @@ class AuctionController extends Controller
             'categories' => $categories,
             'brands' => $brands,
             'featuredAuctions' => $featured,
-            'latestVehicles' => $latestVehicles,
-            'latestProperties' => $latestProperties,
-            'latestAuctions' => $latestAuctions,
-            'latestLiveAuctions' => $latestLiveAuctions,
-            'latestNormalLists' => $latestNormalLists,
+            'categorySections' => $categorySections,
             'favoriteListingIds' => $favoriteListingIds,
             'canLogin' => \Illuminate\Support\Facades\Route::has('login'),
             'canRegister' => \Illuminate\Support\Facades\Route::has('register'),
         ]);
+    }
+
+    /**
+     * Pick up to $limit random root categories that have 3+ browseable listings,
+     * and return their latest products for homepage sections.
+     *
+     * @return list<array{category: array{id:int,name:string,slug:string}, products: \Illuminate\Support\Collection}>
+     */
+    protected function buildRandomHomeCategorySections(int $limit = 6): array
+    {
+        $statuses = $this->browseStatuses();
+        $limit = max(1, min(6, $limit));
+
+        $roots = AuctionCategory::query()
+            ->whereNull('parent_id')
+            ->whereNull('sub_category_id')
+            ->with([
+                'subCategories:id,parent_id,sub_category_id',
+                'subCategories.childCategories:id,parent_id,sub_category_id',
+            ])
+            ->get(['id', 'name', 'slug']);
+
+        if ($roots->isEmpty()) {
+            return [];
+        }
+
+        $eligible = [];
+
+        foreach ($roots as $root) {
+            $treeIds = $this->collectCategoryTreeIds($root);
+            if ($treeIds === []) {
+                continue;
+            }
+
+            $count = \App\Models\Listing::query()
+                ->whereIn('status', $statuses)
+                ->where('listing_type', '!=', 'live_auction')
+                ->where(function ($query) use ($treeIds) {
+                    $query->whereIn('category_id', $treeIds)
+                        ->orWhereIn('sub_category_id', $treeIds)
+                        ->orWhereIn('child_category_id', $treeIds);
+                })
+                ->count();
+
+            if ($count >= 3) {
+                $eligible[] = [
+                    'category' => $root,
+                    'tree_ids' => $treeIds,
+                ];
+            }
+        }
+
+        if ($eligible === []) {
+            return [];
+        }
+
+        // Shuffle so each page load can show a different set of sections.
+        shuffle($eligible);
+        $targetCount = count($eligible) >= 6
+            ? random_int(5, 6)
+            : min($limit, count($eligible));
+        $selected = array_slice($eligible, 0, $targetCount);
+
+        $sections = [];
+        foreach ($selected as $item) {
+            /** @var AuctionCategory $category */
+            $category = $item['category'];
+            $treeIds = $item['tree_ids'];
+
+            $products = \App\Models\Listing::query()
+                ->whereIn('status', $statuses)
+                ->where('listing_type', '!=', 'live_auction')
+                ->where(function ($query) use ($treeIds) {
+                    $query->whereIn('category_id', $treeIds)
+                        ->orWhereIn('sub_category_id', $treeIds)
+                        ->orWhereIn('child_category_id', $treeIds);
+                })
+                ->with($this->listingUserRelations())
+                ->withMax('bids', 'bid_amount')
+                ->latest()
+                ->take(12)
+                ->get();
+
+            if ($products->count() < 3) {
+                continue;
+            }
+
+            $sections[] = [
+                'category' => [
+                    'id' => (int) $category->id,
+                    'name' => (string) $category->name,
+                    'slug' => (string) ($category->slug ?: ''),
+                ],
+                'products' => $products,
+            ];
+        }
+
+        return $sections;
+    }
+
+    /**
+     * @return list<int>
+     */
+    protected function collectCategoryTreeIds(AuctionCategory $root): array
+    {
+        $ids = [(int) $root->id];
+
+        foreach ($root->subCategories as $sub) {
+            $ids[] = (int) $sub->id;
+            foreach ($sub->childCategories as $child) {
+                $ids[] = (int) $child->id;
+            }
+        }
+
+        return array_values(array_unique(array_filter($ids)));
     }
 
     public function categoriesPage()
