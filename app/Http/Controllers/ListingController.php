@@ -389,9 +389,33 @@ class ListingController extends Controller
                     $item = null;
                 }
             });
+            $request->merge(['listing_data' => $data]);
+        }
+
+        if (is_array($request->listing_data)) {
+            $data = $request->listing_data;
 
             if (($request->listing_type === 'auction' || $request->input('listing_type') === 'auction') && !isset($data['start_price']) && isset($data['price'])) {
                 $data['start_price'] = $data['price'];
+            }
+
+            // Variation-only listings: fill missing/zero base price from cheapest variation.
+            $priceValue = $data['price'] ?? null;
+            $hasPositivePrice = is_numeric($priceValue) && (float) $priceValue > 0;
+            if (!$hasPositivePrice && !empty($data['variations']) && is_array($data['variations'])) {
+                $variationPrices = [];
+                foreach ($data['variations'] as $variation) {
+                    $variationPrice = $variation['price'] ?? null;
+                    if (is_numeric($variationPrice) && (float) $variationPrice > 0) {
+                        $variationPrices[] = (float) $variationPrice;
+                    }
+                }
+                if ($variationPrices !== []) {
+                    $data['price'] = min($variationPrices);
+                    if (($request->listing_type === 'auction' || $request->input('listing_type') === 'auction') && empty($data['start_price'])) {
+                        $data['start_price'] = $data['price'];
+                    }
+                }
             }
 
             $request->merge(['listing_data' => $data]);

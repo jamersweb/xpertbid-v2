@@ -564,9 +564,17 @@ export default function Create({ categories, countries = [], profileLocation = n
                      }, {});
               };
 
+              // Variation-only listings: use lowest positive variation price as base price
+              // so backend `listing_data.price` validation passes.
+              const variationPrices = (Array.isArray(formData.variations) ? formData.variations : [])
+                     .map((variation) => Number(variation?.price))
+                     .filter((value) => Number.isFinite(value) && value > 0);
+              const basePriceFromVariations = variationPrices.length > 0 ? Math.min(...variationPrices) : '';
+              const resolvedPrice = formData.minimum_bid || basePriceFromVariations;
+
               // Restructuring payload for JSON columns
               const listing_data = cleanData({
-                     price: formData.minimum_bid,
+                     price: resolvedPrice,
                      reserve_price: formData.reserve_price,
                      start_date: formData.start_date,
                      end_date: formData.end_date,
