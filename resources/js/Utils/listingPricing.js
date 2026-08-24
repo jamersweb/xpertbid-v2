@@ -17,16 +17,68 @@ export function isBusinessListing(item) {
 }
 
 export function getBaseListingPrice(item) {
-       const directPrice = Number(
-              item?.price
-              ?? item?.buy_now_price
-              ?? item?.listing_data?.price
-              ?? item?.minimum_bid
-              ?? item?.listing_data?.start_price
-              ?? 0
-       );
+       const candidates = [
+              item?.price,
+              item?.buy_now_price,
+              item?.listing_data?.price,
+              item?.listing_data?.buy_now_price,
+              item?.minimum_bid,
+              item?.listing_data?.minimum_bid,
+              item?.listing_data?.start_price,
+              item?.reserve_price,
+              item?.listing_data?.reserve_price,
+       ];
 
-       return Number.isFinite(directPrice) ? directPrice : 0;
+       for (const candidate of candidates) {
+              const value = Number(candidate);
+              if (Number.isFinite(value) && value > 0) {
+                     return value;
+              }
+       }
+
+       // Variation-only products: use the lowest positive variation price.
+       const variations = getListingVariations(item);
+       const variationPrices = variations
+              .map((variation) => Number(variation?.price))
+              .filter((value) => Number.isFinite(value) && value > 0);
+
+       if (variationPrices.length > 0) {
+              return Math.min(...variationPrices);
+       }
+
+       return 0;
+}
+
+/** Price shown on home/marketplace cards (matches product detail fallbacks). */
+export function getCardDisplayPrice(item) {
+       const maxBid = Number(item?.current_highest_bid ?? item?.bids_max_bid_amount ?? 0);
+       const hasMaxBid = Number.isFinite(maxBid) && maxBid > 0;
+       const discountMeta = getDiscountMeta(item);
+
+       if (isDirectBuyListing(item)) {
+              return {
+                     amount: discountMeta.hasDiscount ? discountMeta.finalPrice : getBaseListingPrice(item),
+                     labelKey: "Price",
+                     hasMaxBid: false,
+                     discountMeta,
+              };
+       }
+
+       if (hasMaxBid) {
+              return {
+                     amount: maxBid,
+                     labelKey: "Current Bid",
+                     hasMaxBid: true,
+                     discountMeta,
+              };
+       }
+
+       return {
+              amount: getBaseListingPrice(item),
+              labelKey: "Minimum Bid",
+              hasMaxBid: false,
+              discountMeta,
+       };
 }
 
 export function getDiscountMeta(item) {

@@ -64,10 +64,9 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
               || (isLiveAuction && auction.youtube_video_id ? `https://img.youtube.com/vi/${auction.youtube_video_id}/hqdefault.jpg` : null)
               || "/assets/images/WebsiteBanner2.png";
        const maxBid = Number(auction?.current_highest_bid || auction?.bids_max_bid_amount || 0);
-       const minBid = Number(auction?.minimum_bid || auction?.price || 0);
        const hasMaxBid = Number.isFinite(maxBid) && maxBid > 0;
        const directBuyAmount = discountMeta.hasDiscount ? discountMeta.finalPrice : getBaseListingPrice(auction);
-       const displayAmount = isWonAuction ? winningBidAmount : (directBuyListing ? directBuyAmount : (hasMaxBid ? maxBid : minBid));
+       const displayAmount = isWonAuction ? winningBidAmount : (directBuyListing ? directBuyAmount : (hasMaxBid ? maxBid : getBaseListingPrice(auction)));
        const displayLabel = isWonAuction
               ? "Winning Bid"
               : (directBuyListing ? "Price" : (isLiveAuction ? (hasMaxBid ? "Live Bid" : "Start Price") : (hasMaxBid ? "Current Bid" : "Minimum Bid")));

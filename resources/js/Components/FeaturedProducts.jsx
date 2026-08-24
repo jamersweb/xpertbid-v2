@@ -4,7 +4,7 @@ import Price from "@/Components/Price";
 import OwnerInfoRow from "@/Components/OwnerInfoRow";
 import FavoriteToggleButton from "@/Components/FavoriteToggleButton";
 import useTranslate from "@/hooks/useTranslate";
-import { getDiscountMeta, isDirectBuyListing, isSoldOutListing } from "@/Utils/listingPricing";
+import { getCardDisplayPrice, isDirectBuyListing, isSoldOutListing } from "@/Utils/listingPricing";
 import { buildProductHref } from "@/Utils/productUrl";
 
 const getProductImageSrc = (product) => {
@@ -43,14 +43,10 @@ export default function FeaturedProducts({ products }) {
                             {displayProducts.length > 0 ? (
                                    <div className="row g-4 home-mobile-scroll-row">
                                           {displayProducts.map((product, index) => {
-                                                 const maxBid = Number(product?.bids_max_bid_amount ?? 0);
-                                                 const minBid = Number(product?.minimum_bid ?? 0);
-                                                 const hasMaxBid = Number.isFinite(maxBid) && maxBid > 0;
                                                  const directBuyListing = isDirectBuyListing(product);
                                                  const isSoldOut = isSoldOutListing(product);
-                                                 const discountMeta = getDiscountMeta(product);
-                                                 const displayLabel = directBuyListing ? t('Price') : (hasMaxBid ? t('Current Bid') : t('Minimum Bid'));
-                                                 const displayAmount = hasMaxBid ? maxBid : minBid;
+                                                 const { amount: displayAmount, labelKey, discountMeta } = getCardDisplayPrice(product);
+                                                 const displayLabel = t(labelKey);
                                                  const imageSrc = getProductImageSrc(product);
 
                                                  return (

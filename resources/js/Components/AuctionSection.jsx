@@ -4,6 +4,7 @@ import Price from "@/Components/Price";
 import OwnerInfoRow from "@/Components/OwnerInfoRow";
 import FavoriteToggleButton from "@/Components/FavoriteToggleButton";
 import useTranslate from "@/hooks/useTranslate";
+import { getCardDisplayPrice } from "@/Utils/listingPricing";
 import { buildProductHref } from "@/Utils/productUrl";
 
 const getProductImageSrc = (product) => {
@@ -49,10 +50,7 @@ export default function AuctionSection({ products, title = 'Latest Auctions', vi
                                    {displayProducts.map((product, index) => {
                                           const listingKind = product?.list_type || product?.listing_type;
                                           const isLiveAuction = listingKind === "live_auction";
-                                          const maxBid = Number(product?.bids_max_bid_amount ?? 0);
-                                          const minBid = Number(product?.minimum_bid ?? 0);
-                                          const hasMaxBid = Number.isFinite(maxBid) && maxBid > 0;
-                                          const displayAmount = hasMaxBid ? maxBid : minBid;
+                                          const { amount: displayAmount, hasMaxBid } = getCardDisplayPrice(product);
                                           const imageSrc = getProductImageSrc(product);
 
                                           return (

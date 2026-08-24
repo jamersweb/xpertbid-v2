@@ -142,7 +142,7 @@ class Listing extends Model
     // Helper methods to access listing-type specific data
     public function getPriceAttribute()
     {
-        return $this->listing_data['price'] ?? $this->listing_data['start_price'] ?? $this->listing_data['minimum_bid'] ?? null;
+        return $this->firstPositiveListingAmount(['price', 'buy_now_price', 'start_price', 'minimum_bid']);
     }
 
     public function getStockAttribute()
@@ -152,7 +152,47 @@ class Listing extends Model
 
     public function getMinimumBidAttribute()
     {
-        return $this->listing_data['minimum_bid'] ?? $this->listing_data['start_price'] ?? $this->listing_data['price'] ?? null;
+        return $this->firstPositiveListingAmount(['minimum_bid', 'start_price', 'price', 'buy_now_price']);
+    }
+
+    /**
+     * Prefer the first positive numeric amount from listing_data keys.
+     * Skips null/empty/0 so e.g. minimum_bid=0 does not hide a real price.
+     */
+    protected function firstPositiveListingAmount(array $keys)
+    {
+        $data = is_array($this->listing_data) ? $this->listing_data : [];
+
+        foreach ($keys as $key) {
+            if (!array_key_exists($key, $data)) {
+                continue;
+            }
+
+            $value = $data[$key];
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            if (is_numeric($value) && (float) $value > 0) {
+                return $value;
+            }
+        }
+
+        $variations = $data['variations'] ?? null;
+        if (is_array($variations)) {
+            $prices = [];
+            foreach ($variations as $variation) {
+                $price = $variation['price'] ?? null;
+                if (is_numeric($price) && (float) $price > 0) {
+                    $prices[] = (float) $price;
+                }
+            }
+            if ($prices !== []) {
+                return min($prices);
+            }
+        }
+
+        return null;
     }
 
     public function getStartDateAttribute()
