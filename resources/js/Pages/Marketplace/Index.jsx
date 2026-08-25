@@ -362,6 +362,12 @@ export default function Index({
               business_list: 'business-products',
        };
 
+       const resolveListingTypeParam = (type = currentType) => {
+              if (['normal', 'normal_list'].includes(type)) return 'normal';
+              if (['business', 'business_list'].includes(type)) return 'business';
+              return 'auction';
+       };
+
        const marketplaceUrl = (type = currentType, slug = currentCategory?.slug) => {
               if (slug) {
                      return route('marketplace.type', {
@@ -383,17 +389,24 @@ export default function Index({
               return cleaned;
        };
 
+       // When no category slug, type lives in the query string (path has no typeSlug).
+       const marketplaceQuery = (type = currentType, extra = {}, baseFilters = filters) => {
+              const cleaned = cleanFilters(baseFilters);
+              if (!currentCategory?.slug) {
+                     cleaned.type = resolveListingTypeParam(type);
+              }
+              return { ...cleaned, ...extra };
+       };
+
        const handleTabChange = (type) => {
-              router.get(
-                     marketplaceUrl(type),
-                     {
-                            ...cleanFilters(),
-                     },
-                     {
-                            preserveState: true,
-                            preserveScroll: true,
-                     }
-              );
+              const query = marketplaceQuery(type);
+              // Leaving a featured/home deep-link should open the full catalog for that tab.
+              delete query.featured;
+
+              router.get(marketplaceUrl(type), query, {
+                     preserveState: true,
+                     preserveScroll: true,
+              });
        };
 
        const handleSearchSubmit = (e) => {
@@ -401,10 +414,7 @@ export default function Index({
 
               router.get(
                      marketplaceUrl(),
-                     {
-                            ...cleanFilters(),
-                            search: searchTerm,
-                     },
+                     marketplaceQuery(currentType, { search: searchTerm }),
                      {
                             preserveState: true,
                             preserveScroll: true,
@@ -428,9 +438,7 @@ export default function Index({
        const handleMainCategoriesBack = () => {
               router.get(
                      route('marketplace.index'),
-                     {
-                            ...cleanFilters(),
-                     },
+                     marketplaceQuery(currentType),
                      {
                             preserveState: true,
                             preserveScroll: true,
@@ -579,7 +587,7 @@ export default function Index({
                      }
               });
 
-              router.get(marketplaceUrl(), cleanFilters(nextFilters), {
+              router.get(marketplaceUrl(), marketplaceQuery(currentType, {}, nextFilters), {
                      preserveState: true,
                      preserveScroll: true,
               });
@@ -610,7 +618,7 @@ export default function Index({
                      }
               });
 
-              router.get(marketplaceUrl(), cleanFilters(nextFilters), {
+              router.get(marketplaceUrl(), marketplaceQuery(currentType, {}, nextFilters), {
                      preserveState: true,
                      preserveScroll: true,
               });
