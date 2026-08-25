@@ -1,2 +1,17 @@
 User-agent: *
-Disallow:
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /account-settings
+Disallow: /cart
+Disallow: /checkout
+Disallow: /wallet
+Disallow: /chat
+Disallow: /my-listings
+Disallow: /my-bids
+Disallow: /my-orders
+Disallow: /favorites
+Disallow: /sell
+Disallow: /api/
+Disallow: /get-
+
+Sitemap: https://xpertbid.com/sitemap.xml

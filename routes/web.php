@@ -48,6 +48,15 @@ use App\Http\Controllers\Admin\OlxScraperController as AdminOlxScraperController
 // --- Public Pages (Inertia) ---
 
 Route::get('/', [AuctionController::class, 'home'])->name('home'); // Replaces Welcome
+Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap.index');
+Route::get('/sitemap/static.xml', [\App\Http\Controllers\SitemapController::class, 'staticPages'])->name('sitemap.static');
+Route::get('/sitemap/categories.xml', [\App\Http\Controllers\SitemapController::class, 'categories'])->name('sitemap.categories');
+Route::get('/sitemap/blogs.xml', [\App\Http\Controllers\SitemapController::class, 'blogs'])->name('sitemap.blogs');
+Route::get('/sitemap/brands.xml', [\App\Http\Controllers\SitemapController::class, 'brands'])->name('sitemap.brands');
+Route::get('/sitemap/malls.xml', [\App\Http\Controllers\SitemapController::class, 'malls'])->name('sitemap.malls');
+Route::get('/sitemap/products-{page}.xml', [\App\Http\Controllers\SitemapController::class, 'products'])
+    ->whereNumber('page')
+    ->name('sitemap.products');
 Route::get('/product/{slug}', [AuctionController::class, 'show'])->name('product.show');
 Route::get('/live-auctions/feed', [AuctionController::class, 'liveAuctionsFeed'])->name('live-auctions.feed');
 Route::get('/live-auctions', [AuctionController::class, 'liveAuctions'])->name('live-auctions.public');
