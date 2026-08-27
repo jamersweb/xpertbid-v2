@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
-import { Link } from '@inertiajs/react';
-import { route } from 'ziggy-js';
+import { Link, usePage } from '@inertiajs/react';
 import useTranslate from '@/hooks/useTranslate';
+import { getCategoryBrowseUrl } from '@/Utils/categoryBrowseUrl';
 
 export default function CategoriesDropdown() {
        const { t } = useTranslate();
+       const { propertyFrontendUrl, propertyRootCategoryId } = usePage().props;
        const [categories, setCategories] = useState([]);
        const [isOpen, setIsOpen] = useState(false);
        const btnRef = useRef();
@@ -83,16 +84,28 @@ export default function CategoriesDropdown() {
                             </svg>
                      </button>
                      <ul className="dropdown-menu" aria-labelledby="categoriesDropdown">
-                            {categories.map((cat) => (
-                                   <li key={cat.id}>
-                                          <Link
-                                                 href={route('marketplace.type', { slug: cat.slug, typeSlug: 'auctions' })}
-                                                 className="dropdown-item"
-                                          >
-                                                 {cat.name}
-                                          </Link>
-                                   </li>
-                            ))}
+                            {categories.map((cat) => {
+                                   const browse = getCategoryBrowseUrl(cat, { propertyFrontendUrl, propertyRootCategoryId });
+                                   const className = "dropdown-item";
+
+                                   if (browse.external) {
+                                          return (
+                                                 <li key={cat.id}>
+                                                        <a href={browse.href} className={className} target="_blank" rel="noopener noreferrer">
+                                                               {cat.name}
+                                                        </a>
+                                                 </li>
+                                          );
+                                   }
+
+                                   return (
+                                          <li key={cat.id}>
+                                                 <Link href={browse.href} className={className}>
+                                                        {cat.name}
+                                                 </Link>
+                                          </li>
+                                   );
+                            })}
                      </ul>
               </div>
        );

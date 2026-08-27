@@ -163,6 +163,33 @@ class MarketplaceController extends Controller
             $featured = 'home_featured';
         }
 
+        // Property categories live on property.xpertbid.com — never open them in main marketplace.
+        $propertyRedirectSlug = $slug ?: $queryCategorySlug;
+        if ($propertyRedirectSlug && $propertyRedirectSlug !== 'all') {
+            $propertyCategoryQuery = AuctionCategory::query()->where('slug', $propertyRedirectSlug);
+            if (ctype_digit((string) $propertyRedirectSlug)) {
+                $propertyCategoryQuery->orWhere('id', (int) $propertyRedirectSlug);
+            }
+            $propertyCategory = $propertyCategoryQuery->first();
+
+            if ($propertyCategory) {
+                $propertyIds = Listing::propertyCategoryIds();
+                $isPropertyCategory = in_array((int) $propertyCategory->id, $propertyIds, true)
+                    || in_array((int) $propertyCategory->parent_id, $propertyIds, true)
+                    || in_array((int) $propertyCategory->sub_category_id, $propertyIds, true);
+
+                if ($isPropertyCategory) {
+                    $propertyBase = rtrim((string) config('property.frontend_url'), '/') ?: 'https://property.xpertbid.com';
+                    $rootId = (int) config('property.root_category_id', 222);
+                    $target = ((int) $propertyCategory->id === $rootId)
+                        ? "{$propertyBase}/properties"
+                        : "{$propertyBase}/categories/{$propertyCategory->slug}";
+
+                    return redirect()->away($target);
+                }
+            }
+        }
+
         if (!$slug && $queryCategorySlug) {
             return redirect()->to($this->canonicalMarketplaceUrl($queryCategorySlug, $type, $request), 301);
         }

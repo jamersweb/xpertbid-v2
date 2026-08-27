@@ -1,11 +1,13 @@
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import AppLayout from "@/Layouts/AppLayout";
 import useTranslate from "@/hooks/useTranslate";
+import { getCategoryBrowseUrl } from "@/Utils/categoryBrowseUrl";
 
 const imagePath = (cat) => `${cat?.image?.startsWith("/") ? "" : "/"}${cat?.image ?? "images/placeholder.png"}`;
 
 export default function Index({ categories = [] }) {
        const { t } = useTranslate();
+       const { propertyFrontendUrl, propertyRootCategoryId } = usePage().props;
 
        return (
               <AppLayout title={t("Categories")}>
@@ -18,18 +20,42 @@ export default function Index({ categories = [] }) {
                                    </div>
 
                                    <div className="all-categories-grid">
-                                          {categories.map((cat, i) => (
-                                                 <Link
-                                                        key={cat.id || i}
-                                                        href={route('marketplace.type', { slug: cat.slug, typeSlug: 'auctions' })}
-                                                        className="text-decoration-none all-category-card"
-                                                 >
-                                                        <div className="all-category-image">
-                                                               <img src={imagePath(cat)} alt={cat.name} />
-                                                        </div>
-                                                        <h3 className="all-category-title">{cat.name}</h3>
-                                                 </Link>
-                                          ))}
+                                          {categories.map((cat, i) => {
+                                                 const browse = getCategoryBrowseUrl(cat, { propertyFrontendUrl, propertyRootCategoryId });
+                                                 const className = "text-decoration-none all-category-card";
+                                                 const content = (
+                                                        <>
+                                                               <div className="all-category-image">
+                                                                      <img src={imagePath(cat)} alt={cat.name} />
+                                                               </div>
+                                                               <h3 className="all-category-title">{cat.name}</h3>
+                                                        </>
+                                                 );
+
+                                                 if (browse.external) {
+                                                        return (
+                                                               <a
+                                                                      key={cat.id || i}
+                                                                      href={browse.href}
+                                                                      className={className}
+                                                                      target="_blank"
+                                                                      rel="noopener noreferrer"
+                                                               >
+                                                                      {content}
+                                                               </a>
+                                                        );
+                                                 }
+
+                                                 return (
+                                                        <Link
+                                                               key={cat.id || i}
+                                                               href={browse.href}
+                                                               className={className}
+                                                        >
+                                                               {content}
+                                                        </Link>
+                                                 );
+                                          })}
                                    </div>
                             </div>
                      </section>

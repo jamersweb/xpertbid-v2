@@ -26,7 +26,7 @@ const getProductImageSrc = (product) => {
        return `/${String(rawPath).replace(/^\/+/, "")}`;
 };
 
-export default function HomeCategorySection({ title, products, viewAllHref }) {
+export default function HomeCategorySection({ title, products, viewAllHref, viewAllExternal = false }) {
        const { t } = useTranslate();
        const displayProducts = (products || []).slice(0, 3);
 
@@ -42,7 +42,13 @@ export default function HomeCategorySection({ title, products, viewAllHref }) {
                                    <div className="featured-heading mb-0">
                                           <h2>{sectionTitle}</h2>
                                    </div>
-                                   <Link href={href} className="section-view-all-btn">{t('View All')}</Link>
+                                   {viewAllExternal ? (
+                                          <a href={href} className="section-view-all-btn" target="_blank" rel="noopener noreferrer">
+                                                 {t('View All')}
+                                          </a>
+                                   ) : (
+                                          <Link href={href} className="section-view-all-btn">{t('View All')}</Link>
+                                   )}
                             </div>
 
                             <div className="row g-4 home-mobile-scroll-row">

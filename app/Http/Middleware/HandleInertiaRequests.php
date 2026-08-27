@@ -91,6 +91,7 @@ class HandleInertiaRequests extends Middleware
                 'info' => $request->session()->get('info'),
             ],
             'propertyFrontendUrl' => rtrim((string) config('property.frontend_url'), '/') ?: 'https://property.xpertbid.com',
+            'propertyRootCategoryId' => (int) config('property.root_category_id', 222),
             'locale' => [
                 'current' => $currentLocale,
                 'fallback' => config('app.fallback_locale', 'en'),

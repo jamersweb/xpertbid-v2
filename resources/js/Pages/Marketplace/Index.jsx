@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import AuctionCard from '@/Components/AuctionCard';
+import { getCategoryBrowseUrl } from '@/Utils/categoryBrowseUrl';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
 import 'swiper/css';
@@ -242,6 +243,7 @@ export default function Index({
        filters = {},
        currentType: serverCurrentType = 'auction',
 }) {
+       const { propertyFrontendUrl, propertyRootCategoryId } = usePage().props;
        const [searchTerm, setSearchTerm] = useState(filters?.search || '');
        const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
        const [isFilterDrawerMounted, setIsFilterDrawerMounted] = useState(false);
@@ -423,6 +425,20 @@ export default function Index({
        };
 
        const handleCategoryTabChange = (slug) => {
+              const matchedCategory =
+                     categories.find((category) => category.slug === slug)
+                     || subcategoryTabs.find((category) => category.slug === slug)
+                     || childCategoryTabs.find((category) => category.slug === slug)
+                     || (currentCategory?.slug === slug ? currentCategory : null)
+                     || (currentTopCategory?.slug === slug ? currentTopCategory : null)
+                     || { slug };
+
+              const browse = getCategoryBrowseUrl(matchedCategory, { propertyFrontendUrl, propertyRootCategoryId });
+              if (browse.external) {
+                     window.location.assign(browse.href);
+                     return;
+              }
+
               router.get(
                      marketplaceUrl(currentType, slug),
                      {

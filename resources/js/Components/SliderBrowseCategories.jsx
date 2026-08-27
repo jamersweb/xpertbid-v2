@@ -1,10 +1,12 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { Swiper, SwiperSlide } from "swiper/react";
 import useTranslate from "@/hooks/useTranslate";
+import { getCategoryBrowseUrl } from "@/Utils/categoryBrowseUrl";
 import "swiper/css";
 
 export default function SliderBrowseCategories({ categories }) {
        const { t } = useTranslate();
+       const { propertyFrontendUrl, propertyRootCategoryId } = usePage().props;
        const displayCategories = (categories || []).slice(0, 12);
        const assetSrc = (path) => {
               if (!path) return "/images/placeholder.png";
@@ -40,22 +42,35 @@ export default function SliderBrowseCategories({ categories }) {
                                                  {(() => {
                                                         const media = cat.icon || cat.image;
                                                         const hasIcon = Boolean(cat.icon);
+                                                        const browse = getCategoryBrowseUrl(cat, { propertyFrontendUrl, propertyRootCategoryId });
+                                                        const className = "text-decoration-none category-link";
+                                                        const content = (
+                                                               <>
+                                                                      <div className={`image-circle ${hasIcon ? 'has-icon' : ''}`}>
+                                                                             <img
+                                                                                    src={assetSrc(media)}
+                                                                                    alt={cat.name}
+                                                                                    className="category-icon"
+                                                                             />
+                                                                      </div>
+                                                                      <div className="category-title-wrapper">
+                                                                            <h3 className="category-name">{cat.name}</h3>
+                                                                      </div>
+                                                               </>
+                                                        );
+
+                                                        if (browse.external) {
+                                                               return (
+                                                                      <a href={browse.href} className={className} target="_blank" rel="noopener noreferrer">
+                                                                             {content}
+                                                                      </a>
+                                                               );
+                                                        }
+
                                                         return (
-                                                 <Link
-                                                        href={route('marketplace.type', { slug: cat.slug, typeSlug: 'auctions' })}
-                                                        className="text-decoration-none category-link"
-                                                 >
-                                                        <div className={`image-circle ${hasIcon ? 'has-icon' : ''}`}>
-                                                               <img
-                                                                      src={assetSrc(media)}
-                                                                      alt={cat.name}
-                                                                      className="category-icon"
-                                                               />
-                                                        </div>
-                                                        <div className="category-title-wrapper">
-                                                              <h3 className="category-name">{cat.name}</h3>
-                                                        </div>
-                                                 </Link>
+                                                               <Link href={browse.href} className={className}>
+                                                                      {content}
+                                                               </Link>
                                                         );
                                                  })()}
                                           </SwiperSlide>
