@@ -32,6 +32,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Hide property LISTINGS from main site discovery
+    |--------------------------------------------------------------------------
+    |
+    | When true, property-tree products are excluded from home, marketplace,
+    | search, and related public feeds on xpertbid.com. Category navigation,
+    | sell form, my-listings, chat, bids, and favorites stay unchanged.
+    | Direct /product/{slug} URLs redirect to the property frontend.
+    |
+    */
+
+    'hide_listings_from_main_site' => filter_var(
+        env('HIDE_PROPERTY_LISTINGS_FROM_MAIN', true),
+        FILTER_VALIDATE_BOOLEAN
+    ),
+
+    /*
+    |--------------------------------------------------------------------------
     | Public attribute whitelist (from listing_data / category_features)
     |--------------------------------------------------------------------------
     */

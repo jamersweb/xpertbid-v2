@@ -64,6 +64,7 @@ class AuctionController extends Controller
         }
 
         $listings = \App\Models\Listing::query()
+            ->excludeProperties()
             ->where('listing_type', 'live_auction')
             ->whereIn('id', $ids->all())
             ->with($this->listingUserRelations())
@@ -277,6 +278,7 @@ class AuctionController extends Controller
             ->values();
         
         $featured = \App\Models\Listing::where('featured_name', 'home_featured')
+            ->excludeProperties()
             ->whereIn("status", $this->browseStatuses())
             ->with(array_merge($this->listingUserRelations(), ['bids'])) // Eager load relationships
             ->withMax('bids', 'bid_amount')
@@ -331,12 +333,21 @@ class AuctionController extends Controller
         $eligible = [];
 
         foreach ($roots as $root) {
+            // Keep Properties in nav/sell; do not surface a property product section on main home.
+            if (
+                \App\Models\Listing::shouldHideListingsFromMainSite()
+                && (int) $root->id === (int) config('property.root_category_id', 222)
+            ) {
+                continue;
+            }
+
             $treeIds = $this->collectCategoryTreeIds($root);
             if ($treeIds === []) {
                 continue;
             }
 
             $count = \App\Models\Listing::query()
+                ->excludeProperties()
                 ->whereIn('status', $statuses)
                 ->where('listing_type', '!=', 'live_auction')
                 ->where(function ($query) use ($treeIds) {
@@ -372,6 +383,7 @@ class AuctionController extends Controller
             $treeIds = $item['tree_ids'];
 
             $products = \App\Models\Listing::query()
+                ->excludeProperties()
                 ->whereIn('status', $statuses)
                 ->where('listing_type', '!=', 'live_auction')
                 ->where(function ($query) use ($treeIds) {
@@ -634,7 +646,7 @@ class AuctionController extends Controller
         $maxPrice = isset($priceRange[1]) ? (float) $priceRange[1] : 300000;
 
         // Start the query
-        $query = \App\Models\Listing::where('status', 'active');
+        $query = \App\Models\Listing::where('status', 'active')->excludeProperties();
 
         // Apply filters if they exist
         if (!empty($categoryId)) {
@@ -749,11 +761,16 @@ class AuctionController extends Controller
             ->with(array_merge($this->listingUserRelations(), ['category', 'bids.user']))
             ->firstOrFail();
 
+        if ($listing->isPropertyListing() && \App\Models\Listing::shouldHideListingsFromMainSite()) {
+            return redirect()->away($listing->propertyFrontendUrl());
+        }
+
         // 2. Increment view count
         $listing->increment('views');
 
         // 3. Fetch Related Items (Same Category, excluding current)
         $related = \App\Models\Listing::where('category_id', $listing->category_id)
+            ->excludeProperties()
             ->where('id', '!=', $listing->id)
             ->where('status', 'active')
             ->with(array_merge($this->listingUserRelations(), ['category']))
@@ -934,7 +951,7 @@ class AuctionController extends Controller
 
     public function get_products()
     {
-        $product = \App\Models\Listing::whereIn('status', $this->browseStatuses())->withMax('bids', 'bid_amount')->latest()->get()->take(9);
+        $product = \App\Models\Listing::whereIn('status', $this->browseStatuses())->excludeProperties()->withMax('bids', 'bid_amount')->latest()->get()->take(9);
 
         // Add owner data for each product (OwnerInfoRow expects user relationship)
         foreach ($product as $p) {
@@ -952,6 +969,7 @@ class AuctionController extends Controller
     {
         // 1. Fetch all visible featured products sorted by latest
         $allFeatured = \App\Models\Listing::where('featured_name', 'home_featured')
+            ->excludeProperties()
             ->withMax('bids', 'bid_amount')
             ->whereIn("status", $this->browseStatuses())
             ->latest()
@@ -1003,6 +1021,10 @@ class AuctionController extends Controller
     }
     public function get_featured_realstate()
     {
+        if (\App\Models\Listing::shouldHideListingsFromMainSite()) {
+            return response()->json(['product' => []]);
+        }
+
         $product = \App\Models\Listing::where('featured_name', 'realstate_featured')
             ->whereIn("status", $this->browseStatuses())
             ->latest()
@@ -1023,6 +1045,10 @@ class AuctionController extends Controller
     }
     public function get_realestate()
     {
+        if (\App\Models\Listing::shouldHideListingsFromMainSite()) {
+            return response()->json(['product' => []]);
+        }
+
         $product = \App\Models\Listing::where(function ($query) {
                 $query->whereBetween('category_id', [207, 211])
                     ->orWhere('category_id', 216);
@@ -1069,6 +1095,10 @@ class AuctionController extends Controller
     // Latest Properties API - category_id = 222, latest 12
     public function get_latest_properties()
     {
+        if (\App\Models\Listing::shouldHideListingsFromMainSite()) {
+            return response()->json(['product' => []]);
+        }
+
         $products = \App\Models\Listing::where('category_id', 222)
             ->whereIn('status', $this->browseStatuses())
             ->withMax('bids', 'bid_amount')
@@ -1092,6 +1122,7 @@ class AuctionController extends Controller
     public function get_latest_normal_lists()
     {
         $products = \App\Models\Listing::where('listing_type', 'normal_list')
+            ->excludeProperties()
             ->whereIn('status', $this->browseStatuses())
             ->withMax('bids', 'bid_amount')
             ->latest()
@@ -1114,6 +1145,7 @@ class AuctionController extends Controller
     public function get_latest_auctions()
     {
         $products = \App\Models\Listing::whereIn('listing_type', ['auction', 'live_auction'])
+            ->excludeProperties()
             ->whereIn('status', $this->browseStatuses())
             ->withMax('bids', 'bid_amount')
             ->latest()
@@ -1135,6 +1167,7 @@ class AuctionController extends Controller
     public function get_one_rupee_auctions()
     {
         $products = \App\Models\Listing::where('is_1_rupee', 1)
+            ->excludeProperties()
             ->whereIn('status', ['active', 'awarded'])
             ->with('user')
             ->withMax('bids', 'bid_amount')
@@ -1167,6 +1200,7 @@ class AuctionController extends Controller
     public function one_rupee_page()
     {
         $products = \App\Models\Listing::where('is_1_rupee', 1)
+            ->excludeProperties()
             ->whereIn('status', ['active', 'awarded'])
             ->with(['user']) // Load relationships
             ->latest()
@@ -1232,6 +1266,10 @@ class AuctionController extends Controller
             ->with(['user', 'category', 'bids.user'])
             ->firstOrFail();
 
+        if ($listing->isPropertyListing() && \App\Models\Listing::shouldHideListingsFromMainSite()) {
+            return redirect()->away($listing->propertyFrontendUrl());
+        }
+
         // Increment view count
         $listing->increment('views');
 
@@ -1270,6 +1308,7 @@ class AuctionController extends Controller
         
         // 1. Same Category
         $sameCategory = \App\Models\Listing::where('category_id', $listing->category_id)
+            ->excludeProperties()
             ->where('id', '!=', $listing->id)
             ->whereIn('status', $this->browseStatuses())
             ->latest()
@@ -1278,6 +1317,7 @@ class AuctionController extends Controller
 
         // 2. 1 Rupee Auctions
         $oneRupee = \App\Models\Listing::where('is_1_rupee', 1)
+            ->excludeProperties()
             ->where('id', '!=', $listing->id)
             ->whereIn('status', $this->browseStatuses())
             ->latest()
@@ -1286,6 +1326,7 @@ class AuctionController extends Controller
 
         // 3. Latest Products
         $latest = \App\Models\Listing::where('id', '!=', $listing->id)
+            ->excludeProperties()
             ->whereIn('status', $this->browseStatuses())
             ->latest()
             ->take(12)
@@ -1765,6 +1806,7 @@ class AuctionController extends Controller
         if (!$query) return response()->json(['auctions' => []]);
 
         $listings = \App\Models\Listing::where('status', 'active')
+            ->excludeProperties()
             ->where(function ($q) use ($query) {
                 $q->where('title', 'like', "%{$query}%")
                   ->orWhere('description', 'like', "%{$query}%");
@@ -1785,7 +1827,7 @@ class AuctionController extends Controller
 
     public function filtered(Request $request)
     {
-        $q = \App\Models\Listing::query()->where('status', 'active');
+        $q = \App\Models\Listing::query()->where('status', 'active')->excludeProperties();
 
         if ($request->filled('category') && $request->input('category') != 'all') {
             $cat = AuctionCategory::where('slug', $request->category)->orWhere('id', $request->category)->first();

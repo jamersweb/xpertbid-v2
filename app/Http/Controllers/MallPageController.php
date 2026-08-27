@@ -90,6 +90,7 @@ class MallPageController extends Controller
         }
 
         $listings = Listing::query()
+            ->excludeProperties()
             ->where('user_id', $user->id)
             ->whereIn('status', $this->browseStatuses())
             ->where('listing_type', '!=', 'live_auction')

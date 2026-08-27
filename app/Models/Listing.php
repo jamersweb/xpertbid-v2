@@ -379,6 +379,36 @@ class Listing extends Model
         return array_values(array_unique($ids));
     }
 
+    /**
+     * Whether main-site public discovery should hide property-tree listings.
+     */
+    public static function shouldHideListingsFromMainSite(): bool
+    {
+        return (bool) config('property.hide_listings_from_main_site', true);
+    }
+
+    /**
+     * True when this listing belongs to the property category tree.
+     */
+    public function isPropertyListing(): bool
+    {
+        $ids = static::propertyCategoryIds();
+
+        return in_array((int) $this->category_id, $ids, true)
+            || in_array((int) $this->sub_category_id, $ids, true)
+            || in_array((int) $this->child_category_id, $ids, true);
+    }
+
+    /**
+     * Absolute URL on the property frontend for this listing slug.
+     */
+    public function propertyFrontendUrl(): string
+    {
+        $base = rtrim((string) config('property.frontend_url', 'https://property.xpertbid.com'), '/');
+
+        return $base . '/properties/' . ltrim((string) $this->slug, '/');
+    }
+
     public function scopeBrowseable($query)
     {
         return $query->whereIn('status', ['active', 'sold_out']);
@@ -402,6 +432,32 @@ class Listing extends Model
                     ->orWhereIn('sub_category_id', $ids)
                     ->orWhereIn('child_category_id', $ids);
             });
+    }
+
+    /**
+     * Exclude property-tree listings from main-site public discovery feeds.
+     * No-op when hide_listings_from_main_site is disabled.
+     */
+    public function scopeExcludeProperties($query)
+    {
+        if (!static::shouldHideListingsFromMainSite()) {
+            return $query;
+        }
+
+        $ids = static::propertyCategoryIds();
+        if ($ids === []) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($ids) {
+            $q->where(function ($inner) use ($ids) {
+                $inner->whereNull('category_id')->orWhereNotIn('category_id', $ids);
+            })->where(function ($inner) use ($ids) {
+                $inner->whereNull('sub_category_id')->orWhereNotIn('sub_category_id', $ids);
+            })->where(function ($inner) use ($ids) {
+                $inner->whereNull('child_category_id')->orWhereNotIn('child_category_id', $ids);
+            });
+        });
     }
 
     protected static function booted()

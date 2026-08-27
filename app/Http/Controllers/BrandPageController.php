@@ -25,6 +25,7 @@ class BrandPageController extends Controller
     public function propertiesBrand(Brand $brand)
     {
         $listings = Listing::query()
+            ->excludeProperties()
             ->with(['user', 'category', 'bids'])
             ->where('status', 'active')
             ->where('listing_type', '!=', 'live_auction')

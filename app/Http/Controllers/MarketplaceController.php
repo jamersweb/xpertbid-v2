@@ -236,7 +236,9 @@ class MarketplaceController extends Controller
 
         $activeSlug = $slug ?? $request->input('category');
 
-        $query = Listing::whereIn('status', $this->browseStatuses())->with([
+        $query = Listing::whereIn('status', $this->browseStatuses())
+            ->excludeProperties()
+            ->with([
             'user.individualVerification',
             'user.corporateVerification',
             'category',
@@ -341,6 +343,7 @@ class MarketplaceController extends Controller
         }
 
         $availabilityQuery = Listing::whereIn('status', $this->browseStatuses())
+            ->excludeProperties()
             ->where('listing_type', '!=', 'live_auction');
 
         if ($categoryScopeIds) {
@@ -507,7 +510,9 @@ class MarketplaceController extends Controller
             $query->where('featured_name', 'home_featured');
         }
 
-        $curatedBaseQuery = Listing::whereIn('status', $this->browseStatuses())->with([
+        $curatedBaseQuery = Listing::whereIn('status', $this->browseStatuses())
+            ->excludeProperties()
+            ->with([
             'user.individualVerification',
             'user.corporateVerification',
             'category',
@@ -601,6 +606,7 @@ class MarketplaceController extends Controller
     public function mobileIndex(Request $request)
     {
         $query = Listing::query()
+            ->excludeProperties()
             ->whereIn('status', $this->browseStatuses())
             ->where('listing_type', '!=', 'live_auction')
             ->with(['category', 'user'])
