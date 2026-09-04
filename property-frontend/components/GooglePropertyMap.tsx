@@ -10,6 +10,33 @@ type Props = {
   title?: string;
 };
 
+interface GoogleMapsMap {
+  [key: string]: unknown;
+}
+
+interface GoogleMapsMarker {
+  addListener: (eventName: string, handler: () => void) => void;
+}
+
+interface GoogleMapsInfoWindow {
+  open: (map: GoogleMapsMap, marker: GoogleMapsMarker) => void;
+}
+
+interface GoogleMapsInstance {
+  maps: {
+    Map: new (element: HTMLElement, options: Record<string, unknown>) => GoogleMapsMap;
+    Marker: new (options: Record<string, unknown>) => GoogleMapsMarker;
+    InfoWindow: new (options: Record<string, unknown>) => GoogleMapsInfoWindow;
+    Animation?: {
+      DROP: unknown;
+    };
+  };
+}
+
+interface WindowWithGoogle extends Window {
+  google?: GoogleMapsInstance;
+}
+
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
 function extractCoordinates(
@@ -52,7 +79,7 @@ export function GooglePropertyMap({
   title = "Property Location",
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<GoogleMapsMap | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
@@ -67,7 +94,7 @@ export function GooglePropertyMap({
     if (typeof window === "undefined") return;
 
     const checkMapsReady = () => {
-      const g = (window as any).google;
+      const g = (window as WindowWithGoogle).google;
       return Boolean(g && g.maps && typeof g.maps.Map === "function");
     };
 
@@ -112,7 +139,7 @@ export function GooglePropertyMap({
     if (!isLoaded || !containerRef.current || mapRef.current || !coords) return;
 
     try {
-      const google = (window as any).google;
+      const google = (window as WindowWithGoogle).google;
       if (!google || !google.maps || typeof google.maps.Map !== "function") {
         setLoadError(true);
         return;
