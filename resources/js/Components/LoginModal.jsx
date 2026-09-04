@@ -46,7 +46,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
               setForgotErrors({});
               setForgotProcessing(true);
               try {
-                     await axios.post("https://admin.xpertbid.com/api/forgot-password", { email: forgotEmail });
+                     await axios.post("/api/forgot-password", { email: forgotEmail });
                      setForgotMessage("sent");
               } catch (error) {
                      setForgotErrors(error.response?.data?.error || { email: t('auth.failed_send_link') });

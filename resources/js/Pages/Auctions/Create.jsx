@@ -35,10 +35,10 @@ export default function Create({ categories, countries = [], profileLocation = n
 
        // --- helpers ---
        const buildAbsoluteMediaUrl = (path) => {
-              if (!path) return "https://admin.xpertbid.com/assets/images/category_images/1750684943_6859550f2948f.png";
+              if (!path) return "/assets/images/category_images/1750684943_6859550f2948f.png";
               if (path.startsWith("http://") || path.startsWith("https://")) return path;
               const clean = path.replace(/^\/+/, "");
-              return `https://admin.xpertbid.com/${clean}`;
+              return `/${clean}`;
        };
 
        const getCategoryMedia = (item) => {
@@ -80,6 +80,9 @@ export default function Create({ categories, countries = [], profileLocation = n
 
               property_type: listing?.property_type || propertyVerification?.property_type || categoryFeatures.property_type || '',
               property_address: listing?.property_address || propertyVerification?.property_address || categoryFeatures.property_address || '',
+              latitude: listing?.latitude || categoryFeatures.latitude || '',
+              longitude: listing?.longitude || categoryFeatures.longitude || '',
+              map_url: listing?.map_url || categoryFeatures.map_url || '',
               title_deed_number: listing?.title_deed_number || propertyVerification?.title_deed_number || categoryFeatures.title_deed_number || '',
               property_documents: [],
 
@@ -595,6 +598,9 @@ export default function Create({ categories, countries = [], profileLocation = n
               if (catId === '222') {
                      category_features.property_type = formData.property_type;
                      category_features.property_address = formData.property_address;
+                     category_features.latitude = formData.latitude;
+                     category_features.longitude = formData.longitude;
+                     category_features.map_url = formData.map_url || (formData.latitude && formData.longitude ? `https://maps.google.com/maps?q=${formData.latitude},${formData.longitude}` : '');
                      category_features.title_deed_number = formData.title_deed_number;
               } else if (catId === '311') {
                      category_features.vehicle_make_model = formData.vehicle_make_model;

@@ -64,7 +64,7 @@ export default function ProductImages({ albumImages, videos = null, status, main
               if (!path) return '';
               if (path.startsWith('http')) return path;
               const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-              return `https://admin.xpertbid.com/${cleanPath}`;
+              return `/${cleanPath}`;
        };
 
        return (

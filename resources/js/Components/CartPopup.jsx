@@ -118,7 +118,7 @@ export default function CartPopup() {
                                                                       <div key={item.id} className="cart-popup-item d-flex gap-3 mb-3 last-child-mb-0">
                                                                              <div className="flex-shrink-0 cart-popup-item-image">
                                                                                     <img
-                                                                                           src={item.image ? (item.image.startsWith('http') ? item.image : `https://admin.xpertbid.com/${item.image}`) : '/assets/images/placeholder.png'}
+                                                                                           src={item.image ? (item.image.startsWith('http') ? item.image : `/${item.image.replace(/^\/+/, '')}`) : '/assets/images/placeholder.png'}
                                                                                            alt={item.title}
                                                                                            className="w-100 h-100 object-fit-cover"
                                                                                            onError={(e) => e.target.src = '/assets/images/WebsiteBanner2.png'}

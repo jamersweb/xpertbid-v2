@@ -791,10 +791,10 @@ class ListingController extends Controller
             'listing_data.end_date' => 'required_if:listing_type,auction|date|after:listing_data.start_date|nullable',
             
             // Business specific listing_data
-            'listing_data.stock' => 'required_if:listing_type,business|integer|min:0|nullable',
-            'listing_data.quantity' => 'required_if:listing_type,business|integer|min:1|nullable',
+            'listing_data.stock' => 'nullable|integer|min:0',
+            'listing_data.quantity' => 'nullable|integer|min:1',
             'listing_data.discount' => 'nullable|numeric|min:0|max:100',
-            'listing_data.shop_details' => 'required_if:listing_type,business|array',
+            'listing_data.shop_details' => 'nullable|array',
             
             // Category features (Category-specific dynamic data)
             'category_features' => 'nullable|array',

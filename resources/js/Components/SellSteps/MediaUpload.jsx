@@ -176,7 +176,7 @@ export default function MediaUpload({ files, setFiles, existingFiles = [], setEx
                                           {/* Existing Files */}
                                           {existingFiles.map((url, idx) => {
                                                  const isVideo = /\.(mp4|webm|mov)$/i.test(url);
-                                                 const fullUrl = url.startsWith('http') ? url : `https://admin.xpertbid.com${url}`;
+                                                 const fullUrl = url.startsWith('http') ? url : (url.startsWith('/') ? url : `/${url}`);
 
                                                  return (
                                                         <div key={`existing-${idx}`} className="upload-preview-item position-relative">

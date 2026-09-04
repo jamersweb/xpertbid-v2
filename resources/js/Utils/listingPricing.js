@@ -8,12 +8,12 @@ export function isSoldOutListing(item) {
 
 export function isDirectBuyListing(item) {
        const normalized = normalizeListingType(item);
-       return ["normal", "normal_list", "business", "business_list"].includes(normalized);
+       return ["normal", "normal_list", "business", "business_list", "bussiness", "bussiness_list"].includes(normalized);
 }
 
 export function isBusinessListing(item) {
        const normalized = normalizeListingType(item);
-       return ["business", "business_list"].includes(normalized);
+       return ["business", "business_list", "bussiness", "bussiness_list"].includes(normalized);
 }
 
 export function getBaseListingPrice(item) {

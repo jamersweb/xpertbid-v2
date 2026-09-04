@@ -657,7 +657,7 @@ export default function Index({ cartItems: inertiaCartItems = [], user }) {
                                             <div key={item.id} className="d-flex mb-3 pb-3 border-bottom">
                                                 <div className="flex-shrink-0" style={{ width: '80px', height: '80px' }}>
                                                     <img
-                                                        src={item.image ? (item.image.startsWith('http') ? item.image : `https://admin.xpertbid.com/${item.image}`) : '/assets/images/placeholder.png'}
+                                                        src={item.image ? (item.image.startsWith('http') ? item.image : `/${item.image.replace(/^\/+/, '')}`) : '/assets/images/placeholder.png'}
                                                         className="w-100 h-100 object-fit-cover rounded-3 border"
                                                         alt={item.title}
                                                         onError={e => e.target.src = '/assets/images/WebsiteBanner2.png'}

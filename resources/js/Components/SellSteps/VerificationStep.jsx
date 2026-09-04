@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import SummaryCard from './SummaryCard';
+import GoogleLocationPicker from '../GoogleLocationPicker';
 
 export default function VerificationStep({ categoryId, formData, setFormData, summaryData, onContinue, onBack, onEditListType, onEditCategory, onEditDetails, onSaveDraft, isSavingDraft, progressPercent = 0 }) {
        const isProperty = String(categoryId) === '222';
@@ -158,7 +159,7 @@ export default function VerificationStep({ categoryId, formData, setFormData, su
                                                  <input
                                                         type="text"
                                                         className="form-control verify_input"
-                                                        placeholder="Please enter property type"
+                                                        placeholder="Please enter property type (e.g. Apartment, House, Villa, Office)"
                                                         name="property_type"
                                                         value={formData.property_type || ''}
                                                         onChange={handleChange}
@@ -166,18 +167,21 @@ export default function VerificationStep({ categoryId, formData, setFormData, su
                                                  {errors.property_type && <p className="text-danger small mt-1">{errors.property_type}</p>}
                                           </div>
 
-                                          <div className="form-group mb-4">
-                                                 <label className="form-label fw-bold">Property Address</label>
-                                                 <input
-                                                        type="text"
-                                                        className="form-control verify_input"
-                                                        placeholder="Please enter property address"
-                                                        name="property_address"
-                                                        value={formData.property_address || ''}
-                                                        onChange={handleChange}
-                                                 />
-                                                 {errors.property_address && <p className="text-danger small mt-1">{errors.property_address}</p>}
-                                          </div>
+                                          <GoogleLocationPicker
+                                                 addressValue={formData.property_address || ''}
+                                                 latitudeValue={formData.latitude || ''}
+                                                 longitudeValue={formData.longitude || ''}
+                                                 onChange={({ property_address, latitude, longitude, map_url }) => {
+                                                        setFormData(prev => ({
+                                                               ...prev,
+                                                               property_address,
+                                                               latitude,
+                                                               longitude,
+                                                               map_url,
+                                                        }));
+                                                 }}
+                                                 error={errors.property_address}
+                                          />
 
                                           <div className="form-group mb-4">
                                                  <label className="form-label fw-bold">Title Deed Number</label>

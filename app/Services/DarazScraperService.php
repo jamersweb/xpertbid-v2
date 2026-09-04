@@ -14,6 +14,11 @@ class DarazScraperService
 {
     public function scrape(string $url): array
     {
+        $nodeResult = $this->scrapeViaNode($url);
+        if ($nodeResult !== null && !empty($nodeResult['title']) && $nodeResult['title'] !== 'No title') {
+            return $nodeResult;
+        }
+
         $response = Http::withHeaders([
             'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
             'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -31,13 +36,39 @@ class DarazScraperService
             throw new RuntimeException('Daraz returned an empty response.');
         }
 
-        if (str_contains($html, '__moduleData__') && str_contains($html, '"skuBase"')) {
-            return $this->parseHtml($html, $url);
+        return $this->parseHtml($html, $url);
+    }
+
+    protected function scrapeViaNode(string $url): ?array
+    {
+        $scriptPath = base_path('tools/daraz_scraper.mjs');
+        if (!file_exists($scriptPath)) {
+            return null;
         }
 
-        $renderedHtml = $this->fetchRenderedHtml($url);
+        $process = new Process([
+            'node',
+            $scriptPath,
+            $url,
+        ]);
+        $process->setTimeout(20);
 
-        return $this->parseHtml($renderedHtml ?: $html, $url);
+        try {
+            $process->mustRun();
+            $output = trim($process->getOutput());
+            if ($output !== '') {
+                $data = json_decode($output, true);
+                if (is_array($data) && !empty($data['title']) && empty($data['error'])) {
+                    $data['source_url'] = $url;
+                    $data['source_domain'] = parse_url($url, PHP_URL_HOST);
+                    return $data;
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Daraz scrapeViaNode failed: ' . $e->getMessage());
+        }
+
+        return null;
     }
 
     protected function fetchRenderedHtml(string $url): ?string
@@ -47,19 +78,28 @@ class DarazScraperService
             return null;
         }
 
+        $tempDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'chrome_pdp_' . uniqid();
+        @mkdir($tempDir, 0777, true);
+
         $process = new Process([
             $browser,
             '--headless=new',
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
             '--disable-gpu',
+            '--disable-software-rasterizer',
+            '--disable-extensions',
+            '--user-data-dir=' . $tempDir,
             '--dump-dom',
-            '--virtual-time-budget=15000',
+            '--virtual-time-budget=4000',
             '--no-first-run',
             '--no-default-browser-check',
             '--lang=en-US',
             $url,
         ]);
 
-        $process->setTimeout(45);
+        $process->setTimeout(8);
 
         try {
             $process->mustRun();
@@ -125,13 +165,14 @@ class DarazScraperService
         // Prefer module gallery (full originals). DOM often mixes one 720px main + many 80px thumbs.
         $images = $moduleImages !== [] ? $moduleImages : $domImages;
         $normalizedPrice = $this->normalizePrice($price) ?? $price;
+        $originalPrice = $this->extractOriginalPrice($xpath, $html);
 
         return [
             'title' => $this->normalizeText($title) ?: 'No title',
             'description' => $this->normalizeMultilineText($description),
             'images' => $images,
             'price' => $normalizedPrice,
-            'variations' => $this->extractVariations($moduleFields, $normalizedPrice),
+            'variations' => $this->extractVariations($moduleFields, $normalizedPrice, $originalPrice),
             'source_url' => $url,
             'source_domain' => parse_url($url, PHP_URL_HOST),
         ];
@@ -210,7 +251,7 @@ class DarazScraperService
         return $images;
     }
 
-    protected function extractVariations(array $moduleFields, mixed $fallbackPrice): array
+    protected function extractVariations(array $moduleFields, mixed $fallbackPrice, mixed $fallbackOriginalPrice = null): array
     {
         $skuBase = $moduleFields['productOption']['skuBase'] ?? $moduleFields['skuBase'] ?? [];
         $skus = is_array($skuBase['skus'] ?? null) ? $skuBase['skus'] : [];
@@ -238,8 +279,9 @@ class DarazScraperService
         $variations = [];
         $seenNames = [];
         $fallback = $this->formatNumericPrice((string) ($this->normalizePriceValue((string) $fallbackPrice, true) ?? ''));
+        $fallbackOriginal = $this->formatNumericPrice((string) ($this->normalizePriceValue((string) $fallbackOriginalPrice, true) ?? ''));
 
-        foreach ($skus as $sku) {
+        foreach ($skus as $index => $sku) {
             if (!is_array($sku)) {
                 continue;
             }
@@ -250,8 +292,8 @@ class DarazScraperService
             }
 
             $skuId = (string) ($sku['skuId'] ?? $sku['cartSkuId'] ?? '');
-            $skuInfo = $skuInfos[$skuId] ?? [];
-            [$price, $discountType, $discountValue] = $this->extractVariationPricing($skuInfo, $fallback);
+            $skuInfo = $skuInfos[$skuId] ?? $skuInfos[(string) $index] ?? [];
+            [$price, $discountType, $discountValue] = $this->extractVariationPricing($skuInfo, $sku, $moduleFields, $fallback, $fallbackOriginal);
 
             $seenNames[mb_strtolower($name)] = true;
             $variations[] = [
@@ -374,27 +416,40 @@ class DarazScraperService
         return implode(' / ', $cleaned);
     }
 
-    protected function extractVariationPricing(array $skuInfo, ?string $fallbackPrice): array
+    protected function extractVariationPricing(array $skuInfo, array $sku, array $moduleFields, ?string $fallbackPrice, ?string $fallbackOriginalPrice = null): array
     {
-        $priceNode = $skuInfo['price'] ?? [];
         $sale = null;
-        $original = null;
 
-        if (is_array($priceNode)) {
-            $sale = $this->normalizePriceValue((string) ($priceNode['salePrice']['text'] ?? $priceNode['salePrice']['value'] ?? $priceNode['salePrice'] ?? ''), true);
-            $original = $this->normalizePriceValue((string) ($priceNode['originalPrice']['text'] ?? $priceNode['originalPrice']['value'] ?? $priceNode['originalPrice'] ?? ''), true);
+        $candidates = [
+            $skuInfo['price'] ?? null,
+            $skuInfo['salePrice'] ?? null,
+            $sku['price'] ?? null,
+            $sku['salePrice'] ?? null,
+            $skuInfo['priceText'] ?? null,
+            $sku['priceText'] ?? null,
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (is_array($candidate)) {
+                $saleCandidate = $this->normalizePriceValue((string) ($candidate['salePrice']['text'] ?? $candidate['salePrice']['value'] ?? $candidate['salePrice'] ?? $candidate['text'] ?? $candidate['value'] ?? ''), true);
+                if ($saleCandidate !== null && $sale === null) {
+                    $sale = $saleCandidate;
+                }
+            } elseif (is_string($candidate) || is_numeric($candidate)) {
+                $saleCandidate = $this->normalizePriceValue((string) $candidate, true);
+                if ($saleCandidate !== null && $sale === null) {
+                    $sale = $saleCandidate;
+                }
+            }
         }
 
-        $price = $sale ?? $fallbackPrice;
-        $discountType = '';
-        $discountValue = '';
-
-        if ($original !== null && $price !== null && (float) $original > (float) $price) {
-            $discountType = 'flat';
-            $discountValue = $this->formatNumericPrice((string) ((float) $original - (float) $price)) ?? '';
+        if ($sale === null) {
+            $sale = $this->normalizePriceValue((string) ($skuInfo['salePrice'] ?? $skuInfo['priceText'] ?? $sku['salePrice'] ?? $sku['priceText'] ?? ''), true);
         }
 
-        return [$price ?? '', $discountType, $discountValue];
+        $finalPrice = $sale ?? $fallbackPrice ?? '';
+
+        return [$finalPrice, '', ''];
     }
 
     protected function shouldDropGenericVariations(array $variations): bool
@@ -507,6 +562,37 @@ class DarazScraperService
                 if ($price !== null) {
                     return $price;
                 }
+            }
+        }
+
+        return null;
+    }
+
+    protected function extractOriginalPrice(DOMXPath $xpath, string $html): ?string
+    {
+        $queries = [
+            '//span[contains(concat(" ", normalize-space(@class), " "), " pdp-price_type_deleted ")]',
+            '//div[@class="pdp-product-price"]//span[contains(concat(" ", normalize-space(@class), " "), " pdp-price_type_deleted ")]',
+        ];
+
+        foreach ($queries as $query) {
+            $nodes = $xpath->query($query);
+            if ($nodes && $nodes->length > 0) {
+                $text = $this->normalizeText($nodes->item(0)?->textContent ?? '');
+                if ($text !== '') {
+                    $price = $this->normalizePrice($text);
+                    if ($price !== null) {
+                        return $price;
+                    }
+                }
+            }
+        }
+
+        if (preg_match('~<span[^>]*class="[^"]*\bpdp-price_type_deleted\b[^"]*"[^>]*>\s*([^<]+?)\s*</span>~is', $html, $matches)) {
+            $raw = trim((string) ($matches[1] ?? ''));
+            $price = $this->normalizePrice($raw);
+            if ($price !== null) {
+                return $price;
             }
         }
 

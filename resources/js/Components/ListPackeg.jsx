@@ -30,7 +30,7 @@ const ListPackeg = ({ isOpen, onClose, onPurchaseSuccess, listing }) => {
               const fetchWalletBalance = async () => {
                      if (auth?.user) {
                             try {
-                                   const response = await axios.get("https://admin.xpertbid.com/api/wallet", {
+                                   const response = await axios.get("/api/wallet", {
                                           headers: {
                                                  Authorization: `Bearer ${auth.user.token}`,
                                                  "Cache-Control": "no-store",

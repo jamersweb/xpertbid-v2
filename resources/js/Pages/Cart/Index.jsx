@@ -142,7 +142,7 @@ export default function Index({ cart: propCart }) {
                                                                                                   }}
                                                                                            >
                                                                                                   <img
-                                                                                                         src={item.image ? (item.image.startsWith('http') ? item.image : `https://admin.xpertbid.com/${item.image}`) : '/assets/images/placeholder.png'}
+                                                                                                         src={item.image ? (item.image.startsWith('http') ? item.image : `/${item.image.replace(/^\/+/, '')}`) : '/assets/images/placeholder.png'}
                                                                                                          alt={item.title}
                                                                                                          style={{ objectFit: "cover", width: "100%", height: "100%", borderRadius: "6px" }}
                                                                                                          onError={(e) => e.target.src = '/assets/images/WebsiteBanner2.png'}

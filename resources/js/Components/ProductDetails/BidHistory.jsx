@@ -7,7 +7,7 @@ export default function BidHistory({ bids }) {
               if (!path) return defaultProfileImage;
               if (path.startsWith('http')) return path;
               const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-              return `https://admin.xpertbid.com/${cleanPath}`;
+              return `/${cleanPath}`;
        };
 
        return (

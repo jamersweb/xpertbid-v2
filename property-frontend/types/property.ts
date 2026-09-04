@@ -44,6 +44,8 @@ export type PropertyCard = {
 export type PropertyDetail = PropertyCard & {
   description: string;
   map_url: string | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
   canonical_path: string;
   views: number;
   start_date?: string | null;

@@ -1101,7 +1101,6 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
                                                                              {auction.description && (
                                                                                     <div className="mb-3" dangerouslySetInnerHTML={{ __html: auction.description }} />
                                                                              )}
-                                                                             <PropertyLocationMap categoryFeatures={auction.category_features} />
                                                                       </AccordionItem>
                                                                )}
 

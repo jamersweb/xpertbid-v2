@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AccordionItem } from "@/components/AccordionItem";
 import { Gallery } from "@/components/Gallery";
+import { GooglePropertyMap } from "@/components/GooglePropertyMap";
 import { ProductBrief } from "@/components/ProductBrief";
 import { ProductDetailHeader } from "@/components/ProductDetailHeader";
 import { RelatedProperties } from "@/components/RelatedProperties";
@@ -246,11 +247,14 @@ export default async function PropertyDetailPage({ params }: Props) {
                     </AccordionItem>
                   ) : null}
 
-                  {property.location_url ? (
-                    <AccordionItem title="Location">
-                      <div
-                        dangerouslySetInnerHTML={{ __html: property.location_url }}
-                        style={{ width: "100%", display: "flex", justifyContent: "center", marginTop: 10 }}
+                  {(property.map_url || property.latitude || property.product_location || property.location_url || property.attributes?.map_url) ? (
+                    <AccordionItem title="Property Location Map" defaultOpen>
+                      <GooglePropertyMap
+                        mapUrl={property.map_url || property.location_url || (property.attributes?.map_url as string)}
+                        latitude={property.latitude || (property.attributes?.latitude as string)}
+                        longitude={property.longitude || (property.attributes?.longitude as string)}
+                        locationAddress={property.product_location || (property.attributes?.address as string) || (property.attributes?.property_address as string)}
+                        title={property.title}
                       />
                     </AccordionItem>
                   ) : null}

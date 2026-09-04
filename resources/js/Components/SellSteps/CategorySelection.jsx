@@ -40,10 +40,10 @@ export default function CategorySelection({ categories: initialCategories, onSel
 
        // Helpers similar to sell.js
        const buildAbsoluteMediaUrl = (path) => {
-              if (!path) return "https://admin.xpertbid.com/assets/images/category_images/1750684943_6859550f2948f.png";
+              if (!path) return "/assets/images/category_images/1750684943_6859550f2948f.png";
               if (path.startsWith("http://") || path.startsWith("https://")) return path;
               const clean = path.replace(/^\/+/, "");
-              return `https://admin.xpertbid.com/${clean}`;
+              return `/${clean}`;
        };
 
        const getCategoryMedia = (item) => {

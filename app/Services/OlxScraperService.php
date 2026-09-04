@@ -67,8 +67,26 @@ class OlxScraperService
             '//*[contains(@class, "location")]',
         ]);
 
+        $nextData = $this->extractNextData($html);
+        $adData = $this->findAdDataFromNextData($nextData);
+
+        if ($adData !== []) {
+            $title = $title ?: ($adData['title'] ?? $adData['subject'] ?? null);
+            $description = $description ?: ($adData['description'] ?? null);
+            if ($price === null || $price === '') {
+                $rawPrice = $adData['price']['value']['raw'] ?? $adData['price']['value']['display'] ?? $adData['price']['value'] ?? null;
+                $price = is_scalar($rawPrice) ? (string) $rawPrice : $price;
+            }
+            if ($location === null || $location === '') {
+                $location = $adData['locationsResolved']['ADMIN_LEVEL_3']['name']
+                    ?? $adData['locationsResolved']['ADMIN_LEVEL_1']['name']
+                    ?? null;
+            }
+        }
+
         $images = $this->extractImages($xpath, $html, $url);
         $normalizedPrice = $this->normalizePrice($price);
+        $variations = $this->extractVariations($xpath, $adData, $normalizedPrice);
 
         return [
             'title' => $this->normalizeTitle($title),
@@ -76,7 +94,7 @@ class OlxScraperService
             'images' => $images,
             'location_text' => $this->normalizeText($location),
             'price' => $normalizedPrice,
-            'variations' => $this->extractVariations($xpath, $normalizedPrice),
+            'variations' => $variations,
             'minimum_bid' => 0,
             'reserve_price' => 0,
             'source_url' => $url,
@@ -84,9 +102,86 @@ class OlxScraperService
         ];
     }
 
-    protected function extractVariations(DOMXPath $xpath, ?string $fallbackPrice): array
+    protected function extractNextData(string $html): array
     {
+        if (preg_match('/<script\s+id="__NEXT_DATA__"\s+type="application\/json"\s*>(.*?)<\/script>/s', $html, $matches)) {
+            $decoded = json_decode($matches[1], true);
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        if (preg_match('/window\.__NEXT_DATA__\s*=\s*(\{.*?\});/s', $html, $matches)) {
+            $decoded = json_decode($matches[1], true);
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        return [];
+    }
+
+    protected function findAdDataFromNextData(array $nextData): array
+    {
+        $props = $nextData['props']['pageProps'] ?? [];
+        $ad = $props['initialState']['ad']['states']['view'] ?? $props['adData'] ?? $props['data'] ?? [];
+
+        return is_array($ad) ? $ad : [];
+    }
+
+    protected function extractVariations(DOMXPath $xpath, array $adData, ?string $fallbackPrice): array
+    {
+        $variations = [];
+        $seenNames = [];
+
+        // First, check if adData contains explicit variants
+        $variants = $adData['variants'] ?? $adData['options'] ?? [];
+        if (is_array($variants) && $variants !== []) {
+            foreach ($variants as $variant) {
+                if (!is_array($variant)) {
+                    continue;
+                }
+
+                $name = trim((string) ($variant['name'] ?? $variant['title'] ?? $variant['label'] ?? ''));
+                if ($name === '' || isset($seenNames[mb_strtolower($name)])) {
+                    continue;
+                }
+
+                $varPriceRaw = $variant['price']['value']['raw']
+                    ?? $variant['price']['value']['display']
+                    ?? $variant['price']
+                    ?? $variant['price_value']
+                    ?? null;
+
+                $varPrice = is_scalar($varPriceRaw) ? $this->normalizePrice((string) $varPriceRaw) : null;
+                $finalPrice = $varPrice ?? $fallbackPrice ?? '';
+
+                $origPriceRaw = $variant['original_price'] ?? $variant['market_price'] ?? null;
+                $origPrice = is_scalar($origPriceRaw) ? $this->normalizePrice((string) $origPriceRaw) : null;
+
+                $seenNames[mb_strtolower($name)] = true;
+                $variations[] = [
+                    'name' => $name,
+                    'price' => $finalPrice,
+                    'discount_type' => '',
+                    'discount_value' => '',
+                ];
+            }
+
+            if ($variations !== []) {
+                return $variations;
+            }
+        }
+
+        // Fallback to parameter-based variation extraction
         $parameters = $this->extractParameters($xpath);
+        if ($parameters === [] && isset($adData['parameters']) && is_array($adData['parameters'])) {
+            foreach ($adData['parameters'] as $param) {
+                if (is_array($param) && isset($param['key'], $param['valueName'])) {
+                    $key = strtolower(preg_replace('/[^a-z]+/i', '', (string) $param['key']) ?? '');
+                    if ($key !== '') {
+                        $parameters[$key] = (string) $param['valueName'];
+                    }
+                }
+            }
+        }
+
         if ($parameters === []) {
             return [];
         }
