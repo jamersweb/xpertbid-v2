@@ -2,9 +2,22 @@ import React, { useState } from 'react';
 import SummaryCard from './SummaryCard';
 import GoogleLocationPicker from '../GoogleLocationPicker';
 
-export default function VerificationStep({ categoryId, formData, setFormData, summaryData, onContinue, onBack, onEditListType, onEditCategory, onEditDetails, onSaveDraft, isSavingDraft, progressPercent = 0 }) {
-       const isProperty = String(categoryId) === '222';
-       const isVehicle = String(categoryId) === '311';
+export default function VerificationStep({ categoryId, categoryObj, formData, setFormData, summaryData, onContinue, onBack, onEditListType, onEditCategory, onEditDetails, onSaveDraft, isSavingDraft, progressPercent = 0 }) {
+       const catIdStr = String(categoryId || '');
+       const nameStr = String(categoryObj?.name || '').toLowerCase();
+       const slugStr = String(categoryObj?.slug || '').toLowerCase();
+
+       const isProperty = catIdStr === '222' ||
+                          slugStr.includes('property') ||
+                          slugStr.includes('real-estate') ||
+                          nameStr.includes('property') ||
+                          nameStr.includes('real estate');
+
+       const isVehicle = catIdStr === '311' ||
+                         slugStr.includes('vehicle') ||
+                         slugStr.includes('car') ||
+                         nameStr.includes('vehicle') ||
+                         nameStr.includes('car');
        const existingPropertyDocs = formData.existing_property_documents || [];
        const existingVehicleDocs = formData.existing_vehicle_documents || [];
 

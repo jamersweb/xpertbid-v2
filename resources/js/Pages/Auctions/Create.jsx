@@ -529,9 +529,31 @@ export default function Create({ categories, countries = [], profileLocation = n
               setStep('details');
        };
 
+       const isPropertyCategory = (catId, catObj) => {
+              const idStr = String(catId || '');
+              const nameStr = String(catObj?.name || '').toLowerCase();
+              const slugStr = String(catObj?.slug || '').toLowerCase();
+              return idStr === '222' ||
+                     slugStr.includes('property') ||
+                     slugStr.includes('real-estate') ||
+                     nameStr.includes('property') ||
+                     nameStr.includes('real estate');
+       };
+
+       const isVehicleCategory = (catId, catObj) => {
+              const idStr = String(catId || '');
+              const nameStr = String(catObj?.name || '').toLowerCase();
+              const slugStr = String(catObj?.slug || '').toLowerCase();
+              return idStr === '311' ||
+                     slugStr.includes('vehicle') ||
+                     slugStr.includes('car') ||
+                     nameStr.includes('vehicle') ||
+                     nameStr.includes('car');
+       };
+
        const handleDetailsContinue = () => {
               const catId = String(formData.category_id);
-              if (catId === '222' || catId === '311') {
+              if (isPropertyCategory(catId, selectedCategory) || isVehicleCategory(catId, selectedCategory)) {
                      setStep('verification');
               } else {
                      setStep('media');
@@ -595,14 +617,14 @@ export default function Create({ categories, countries = [], profileLocation = n
               const catId = String(formData.category_id);
 
               // Only include verification fields if the category is Property or Vehicle
-              if (catId === '222') {
+              if (isPropertyCategory(catId, selectedCategory)) {
                      category_features.property_type = formData.property_type;
                      category_features.property_address = formData.property_address;
                      category_features.latitude = formData.latitude;
                      category_features.longitude = formData.longitude;
                      category_features.map_url = formData.map_url || (formData.latitude && formData.longitude ? `https://maps.google.com/maps?q=${formData.latitude},${formData.longitude}` : '');
                      category_features.title_deed_number = formData.title_deed_number;
-              } else if (catId === '311') {
+              } else if (isVehicleCategory(catId, selectedCategory)) {
                      category_features.vehicle_make_model = formData.vehicle_make_model;
                      category_features.year_of_manufacture = formData.year_of_manufacture;
                      category_features.chassis_vin = formData.chassis_vin;
