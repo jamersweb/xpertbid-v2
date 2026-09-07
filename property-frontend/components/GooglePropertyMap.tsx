@@ -208,23 +208,68 @@ export function GooglePropertyMap({
     : mapUrl || "#";
 
   if (loadError || !API_KEY || !coords) {
+    const embedSrc = coords
+      ? `https://maps.google.com/maps?q=${coords.lat},${coords.lng}&t=&z=15&ie=UTF8&iwloc=&output=embed`
+      : null;
+
     return (
-      <div className="property-google-map-fallback mt-3 p-3 border rounded bg-light">
-        {locationAddress ? (
-          <p className="mb-2 text-dark small font-weight-bold">
-            <i className="fa-solid fa-location-dot me-1 text-danger"></i> {locationAddress}
-          </p>
-        ) : null}
-        {mapUrl ? (
-          <a
-            href={mapUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
+      <div className="property-google-map-fallback mt-3">
+        {embedSrc ? (
+          <div
+            style={{
+              width: "100%",
+              height: "360px",
+              borderRadius: "8px",
+              overflow: "hidden",
+              border: "1px solid #e5e7eb",
+              background: "#f8fafc",
+            }}
           >
-            <i className="fa-solid fa-map-location-dot me-1"></i> View on Google Maps
-          </a>
-        ) : null}
+            <iframe
+              title={title}
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+              allowFullScreen
+              src={embedSrc}
+            />
+          </div>
+        ) : (
+          <div className="p-3 border rounded bg-light">
+            {locationAddress ? (
+              <p className="mb-2 text-dark small font-weight-bold">
+                <i className="fa-solid fa-location-dot me-1 text-danger"></i> {locationAddress}
+              </p>
+            ) : null}
+            {mapUrl ? (
+              <a
+                href={mapUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
+              >
+                <i className="fa-solid fa-map-location-dot me-1"></i> View on Google Maps
+              </a>
+            ) : null}
+          </div>
+        )}
+        <div className="d-flex justify-content-between align-items-center mt-2 px-1">
+          <span className="text-muted small">
+            <i className="fa-solid fa-location-dot text-danger me-1"></i>
+            {locationAddress || "Pinpointed property location"}
+          </span>
+          {directGoogleMapsUrl ? (
+            <a
+              href={directGoogleMapsUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary small fw-semibold text-decoration-none"
+            >
+              Open in Google Maps <i className="fa-solid fa-arrow-up-right-from-square ms-1" style={{ fontSize: "0.75rem" }}></i>
+            </a>
+          ) : null}
+        </div>
       </div>
     );
   }
