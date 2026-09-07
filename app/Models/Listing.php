@@ -355,11 +355,26 @@ class Listing extends Model
      */
     public static function propertyCategoryIds(?int $rootId = null): array
     {
-        $rootId = $rootId ?? (int) config('property.root_category_id', 222);
-        $ids = [$rootId];
+        $configuredId = $rootId ?? (int) config('property.root_category_id', 222);
+
+        $rootIds = AuctionCategory::query()
+            ->where('id', $configuredId)
+            ->orWhere('slug', 'like', '%property%')
+            ->orWhere('slug', 'like', '%real-estate%')
+            ->orWhere('name', 'like', '%property%')
+            ->orWhere('name', 'like', '%real estate%')
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        if (empty($rootIds)) {
+            $rootIds = [$configuredId];
+        }
+
+        $ids = $rootIds;
 
         $subIds = AuctionCategory::query()
-            ->where('parent_id', $rootId)
+            ->whereIn('parent_id', $rootIds)
             ->pluck('id')
             ->map(fn ($id) => (int) $id)
             ->all();

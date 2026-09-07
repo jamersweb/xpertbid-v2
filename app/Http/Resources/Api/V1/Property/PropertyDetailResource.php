@@ -20,13 +20,21 @@ class PropertyDetailResource extends PropertyCardResource
 
         $html = static fn ($value) => is_string($value) ? $value : '';
 
+        $lat = $attrs['latitude'] ?? $features['latitude'] ?? $data['latitude'] ?? null;
+        $lng = $attrs['longitude'] ?? $features['longitude'] ?? $data['longitude'] ?? null;
+        $mapUrl = $attrs['map_url'] ?? $features['map_url'] ?? $data['map_url'] ?? null;
+
+        if (!$mapUrl && $lat && $lng) {
+            $mapUrl = "https://maps.google.com/maps?q={$lat},{$lng}";
+        }
+
         return array_merge($card, [
             'description' => $this->sanitizeDescription($this->description),
             'album_urls' => $album,
             'attributes' => $attrs,
-            'map_url' => $attrs['map_url'] ?? $features['map_url'] ?? $data['map_url'] ?? null,
-            'latitude' => $attrs['latitude'] ?? $features['latitude'] ?? $data['latitude'] ?? null,
-            'longitude' => $attrs['longitude'] ?? $features['longitude'] ?? $data['longitude'] ?? null,
+            'map_url' => $mapUrl,
+            'latitude' => $lat,
+            'longitude' => $lng,
             'canonical_path' => '/properties/' . $this->slug,
             'views' => (int) ($this->views ?? 0),
             'start_date' => $this->start_date,

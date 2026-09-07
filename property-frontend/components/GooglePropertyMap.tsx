@@ -54,18 +54,33 @@ function extractCoordinates(
 
   if (!url || typeof url !== "string") return null;
 
-  const matchAt = url.match(/@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/i);
-  if (matchAt) {
-    const lat = Number.parseFloat(matchAt[1]);
-    const lng = Number.parseFloat(matchAt[2]);
-    if (!Number.isNaN(lat) && !Number.isNaN(lng)) return { lat, lng };
-  }
+  try {
+    const decodedUrl = decodeURIComponent(url);
 
-  const matchQuery = url.match(/[?&]q=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/i);
-  if (matchQuery) {
-    const lat = Number.parseFloat(matchQuery[1]);
-    const lng = Number.parseFloat(matchQuery[2]);
-    if (!Number.isNaN(lat) && !Number.isNaN(lng)) return { lat, lng };
+    const matchAt = decodedUrl.match(/@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/i);
+    if (matchAt) {
+      const lat = Number.parseFloat(matchAt[1]);
+      const lng = Number.parseFloat(matchAt[2]);
+      if (!Number.isNaN(lat) && !Number.isNaN(lng)) return { lat, lng };
+    }
+
+    const matchQuery = decodedUrl.match(/[?&](?:q|query|ll)=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/i);
+    if (matchQuery) {
+      const lat = Number.parseFloat(matchQuery[1]);
+      const lng = Number.parseFloat(matchQuery[2]);
+      if (!Number.isNaN(lat) && !Number.isNaN(lng)) return { lat, lng };
+    }
+
+    const matchRaw = decodedUrl.match(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);
+    if (matchRaw) {
+      const lat = Number.parseFloat(matchRaw[1]);
+      const lng = Number.parseFloat(matchRaw[2]);
+      if (!Number.isNaN(lat) && !Number.isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return { lat, lng };
+      }
+    }
+  } catch {
+    // Ignore decode URI errors
   }
 
   return null;
