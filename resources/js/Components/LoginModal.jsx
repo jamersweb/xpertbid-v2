@@ -35,11 +35,125 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
               otp_type: 'sms'
        });
 
-       // Forgot Password State
+       // Forgot Password State (Email)
        const [forgotEmail, setForgotEmail] = useState("");
        const [forgotMessage, setForgotMessage] = useState("");
        const [forgotErrors, setForgotErrors] = useState({});
        const [forgotProcessing, setForgotProcessing] = useState(false);
+
+       // Forgot Password State (Phone / WhatsApp)
+       const [forgotPhoneData, setForgotPhoneData] = useState({
+              phone: "",
+              countryCode: "+92",
+              otp: "",
+              password: "",
+              password_confirmation: "",
+       });
+       const [forgotPhoneErrors, setForgotPhoneErrors] = useState({});
+       const [forgotPhoneProcessing, setForgotPhoneProcessing] = useState(false);
+       const [forgotPhoneResendTimer, setForgotPhoneResendTimer] = useState(60);
+       const [isForgotPhoneResendDisabled, setIsForgotPhoneResendDisabled] = useState(true);
+       const [showForgotPhonePassword, setShowForgotPhonePassword] = useState(false);
+       const [showForgotPhoneConfirmPassword, setShowForgotPhoneConfirmPassword] = useState(false);
+
+       const startForgotPhoneTimer = () => {
+              setIsForgotPhoneResendDisabled(true);
+              setForgotPhoneResendTimer(60);
+              const timer = setInterval(() => {
+                     setForgotPhoneResendTimer((prev) => {
+                            if (prev <= 1) {
+                                   clearInterval(timer);
+                                   setIsForgotPhoneResendDisabled(false);
+                                   return 0;
+                            }
+                            return prev - 1;
+                     });
+              }, 1000);
+       };
+
+       const handleSendForgotPhoneOtp = async () => {
+              if (!validatePhoneNumber(forgotPhoneData.phone)) {
+                     setForgotPhoneErrors({ phone: t('auth.invalid_phone') || "Please enter a valid phone number." });
+                     return;
+              }
+              setForgotPhoneErrors({});
+              setForgotPhoneProcessing(true);
+              try {
+                     const formattedPhone = `${forgotPhoneData.countryCode}${forgotPhoneData.phone.replace(/^0+/, "")}`;
+                     await axios.post('/api/auth/send-otp', {
+                            phone: formattedPhone,
+                            type: 'forgot_password',
+                            otp_type: 'whatsapp'
+                     });
+                     setCurrentStep("forgotPasswordPhoneOtp");
+                     startForgotPhoneTimer();
+              } catch (error) {
+                     const msg = error.response?.data?.message || (error.response?.data?.errors?.phone ? error.response.data.errors.phone[0] : (t('auth.account_not_found_phone') || "Failed to send OTP."));
+                     setForgotPhoneErrors({ phone: msg });
+              } finally {
+                     setForgotPhoneProcessing(false);
+              }
+       };
+
+       const handleVerifyForgotPhoneOtp = async (e) => {
+              if (e) e.preventDefault();
+              if (!forgotPhoneData.otp || forgotPhoneData.otp.length < 6) {
+                     setForgotPhoneErrors({ otp: t('auth.invalid_otp') || "Please enter complete 6-digit OTP." });
+                     return;
+              }
+              setForgotPhoneErrors({});
+              setForgotPhoneProcessing(true);
+              try {
+                     const formattedPhone = `${forgotPhoneData.countryCode}${forgotPhoneData.phone.replace(/^0+/, "")}`;
+                     await axios.post('/api/auth/validate-reset-otp', {
+                            phone: formattedPhone,
+                            otp: forgotPhoneData.otp,
+                     });
+                     setCurrentStep("forgotPasswordPhoneNewPassword");
+              } catch (error) {
+                     const msg = error.response?.data?.message || (t('auth.invalid_otp') || "Invalid or expired OTP.");
+                     setForgotPhoneErrors({ otp: msg });
+              } finally {
+                     setForgotPhoneProcessing(false);
+              }
+       };
+
+       const handleResetPhonePassword = async (e) => {
+              if (e) e.preventDefault();
+              if (!forgotPhoneData.otp || forgotPhoneData.otp.length < 6) {
+                     setForgotPhoneErrors({ otp: t('auth.invalid_otp') || "Please enter complete 6-digit OTP." });
+                     return;
+              }
+              if (!forgotPhoneData.password || forgotPhoneData.password.length < 6) {
+                     setForgotPhoneErrors({ password: "Password must be at least 6 characters." });
+                     return;
+              }
+              if (forgotPhoneData.password !== forgotPhoneData.password_confirmation) {
+                     setForgotPhoneErrors({ password_confirmation: t('auth.passwords_do_not_match') || "Passwords do not match." });
+                     return;
+              }
+              setForgotPhoneErrors({});
+              setForgotPhoneProcessing(true);
+              try {
+                     const formattedPhone = `${forgotPhoneData.countryCode}${forgotPhoneData.phone.replace(/^0+/, "")}`;
+                     await axios.post('/api/auth/reset-password-phone', {
+                            phone: formattedPhone,
+                            otp: forgotPhoneData.otp,
+                            password: forgotPhoneData.password,
+                            password_confirmation: forgotPhoneData.password_confirmation
+                     });
+                     setCurrentStep("forgotPasswordPhoneSuccess");
+              } catch (error) {
+                     const data = error.response?.data;
+                     if (data?.errors) {
+                            setForgotPhoneErrors(data.errors);
+                     } else {
+                            setForgotPhoneErrors({ general: data?.message || (t('auth.invalid_otp') || "Failed to reset password.") });
+                     }
+              } finally {
+                     setForgotPhoneProcessing(false);
+              }
+       };
 
        const handleForgotPassword = async (e) => {
               e.preventDefault();
@@ -256,6 +370,27 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                                         style={{ right: '10px', top: '34px' }}
                                                  >
                                                         <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                                                 </button>
+                                          </div>
+
+                                          <div className="d-flex justify-content-end mb-3">
+                                                 <button
+                                                        type="button"
+                                                        className="btn btn-link small text-dark fw-bold text-decoration-none p-0"
+                                                        onClick={() => {
+                                                               setForgotPhoneData(prev => ({
+                                                                      ...prev,
+                                                                      phone: phoneData.phone,
+                                                                      countryCode: phoneData.countryCode,
+                                                                      otp: "",
+                                                                      password: "",
+                                                                      password_confirmation: ""
+                                                               }));
+                                                               setForgotPhoneErrors({});
+                                                               setCurrentStep("forgotPasswordPhone");
+                                                        }}
+                                                 >
+                                                        {t('auth.forgot_password')}
                                                  </button>
                                           </div>
 
@@ -479,6 +614,252 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                                                         </button>
                                                  </>
                                           )}
+                                   </div>
+                            )}
+
+                            {currentStep === "forgotPasswordPhone" && (
+                                   <div id="forgotPasswordPhoneStep" className="login-form-step" style={{ backgroundColor: "#ffffff" }}>
+                                          <div className="step-heading-and-back">
+                                                 <button
+                                                        id="backForgotPasswordPhone"
+                                                        onClick={() => {
+                                                               setForgotPhoneErrors({});
+                                                               setCurrentStep("phoneLogin");
+                                                        }}
+                                                        style={{
+                                                               position: 'absolute', left: 0, top: 0, background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#666'
+                                                        }}
+                                                 >
+                                                        <i className="fa-solid fa-chevron-left"></i>
+                                                 </button>
+                                                 <h3 className="mb-0 fw-bold">{t('auth.login_or_signup')}</h3>
+                                          </div>
+
+                                          <div className="text-center">
+                                                 <img src="/assets/images/forgetpassword.svg" className="mx-auto mt-4 mb-4" alt="Forgot password illustration" />
+                                                 <h2 className="fw-bold mb-3" style={{ fontSize: '24px' }}>{t('auth.forgot_your_password')}</h2>
+                                                 <p className="text-muted small mb-4">
+                                                        {t('auth.forgot_password_phone_hint')}
+                                                 </p>
+                                          </div>
+
+                                          <div className="mb-3">
+                                                 <select
+                                                        className="form-select border-0 bg-light rounded-3"
+                                                        value={forgotPhoneData.countryCode}
+                                                        onChange={(e) => setForgotPhoneData({ ...forgotPhoneData, countryCode: e.target.value })}
+                                                        style={{ width: '100%', marginBottom: '20px', height: '68px', borderRadius: '12px', border: '1px solid #FAFAFA', backgroundColor: '#FAFAFA', fontSize: '18px', fontWeight: '600', color: '#23262F', boxShadow: '15px 19px 50px 0 #0000001c' }}
+                                                 >
+                                                        <option value="+92">+92 PK</option>
+                                                        <option value="+971">+971 UAE</option>
+                                                 </select>
+                                                 <input
+                                                        type="tel"
+                                                        className="form-control"
+                                                        placeholder={t('auth.enter_phone_number')}
+                                                        value={forgotPhoneData.phone}
+                                                        onChange={(e) => setForgotPhoneData({ ...forgotPhoneData, phone: e.target.value.replace(/\D/g, "") })}
+                                                        style={{ width: '100%', marginBottom: '20px', height: '68px', borderRadius: '12px', border: '1px solid #FAFAFA', backgroundColor: '#FAFAFA', fontSize: '18px', fontWeight: '600', color: '#23262F', boxShadow: '15px 19px 50px 0 #0000001c' }}
+                                                 />
+                                                 {forgotPhoneErrors.phone && <div className="alert alert-danger py-2 small mb-3">{forgotPhoneErrors.phone}</div>}
+                                          </div>
+
+                                          <button className="form-button-1" onClick={handleSendForgotPhoneOtp} disabled={forgotPhoneProcessing}>
+                                                 {forgotPhoneProcessing ? t('auth.sending') : t('auth.send_verification_code')}
+                                          </button>
+                                   </div>
+                            )}
+
+                            {currentStep === "forgotPasswordPhoneOtp" && (
+                                   <div id="forgotPasswordPhoneOtpStep" className="login-form-step" style={{ backgroundColor: "#ffffff" }}>
+                                          <div className="step-heading-and-back">
+                                                 <button
+                                                        id="backForgotPasswordPhoneOtp"
+                                                        onClick={() => {
+                                                               setForgotPhoneErrors({});
+                                                               setCurrentStep("forgotPasswordPhone");
+                                                        }}
+                                                        style={{
+                                                               position: 'absolute', left: 0, top: 0, background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#666'
+                                                        }}
+                                                 >
+                                                        <i className="fa-solid fa-chevron-left"></i>
+                                                 </button>
+                                                 <h3 className="mb-0 fw-bold">{t('auth.login_or_signup')}</h3>
+                                          </div>
+
+                                          <div className="text-center">
+                                                 <h2 className="fw-bold mb-2 mt-3" style={{ fontSize: '22px' }}>{t('auth.verify_otp')}</h2>
+                                                 <p className="text-muted small mb-4">
+                                                        {t('auth.enter_whatsapp_otp_desc')}
+                                                 </p>
+                                          </div>
+
+                                          <form onSubmit={handleVerifyForgotPhoneOtp}>
+                                                 <div className="mb-3 d-flex justify-content-center gap-2">
+                                                        {[0, 1, 2, 3, 4, 5].map((index) => (
+                                                               <input
+                                                                      key={index}
+                                                                      id={`forgot-phone-otp-input-${index}`}
+                                                                      type="text"
+                                                                      maxLength={1}
+                                                                      className="form-control text-center fw-bold fs-4"
+                                                                      value={forgotPhoneData.otp[index] || ""}
+                                                                      onChange={(e) => {
+                                                                             const val = e.target.value.replace(/\D/g, "");
+                                                                             if (!val) return;
+
+                                                                             const newOtp = forgotPhoneData.otp.split("");
+                                                                             newOtp[index] = val;
+                                                                             const newOtpString = newOtp.join("");
+                                                                             setForgotPhoneData({ ...forgotPhoneData, otp: newOtpString });
+
+                                                                             if (index < 5) {
+                                                                                    const nextInput = document.getElementById(`forgot-phone-otp-input-${index + 1}`);
+                                                                                    if (nextInput) nextInput.focus();
+                                                                             }
+                                                                      }}
+                                                                      onKeyDown={(e) => {
+                                                                             if (e.key === "Backspace") {
+                                                                                    if (!forgotPhoneData.otp[index] && index > 0) {
+                                                                                           const prevInput = document.getElementById(`forgot-phone-otp-input-${index - 1}`);
+                                                                                           if (prevInput) prevInput.focus();
+                                                                                    } else {
+                                                                                           const newOtp = forgotPhoneData.otp.split("");
+                                                                                           newOtp[index] = "";
+                                                                                           setForgotPhoneData({ ...forgotPhoneData, otp: newOtp.join("") });
+                                                                                    }
+                                                                             }
+                                                                      }}
+                                                                      onPaste={(e) => {
+                                                                             e.preventDefault();
+                                                                             const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+                                                                             setForgotPhoneData({ ...forgotPhoneData, otp: pastedData });
+                                                                      }}
+                                                                      style={{ width: '50px', height: '60px', borderRadius: '12px', border: '1px solid #FAFAFA', backgroundColor: '#FAFAFA', boxShadow: '15px 19px 50px 0 #0000001c' }}
+                                                               />
+                                                        ))}
+                                                 </div>
+
+                                                 <div className="text-center mb-4">
+                                                        <button
+                                                               type="button"
+                                                               className="btn btn-link text-decoration-none p-0 small text-dark fw-bold"
+                                                               disabled={isForgotPhoneResendDisabled}
+                                                               onClick={handleSendForgotPhoneOtp}
+                                                        >
+                                                               {isForgotPhoneResendDisabled ? `${t('auth.resend_in')} ${forgotPhoneResendTimer}s` : t('auth.resend_code')}
+                                                        </button>
+                                                 </div>
+
+                                                 {forgotPhoneErrors.otp && <div className="alert alert-danger py-2 small mb-3">{forgotPhoneErrors.otp}</div>}
+                                                 {forgotPhoneErrors.general && <div className="alert alert-danger py-2 small mb-3">{forgotPhoneErrors.general}</div>}
+
+                                                 <button className="form-button-1" type="submit" disabled={forgotPhoneProcessing || forgotPhoneData.otp.length < 6}>
+                                                        {forgotPhoneProcessing ? 'Verifying...' : (t('Verify') || 'Verify')}
+                                                 </button>
+                                          </form>
+                                   </div>
+                            )}
+
+                            {currentStep === "forgotPasswordPhoneNewPassword" && (
+                                   <div id="forgotPasswordPhoneNewPasswordStep" className="login-form-step" style={{ backgroundColor: "#ffffff" }}>
+                                          <div className="step-heading-and-back">
+                                                 <button
+                                                        id="backForgotPasswordPhoneNewPassword"
+                                                        onClick={() => {
+                                                               setForgotPhoneErrors({});
+                                                               setCurrentStep("forgotPasswordPhoneOtp");
+                                                        }}
+                                                        style={{
+                                                               position: 'absolute', left: 0, top: 0, background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#666'
+                                                        }}
+                                                 >
+                                                        <i className="fa-solid fa-chevron-left"></i>
+                                                 </button>
+                                                 <h3 className="mb-0 fw-bold">{t('auth.login_or_signup')}</h3>
+                                          </div>
+
+                                          <div className="text-center">
+                                                 <h2 className="fw-bold mb-2 mt-3" style={{ fontSize: '22px' }}>{t('auth.set_new_password') || 'Set New Password'}</h2>
+                                                 <p className="text-muted small mb-4">
+                                                        {t('auth.set_new_password_desc') || 'Create a strong new password for your account.'}
+                                                 </p>
+                                          </div>
+
+                                          <form onSubmit={handleResetPhonePassword}>
+                                                 <div className="mb-3 position-relative">
+                                                        <input
+                                                               type={showForgotPhonePassword ? "text" : "password"}
+                                                               placeholder={t('auth.enter_new_password')}
+                                                               value={forgotPhoneData.password}
+                                                               onChange={(e) => setForgotPhoneData({ ...forgotPhoneData, password: e.target.value })}
+                                                               className="form-control"
+                                                               required
+                                                               style={{ paddingRight: '40px', marginBottom: '16px', height: '68px', borderRadius: '12px', border: '1px solid #FAFAFA', backgroundColor: '#FAFAFA', fontSize: '18px', fontWeight: '600', color: '#23262F', boxShadow: '15px 19px 50px 0 #0000001c', paddingLeft: '20px' }}
+                                                        />
+                                                        <button
+                                                               type="button"
+                                                               className="btn position-absolute end-0 translate-middle-y border-0 bg-transparent text-muted"
+                                                               onClick={() => setShowForgotPhonePassword(!showForgotPhonePassword)}
+                                                               style={{ right: '10px', top: '34px' }}
+                                                        >
+                                                               <i className={`fa-solid ${showForgotPhonePassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                                                        </button>
+                                                 </div>
+
+                                                 <div className="mb-3 position-relative">
+                                                        <input
+                                                               type={showForgotPhoneConfirmPassword ? "text" : "password"}
+                                                               placeholder={t('auth.confirm_new_password')}
+                                                               value={forgotPhoneData.password_confirmation}
+                                                               onChange={(e) => setForgotPhoneData({ ...forgotPhoneData, password_confirmation: e.target.value })}
+                                                               className="form-control"
+                                                               required
+                                                               style={{ paddingRight: '40px', marginBottom: '20px', height: '68px', borderRadius: '12px', border: '1px solid #FAFAFA', backgroundColor: '#FAFAFA', fontSize: '18px', fontWeight: '600', color: '#23262F', boxShadow: '15px 19px 50px 0 #0000001c', paddingLeft: '20px' }}
+                                                        />
+                                                        <button
+                                                               type="button"
+                                                               className="btn position-absolute end-0 translate-middle-y border-0 bg-transparent text-muted"
+                                                               onClick={() => setShowForgotPhoneConfirmPassword(!showForgotPhoneConfirmPassword)}
+                                                               style={{ right: '10px', top: '34px' }}
+                                                        >
+                                                               <i className={`fa-solid ${showForgotPhoneConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                                                        </button>
+                                                 </div>
+
+                                                 {forgotPhoneErrors.password && <div className="alert alert-danger py-2 small mb-3">{forgotPhoneErrors.password}</div>}
+                                                 {forgotPhoneErrors.password_confirmation && <div className="alert alert-danger py-2 small mb-3">{forgotPhoneErrors.password_confirmation}</div>}
+                                                 {forgotPhoneErrors.general && <div className="alert alert-danger py-2 small mb-3">{forgotPhoneErrors.general}</div>}
+
+                                                 <button className="form-button-1" type="submit" disabled={forgotPhoneProcessing}>
+                                                        {forgotPhoneProcessing ? t('auth.sending') : t('auth.reset_password')}
+                                                 </button>
+                                          </form>
+                                   </div>
+                            )}
+
+                            {currentStep === "forgotPasswordPhoneSuccess" && (
+                                   <div id="forgotPasswordPhoneSuccessStep" className="login-form-step" style={{ backgroundColor: "#ffffff" }}>
+                                          <div className="text-center py-4">
+                                                 <div className="mb-4">
+                                                        <img src="/assets/images/send_email.png" alt="Success" width={120} height={120} className="mx-auto" />
+                                                 </div>
+                                                 <h2 className="fw-bold mb-3" style={{ fontSize: '24px' }}>{t('auth.password_reset_success')}</h2>
+                                                 <p className="text-muted small mb-4">
+                                                        {t('auth.password_reset_success_desc')}
+                                                 </p>
+                                                 <button
+                                                        className="form-button-1"
+                                                        onClick={() => {
+                                                               setPhoneData(prev => ({ ...prev, phone: forgotPhoneData.phone, countryCode: forgotPhoneData.countryCode, password: "" }));
+                                                               setErrorMessage("");
+                                                               setCurrentStep("phoneLogin");
+                                                        }}
+                                                 >
+                                                        {t('auth.back_to_login')}
+                                                 </button>
+                                          </div>
                                    </div>
                             )}
                      </div>

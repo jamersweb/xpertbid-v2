@@ -30,15 +30,32 @@ class PhoneAuthController extends Controller
         $this->msgpkService = $msgpkService;
     }
 
+    protected function findUserByPhone(?string $phone): ?User
+    {
+        if (empty($phone)) {
+            return null;
+        }
+
+        $digits = preg_replace('/\D/', '', $phone);
+        $withPlus = '+' . $digits;
+
+        return User::where('phone', $phone)
+            ->orWhere('phone', $digits)
+            ->orWhere('phone', $withPlus)
+            ->first();
+    }
+
     public function sendOtp(Request $request)
     {
         $request->validate([
-            'phone' => 'required|numeric|min:10',
-            'type' => 'nullable|in:login,register', 
+            'phone' => 'required|string|min:7',
+            'type' => 'nullable|in:login,register,forgot_password', 
             'otp_type' => 'nullable|in:sms,whatsapp',
         ]);
 
-        $user = User::where('phone', $request->phone)->first();
+        $phone = preg_replace('/\s+/', '', (string) $request->phone);
+        $digits = preg_replace('/\D/', '', $phone);
+        $user = $this->findUserByPhone($phone);
 
         if ($request->type === 'register') {
             if ($user && $user->is_phone_verified) {
@@ -46,31 +63,32 @@ class PhoneAuthController extends Controller
             }
         }
         
-        // For login, usually we don't send OTP anymore with password flow, 
-        // but if user wants to login via OTP strictly (or forgot password flow?), 
-        // we can keep it open or restrict. 
-        // User asked: "otp tab send ho aghar is phone verified 0 hai to" - this applies to verified check.
-        // Assuming for login type we allow OTP if they forgot password? 
-        // Or if they are NOT verified, we send OTP to verify.
         if ($request->type === 'login') {
              if (!$user) {
                  return response()->json(['message' => 'Account does not exist. Please register.'], 422);
              }
-             // Optional: If user is active/verified, maybe we shouldn't send OTP for simple login?
-             // But existing flow was OTP login. 
-             // If pivot to Password login, this endpoint might not be used for Login step anymore.
+        }
+
+        if ($request->type === 'forgot_password') {
+            if (!$user) {
+                return response()->json(['message' => 'No account found with this phone number.'], 404);
+            }
         }
 
         $otp = rand(100000, 999999); // Generate a random 6-digit OTP
 
-        // Cache the OTP with a 5-minute expiry
-        Cache::put('otp_' . $request->phone, $otp, now()->addMinutes(5));
+        // Cache the OTP with a 5-minute expiry under both representations
+        Cache::put('otp_' . $phone, $otp, now()->addMinutes(5));
+        if (!empty($digits)) {
+            Cache::put('otp_' . $digits, $otp, now()->addMinutes(5));
+        }
 
-        // Msgpk type: 0 for SMS, 2 for WhatsApp
-        $msgType = ($request->otp_type === 'whatsapp') ? 2 : 0;
+        // Msgpk type: 0 for SMS, 2 for WhatsApp. Default to WhatsApp for forgot_password if unspecified
+        $otpType = $request->otp_type ?? ($request->type === 'forgot_password' ? 'whatsapp' : 'sms');
+        $msgType = ($otpType === 'whatsapp') ? 2 : 0;
 
         // Send the OTP via Msgpk
-        if ($this->msgpkService->sendOtp($request->phone, $otp, $msgType)) {
+        if ($this->msgpkService->sendOtp($phone, $otp, $msgType)) {
             return response()->json(['message' => 'OTP sent successfully via ' . ($msgType == 2 ? 'WhatsApp' : 'SMS') . '.']);
         }
 
@@ -171,5 +189,71 @@ class PhoneAuthController extends Controller
         }
 
         return response()->json(['message' => 'Invalid or expired OTP.'], 422);
+    }
+
+    public function validateResetOtp(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string|min:7',
+            'otp' => 'required|numeric|digits:6',
+        ]);
+
+        $phone = preg_replace('/\s+/', '', (string) $request->phone);
+        $digits = preg_replace('/\D/', '', $phone);
+
+        $cachedOtp = Cache::get('otp_' . $phone) ?? (!empty($digits) ? Cache::get('otp_' . $digits) : null);
+
+        if (!$cachedOtp || $cachedOtp != $request->otp) {
+            return response()->json(['message' => 'Invalid or expired OTP.'], 422);
+        }
+
+        $user = $this->findUserByPhone($phone);
+
+        if (!$user) {
+            return response()->json(['message' => 'No account found with this phone number.'], 404);
+        }
+
+        return response()->json([
+            'message' => 'OTP verified successfully.',
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string|min:7',
+            'otp' => 'required|numeric|digits:6',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $phone = preg_replace('/\s+/', '', (string) $request->phone);
+        $digits = preg_replace('/\D/', '', $phone);
+
+        $cachedOtp = Cache::get('otp_' . $phone) ?? (!empty($digits) ? Cache::get('otp_' . $digits) : null);
+
+        if (!$cachedOtp || $cachedOtp != $request->otp) {
+            return response()->json(['message' => 'Invalid or expired OTP.'], 422);
+        }
+
+        $user = $this->findUserByPhone($phone);
+
+        if (!$user) {
+            return response()->json(['message' => 'No account found with this phone number.'], 404);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+            'is_phone_verified' => true,
+            'phone_verified_at' => $user->phone_verified_at ?? now(),
+        ]);
+
+        Cache::forget('otp_' . $phone);
+        if (!empty($digits)) {
+            Cache::forget('otp_' . $digits);
+        }
+
+        return response()->json([
+            'message' => 'Password has been reset successfully.',
+        ]);
     }
 }

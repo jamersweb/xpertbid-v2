@@ -187,6 +187,16 @@ class AuthController extends Controller
         ]);
     }
 
+    public function validateResetOtp(Request $request)
+    {
+        return app(PhoneAuthController::class)->validateResetOtp($request);
+    }
+
+    public function resetPasswordWithPhone(Request $request)
+    {
+        return app(PhoneAuthController::class)->resetPassword($request);
+    }
+
     public function notifications(Request $request): JsonResponse
     {
         $notifications = NewNotification::query()

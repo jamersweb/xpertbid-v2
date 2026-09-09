@@ -252,5 +252,20 @@
     "auth.confirm_password": "پاس ورڈ کی تصدیق",
     "auth.confirm_password_placeholder": "پاس ورڈ دوبارہ درج کریں",
     "auth.registering": "رجسٹریشن ہو رہی ہے...",
-    "auth.log_in": "لاگ اِن"
+    "auth.log_in": "لاگ اِن",
+    "auth.forgot_password_phone_hint": "واٹس ایپ پر تصدیقی کوڈ حاصل کرنے کے لیے اپنا فون نمبر درج کریں۔",
+    "auth.send_verification_code": "تصدیقی کوڈ بھیجیں",
+    "auth.reset_password": "پاس ورڈ دوبارہ ترتیب دیں",
+    "auth.enter_new_password": "نیا پاس ورڈ درج کریں",
+    "auth.confirm_new_password": "نئے پاس ورڈ کی تصدیق کریں",
+    "auth.password_reset_success": "پاس ورڈ کامیابی سے تبدیل ہو گیا",
+    "auth.password_reset_success_desc": "آپ کا پاس ورڈ کامیابی کے ساتھ دوبارہ ترتیب دے دیا گیا ہے۔ اب آپ اپنے نئے پاس ورڈ سے لاگ اِن کر سکتے ہیں۔",
+    "auth.account_not_found_phone": "اس فون نمبر سے کوئی اکاؤنٹ موجود نہیں ہے۔",
+    "auth.verify_and_reset": "تصدیق کریں اور پاس ورڈ تبدیل کریں",
+    "auth.enter_whatsapp_otp_desc": "اپنے واٹس ایپ پر موصول ہونے والا 6 ہندسوں کا کوڈ درج کریں۔",
+    "auth.verify_continue": "تصدیق کریں اور آگے بڑھیں",
+    "auth.verify": "تصدیق کریں",
+    "Verify": "تصدیق کریں",
+    "auth.set_new_password": "نیا پاس ورڈ بنائیں",
+    "auth.set_new_password_desc": "اپنے اکاؤنٹ کے لیے ایک مضبوط نیا پاس ورڈ بنائیں۔"
 }

@@ -305,5 +305,20 @@
     "Lost Auctions": "Lost Auctions",
     "You have no active bids yet.": "You have no active bids yet.",
     "You haven't won any auctions yet.": "You haven't won any auctions yet.",
-    "You haven't lost any auctions yet.": "You haven't lost any auctions yet."
+    "You haven't lost any auctions yet.": "You haven't lost any auctions yet.",
+    "auth.forgot_password_phone_hint": "Enter your phone number to receive a verification code via WhatsApp.",
+    "auth.send_verification_code": "Send verification code",
+    "auth.reset_password": "Reset Password",
+    "auth.enter_new_password": "Enter new password",
+    "auth.confirm_new_password": "Confirm new password",
+    "auth.password_reset_success": "Password Reset Successful",
+    "auth.password_reset_success_desc": "Your password has been reset successfully. You can now login with your new password.",
+    "auth.account_not_found_phone": "No account found with this phone number.",
+    "auth.verify_and_reset": "Verify & Reset Password",
+    "auth.enter_whatsapp_otp_desc": "Enter the 6-digit code sent to your WhatsApp.",
+    "auth.verify_continue": "Verify & Continue",
+    "auth.verify": "Verify",
+    "Verify": "Verify",
+    "auth.set_new_password": "Set New Password",
+    "auth.set_new_password_desc": "Create a strong new password for your account."
 }

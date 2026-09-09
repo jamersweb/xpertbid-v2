@@ -13,6 +13,8 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login']);
     Route::post('/auth/register', [AuthController::class, 'register']);
     Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/auth/validate-reset-otp', [AuthController::class, 'validateResetOtp']);
+    Route::post('/auth/reset-password-phone', [AuthController::class, 'resetPasswordWithPhone']);
     Route::post('/auth/send-otp', [AuthController::class, 'sendOtp']);
     Route::post('/auth/verify-otp', [AuthController::class, 'verifyOtp']);
 

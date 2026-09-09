@@ -44,6 +44,8 @@ Route::middleware('guest')->group(function () {
     // Phone Auth
     Route::post('/api/auth/send-otp', [App\Http\Controllers\PhoneAuthController::class, 'sendOtp'])->name('auth.phone.send');
     Route::post('/api/auth/verify-otp', [App\Http\Controllers\PhoneAuthController::class, 'verifyOtp'])->name('auth.phone.verify');
+    Route::post('/api/auth/validate-reset-otp', [App\Http\Controllers\PhoneAuthController::class, 'validateResetOtp'])->name('auth.phone.validate-reset-otp');
+    Route::post('/api/auth/reset-password-phone', [App\Http\Controllers\PhoneAuthController::class, 'resetPassword'])->name('auth.phone.reset-password');
 });
 
 // Available to guests AND already-authenticated users (property frontend deep-links).

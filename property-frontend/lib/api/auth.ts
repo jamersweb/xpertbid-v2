@@ -113,10 +113,26 @@ export async function forgotPassword(email: string) {
 
 export async function sendAuthOtp(input: {
   phone: string;
-  type: "login" | "register";
+  type: "login" | "register" | "forgot_password";
   otp_type?: "sms" | "whatsapp";
 }) {
   return authPost("/auth/send-otp", input);
+}
+
+export async function validateResetOtp(input: {
+  phone: string;
+  otp: string;
+}) {
+  return authPost("/auth/validate-reset-otp", input);
+}
+
+export async function resetPasswordWithPhone(input: {
+  phone: string;
+  otp: string;
+  password: string;
+  password_confirmation: string;
+}) {
+  return authPost("/auth/reset-password-phone", input);
 }
 
 export async function verifyAuthOtp(input: {
