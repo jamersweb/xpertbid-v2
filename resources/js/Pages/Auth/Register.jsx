@@ -38,9 +38,12 @@ export default function Register() {
                             <input
                                 id="name"
                                 name="name"
+                                type="text"
+                                pattern="[a-zA-Z\s]+"
+                                title="Name can only contain letters and spaces"
                                 value={data.name}
                                 placeholder={t('auth.full_name')}
-                                onChange={(e) => setData('name', e.target.value)}
+                                onChange={(e) => setData('name', e.target.value.replace(/[^a-zA-Z\s]/g, ''))}
                                 required
                                 autoFocus
                             />

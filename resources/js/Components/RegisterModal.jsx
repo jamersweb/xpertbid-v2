@@ -194,7 +194,9 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                                                                type="text"
                                                                placeholder={t('auth.enter_name')}
                                                                value={formData.name}
-                                                               onChange={(e) => setData('name', e.target.value)}
+                                                               pattern="[a-zA-Z\s]+"
+                                                               title="Name can only contain letters and spaces"
+                                                               onChange={(e) => setData('name', e.target.value.replace(/[^a-zA-Z\s]/g, ''))}
                                                                required
                                                         />
                                                  </div>
@@ -257,7 +259,9 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                                                                type="text"
                                                                placeholder={t('auth.enter_name')}
                                                                value={formData.name}
-                                                               onChange={(e) => setData('name', e.target.value)}
+                                                               pattern="[a-zA-Z\s]+"
+                                                               title="Name can only contain letters and spaces"
+                                                               onChange={(e) => setData('name', e.target.value.replace(/[^a-zA-Z\s]/g, ''))}
                                                                required
                                                         />
                                                  </div>

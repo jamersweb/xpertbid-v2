@@ -284,7 +284,9 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Props) {
                   type="text"
                   placeholder="Enter name"
                   value={formData.name}
-                  onChange={(e) => setField("name", e.target.value)}
+                  pattern="[a-zA-Z\s]+"
+                  title="Name can only contain letters and spaces"
+                  onChange={(e) => setField("name", e.target.value.replace(/[^a-zA-Z\s]/g, ""))}
                   required
                 />
               </div>
@@ -351,7 +353,9 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Props) {
                   type="text"
                   placeholder="Enter name"
                   value={formData.name}
-                  onChange={(e) => setField("name", e.target.value)}
+                  pattern="[a-zA-Z\s]+"
+                  title="Name can only contain letters and spaces"
+                  onChange={(e) => setField("name", e.target.value.replace(/[^a-zA-Z\s]/g, ""))}
                   required
                 />
               </div>
