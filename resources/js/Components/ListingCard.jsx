@@ -79,6 +79,8 @@ const ListingCard = ({ listing, onDeleted }) => {
        const listingTitle = listing?.title || "Untitled Listing";
        const listingStartDate = listing?.start_date || "Not set";
        const listingEndDate = listing?.end_date || "Not set";
+       const viewHref = buildProductHref(listing?.slug, listing);
+       const isExternalView = /^https?:\/\//i.test(viewHref);
 
        return (
               <div
@@ -283,11 +285,19 @@ const ListingCard = ({ listing, onDeleted }) => {
                                    )}
 
                                    {isActive && !isDraft && listing.slug && (
-                                          <Link href={buildProductHref(listing.slug)} className="ms-2">
-                                                 <button className="button-style-1 editListing">
-                                                        View
-                                                 </button>
-                                          </Link>
+                                          isExternalView ? (
+                                                 <a href={viewHref} className="ms-2" target="_blank" rel="noopener noreferrer">
+                                                        <button className="button-style-1 editListing">
+                                                               View
+                                                        </button>
+                                                 </a>
+                                          ) : (
+                                                 <Link href={viewHref} className="ms-2">
+                                                        <button className="button-style-1 editListing">
+                                                               View
+                                                        </button>
+                                                 </Link>
+                                          )
                                    )}
 
                                    <Link href={listing.edit_url || `/auctions/${listing.slug || listing.id}/edit`} className="ms-2">

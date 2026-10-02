@@ -71,6 +71,8 @@ class Listing extends Model
         'vehicle_verification',
         'property_verification',
         'variations',
+        'is_property',
+        'property_url',
     ];
 
     /**
@@ -412,6 +414,16 @@ class Listing extends Model
         return in_array((int) $this->category_id, $ids, true)
             || in_array((int) $this->sub_category_id, $ids, true)
             || in_array((int) $this->child_category_id, $ids, true);
+    }
+
+    public function getIsPropertyAttribute(): bool
+    {
+        return $this->isPropertyListing();
+    }
+
+    public function getPropertyUrlAttribute(): ?string
+    {
+        return $this->isPropertyListing() ? $this->propertyFrontendUrl() : null;
     }
 
     /**

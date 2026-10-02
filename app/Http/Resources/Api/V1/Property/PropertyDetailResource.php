@@ -24,8 +24,27 @@ class PropertyDetailResource extends PropertyCardResource
         $lng = $attrs['longitude'] ?? $features['longitude'] ?? $data['longitude'] ?? null;
         $mapUrl = $attrs['map_url'] ?? $features['map_url'] ?? $data['map_url'] ?? null;
 
+        $locationAddress = $features['product_location']
+            ?? $data['product_location']
+            ?? $features['property_address']
+            ?? $data['property_address']
+            ?? $features['address']
+            ?? $data['address']
+            ?? $features['location']
+            ?? $data['location']
+            ?? null;
+
+        if (!$locationAddress && ($this->city || $this->state || $this->country)) {
+            $parts = array_filter([$this->city?->name, $this->state?->name, $this->country?->name]);
+            if (!empty($parts)) {
+                $locationAddress = implode(', ', $parts);
+            }
+        }
+
         if (!$mapUrl && $lat && $lng) {
             $mapUrl = "https://maps.google.com/maps?q={$lat},{$lng}";
+        } elseif (!$mapUrl && $locationAddress) {
+            $mapUrl = "https://maps.google.com/maps?q=" . urlencode($locationAddress);
         }
 
         return array_merge($card, [
@@ -44,7 +63,7 @@ class PropertyDetailResource extends PropertyCardResource
             'highest_bid' => (float) ($this->bids()->max('bid_amount') ?? 0),
             'youtube_video_id' => $this->youtube_video_id,
             'featured_name' => $this->featured_name,
-            'product_location' => $features['product_location'] ?? $data['product_location'] ?? $features['property_address'] ?? $data['property_address'] ?? null,
+            'product_location' => $locationAddress,
             'developer' => $data['developer'] ?? null,
             'delivery_date' => $data['delivery_date'] ?? null,
             'sale_starts' => $data['sale_starts'] ?? null,

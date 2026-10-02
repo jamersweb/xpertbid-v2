@@ -22,11 +22,26 @@ interface GoogleMapsInfoWindow {
   open: (map: GoogleMapsMap, marker: GoogleMapsMarker) => void;
 }
 
+interface GoogleMapsGeocoderResult {
+  geometry: {
+    location: {
+      lat: () => number;
+      lng: () => number;
+    };
+  };
+}
+
 interface GoogleMapsInstance {
   maps: {
     Map: new (element: HTMLElement, options: Record<string, unknown>) => GoogleMapsMap;
     Marker: new (options: Record<string, unknown>) => GoogleMapsMarker;
     InfoWindow: new (options: Record<string, unknown>) => GoogleMapsInfoWindow;
+    Geocoder: new () => {
+      geocode: (
+        request: { address: string },
+        callback: (results: GoogleMapsGeocoderResult[] | null, status: string) => void
+      ) => void;
+    };
     Animation?: {
       DROP: unknown;
     };
@@ -97,8 +112,16 @@ export function GooglePropertyMap({
   const mapRef = useRef<GoogleMapsMap | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [activeCoords, setActiveCoords] = useState<{ lat: number; lng: number } | null>(() =>
+    extractCoordinates(latitude, longitude, mapUrl)
+  );
+  const rawCoords = extractCoordinates(latitude, longitude, mapUrl);
 
-  const coords = extractCoordinates(latitude, longitude, mapUrl);
+  useEffect(() => {
+    if (rawCoords) {
+      setActiveCoords(rawCoords);
+    }
+  }, [rawCoords]);
 
   useEffect(() => {
     if (!API_KEY) {
@@ -150,8 +173,9 @@ export function GooglePropertyMap({
     }
   }, []);
 
+  // Initialize Map
   useEffect(() => {
-    if (!isLoaded || !containerRef.current || mapRef.current || !coords) return;
+    if (!isLoaded || !containerRef.current || mapRef.current) return;
 
     try {
       const google = (window as WindowWithGoogle).google;
@@ -160,56 +184,96 @@ export function GooglePropertyMap({
         return;
       }
 
-      const position = { lat: coords.lat, lng: coords.lng };
+      const initMapWithPosition = (position: { lat: number; lng: number }) => {
+        if (!containerRef.current) return;
+        const map = new google.maps.Map(containerRef.current, {
+          center: position,
+          zoom: 15,
+          mapTypeControl: true,
+          streetViewControl: true,
+          fullscreenControl: true,
+          zoomControl: true,
+        });
+        mapRef.current = map;
 
-      const map = new google.maps.Map(containerRef.current, {
-        center: position,
-        zoom: 15,
-        mapTypeControl: true,
-        streetViewControl: true,
-        fullscreenControl: true,
-        zoomControl: true,
-      });
-      mapRef.current = map;
-
-      const marker = new google.maps.Marker({
-        position,
-        map,
-        title,
-        animation: google.maps.Animation ? google.maps.Animation.DROP : undefined,
-      });
-
-      if (locationAddress || title) {
-        const infoWindow = new google.maps.InfoWindow({
-          content: `
-            <div style="padding: 6px; font-family: system-ui, sans-serif;">
-              <strong style="font-size: 14px; color: #111827;">${title}</strong>
-              ${locationAddress ? `<p style="margin: 4px 0 0; font-size: 12px; color: #4b5563;">${locationAddress}</p>` : ""}
-            </div>
-          `,
+        const marker = new google.maps.Marker({
+          position,
+          map,
+          title,
+          animation: google.maps.Animation ? google.maps.Animation.DROP : undefined,
         });
 
-        marker.addListener("click", () => {
-          infoWindow.open(map, marker);
+        if (locationAddress || title) {
+          const infoWindow = new google.maps.InfoWindow({
+            content: `
+              <div style="padding: 6px; font-family: system-ui, sans-serif;">
+                <strong style="font-size: 14px; color: #111827;">${title}</strong>
+                ${locationAddress ? `<p style="margin: 4px 0 0; font-size: 12px; color: #4b5563;">${locationAddress}</p>` : ""}
+              </div>
+            `,
+          });
+
+          marker.addListener("click", () => {
+            infoWindow.open(map, marker);
+          });
+        }
+      };
+
+      if (activeCoords) {
+        initMapWithPosition(activeCoords);
+      } else if (locationAddress && typeof google.maps.Geocoder === "function") {
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ address: locationAddress }, (results, status) => {
+          if (status === "OK" && results && results[0]) {
+            const loc = results[0].geometry.location;
+            const foundCoords = { lat: loc.lat(), lng: loc.lng() };
+            setActiveCoords(foundCoords);
+            initMapWithPosition(foundCoords);
+          } else {
+            setLoadError(true);
+          }
         });
+      } else {
+        setLoadError(true);
       }
     } catch (err) {
       console.error("Google Maps frontend render error:", err);
       setLoadError(true);
     }
-  }, [isLoaded, coords, locationAddress, title]);
+  }, [isLoaded, activeCoords, locationAddress, title]);
 
-  if (!coords && !mapUrl) {
+  if (!activeCoords && !mapUrl && !locationAddress) {
     return null;
   }
 
-  const directGoogleMapsUrl = coords
-    ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`
+  // If mapUrl is directly an iframe embed
+  if (typeof mapUrl === "string" && mapUrl.includes("<iframe")) {
+    return (
+      <div
+        className="property-google-map-embed mt-3"
+        dangerouslySetInnerHTML={{ __html: mapUrl }}
+      />
+    );
+  }
+
+  const directGoogleMapsUrl = activeCoords
+    ? `https://www.google.com/maps/search/?api=1&query=${activeCoords.lat},${activeCoords.lng}`
+    : locationAddress
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationAddress)}`
     : mapUrl || "#";
 
-  if (loadError || !API_KEY || !coords) {
-    const embedSrc = coords
-      ? `https://maps.google.com/maps?q=${coords.lat},${coords.lng}&t=&z=15&ie=UTF8&iwloc=&output=embed`
+  // Fallback: Embed Iframe
+  if (loadError || !API_KEY || !mapRef.current) {
+    const embedQuery = activeCoords
+      ? `${activeCoords.lat},${activeCoords.lng}`
+      : locationAddress
+      ? encodeURIComponent(locationAddress)
+      : mapUrl && !mapUrl.startsWith("http")
+      ? encodeURIComponent(mapUrl)
+      : null;
+
+    const embedSrc = embedQuery
+      ? `https://maps.google.com/maps?q=${embedQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`
       : null;
 
     return (
@@ -242,9 +306,9 @@ export function GooglePropertyMap({
                 <i className="fa-solid fa-location-dot me-1 text-danger"></i> {locationAddress}
               </p>
             ) : null}
-            {mapUrl ? (
+            {directGoogleMapsUrl ? (
               <a
-                href={mapUrl}
+                href={directGoogleMapsUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1"
