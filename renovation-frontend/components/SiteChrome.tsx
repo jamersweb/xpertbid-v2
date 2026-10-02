@@ -170,10 +170,10 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
           <Link className="navbar-brand d-flex align-items-center me-0 me-lg-4" href="/">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={assetImage("xp-prop-logo-clean.png")}
-              alt="XpertBid Property"
-              width={180}
-              height={52}
+              src={assetImage("xp-renovation-logo-clean.svg")}
+              alt="Xpert Home Renovation"
+              width={220}
+              height={48}
               className="logo-image property-header-logo"
             />
           </Link>

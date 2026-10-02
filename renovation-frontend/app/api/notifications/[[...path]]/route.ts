@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ||
-  "http://localhost/api/v1";
+  "http://127.0.0.1:8000/api/v1";
 
 type Ctx = { params: Promise<{ path?: string[] }> };
 

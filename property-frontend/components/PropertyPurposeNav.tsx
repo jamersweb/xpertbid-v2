@@ -9,6 +9,8 @@ type Props = {
 };
 
 export function PropertyPurposeNav({ purposes, onNavigate }: Props) {
+  const visiblePurposes = (purposes || []).slice(0, 3);
+
   return (
     <ul className="navbar-nav me-auto mb-2 mb-lg-0 align-items-lg-center property-purpose-nav">
       <li className="nav-item">
@@ -21,7 +23,7 @@ export function PropertyPurposeNav({ purposes, onNavigate }: Props) {
         </Link>
       </li>
 
-      {purposes.map((purpose) => (
+      {visiblePurposes.map((purpose) => (
         <li key={purpose.id} className="nav-item">
           <Link
             href={`/properties?sub_category=${encodeURIComponent(purpose.slug)}&listing_type=normal`}

@@ -290,23 +290,20 @@ const ListingCard = ({ listing, onDeleted }) => {
                                           </Link>
                                    )}
 
-                                   {!isActive && (
-                                          <>
-                                                 <Link href={listing.edit_url || `/auctions/${listing.slug || listing.id}/edit`} className="ms-2">
-                                                        <button className="button-style-1 editListing">
-                                                               Edit
-                                                        </button>
-                                                 </Link>
+                                   <Link href={listing.edit_url || `/auctions/${listing.slug || listing.id}/edit`} className="ms-2">
+                                          <button className="button-style-1 editListing">
+                                                 Edit
+                                          </button>
+                                   </Link>
 
-                                                 <button
-                                                        className="button-style-1 editListing ms-2"
-                                                        style={{ backgroundColor: "#dc3545", color: "#fff", border: "1px solid #dc3545" }}
-                                                        onClick={handleDelete}
-                                                 >
-                                                        <i className="fa fa-trash"></i>
-                                                 </button>
-                                          </>
-                                   )}
+                                   <button
+                                          className="button-style-1 editListing ms-2"
+                                          style={{ backgroundColor: "#dc3545", color: "#fff", border: "1px solid #dc3545" }}
+                                          onClick={handleDelete}
+                                          title="Cancel / Delete"
+                                   >
+                                          <i className="fa fa-trash"></i>
+                                   </button>
 
                                    {isListPackegOpen && (
                                           <ListPackeg

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 54" width="440" height="54" fill="none">
+  <!-- House + Renovation Icon (Matching exact line style of Xpert Property) -->
+  <g transform="translate(4, 3)">
+    <!-- Roof line -->
+    <path d="M 4 25 L 25 4 L 46 25" stroke="#4bb0ec" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- House body -->
+    <path d="M 9 22 L 9 44 L 41 44 L 41 22" stroke="#4bb0ec" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- Renovation Roller / Door -->
+    <path d="M 20 44 L 20 31 L 30 31 L 30 44" stroke="#4bb0ec" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- Renovation Spark / Star above roof -->
+    <path d="M 43 4 L 44.5 7 L 47.5 8.5 L 44.5 10 L 43 13 L 41.5 10 L 38.5 8.5 L 41.5 7 Z" fill="#4bb0ec" />
+  </g>
+
+  <!-- Typography (Matching exact font weight, size & colors of Xpert Property) -->
+  <text x="62" y="39" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Inter, sans-serif" font-size="33" font-weight="800" letter-spacing="-0.5">
+    <tspan fill="#4bb0ec">Xpert </tspan><tspan fill="#23262f">Home Renovation</tspan>
+  </text>
+</svg>
