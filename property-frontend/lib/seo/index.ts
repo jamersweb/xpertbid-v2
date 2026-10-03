@@ -33,10 +33,7 @@ export function formatPrice(amount: number | null | undefined, currency = "PKR")
 }
 
 export function propertyMetadata(property: PropertyDetail): Metadata {
-  const city = property.location?.city;
-  const title = city
-    ? `${property.title} in ${city} | ${SITE_NAME}`
-    : `${property.title} | ${SITE_NAME}`;
+  const title = `${property.title} | ${SITE_NAME}`;
   const description = truncate(
     property.description?.replace(/<[^>]+>/g, " ") ||
       `${property.title} listed on ${SITE_NAME}.`
