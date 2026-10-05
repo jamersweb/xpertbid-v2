@@ -32,16 +32,11 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const LOGGED_OUT_KEY = "xb_property_logged_out";
-/** Mid-flight redirect to main handoff */
-const HANDOFF_PENDING_KEY = "xb_main_handoff_pending";
-/** Already asked main this tab — do not ask again */
-const HANDOFF_DONE_KEY = "xb_main_handoff_done";
+const LAST_HANDOFF_KEY = "xb_last_handoff_check";
 
 function clearHandoffFlags() {
   if (typeof window === "undefined") return;
-  window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
-  window.sessionStorage.removeItem(HANDOFF_DONE_KEY);
+  window.sessionStorage.removeItem(LAST_HANDOFF_KEY);
 }
 
 function clearMainSyncFlags() {
@@ -97,6 +92,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Auto-sync authentication whenever user switches back to this tab (no refresh needed)
+  useEffect(() => {
+    const handleTabRevisit = () => {
+      if (typeof document !== "undefined" && document.visibilityState && document.visibilityState !== "visible") {
+        return;
+      }
+
+      const token = getStoredToken();
+      if (token) {
+        // If we already have a token, verify if user is still logged in or logged out on main site
+        void refreshUser();
+      } else {
+        // If we don't have a token, check if user logged in on the main site while away
+        const lastCheck = Number(window.sessionStorage.getItem(LAST_HANDOFF_KEY) || 0);
+        if (Date.now() - lastCheck > 2500) {
+          window.sessionStorage.setItem(LAST_HANDOFF_KEY, String(Date.now()));
+          const returnTo = encodeURIComponent(cleanReturnUrl());
+          window.location.replace(`${MAIN_SITE_URL}/auth/property-handoff?return_to=${returnTo}`);
+        }
+      }
+    };
+
+    window.addEventListener("focus", handleTabRevisit);
+    document.addEventListener("visibilitychange", handleTabRevisit);
+    return () => {
+      window.removeEventListener("focus", handleTabRevisit);
+      document.removeEventListener("visibilitychange", handleTabRevisit);
+    };
+  }, [refreshUser]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -118,7 +143,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (loggedOutParam) {
         clearStoredToken();
-        window.sessionStorage.setItem(LOGGED_OUT_KEY, "1");
         clearHandoffFlags();
         stripAuthParams();
         if (!cancelled) {
@@ -130,33 +154,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (authToken) {
         storeToken(authToken);
-        window.sessionStorage.removeItem(LOGGED_OUT_KEY);
-        window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
-        window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
+        clearHandoffFlags();
         stripAuthParams();
       } else if (authChecked) {
-        // Main said "not logged in" — stop. Do NOT handoff again this tab.
-        window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
-        window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
+        window.sessionStorage.setItem(LAST_HANDOFF_KEY, String(Date.now()));
         stripAuthParams();
       }
 
-      const explicitlyLoggedOut = window.sessionStorage.getItem(LOGGED_OUT_KEY) === "1";
-      const handoffDone = window.sessionStorage.getItem(HANDOFF_DONE_KEY) === "1";
-      const handoffPending = window.sessionStorage.getItem(HANDOFF_PENDING_KEY) === "1";
+      const lastCheck = Number(window.sessionStorage.getItem(LAST_HANDOFF_KEY) || 0);
+      const recentlyChecked = Date.now() - lastCheck < 15000;
 
-      // One handoff attempt per tab unless user explicitly logs in later.
-      if (!getStoredToken() && !explicitlyLoggedOut && !handoffDone) {
-        if (handoffPending) {
-          // Returned without params — treat as done/guest, never loop.
-          window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
-          window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
-        } else {
-          window.sessionStorage.setItem(HANDOFF_PENDING_KEY, "1");
-          const returnTo = encodeURIComponent(cleanReturnUrl());
-          window.location.replace(`${MAIN_SITE_URL}/auth/property-handoff?return_to=${returnTo}`);
-          return;
-        }
+      // If we don't have a token, check once with Laravel main site
+      if (!getStoredToken() && !authChecked && !recentlyChecked) {
+        window.sessionStorage.setItem(LAST_HANDOFF_KEY, String(Date.now()));
+        const returnTo = encodeURIComponent(cleanReturnUrl());
+        window.location.replace(`${MAIN_SITE_URL}/auth/property-handoff?return_to=${returnTo}`);
+        return;
       }
 
       if (!getStoredToken()) {
@@ -171,8 +184,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const me = await fetchMe();
         if (cancelled) return;
         setUser(me);
-        window.sessionStorage.removeItem(LOGGED_OUT_KEY);
-        window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
 
         const syncedKey = `xb_main_synced_${me.id}`;
         if (hadAuthToken) {
@@ -188,8 +199,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch {
         clearStoredToken();
-        // Do not bounce to handoff again — that caused auth_checked loops.
-        window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
         if (!cancelled) setUser(null);
       } finally {
         if (!cancelled) setLoading(false);
@@ -205,9 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const setSession = useCallback(async (token: string, nextUser: AuthUser, redirectUrl?: string) => {
     storeToken(token);
     setUser(nextUser);
-    window.sessionStorage.removeItem(LOGGED_OUT_KEY);
     clearMainSyncFlags();
-    window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
     await establishMainSiteSession(redirectUrl);
   }, []);
 
@@ -219,8 +226,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     clearMainSyncFlags();
     setUser(null);
-    window.sessionStorage.setItem(LOGGED_OUT_KEY, "1");
-    window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
 
     const returnTo = encodeURIComponent(`${window.location.origin}/`);
     window.location.replace(`${MAIN_SITE_URL}/auth/property-logout?return_to=${returnTo}`);

@@ -10,9 +10,26 @@ export const buildProductHref = (slugOrListing, maybeListing = null) => {
               return '#';
        }
 
+       // Direct renovation URL from backend
+       if (listing?.renovation_url) {
+              return listing.renovation_url;
+       }
+
        // Direct property URL from backend
        if (listing?.property_url) {
               return listing.property_url;
+       }
+
+       // If listing is flagged as renovation or belongs to renovation/builder categories
+       const isRenovation = listing?.is_renovation === true ||
+              [1163, 1294].includes(Number(listing?.category_id)) ||
+              listing?.category?.slug?.includes('renovation') ||
+              listing?.category?.slug?.includes('builder');
+
+       if (isRenovation) {
+              const renovationBase = (typeof window !== 'undefined' && (window.__RENOVATION_FRONTEND_URL__ || window.renovationFrontendUrl))
+                     || 'https://renovation.xpertbid.com';
+              return `${renovationBase.replace(/\/+$/, '')}/properties/${encodeURIComponent(slug)}`;
        }
 
        // If listing is flagged as property or belongs to property category

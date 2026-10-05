@@ -87,6 +87,7 @@ export type CategoryNode = {
   slug: string;
   image_url?: string | null;
   children: CategoryNode[];
+  main_categories?: CategoryNode[];
 };
 
 export type PropertyFilters = {

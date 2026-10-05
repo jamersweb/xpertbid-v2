@@ -130,7 +130,7 @@ export default function MobileBottomNav() {
 
                                           {isUserMenuOpen && (
                                                  <div className="mobile-bottom-nav__dropdown shadow">
-                                                       <ul className="user-setting-menu list-unstyled m-0 p-0">
+                                                        <ul className="user-setting-menu list-unstyled m-0 p-0">
                                                                <li>
                                                                       <Link href={route('dashboard')} onClick={() => setIsUserMenuOpen(false)}>
                                                                              <i className="fa-solid fa-table-columns text-center" style={{ width: '20px', fontSize: '18px' }}></i>
@@ -162,6 +162,7 @@ export default function MobileBottomNav() {
                                                                       </Link>
                                                                </li>
                                                                <li>
+
                                                                       <Link href={route('bids.index')} onClick={() => setIsUserMenuOpen(false)}>
                                                                              <img src="/assets/images/myBids.svg" alt="Bids" width={20} height={20} />
                                                                              {t('My Bids')}

@@ -38,15 +38,7 @@ class PropertyLogoutController extends Controller
             $parts['scheme'].'://'.$parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : '')
         );
 
-        $allowed = array_values(array_filter([
-            $fallback,
-            'https://property.xpertbid.com',
-            'http://property.xpertbid.com',
-            'https://www.property.xpertbid.com',
-            'http://www.property.xpertbid.com',
-            'http://localhost:3000',
-            'http://127.0.0.1:3000',
-        ]));
+        $allowed = AuthBridge::allowedOrigins();
 
         if (! in_array($origin, $allowed, true)) {
             return $fallback;

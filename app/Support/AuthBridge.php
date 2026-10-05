@@ -61,12 +61,16 @@ class AuthBridge
     {
         $appUrl = rtrim((string) config('app.url'), '/');
         $propertyUrl = rtrim((string) config('property.frontend_url'), '/');
+        $renovationUrl = rtrim((string) config('renovation.frontend_url'), '/');
 
         return array_values(array_filter(array_unique([
             $appUrl,
             $propertyUrl,
+            $renovationUrl,
             'http://localhost:3000',
             'http://127.0.0.1:3000',
+            'http://localhost:3001',
+            'http://127.0.0.1:3001',
             'http://localhost:8000',
             'http://127.0.0.1:8000',
             'https://xpertbid.com',
@@ -77,6 +81,10 @@ class AuthBridge
             'http://property.xpertbid.com',
             'https://www.property.xpertbid.com',
             'http://www.property.xpertbid.com',
+            'https://renovation.xpertbid.com',
+            'http://renovation.xpertbid.com',
+            'https://www.renovation.xpertbid.com',
+            'http://www.renovation.xpertbid.com',
         ])));
     }
 

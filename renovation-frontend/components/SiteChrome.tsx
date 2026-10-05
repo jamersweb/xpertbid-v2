@@ -206,9 +206,9 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
                   <img
                     src={profileSrc}
                     alt="Profile"
-                    className="rounded-circle border"
-                    width={28}
-                    height={28}
+                    className="header-avatar-img-mobile rounded-circle"
+                    width={32}
+                    height={32}
                     referrerPolicy="no-referrer"
                     onError={(e) => {
                       e.currentTarget.onerror = null;
@@ -289,42 +289,49 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
                   className="d-none d-lg-flex align-items-center header-user-actions header-profile-root"
                   style={{ position: "relative" }}
                 >
-                  <div className="header-action-notification me-2">
+                  <div className="header-action-notification">
                     <NotificationDropdown />
+                  </div>
+
+                  <div className="user-profile-setting-wrapper position-relative">
+                    <button
+                      type="button"
+                      className="user-profile-setting btn btn-link p-0 text-decoration-none d-flex align-items-center gap-2"
+                      onClick={() => setProfileOpen((v) => !v)}
+                      aria-label="Profile menu"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={profileSrc}
+                        alt="Profile"
+                        className="header-avatar-img rounded-circle"
+                        width={36}
+                        height={36}
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = assetImage("user.jpg");
+                        }}
+                      />
+                      <i
+                        className={`fa-solid fa-chevron-down header-avatar-chevron small text-muted d-none d-lg-inline ${
+                          profileOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {profileOpen ? (
+                      <ProfileMenu
+                        onClose={() => setProfileOpen(false)}
+                        onLogout={handleLogout}
+                        openMainPath={openMainPath}
+                      />
+                    ) : null}
                   </div>
 
                   <button
                     type="button"
-                    className="user-profile-setting btn btn-link p-0 text-decoration-none d-flex align-items-center gap-2"
-                    onClick={() => setProfileOpen((v) => !v)}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={profileSrc}
-                      alt="Profile"
-                      className="rounded-circle border"
-                      width={35}
-                      height={35}
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = assetImage("user.jpg");
-                      }}
-                    />
-                    <i className="fa-solid fa-chevron-down small text-muted d-none d-lg-inline" />
-                  </button>
-
-                  {profileOpen ? (
-                    <ProfileMenu
-                      onClose={() => setProfileOpen(false)}
-                      onLogout={handleLogout}
-                      openMainPath={openMainPath}
-                    />
-                  ) : null}
-
-                  <button
-                    type="button"
-                    className="sellnow header-sell-btn px-3 d-none d-lg-inline-flex align-items-center ms-3"
+                    className="sellnow header-sell-btn d-none d-lg-inline-flex align-items-center"
                     onClick={handleSellClick}
                   >
                     Sell Now

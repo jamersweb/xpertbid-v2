@@ -170,6 +170,14 @@ class RenovationController extends Controller
             $query->where('listing_type', $listingType);
         }
 
+        if ($request->filled('category_id')) {
+            $query->where('category_id', (int) $request->input('category_id'));
+        } elseif ($request->filled('category')) {
+            $this->applyCategorySlugFilter($query, 'category', 'category_id', $request->input('category'));
+        } elseif ($request->filled('type')) {
+            $this->applyCategorySlugFilter($query, 'category', 'category_id', $request->input('type'));
+        }
+
         if ($request->filled('sub_category')) {
             $this->applyCategorySlugFilter($query, 'subCategory', 'sub_category_id', $request->input('sub_category'));
         }

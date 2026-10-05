@@ -234,6 +234,10 @@ class ListingMedia
             return false;
         }
 
+        if (str_starts_with($normalized, 'http://') || str_starts_with($normalized, 'https://')) {
+            return true;
+        }
+
         $component = self::pathComponent($normalized);
 
         if (str_ends_with($component, '.')) {

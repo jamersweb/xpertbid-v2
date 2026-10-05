@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\Property\LocationController;
 use App\Http\Controllers\Api\V1\Property\PropertyCategoryController;
 use App\Http\Controllers\Api\V1\Property\PropertyController;
+use App\Http\Controllers\Api\V1\Renovation\RenovationCategoryController;
+use App\Http\Controllers\Api\V1\Renovation\RenovationController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -29,14 +31,23 @@ Route::prefix('v1')->group(function () {
         Route::delete('/notifications/{id}', [AuthController::class, 'deleteNotification']);
     });
 
+    // Property vertical routes
     Route::get('/properties', [PropertyController::class, 'index']);
     Route::get('/properties/featured', [PropertyController::class, 'featured']);
     Route::get('/properties/sitemap-slugs', [PropertyController::class, 'sitemapSlugs']);
     Route::get('/properties/{slug}', [PropertyController::class, 'show']);
     Route::get('/properties/{slug}/related', [PropertyController::class, 'related']);
-
     Route::get('/property-categories', [PropertyCategoryController::class, 'index']);
 
+    // Home Renovation & Builder vertical routes
+    Route::get('/renovations', [RenovationController::class, 'index']);
+    Route::get('/renovations/featured', [RenovationController::class, 'featured']);
+    Route::get('/renovations/sitemap-slugs', [RenovationController::class, 'sitemapSlugs']);
+    Route::get('/renovations/{slug}', [RenovationController::class, 'show']);
+    Route::get('/renovations/{slug}/related', [RenovationController::class, 'related']);
+    Route::get('/renovation-categories', [RenovationCategoryController::class, 'index']);
+
+    // Location routes (Shared)
     Route::get('/locations/countries', [LocationController::class, 'countries']);
     Route::get('/locations/states/{countryId}', [LocationController::class, 'states']);
     Route::get('/locations/cities/{stateId}', [LocationController::class, 'cities']);

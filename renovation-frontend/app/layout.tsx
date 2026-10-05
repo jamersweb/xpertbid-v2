@@ -29,7 +29,10 @@ export const metadata: Metadata = {
 async function loadPurposes(): Promise<CategoryNode[]> {
   try {
     const tree = await getPropertyCategories();
-    return tree.children || [];
+    if (tree.main_categories && tree.main_categories.length > 0) {
+      return tree.main_categories;
+    }
+    return [tree];
   } catch {
     return [];
   }

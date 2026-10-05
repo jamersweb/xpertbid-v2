@@ -124,8 +124,6 @@ export function NotificationDropdown() {
           border: "none",
           backgroundColor: "transparent",
           position: "relative",
-          padding: "8px",
-          paddingLeft: "0px",
         }}
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Notifications"

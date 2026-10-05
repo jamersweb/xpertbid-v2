@@ -10,19 +10,42 @@ class RenovationCategoryController extends Controller
 {
     public function index(): JsonResponse
     {
-        $rootId = (int) config('renovation.root_category_id', 1163);
-
-        $root = AuctionCategory::query()
-            ->select(['id', 'name', 'slug', 'parent_id', 'sub_category_id', 'image'])
-            ->where('id', $rootId)
+        $renovationRoot = AuctionCategory::query()
+            ->where('id', (int) config('renovation.root_category_id', 1163))
             ->orWhere('slug', 'like', '%home-renovation%')
             ->first();
 
-        $activeRootId = $root?->id ?? $rootId;
+        $builderRoot = AuctionCategory::query()
+            ->where('id', 1294)
+            ->orWhere('slug', 'like', '%home-builder%')
+            ->first();
 
+        $roots = collect([$renovationRoot, $builderRoot])->filter()->unique('id');
+
+        $mainTrees = $roots->map(function (AuctionCategory $root) {
+            return $this->buildTreeForRoot($root);
+        })->values()->all();
+
+        $primaryTree = $mainTrees[0] ?? [
+            'id' => 1163,
+            'name' => 'Home Renovation',
+            'slug' => 'home-renovation',
+            'image_url' => null,
+            'children' => [],
+        ];
+
+        return response()->json([
+            'data' => array_merge($primaryTree, [
+                'main_categories' => $mainTrees,
+            ]),
+        ]);
+    }
+
+    protected function buildTreeForRoot(AuctionCategory $root): array
+    {
         $subs = AuctionCategory::query()
             ->select(['id', 'name', 'slug', 'parent_id', 'sub_category_id', 'image'])
-            ->where('parent_id', $activeRootId)
+            ->where('parent_id', $root->id)
             ->whereNull('sub_category_id')
             ->orderBy('id')
             ->get();
@@ -59,14 +82,12 @@ class RenovationCategoryController extends Controller
             ->values()
             ->all();
 
-        return response()->json([
-            'data' => [
-                'id' => $root?->id ?? $activeRootId,
-                'name' => $root?->name ?? 'Home Renovation',
-                'slug' => $root?->slug ?? 'home-renovation',
-                'image_url' => $root?->image_url,
-                'children' => $tree,
-            ],
-        ]);
+        return [
+            'id' => $root->id,
+            'name' => $root->name,
+            'slug' => $root->slug,
+            'image_url' => $root->image_url,
+            'children' => $tree,
+        ];
     }
 }

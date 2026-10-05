@@ -1,11 +1,11 @@
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "https://property.xpertbid.com";
+  "http://localhost:3000";
 
 /** Main XpertBid marketplace (Inertia) — logos, auth, sell, policies */
 export const MAIN_SITE_URL =
   process.env.NEXT_PUBLIC_MAIN_SITE_URL?.replace(/\/$/, "") ||
-  "https://xpertbid.com";
+  "http://localhost:8000";
 
 export function mainUrl(path = "/") {
   if (path.startsWith("http")) return path;

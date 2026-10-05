@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ||
-  "http://127.0.0.1:8000/api/v1";
+  "http://localhost:8000/api/v1";
 
 const ALLOWED = new Set([
   "me",
@@ -15,6 +15,8 @@ const ALLOWED = new Set([
   "send-otp",
   "verify-otp",
   "session-link",
+  "validate-reset-otp",
+  "reset-password-phone",
 ]);
 
 type Ctx = { params: Promise<{ path: string[] }> };

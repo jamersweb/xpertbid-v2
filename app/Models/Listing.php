@@ -436,6 +436,75 @@ class Listing extends Model
         return $base . '/properties/' . ltrim((string) $this->slug, '/');
     }
 
+    /**
+     * Category IDs in the Home Renovation & Builder tree (root + sub + child).
+     *
+     * @return list<int>
+     */
+    public static function renovationCategoryIds(?int $rootId = null): array
+    {
+        $configuredId = $rootId ?? (int) config('renovation.root_category_id', 1163);
+
+        $rootIds = AuctionCategory::query()
+            ->where('id', $configuredId)
+            ->orWhere('id', 1294)
+            ->orWhere('slug', 'like', '%home-renovation%')
+            ->orWhere('slug', 'like', '%home-builder%')
+            ->orWhere('name', 'like', '%Home Renovation%')
+            ->orWhere('name', 'like', '%Home Builder%')
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        if (empty($rootIds)) {
+            $rootIds = [$configuredId];
+        }
+
+        $ids = $rootIds;
+
+        $subIds = AuctionCategory::query()
+            ->whereIn('parent_id', $rootIds)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $ids = array_merge($ids, $subIds);
+
+        if ($subIds !== []) {
+            $childIds = AuctionCategory::query()
+                ->whereIn('sub_category_id', $subIds)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $ids = array_merge($ids, $childIds);
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * True when this listing belongs to the Home Renovation / Builder category tree.
+     */
+    public function isRenovationListing(): bool
+    {
+        $ids = static::renovationCategoryIds();
+
+        return in_array((int) $this->category_id, $ids, true)
+            || in_array((int) $this->sub_category_id, $ids, true)
+            || in_array((int) $this->child_category_id, $ids, true);
+    }
+
+    /**
+     * Absolute URL on the renovation frontend for this listing slug.
+     */
+    public function renovationFrontendUrl(): string
+    {
+        $base = rtrim((string) config('renovation.frontend_url', 'https://renovation.xpertbid.com'), '/');
+
+        return $base . '/properties/' . ltrim((string) $this->slug, '/');
+    }
+
     public function scopeBrowseable($query)
     {
         return $query->whereIn('status', ['active', 'sold_out']);
@@ -447,6 +516,26 @@ class Listing extends Model
     public function scopeProperties($query)
     {
         $ids = static::propertyCategoryIds();
+
+        return $query
+            ->browseable()
+            ->where(function ($q) {
+                $q->whereNull('listing_type')
+                    ->orWhere('listing_type', '!=', 'live_auction');
+            })
+            ->where(function ($q) use ($ids) {
+                $q->whereIn('category_id', $ids)
+                    ->orWhereIn('sub_category_id', $ids)
+                    ->orWhereIn('child_category_id', $ids);
+            });
+    }
+
+    /**
+     * Public renovation & builder listings under the configured root category tree.
+     */
+    public function scopeRenovations($query)
+    {
+        $ids = static::renovationCategoryIds();
 
         return $query
             ->browseable()

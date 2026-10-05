@@ -47,6 +47,12 @@ function parseFilters(sp: SearchParams): PropertyFilters {
 
 function findPurpose(tree: CategoryNode | null, slug?: string) {
   if (!tree || !slug) return null;
+  if (tree.main_categories && tree.main_categories.length > 0) {
+    for (const main of tree.main_categories) {
+      const found = (main.children || []).find((c) => c.slug === slug);
+      if (found) return found;
+    }
+  }
   return (tree.children || []).find((c) => c.slug === slug) || null;
 }
 
@@ -67,6 +73,7 @@ function hrefWith(
     "city_id",
     "state_id",
     "country_id",
+    "type",
     "sub_category",
     "child_category",
     "listing_type",
@@ -94,18 +101,15 @@ export async function generateMetadata({
   const sub = first(sp.sub_category);
   const child = first(sp.child_category);
 
-  if (sub === "for-sale") {
+  if (sub) {
     return {
-      title: child ? `${child.replace(/-/g, " ")} for sale` : "Properties for sale",
-    };
-  }
-  if (sub === "for-rent") {
-    return {
-      title: child ? `${child.replace(/-/g, " ")} for rent` : "Properties for rent",
+      title: child
+        ? `${child.replace(/-/g, " ")} | ${sub.replace(/-/g, " ")}`
+        : `${sub.replace(/-/g, " ")}`,
     };
   }
 
-  return { title: "Browse properties" };
+  return { title: "Browse Home Renovation & Builder Products" };
 }
 
 export default async function PropertiesPage({
@@ -131,7 +135,10 @@ export default async function PropertiesPage({
   const purpose = findPurpose(tree, filters.sub_category);
   const selectedChild = findChild(purpose, filters.child_category);
   const childOptions = purpose?.children || [];
-  const purposeTabs = tree?.children || [];
+  const purposeTabs =
+    tree?.main_categories && tree.main_categories.length > 0
+      ? tree.main_categories.flatMap((m) => m.children || [])
+      : tree?.children || [];
 
   let result: Awaited<ReturnType<typeof getProperties>> = {
     data: [],

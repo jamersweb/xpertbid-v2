@@ -64,6 +64,24 @@ export default function AppLayout({ children, title }) {
               document.body.classList.toggle('locale-rtl', currentDirection === 'rtl');
        }, [currentLocale, currentDirection]);
 
+       // Auto-sync authentication and cart whenever user switches back to this tab
+       useEffect(() => {
+              const handleTabFocus = () => {
+                     if (document.visibilityState && document.visibilityState !== 'visible') return;
+                     router.reload({
+                            only: ['auth', 'cart', 'favoriteListingIds'],
+                            preserveScroll: true,
+                            preserveState: true,
+                     });
+              };
+              window.addEventListener('focus', handleTabFocus);
+              document.addEventListener('visibilitychange', handleTabFocus);
+              return () => {
+                     window.removeEventListener('focus', handleTabFocus);
+                     document.removeEventListener('visibilitychange', handleTabFocus);
+              };
+       }, []);
+
        return (
               <CartProvider>
                      <AuthModalProvider>
