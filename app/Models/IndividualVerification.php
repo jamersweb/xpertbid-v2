@@ -22,8 +22,17 @@ class IndividualVerification extends Model
         'document_type',
     ];
 
-    // Optionally, for relationship with user:
-    public function user() {
+    /**
+     * Never expose storage keys in JSON / Inertia payloads.
+     * Serve files only via authenticated KYC download routes.
+     */
+    protected $hidden = [
+        'id_front_path',
+        'id_back_path',
+    ];
+
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 }

@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use App\Support\LoggedMail as Mail;
 use App\Models\CorporateVerification;
 use App\Models\NewNotification;
 use App\Mail\CorporateVerificationAcceptedMail;
 use App\Mail\CorporateVerificationDeclinedMail;
 use App\Mail\CorporateVerificationStatusUpdated;
+use App\Services\KycDocumentStorage;
 
 class CorporateVerificationController extends Controller
 {
@@ -103,18 +103,17 @@ class CorporateVerificationController extends Controller
             'mall_id' => 'nullable|integer|exists:malls,id',
         ]);
 
-        // Ensure public folder exists
-        $destination = public_path('assets/images/corporate_verifications');
-        if (!file_exists($destination)) {
-            mkdir($destination, 0755, true);
-        }
+        $kyc = app(KycDocumentStorage::class);
+        $existing = CorporateVerification::where('user_id', $user->id)->first();
+        $folder = 'corporate/' . $user->id;
 
-        // Move each uploaded file into that folder
         $relativePaths = [];
         foreach ($request->file('business_documents') as $file) {
-            $filename = Str::random(12) . '.' . $file->getClientOriginalExtension();
-            $file->move($destination, $filename);
-            $relativePaths[] = 'assets/images/corporate_verifications/' . $filename;
+            $relativePaths[] = $kyc->store($file, $folder);
+        }
+
+        if ($existing?->business_documents) {
+            $kyc->deleteMany($existing->business_documents);
         }
 
         $updateData = [
@@ -126,11 +125,8 @@ class CorporateVerificationController extends Controller
             'mall_id' => $data['mall_id'] ?? null,
             'status' => 'not_verified',
             'decline_reason' => null,
+            'business_documents' => $relativePaths,
         ];
-
-        if (!empty($relativePaths)) {
-            $updateData['business_documents'] = $relativePaths;
-        }
 
         $cv = CorporateVerification::updateOrCreate(
             ['user_id' => $user->id],
@@ -174,18 +170,17 @@ class CorporateVerificationController extends Controller
 
         $oldStatus = (string) ($cv->status ?? '');
 
-        // Handle new uploads
         if ($request->hasFile('business_documents')) {
-            $destination = public_path('assets/images/corporate_verifications');
-            if (!file_exists($destination)) {
-                mkdir($destination, 0755, true);
+            $kyc = app(KycDocumentStorage::class);
+            $folder = 'corporate/' . $cv->user_id;
+
+            if (is_array($cv->business_documents)) {
+                $kyc->deleteMany($cv->business_documents);
             }
 
             $relativePaths = [];
             foreach ($request->file('business_documents') as $file) {
-                $filename = Str::random(12) . '.' . $file->getClientOriginalExtension();
-                $file->move($destination, $filename);
-                $relativePaths[] = 'assets/images/corporate_verifications/' . $filename;
+                $relativePaths[] = $kyc->store($file, $folder);
             }
             $cv->business_documents = $relativePaths;
         }

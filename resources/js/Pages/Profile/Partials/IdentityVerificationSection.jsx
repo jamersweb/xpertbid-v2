@@ -287,8 +287,8 @@ function IndividualForm({ initialData, auth, countries }) {
 
     const [frontFile, setFrontFile] = useState(null);
     const [backFile, setBackFile] = useState(null);
-    const [frontPreview, setFrontPreview] = useState(initialData?.id_front_path ? `/${initialData.id_front_path}` : '');
-    const [backPreview, setBackPreview] = useState(initialData?.id_back_path ? `/${initialData.id_back_path}` : '');
+    const [frontPreview, setFrontPreview] = useState(initialData?.id_front_url || '');
+    const [backPreview, setBackPreview] = useState(initialData?.id_back_url || '');
 
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
@@ -429,7 +429,7 @@ function IndividualForm({ initialData, auth, countries }) {
                             file={frontFile}
                             onChange={onFrontChange}
                             onClear={() => { setFrontPreview(''); setFrontFile(null); }}
-                            existingPath={initialData?.id_front_path}
+                            existingPath={initialData?.has_id_front ? 'uploaded-front' : null}
                         />
                         {errors.id_front && <div className="text-danger mt-2">{errors.id_front}</div>}
                     </div>
@@ -441,7 +441,7 @@ function IndividualForm({ initialData, auth, countries }) {
                             file={backFile}
                             onChange={onBackChange}
                             onClear={() => { setBackPreview(''); setBackFile(null); }}
-                            existingPath={initialData?.id_back_path}
+                            existingPath={initialData?.has_id_back ? 'uploaded-back' : null}
                         />
                         {errors.id_back && <div className="text-danger mt-2">{errors.id_back}</div>}
                     </div>
@@ -513,8 +513,8 @@ function CorporateForm({ initialData, countries, malls = [] }) {
 
     const [businessDocuments, setBusinessDocuments] = useState([]);
     const [businessPreview, setBusinessPreview] = useState(
-        Array.isArray(initialData?.business_documents)
-            ? initialData.business_documents.map(p => `/${p}`)
+        Array.isArray(initialData?.business_document_urls)
+            ? initialData.business_document_urls
             : []
     );
     const [fileCountError, setFileCountError] = useState('');

@@ -12,6 +12,7 @@ use App\Mail\VerificationAcceptedMail;
 use App\Mail\VerificationDeclinedMail;
 use App\Mail\IndividualVerificationStatusUpdated;
 use App\Support\VerificationStatusMessageSender;
+use App\Support\KycVerificationPresenter;
 use Inertia\Inertia;
 
 class IndividualVerificationController extends Controller
@@ -41,6 +42,9 @@ class IndividualVerificationController extends Controller
         }
 
         $verifications = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
+        $verifications->getCollection()->transform(
+            fn ($verification) => KycVerificationPresenter::individual($verification)
+        );
 
         return Inertia::render('Admin/Verifications/Individual', [
             'verifications' => $verifications,

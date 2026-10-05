@@ -32,7 +32,7 @@ const OwnerInfoRow = ({
        const avatarSrc = buildAvatarUrl(owner?.profile || owner?.profile_pic || fallbackAvatar);
        const individualStatus = owner?.individual_verification?.status || owner?.individualVerification?.status;
        const corporateStatus = owner?.corporate_verification?.status || owner?.corporateVerification?.status;
-       const isVerified = [individualStatus, corporateStatus].some(
+       const isVerified = Boolean(owner?.is_verified) || [individualStatus, corporateStatus].some(
               (status) => String(status || "").toLowerCase() === "verified" || String(status || "").toLowerCase() === "approved"
        );
 

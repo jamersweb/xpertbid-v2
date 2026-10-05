@@ -7,10 +7,11 @@ use App\Models\CorporateVerification;
 use App\Models\Country;
 use App\Models\Mall;
 use App\Models\User;
+use App\Services\KycDocumentStorage;
+use App\Support\KycVerificationPresenter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -41,6 +42,7 @@ class MallSellerController extends Controller
 
         $users->through(function (User $user) {
             $corp = $user->corporateVerification;
+            $presented = KycVerificationPresenter::corporate($corp);
 
             return array_merge($user->toArray(), [
                 'role_name' => $user->getRoleNames()->first() ?? $user->role ?? 'User',
@@ -53,7 +55,9 @@ class MallSellerController extends Controller
                 'date_of_incorporation' => $corp?->date_of_incorporation,
                 'entity_type' => $corp?->entity_type,
                 'country' => $corp?->country,
-                'business_documents' => $corp?->business_documents ?? [],
+                'business_documents' => [],
+                'business_document_urls' => $presented['business_document_urls'] ?? [],
+                'document_count' => $presented['document_count'] ?? 0,
             ]);
         });
 
@@ -92,7 +96,7 @@ class MallSellerController extends Controller
                 'registered_address' => $data['registered_address'],
                 'date_of_incorporation' => $data['date_of_incorporation'],
                 'entity_type' => $data['entity_type'],
-                'business_documents' => $this->storeDocuments($request),
+                'business_documents' => $this->storeDocuments($request, $user->id),
                 'country' => $data['country'],
                 'mall_id' => $data['mall_id'],
                 'status' => 'verified',
@@ -115,9 +119,14 @@ class MallSellerController extends Controller
 
         $corp = $user->corporateVerification;
         $existingDocs = $corp?->business_documents ?? [];
-        $documents = $request->hasFile('business_documents')
-            ? $this->storeDocuments($request)
-            : $existingDocs;
+        $documents = $existingDocs;
+
+        if ($request->hasFile('business_documents')) {
+            $documents = $this->storeDocuments($request, $user->id);
+            if (! empty($existingDocs)) {
+                app(KycDocumentStorage::class)->deleteMany($existingDocs);
+            }
+        }
 
         if (empty($documents)) {
             return redirect()
@@ -220,12 +229,10 @@ class MallSellerController extends Controller
         return $request->validate($rules);
     }
 
-    protected function storeDocuments(Request $request): array
+    protected function storeDocuments(Request $request, ?int $userId = null): array
     {
-        $destination = public_path('assets/images/corporate_verifications');
-        if (! file_exists($destination)) {
-            mkdir($destination, 0755, true);
-        }
+        $kyc = app(KycDocumentStorage::class);
+        $folder = 'corporate/' . ($userId ?: 'pending');
 
         $relativePaths = [];
         foreach ($request->file('business_documents', []) as $file) {
@@ -233,9 +240,7 @@ class MallSellerController extends Controller
                 continue;
             }
 
-            $filename = Str::random(12) . '.' . $file->getClientOriginalExtension();
-            $file->move($destination, $filename);
-            $relativePaths[] = 'assets/images/corporate_verifications/' . $filename;
+            $relativePaths[] = $kyc->store($file, $folder);
         }
 
         return $relativePaths;

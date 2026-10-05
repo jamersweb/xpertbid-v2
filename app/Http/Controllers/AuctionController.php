@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Models\IndividualVerification;
 use App\Models\CorporateVerification;
 use App\Models\Favorite;
+use App\Support\ProductPagePresenter;
 use Illuminate\Support\Carbon;      //  import Carbon here
 use App\Mail\AuctionStatusUpdated;
 use App\Models\NewNotification;
@@ -215,8 +216,8 @@ class AuctionController extends Controller
     {
         return [
             'user',
-            'user.individualVerification',
-            'user.corporateVerification',
+            'user.individualVerification:id,user_id,status',
+            'user.corporateVerification:id,user_id,status',
         ];
     }
 
@@ -778,29 +779,17 @@ class AuctionController extends Controller
             ->latest()
             ->take(8)
             ->get()
-            ->map(function ($item) {
-                 // Map owner for frontend consistency if needed, or just use item.user
-                 $item->owner = [
-                     'name' => $item->user->name ?? '',
-                     'profile' => $item->user->profile_pic ?? '',
-                 ];
-                 return $item;
-            });
+            ->map(fn ($item) => ProductPagePresenter::related($item))
+            ->values()
+            ->all();
 
         // 4. Calculate Highest Bid (Server-side source of truth)
         $highestBid = $this->listingBidQuery($listing)->max('bid_amount') ?? 0;
 
-        // 5. Winner Details (if awarded)
+        // 5. Winner Details (if awarded) — name only, no email/PII
         $winnerDetails = null;
         if ($listing->status === 'awarded' || $listing->status === 'awarded ') {
-             $winner = $this->resolveListingWinner($listing);
-             if ($winner) {
-                 $winnerDetails = [[
-                     'name' => $winner->name,
-                     'email' => $winner->email, // Be careful exposing email? Next.js did it.
-                     // Add other details if matching Next.js structure
-                 ]];
-             }
+             $winnerDetails = ProductPagePresenter::winnerDetails($this->resolveListingWinner($listing));
         }
 
         $isFavorite = false;
@@ -862,17 +851,28 @@ class AuctionController extends Controller
             ->orderBy('id')
             ->get(['id', 'field_name', 'label', 'input_type']);
 
+        $bids = $this->listingBidQuery($listing)
+            ->with(['user.individualVerification:id,user_id,status', 'user.corporateVerification:id,user_id,status'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return Inertia::render('Auctions/Show', [
-            'auction' => $listing,
-            'bids' => $this->listingBidQuery($listing)->with('user')->orderBy('created_at', 'desc')->get(), // specific order for history
+            'auction' => ProductPagePresenter::listing($listing),
+            'bids' => ProductPagePresenter::bids($bids),
             'related' => $related,
-            'highestBid' => $highestBid, 
+            'highestBid' => $highestBid,
             'winnerDetails' => $winnerDetails,
-            'files' => $listing->album ?: [], // album is already cast to array in Listing model
             'isFavorite' => $isFavorite,
             'dynamicFields' => $dynamicFields,
             'liveVideoId' => $liveSession?->youtube_video_id,
-            'liveActiveAuction' => $liveActiveAuction,
+            'liveActiveAuction' => $liveActiveAuction
+                ? [
+                    'id' => $liveActiveAuction->id,
+                    'slug' => $liveActiveAuction->slug,
+                    'status' => $liveActiveAuction->status,
+                    'title' => $liveActiveAuction->title,
+                ]
+                : null,
             'marketplaceBackUrl' => $marketplaceBackUrl,
         ]);
     }

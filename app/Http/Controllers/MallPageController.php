@@ -95,8 +95,8 @@ class MallPageController extends Controller
             ->whereIn('status', $this->browseStatuses())
             ->where('listing_type', '!=', 'live_auction')
             ->with([
-                'user.individualVerification',
-                'user.corporateVerification',
+                'user.individualVerification:id,user_id,status',
+                'user.corporateVerification:id,user_id,status',
                 'category',
             ])
             ->withMax('bids', 'bid_amount')

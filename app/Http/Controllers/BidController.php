@@ -258,8 +258,8 @@ class BidController extends Controller
                 $q->orderBy('bid_amount', 'desc');
             },
             'category',
-            'user.individualVerification',
-            'user.corporateVerification',
+            'user.individualVerification:id,user_id,status',
+            'user.corporateVerification:id,user_id,status',
         ]);
 
         if ($activeTab === 'active') {

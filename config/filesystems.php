@@ -38,6 +38,18 @@ return [
             'report' => false,
         ],
 
+        /*
+        | KYC / identity documents — never publicly web-accessible.
+        | Swap driver via KYC_DISK env (e.g. s3) without changing controllers.
+        */
+        'kyc' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/kyc'),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

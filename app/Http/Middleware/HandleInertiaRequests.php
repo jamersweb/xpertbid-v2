@@ -33,8 +33,31 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $authUser = $request->user()?->loadMissing(['individualVerification', 'corporateVerification']);
+        $authUser = $request->user();
         $authPermissions = [];
+        $verificationSummary = [
+            'individual_status' => null,
+            'corporate_status' => null,
+            'is_verified' => false,
+        ];
+
+        if ($authUser) {
+            // Status-only queries — never attach full KYC records (PII/docs) to shared auth.user
+            $individualStatus = $authUser->individualVerification()->value('status');
+            $corporateStatus = $authUser->corporateVerification()->value('status');
+            $approved = ['verified', 'approved'];
+            $verificationSummary = [
+                'individual_status' => $individualStatus,
+                'corporate_status' => $corporateStatus,
+                'is_verified' => in_array(strtolower((string) $individualStatus), $approved, true)
+                    || in_array(strtolower((string) $corporateStatus), $approved, true),
+            ];
+
+            // Ensure relation attributes are not leaked if previously eager-loaded elsewhere
+            $authUser->unsetRelation('individualVerification');
+            $authUser->unsetRelation('corporateVerification');
+            $authUser->unsetRelation('identity_verification');
+        }
 
         if ($authUser && method_exists($authUser, 'getAllPermissions')) {
             $authPermissions = $authUser->getAllPermissions()->pluck('name')->values()->all();
@@ -59,6 +82,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $authUser,
                 'permissions' => $authPermissions,
+                'verification' => $verificationSummary,
             ],
             'cart' => $request->user() ? \App\Models\Cart::where('user_id', $request->user()->id)
                 ->with(['listing' => function ($query) {
@@ -81,10 +105,38 @@ class HandleInertiaRequests extends Middleware
                         'variation_name' => $cartItem->variation->name ?? $cartItem->variation_name,
                     ];
                 }) : [],
-            'ziggy' => fn () => [
-                ...(new Ziggy)->toArray(),
-                'location' => $request->url(),
-            ],
+            'ziggy' => function () use ($request, $authUser) {
+                $ziggy = new Ziggy;
+
+                $excluded = [
+                    'horizon.*',
+                    'telescope.*',
+                    'sanctum.*',
+                ];
+
+                $role = strtolower((string) ($authUser?->role ?? ''));
+                $isAdmin = in_array($role, ['admin', 'superadmin'], true);
+
+                // Don't leak the admin route map to public/non-admin users.
+                if (! $isAdmin) {
+                    $excluded[] = 'admin.*';
+                }
+
+                // KYC document routes only for signed-in users.
+                if (! $authUser) {
+                    $excluded[] = 'kyc.*';
+                    $excluded[] = 'individual-verifications.*';
+                    $excluded[] = 'corporate-verifications.*';
+                    $excluded[] = 'verification.identity.store';
+                }
+
+                $ziggy->filter($excluded, false);
+
+                return [
+                    ...$ziggy->toArray(),
+                    'location' => $request->url(),
+                ];
+            },
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),

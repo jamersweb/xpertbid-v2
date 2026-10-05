@@ -121,11 +121,28 @@ export default function Individual({ verifications, filters }) {
                                                                </td>
                                                                <td className="px-6 py-4">
                                                                       <div className="flex gap-2">
-                                                                             {verification.id_front_path && (
-                                                                                    <a href={asset(verification.id_front_path)} target="_blank" className="text-xs bg-gray-100 text-gray-900 hover:bg-gray-200 px-2 py-1 rounded transition-colors">Front</a>
+                                                                             {(verification.has_id_front || verification.id_front_url) && (
+                                                                                    <a
+                                                                                           href={verification.id_front_url || route('kyc.individual.front', verification.id)}
+                                                                                           target="_blank"
+                                                                                           rel="noopener noreferrer"
+                                                                                           className="text-xs bg-gray-100 text-gray-900 hover:bg-gray-200 px-2 py-1 rounded transition-colors"
+                                                                                    >
+                                                                                           Front
+                                                                                    </a>
                                                                              )}
-                                                                             {verification.id_back_path && (
-                                                                                    <a href={asset(verification.id_back_path)} target="_blank" className="text-xs bg-gray-100 text-gray-900 hover:bg-gray-200 px-2 py-1 rounded transition-colors">Back</a>
+                                                                             {(verification.has_id_back || verification.id_back_url) && (
+                                                                                    <a
+                                                                                           href={verification.id_back_url || route('kyc.individual.back', verification.id)}
+                                                                                           target="_blank"
+                                                                                           rel="noopener noreferrer"
+                                                                                           className="text-xs bg-gray-100 text-gray-900 hover:bg-gray-200 px-2 py-1 rounded transition-colors"
+                                                                                    >
+                                                                                           Back
+                                                                                    </a>
+                                                                             )}
+                                                                             {!verification.has_id_front && !verification.has_id_back && !verification.id_front_url && !verification.id_back_url && (
+                                                                                    <span className="text-[11px] text-gray-400">No docs</span>
                                                                              )}
                                                                       </div>
                                                                </td>
@@ -198,6 +215,3 @@ export default function Individual({ verifications, filters }) {
               </AdminLayout>
        );
 }
-
-// Shorthand for asset function if needed, or use window.asset
-const asset = (path) => '/' + path;

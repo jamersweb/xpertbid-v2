@@ -11,6 +11,7 @@ use App\Models\Notification as NewNotification;
 use App\Mail\CorporateVerificationAcceptedMail;
 use App\Mail\CorporateVerificationDeclinedMail;
 use App\Support\VerificationStatusMessageSender;
+use App\Support\KycVerificationPresenter;
 use Inertia\Inertia;
 
 class CorporateVerificationController extends Controller
@@ -37,6 +38,9 @@ class CorporateVerificationController extends Controller
         }
 
         $verifications = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
+        $verifications->getCollection()->transform(
+            fn ($verification) => KycVerificationPresenter::corporate($verification)
+        );
 
         return Inertia::render('Admin/Verifications/Corporate', [
             'verifications' => $verifications,

@@ -12,10 +12,16 @@ import '@/../css/sell.css'; // Import custom styles for Sell page
 export default function Create({ categories, countries = [], profileLocation = null, listing = null, vehicleVerification = null, propertyVerification = null }) {
        const { auth } = usePage().props;
        const individualVerificationStatus =
-              auth?.user?.individual_verification?.status || auth?.user?.individualVerification?.status || '';
+              auth?.verification?.individual_status
+              || auth?.user?.individual_verification?.status
+              || auth?.user?.individualVerification?.status
+              || '';
        const corporateVerificationStatus =
-              auth?.user?.corporate_verification?.status || auth?.user?.corporateVerification?.status || '';
-       const canPublishListing = [individualVerificationStatus, corporateVerificationStatus].some(
+              auth?.verification?.corporate_status
+              || auth?.user?.corporate_verification?.status
+              || auth?.user?.corporateVerification?.status
+              || '';
+       const canPublishListing = Boolean(auth?.verification?.is_verified) || [individualVerificationStatus, corporateVerificationStatus].some(
               (status) => ['verified', 'approved'].includes(String(status || '').toLowerCase())
        );
        const publishBlockedMessage = 'Complete individual or corporate verification before publishing a listing. You can still save it as a draft.';

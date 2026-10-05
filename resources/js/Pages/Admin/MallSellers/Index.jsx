@@ -152,7 +152,7 @@ export default function Index({ users, filters, malls = [], countries = [] }) {
 
        const bannerStatus = flash?.success || null;
        const bannerError = flash?.error || null;
-       const existingDocs = editingUser?.business_documents || [];
+       const existingDocs = editingUser?.business_document_urls || [];
 
        return (
               <AdminLayout title="Mall Sellers">
@@ -471,15 +471,15 @@ export default function Index({ users, filters, malls = [], countries = [] }) {
                                                                <p className="mt-1 text-xs text-gray-500">JPG, PNG or PDF. Max 3 files, 10MB each.</p>
                                                                {editingUser && existingDocs.length > 0 && (
                                                                       <div className="mt-2 space-y-1">
-                                                                             {existingDocs.map((doc) => (
+                                                                             {existingDocs.map((url, idx) => (
                                                                                     <a
-                                                                                           key={doc}
-                                                                                           href={`/${String(doc).replace(/^\//, '')}`}
+                                                                                           key={url}
+                                                                                           href={url}
                                                                                            target="_blank"
                                                                                            rel="noreferrer"
                                                                                            className="block text-xs font-medium text-sky-600 hover:underline"
                                                                                     >
-                                                                                           {String(doc).split('/').pop()}
+                                                                                           Document {idx + 1}
                                                                                     </a>
                                                                              ))}
                                                                       </div>

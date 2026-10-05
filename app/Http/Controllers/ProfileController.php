@@ -16,6 +16,7 @@ use App\Models\State;
 use App\Models\City;
 use App\Models\Notification;
 use App\Models\Mall;
+use App\Support\KycVerificationPresenter;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
@@ -140,8 +141,10 @@ class ProfileController extends Controller
         $user = $request->user();
         $address = $user->shippingAddress;
         $identity = $user->identity_verification;
-        $individualVerification = $user->individualVerification;
-        $corporateVerification = $user->corporateVerification()->with('mall')->first();
+        $individualVerification = KycVerificationPresenter::individual($user->individualVerification);
+        $corporateVerification = KycVerificationPresenter::corporate(
+            $user->corporateVerification()->with('mall')->first()
+        );
         $malls = Mall::query()->orderBy('name')->get(['id', 'name', 'status']);
         $notificationSettings = Notification::where("user_id", $user->id)->first();
 

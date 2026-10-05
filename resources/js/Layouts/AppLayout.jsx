@@ -20,16 +20,26 @@ export default function AppLayout({ children, title }) {
        const propertyFrontendUrl = propertyUrlProp || 'https://property.xpertbid.com';
 
        const individualVerificationStatus =
-              auth?.user?.individual_verification?.status || auth?.user?.individualVerification?.status;
+              auth?.verification?.individual_status
+              || auth?.user?.individual_verification?.status
+              || auth?.user?.individualVerification?.status;
        const corporateVerificationStatus =
-              auth?.user?.corporate_verification?.status || auth?.user?.corporateVerification?.status;
-       const verificationStatus = corporateVerificationStatus || individualVerificationStatus || 'unverified';
+              auth?.verification?.corporate_status
+              || auth?.user?.corporate_verification?.status
+              || auth?.user?.corporateVerification?.status;
+       const isVerified = Boolean(auth?.verification?.is_verified)
+              || [individualVerificationStatus, corporateVerificationStatus].some(
+                     (status) => ['verified', 'approved'].includes(String(status || '').toLowerCase())
+              );
+       const verificationStatus = isVerified
+              ? 'verified'
+              : (corporateVerificationStatus || individualVerificationStatus || 'unverified');
        const currentPath = ziggy?.location && ziggy.location.startsWith('http') 
               ? new URL(ziggy.location).pathname 
               : (ziggy?.location || '');
        const shouldShowVerifyButton =
               Boolean(auth?.user) &&
-              verificationStatus !== 'verified' &&
+              !isVerified &&
               (auth?.user ? currentPath !== route('verification.identity', {}, false) : false);
        useSessionKeepAlive(Boolean(auth?.user));
 

@@ -184,8 +184,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Verification
     Route::get('/identity-verification', [ProfileController::class, 'getIdentityVerification'])->name('verification.identity');
     Route::post('/identity-verification', [ProfileController::class, 'saveIdentityVerification'])->name('verification.identity.store');
-    Route::post('/individual-verification', [\App\Http\Controllers\IndividualVerificationController::class, 'store'])->name('individual-verifications.store');
-    Route::post('/corporate-verification', [\App\Http\Controllers\CorporateVerificationController::class, 'store'])->name('corporate-verifications.store');
+    Route::post('/individual-verification', [\App\Http\Controllers\IndividualVerificationController::class, 'store'])
+        ->middleware('throttle:5,60')
+        ->name('individual-verifications.store');
+    Route::post('/corporate-verification', [\App\Http\Controllers\CorporateVerificationController::class, 'store'])
+        ->middleware('throttle:5,60')
+        ->name('corporate-verifications.store');
+
+    // Private KYC document downloads (owner or admin with verification permission)
+    Route::get('/kyc/individual/{id}/front', [\App\Http\Controllers\KycDocumentController::class, 'individualFront'])
+        ->name('kyc.individual.front');
+    Route::get('/kyc/individual/{id}/back', [\App\Http\Controllers\KycDocumentController::class, 'individualBack'])
+        ->name('kyc.individual.back');
+    Route::get('/kyc/corporate/{id}/documents/{index}', [\App\Http\Controllers\KycDocumentController::class, 'corporateDocument'])
+        ->whereNumber('index')
+        ->name('kyc.corporate.document');
 
     // Unified Listings (Refactored from Auctions)
     Route::get('/sell', [\App\Http\Controllers\ListingController::class, 'create'])->name('auctions.create');

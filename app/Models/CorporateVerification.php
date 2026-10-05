@@ -24,6 +24,14 @@ class CorporateVerification extends Model
         'date_of_incorporation' => 'date',
     ];
 
+    /**
+     * Never expose storage keys in JSON / Inertia payloads.
+     * Serve files only via authenticated KYC download routes.
+     */
+    protected $hidden = [
+        'business_documents',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

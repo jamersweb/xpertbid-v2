@@ -21,8 +21,8 @@ class LiveAuctionDemoController extends Controller
     {
         return [
             'user',
-            'user.individualVerification',
-            'user.corporateVerification',
+            'user.individualVerification:id,user_id,status',
+            'user.corporateVerification:id,user_id,status',
         ];
     }
 

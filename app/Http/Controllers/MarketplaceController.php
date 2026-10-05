@@ -266,8 +266,8 @@ class MarketplaceController extends Controller
         $query = Listing::whereIn('status', $this->browseStatuses())
             ->excludeProperties()
             ->with([
-            'user.individualVerification',
-            'user.corporateVerification',
+            'user.individualVerification:id,user_id,status',
+            'user.corporateVerification:id,user_id,status',
             'category',
             'bids',
         ])->withMax('bids', 'bid_amount');
@@ -540,8 +540,8 @@ class MarketplaceController extends Controller
         $curatedBaseQuery = Listing::whereIn('status', $this->browseStatuses())
             ->excludeProperties()
             ->with([
-            'user.individualVerification',
-            'user.corporateVerification',
+            'user.individualVerification:id,user_id,status',
+            'user.corporateVerification:id,user_id,status',
             'category',
             'bids',
         ])->withMax('bids', 'bid_amount');

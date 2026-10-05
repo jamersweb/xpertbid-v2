@@ -9,6 +9,7 @@ use App\Models\NewNotification;
 use App\Mail\VerificationAcceptedMail;
 use App\Mail\VerificationDeclinedMail;
 use App\Mail\IndividualVerificationStatusUpdated;
+use App\Services\KycDocumentStorage;
 
 class IndividualVerificationController extends Controller
 {
@@ -106,28 +107,9 @@ class IndividualVerificationController extends Controller
             'document_type' => 'required|string',
         ]);
 
-        // Ensure upload dir exists
-        $dest = public_path('assets/images/individuals');
-        if (!is_dir($dest))
-            @mkdir($dest, 0755, true);
-
-        // Front doc (optional)
-        $frontPath = null;
-        if ($request->hasFile('id_front')) {
-            $frontFile = $request->file('id_front');
-            $frontName = time() . '_front.' . $frontFile->getClientOriginalExtension();
-            $frontFile->move($dest, $frontName);
-            $frontPath = 'assets/images/individuals/' . $frontName;
-        }
-
-        // Back doc (optional)
-        $backPath = null;
-        if ($request->hasFile('id_back')) {
-            $backFile = $request->file('id_back');
-            $backName = time() . '_back.' . $backFile->getClientOriginalExtension();
-            $backFile->move($dest, $backName);
-            $backPath = 'assets/images/individuals/' . $backName;
-        }
+        $kyc = app(KycDocumentStorage::class);
+        $existing = IndividualVerification::where('user_id', $user->id)->first();
+        $folder = 'individual/' . $user->id;
 
         $updateData = [
             'full_legal_name' => $data['full_legal_name'],
@@ -142,10 +124,19 @@ class IndividualVerificationController extends Controller
             'decline_reason' => null,
         ];
 
-        if ($frontPath)
-            $updateData['id_front_path'] = $frontPath;
-        if ($backPath)
-            $updateData['id_back_path'] = $backPath;
+        if ($request->hasFile('id_front')) {
+            if ($existing?->id_front_path) {
+                $kyc->delete($existing->id_front_path);
+            }
+            $updateData['id_front_path'] = $kyc->store($request->file('id_front'), $folder);
+        }
+
+        if ($request->hasFile('id_back')) {
+            if ($existing?->id_back_path) {
+                $kyc->delete($existing->id_back_path);
+            }
+            $updateData['id_back_path'] = $kyc->store($request->file('id_back'), $folder);
+        }
 
         $iv = IndividualVerification::updateOrCreate(
             ['user_id' => $user->id],
@@ -195,24 +186,16 @@ class IndividualVerificationController extends Controller
         ]);
 
         $oldStatus = (string) ($iv->status ?? '');
+        $kyc = app(KycDocumentStorage::class);
+        $folder = 'individual/' . $iv->user_id;
 
-        // Ensure dir exists
-        $dest = public_path('assets/images/individuals');
-        if (!is_dir($dest))
-            @mkdir($dest, 0755, true);
-
-        // Files
         if ($request->hasFile('id_front')) {
-            $f = $request->file('id_front');
-            $fn = time() . '_front.' . $f->getClientOriginalExtension();
-            $f->move($dest, $fn);
-            $iv->id_front_path = 'assets/images/individuals/' . $fn;
+            $kyc->delete($iv->id_front_path);
+            $iv->id_front_path = $kyc->store($request->file('id_front'), $folder);
         }
         if ($request->hasFile('id_back')) {
-            $f = $request->file('id_back');
-            $fn = time() . '_back.' . $f->getClientOriginalExtension();
-            $f->move($dest, $fn);
-            $iv->id_back_path = 'assets/images/individuals/' . $fn;
+            $kyc->delete($iv->id_back_path);
+            $iv->id_back_path = $kyc->store($request->file('id_back'), $folder);
         }
 
         // Scalars

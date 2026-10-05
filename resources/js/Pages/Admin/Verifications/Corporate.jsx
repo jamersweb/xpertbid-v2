@@ -109,9 +109,32 @@ export default function Corporate({ verifications, filters }) {
                                                                </td>
                                                                <td className="px-6 py-4">
                                                                       <div className="flex gap-1 flex-wrap max-w-[150px]">
-                                                                             {(verification.business_documents || []).map((doc, idx) => (
-                                                                                    <a key={idx} href={'/' + doc} target="_blank" className="text-[10px] bg-gray-100 text-gray-900 hover:bg-gray-200 px-2 py-1 rounded">Doc {idx + 1}</a>
-                                                                             ))}
+                                                                             {(verification.business_document_urls || []).length > 0
+                                                                                    ? verification.business_document_urls.map((url, idx) => (
+                                                                                           <a
+                                                                                                  key={idx}
+                                                                                                  href={url || route('kyc.corporate.document', [verification.id, idx])}
+                                                                                                  target="_blank"
+                                                                                                  rel="noopener noreferrer"
+                                                                                                  className="text-[10px] bg-gray-100 text-gray-900 hover:bg-gray-200 px-2 py-1 rounded"
+                                                                                           >
+                                                                                                  Doc {idx + 1}
+                                                                                           </a>
+                                                                                    ))
+                                                                                    : Array.from({ length: verification.document_count || 0 }).map((_, idx) => (
+                                                                                           <a
+                                                                                                  key={idx}
+                                                                                                  href={route('kyc.corporate.document', [verification.id, idx])}
+                                                                                                  target="_blank"
+                                                                                                  rel="noopener noreferrer"
+                                                                                                  className="text-[10px] bg-gray-100 text-gray-900 hover:bg-gray-200 px-2 py-1 rounded"
+                                                                                           >
+                                                                                                  Doc {idx + 1}
+                                                                                           </a>
+                                                                                    ))}
+                                                                             {(verification.document_count || 0) === 0 && (verification.business_document_urls || []).length === 0 && (
+                                                                                    <span className="text-[11px] text-gray-400">No docs</span>
+                                                                             )}
                                                                       </div>
                                                                </td>
                                                                <td className="px-6 py-4">
