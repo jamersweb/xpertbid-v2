@@ -170,7 +170,8 @@ class KycDoctorCommand extends Command
                 continue;
             }
             foreach (array_unique($columns) as $column) {
-                $row->{$column} = null;
+                // Columns are NOT NULL in DB — use empty string so filled() hides broken links.
+                $row->{$column} = '';
                 $cleared++;
             }
             $row->save();
