@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\CorporateVerification;
 use App\Models\IndividualVerification;
 use App\Services\KycDocumentStorage;
+use Illuminate\Support\Facades\File;
 
 class KycVerificationPresenter
 {
@@ -17,24 +18,20 @@ class KycVerificationPresenter
         $storage = app(KycDocumentStorage::class);
         $data = $verification->toArray();
 
-        $hasFront = filled($verification->id_front_path)
-            && ! $storage->isPlaceholder($verification->id_front_path);
-        $hasBack = filled($verification->id_back_path)
-            && ! $storage->isPlaceholder($verification->id_back_path);
+        // Only expose download links when the file actually exists on disk.
+        $hasFront = self::documentExists($storage, $verification->id_front_path);
+        $hasBack = self::documentExists($storage, $verification->id_back_path);
 
         unset($data['id_front_path'], $data['id_back_path']);
 
-        $frontUrl = $hasFront
-            ? route('kyc.individual.front', $verification->id, absolute: false)
-            : null;
-        $backUrl = $hasBack
-            ? route('kyc.individual.back', $verification->id, absolute: false)
-            : null;
-
         $data['has_id_front'] = $hasFront;
         $data['has_id_back'] = $hasBack;
-        $data['id_front_url'] = $frontUrl;
-        $data['id_back_url'] = $backUrl;
+        $data['id_front_url'] = $hasFront
+            ? route('kyc.individual.front', $verification->id, absolute: false)
+            : null;
+        $data['id_back_url'] = $hasBack
+            ? route('kyc.individual.back', $verification->id, absolute: false)
+            : null;
 
         return $data;
     }
@@ -53,7 +50,7 @@ class KycVerificationPresenter
 
         $urls = [];
         foreach ($documents as $index => $path) {
-            if (! filled($path) || $storage->isPlaceholder($path)) {
+            if (! self::documentExists($storage, $path)) {
                 continue;
             }
             $urls[] = route('kyc.corporate.document', [
@@ -67,5 +64,18 @@ class KycVerificationPresenter
         $data['business_document_urls'] = $urls;
 
         return $data;
+    }
+
+    private static function documentExists(KycDocumentStorage $storage, ?string $key): bool
+    {
+        if (! filled($key) || $storage->isPlaceholder($key)) {
+            return false;
+        }
+
+        if ($storage->isLegacyPublicPath($key)) {
+            return File::isFile(public_path(ltrim($key, '/')));
+        }
+
+        return $storage->isStoredKey($key) && $storage->exists($key);
     }
 }

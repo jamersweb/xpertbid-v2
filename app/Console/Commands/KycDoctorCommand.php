@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\File;
 class KycDoctorCommand extends Command
 {
     protected $signature = 'kyc:doctor
-                            {--fix-permissions : chmod private KYC dirs/files so the web user can read them}';
+                            {--fix-permissions : chmod private KYC dirs/files so the web user can read them}
+                            {--clear-missing : Null out DB document paths whose files are missing (stops broken /kyc links)}';
 
     protected $description = 'Diagnose KYC private-disk paths vs DB keys (helps debug /kyc 404s after migrate)';
 
@@ -28,43 +29,62 @@ class KycDoctorCommand extends Command
             $this->info('Permissions updated under '.$root);
         }
 
-        $missing = 0;
         $ok = 0;
-        $legacy = 0;
-        $samples = [];
+        $legacyOk = 0;
+        $missingPrivate = 0;
+        $missingLegacy = 0;
+        $samplesPrivate = [];
+        $samplesLegacy = [];
+        $clearable = [];
 
-        IndividualVerification::query()->orderBy('id')->chunkById(100, function ($rows) use ($storage, &$missing, &$ok, &$legacy, &$samples) {
+        IndividualVerification::query()->orderBy('id')->chunkById(100, function ($rows) use ($storage, &$ok, &$legacyOk, &$missingPrivate, &$missingLegacy, &$samplesPrivate, &$samplesLegacy, &$clearable) {
             foreach ($rows as $row) {
                 foreach (['id_front_path' => 'front', 'id_back_path' => 'back'] as $column => $label) {
                     $key = $row->{$column};
                     $status = $this->classify($storage, $key);
-                    if ($status === 'ok') {
+
+                    if ($status === 'ok_private') {
                         $ok++;
-                    } elseif ($status === 'legacy') {
-                        $legacy++;
+                    } elseif ($status === 'ok_legacy') {
+                        $legacyOk++;
                     } elseif ($status === 'missing_private') {
-                        $missing++;
-                        if (count($samples) < 15) {
-                            $samples[] = "individual #{$row->id} {$label}: {$key}";
+                        $missingPrivate++;
+                        $clearable[] = ['type' => 'individual', 'id' => $row->id, 'column' => $column];
+                        if (count($samplesPrivate) < 10) {
+                            $samplesPrivate[] = "individual #{$row->id} {$label}: {$key}";
+                        }
+                    } elseif ($status === 'missing_legacy') {
+                        $missingLegacy++;
+                        $clearable[] = ['type' => 'individual', 'id' => $row->id, 'column' => $column];
+                        if (count($samplesLegacy) < 10) {
+                            $samplesLegacy[] = "individual #{$row->id} {$label}: {$key}";
                         }
                     }
                 }
             }
         });
 
-        CorporateVerification::query()->orderBy('id')->chunkById(100, function ($rows) use ($storage, &$missing, &$ok, &$legacy, &$samples) {
+        CorporateVerification::query()->orderBy('id')->chunkById(100, function ($rows) use ($storage, &$ok, &$legacyOk, &$missingPrivate, &$missingLegacy, &$samplesPrivate, &$samplesLegacy, &$clearable) {
             foreach ($rows as $row) {
                 $docs = is_array($row->business_documents) ? $row->business_documents : [];
                 foreach ($docs as $index => $key) {
                     $status = $this->classify($storage, $key);
-                    if ($status === 'ok') {
+
+                    if ($status === 'ok_private') {
                         $ok++;
-                    } elseif ($status === 'legacy') {
-                        $legacy++;
+                    } elseif ($status === 'ok_legacy') {
+                        $legacyOk++;
                     } elseif ($status === 'missing_private') {
-                        $missing++;
-                        if (count($samples) < 15) {
-                            $samples[] = "corporate #{$row->id} doc[{$index}]: {$key}";
+                        $missingPrivate++;
+                        $clearable[] = ['type' => 'corporate', 'id' => $row->id, 'index' => $index];
+                        if (count($samplesPrivate) < 10) {
+                            $samplesPrivate[] = "corporate #{$row->id} doc[{$index}]: {$key}";
+                        }
+                    } elseif ($status === 'missing_legacy') {
+                        $missingLegacy++;
+                        $clearable[] = ['type' => 'corporate', 'id' => $row->id, 'index' => $index];
+                        if (count($samplesLegacy) < 10) {
+                            $samplesLegacy[] = "corporate #{$row->id} doc[{$index}]: {$key}";
                         }
                     }
                 }
@@ -72,29 +92,40 @@ class KycDoctorCommand extends Command
         });
 
         $this->newLine();
-        $this->table(['ok_on_disk', 'still_legacy_public', 'missing_private_file'], [[$ok, $legacy, $missing]]);
+        $this->table(
+            ['ok_private', 'ok_legacy_public', 'missing_private_key', 'missing_legacy_public'],
+            [[$ok, $legacyOk, $missingPrivate, $missingLegacy]]
+        );
 
-        if ($samples !== []) {
-            $this->warn('Sample missing private files:');
-            foreach ($samples as $sample) {
+        if ($samplesPrivate !== []) {
+            $this->warn('Sample DB private keys with NO file on disk:');
+            foreach ($samplesPrivate as $sample) {
                 $this->line(' - '.$sample);
             }
         }
 
-        if ($missing > 0) {
-            $this->error('DB points to private keys but files are missing on this server disk.');
-            $this->line('Common causes:');
-            $this->line(' 1) migrate ran in a different release/directory than the live app');
-            $this->line(' 2) storage/ is not shared/persisted across deploys');
-            $this->line(' 3) file ownership/permissions (try: php artisan kyc:doctor --fix-permissions)');
-            $this->line(' 4) config cache outdated — run: php artisan config:clear && php artisan config:cache');
+        if ($samplesLegacy !== []) {
+            $this->warn('Sample DB public paths with NO file in public/:');
+            foreach ($samplesLegacy as $sample) {
+                $this->line(' - '.$sample);
+            }
+            $this->line('These were already missing before migrate (or public originals were deleted elsewhere).');
+            $this->line('They cannot be recovered unless you restore from backup.');
         }
 
-        if ($legacy > 0) {
-            $this->warn('Some rows still use public paths. Re-run: php artisan kyc:migrate-public-documents --apply');
+        if ($ok > 0) {
+            $this->info("{$ok} document(s) are OK on the private disk — those /kyc URLs should work.");
         }
 
-        return $missing > 0 ? self::FAILURE : self::SUCCESS;
+        if ($this->option('clear-missing') && $clearable !== []) {
+            $cleared = $this->clearMissing($clearable);
+            $this->info("Cleared {$cleared} missing document path(s) from DB.");
+        } elseif ($missingPrivate + $missingLegacy > 0) {
+            $this->line('To hide broken Front/Back links for missing files:');
+            $this->line('  php artisan kyc:doctor --clear-missing');
+        }
+
+        return ($missingPrivate > 0) ? self::FAILURE : self::SUCCESS;
     }
 
     private function classify(KycDocumentStorage $storage, ?string $key): string
@@ -106,25 +137,62 @@ class KycDoctorCommand extends Command
         if ($storage->isLegacyPublicPath($key)) {
             $absolute = public_path(ltrim($key, '/'));
 
-            return File::isFile($absolute) ? 'legacy' : 'missing_private';
+            return File::isFile($absolute) ? 'ok_legacy' : 'missing_legacy';
         }
 
         if ($storage->isStoredKey($key)) {
-            return $storage->exists($key) || $this->absoluteExists($storage, $key)
-                ? 'ok'
-                : 'missing_private';
+            return $storage->exists($key) ? 'ok_private' : 'missing_private';
         }
 
         return 'empty';
     }
 
-    private function absoluteExists(KycDocumentStorage $storage, string $key): bool
+    /**
+     * @param  list<array<string, mixed>>  $clearable
+     */
+    private function clearMissing(array $clearable): int
     {
-        try {
-            return is_file($storage->disk()->path($key));
-        } catch (\Throwable) {
-            return false;
+        $cleared = 0;
+        $individualCols = [];
+        $corporateIndexes = [];
+
+        foreach ($clearable as $item) {
+            if ($item['type'] === 'individual') {
+                $individualCols[$item['id']][] = $item['column'];
+            } else {
+                $corporateIndexes[$item['id']][] = $item['index'];
+            }
         }
+
+        foreach ($individualCols as $id => $columns) {
+            $row = IndividualVerification::find($id);
+            if (! $row) {
+                continue;
+            }
+            foreach (array_unique($columns) as $column) {
+                $row->{$column} = null;
+                $cleared++;
+            }
+            $row->save();
+        }
+
+        foreach ($corporateIndexes as $id => $indexes) {
+            $row = CorporateVerification::find($id);
+            if (! $row) {
+                continue;
+            }
+            $docs = is_array($row->business_documents) ? $row->business_documents : [];
+            foreach ($indexes as $index) {
+                if (array_key_exists($index, $docs)) {
+                    unset($docs[$index]);
+                    $cleared++;
+                }
+            }
+            $row->business_documents = array_values($docs);
+            $row->save();
+        }
+
+        return $cleared;
     }
 
     private function fixPermissions(string $root): void
