@@ -95,12 +95,29 @@ class KycDocumentController extends Controller
         }
 
         // New private-disk keys
-        if ($this->storage->isStoredKey($key) && $this->storage->exists($key)) {
-            return Storage::disk(KycDocumentStorage::DISK)->response(
-                $key,
-                basename($key),
-                ['Content-Disposition' => 'inline; filename="' . basename($key) . '"']
-            );
+        if ($this->storage->isStoredKey($key)) {
+            $disk = Storage::disk(KycDocumentStorage::DISK);
+
+            $absolute = null;
+            try {
+                $absolute = $disk->path($key);
+            } catch (\Throwable) {
+                $absolute = null;
+            }
+
+            if ($disk->exists($key) || ($absolute && is_file($absolute))) {
+                if ($absolute && is_file($absolute)) {
+                    return response()->file($absolute, [
+                        'Content-Disposition' => 'inline; filename="'.basename($absolute).'"',
+                    ]);
+                }
+
+                return $disk->response(
+                    $key,
+                    basename($key),
+                    ['Content-Disposition' => 'inline; filename="'.basename($key).'"']
+                );
+            }
         }
 
         // Legacy public paths (until kyc:migrate-public-documents --apply --delete-public)
@@ -108,7 +125,7 @@ class KycDocumentController extends Controller
             $absolute = public_path(ltrim($key, '/'));
             if (File::isFile($absolute)) {
                 return response()->file($absolute, [
-                    'Content-Disposition' => 'inline; filename="' . basename($absolute) . '"',
+                    'Content-Disposition' => 'inline; filename="'.basename($absolute).'"',
                 ]);
             }
         }

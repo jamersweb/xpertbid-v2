@@ -42,7 +42,15 @@ class KycDocumentStorage
             return false;
         }
 
-        return $this->disk()->exists($key);
+        if ($this->disk()->exists($key)) {
+            return true;
+        }
+
+        try {
+            return is_file($this->disk()->path($key));
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public function delete(?string $key): bool

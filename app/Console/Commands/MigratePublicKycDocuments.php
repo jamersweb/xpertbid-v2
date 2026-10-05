@@ -33,13 +33,18 @@ class MigratePublicKycDocuments extends Command
             'failed' => 0,
         ];
 
+        File::ensureDirectoryExists(storage_path('app/private/kyc'), 0755);
+        @chmod(storage_path('app/private'), 0775);
+        @chmod(storage_path('app/private/kyc'), 0775);
+
         $this->info($apply ? 'Applying KYC public→private migration…' : 'Dry run (pass --apply to persist)…');
+        $this->line('Target disk root: '.storage_path('app/private/kyc'));
 
         IndividualVerification::query()->orderBy('id')->chunkById(100, function ($rows) use ($storage, $apply, $deletePublic, &$stats) {
             foreach ($rows as $row) {
                 $stats['individual_scanned']++;
                 $changed = false;
-                $folder = 'individual/' . $row->user_id;
+                $folder = 'individual/'.$row->user_id;
 
                 foreach (['id_front_path', 'id_back_path'] as $column) {
                     $result = $this->migratePath($storage, $row->{$column}, $folder, $apply, $deletePublic, $stats);
@@ -71,7 +76,7 @@ class MigratePublicKycDocuments extends Command
                     continue;
                 }
 
-                $folder = 'corporate/' . $row->user_id;
+                $folder = 'corporate/'.$row->user_id;
                 $newDocs = [];
                 $changed = false;
 
@@ -104,7 +109,8 @@ class MigratePublicKycDocuments extends Command
         });
 
         $this->table(array_keys($stats), [array_values($stats)]);
-        $this->line('After deploy: php artisan kyc:migrate-public-documents --apply --delete-public');
+        $this->line('Diagnose: php artisan kyc:doctor');
+        $this->line('Fix perms: php artisan kyc:doctor --fix-permissions');
 
         return $stats['failed'] > 0 ? self::FAILURE : self::SUCCESS;
     }
@@ -130,7 +136,14 @@ class MigratePublicKycDocuments extends Command
         }
 
         if ($storage->isStoredKey($path) && ! $storage->isLegacyPublicPath($path)) {
-            return ['status' => 'already_private'];
+            // Already private key — ensure the file actually exists on THIS server.
+            if ($storage->exists($path) || $this->absoluteExists($storage, $path)) {
+                return ['status' => 'already_private'];
+            }
+
+            $this->warn("Private key in DB but file missing on disk: {$path}");
+
+            return ['status' => 'failed'];
         }
 
         if (! $storage->isLegacyPublicPath($path)) {
@@ -147,23 +160,30 @@ class MigratePublicKycDocuments extends Command
         }
 
         $extension = strtolower(pathinfo($absolute, PATHINFO_EXTENSION) ?: 'bin');
-        $newKey = trim($folder, '/') . '/' . Str::uuid()->toString() . '.' . $extension;
+        $newKey = trim($folder, '/').'/'.Str::uuid()->toString().'.'.$extension;
 
         if ($apply) {
-            $stream = fopen($absolute, 'rb');
-            if ($stream === false) {
-                $this->warn("Could not read: {$relative}");
+            try {
+                $destination = $storage->disk()->path($newKey);
+            } catch (\Throwable $e) {
+                $this->warn('KYC disk path() unavailable: '.$e->getMessage());
 
                 return ['status' => 'failed'];
             }
 
-            $stored = $storage->disk()->put($newKey, $stream);
-            if (is_resource($stream)) {
-                fclose($stream);
+            File::ensureDirectoryExists(dirname($destination), 0755);
+            @chmod(dirname($destination), 0775);
+
+            if (! @copy($absolute, $destination) || ! is_file($destination) || filesize($destination) < 1) {
+                $this->warn("Could not copy to private disk: {$newKey}");
+
+                return ['status' => 'failed'];
             }
 
-            if (! $stored) {
-                $this->warn("Could not store: {$newKey}");
+            @chmod($destination, 0664);
+
+            if (! $storage->exists($newKey) && ! is_file($destination)) {
+                $this->warn("Copy reported ok but exists() failed: {$newKey}");
 
                 return ['status' => 'failed'];
             }
@@ -180,5 +200,14 @@ class MigratePublicKycDocuments extends Command
         }
 
         return ['status' => 'migrated', 'key' => $newKey];
+    }
+
+    private function absoluteExists(KycDocumentStorage $storage, string $key): bool
+    {
+        try {
+            return is_file($storage->disk()->path($key));
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }
