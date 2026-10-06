@@ -42,6 +42,9 @@
         @viteReactRefresh
         @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"])
         @inertiaHead
+        @foreach (\App\Support\SchemaMarkup::blocksFromInertiaPage($page ?? []) as $index => $schemaBlock)
+            <script type="application/ld+json" data-inertia-jsonld="{{ $index }}">{!! $schemaBlock !!}</script>
+        @endforeach
     </head>
     <body class="font-sans antialiased" style="background: #fff !important;">
         @inertia

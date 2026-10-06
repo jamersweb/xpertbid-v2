@@ -3,12 +3,25 @@ const normalizeJsonText = (value) => {
               return '';
        }
 
-       return value
+       const withoutScripts = value
               .replace(/^\uFEFF/, '')
               .replace(/<!--[\s\S]*?-->/g, ' ')
               .replace(/<script\b[^>]*>/gi, ' ')
               .replace(/<\/script>/gi, ' ')
               .trim();
+
+       if (typeof document === 'undefined') {
+              return withoutScripts
+                     .replace(/&quot;/g, '"')
+                     .replace(/&#39;/g, "'")
+                     .replace(/&amp;/g, '&')
+                     .replace(/&lt;/g, '<')
+                     .replace(/&gt;/g, '>');
+       }
+
+       const textarea = document.createElement('textarea');
+       textarea.innerHTML = withoutScripts;
+       return textarea.value.trim();
 };
 
 const readJsonValue = (text, start) => {
