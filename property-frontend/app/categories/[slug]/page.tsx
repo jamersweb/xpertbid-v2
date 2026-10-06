@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LoadMoreProperties } from "@/components/LoadMoreProperties";
+import { JsonLdScripts } from "@/components/JsonLdScripts";
 import { getProperties, getPropertyCategories } from "@/lib/api/client";
 import type { CategoryNode } from "@/types/property";
 
@@ -31,8 +32,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const cat = findCategory(tree, slug);
     if (!cat) return { title: "Category" };
     return {
-      title: `${cat.name} properties`,
-      description: `Browse ${cat.name} listings on XpertBid Property.`,
+      title: cat.meta_title || `${cat.name} properties`,
+      description: cat.meta_description || `Browse ${cat.name} listings on XpertBid Property.`,
     };
   } catch {
     return { title: "Category" };
@@ -70,8 +71,11 @@ export default async function CategoryPage({ params }: Props) {
     // empty
   }
 
+  const schemaMarkup = category.schema_markup || tree.schema_markup;
+
   return (
     <div className="property-browse-wrap py-4">
+      <JsonLdScripts markup={schemaMarkup} idPrefix="category-schema" />
       <div className="container-fluid px-3 px-lg-5">
         <nav aria-label="breadcrumb" className="mb-3">
           <ol className="breadcrumb mb-0">

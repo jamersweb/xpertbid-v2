@@ -14,6 +14,7 @@ import { AuthModalProvider } from '@/Contexts/AuthModalContext';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { isGoogleMapsUrl } from '@/Utils/mapLocation';
+import JsonLdScripts from '@/Components/JsonLdScripts';
 
 const AccordionItem = ({ title, children, defaultOpen = false }) => {
        const [open, setOpen] = useState(defaultOpen);
@@ -55,60 +56,6 @@ const listingImageUrl = (path) => {
        return `/${String(path).replace(/^\/+/, '')}`;
 };
 
-const normalizeSchemaMarkup = (schemaMarkup) => {
-       if (typeof schemaMarkup !== 'string') {
-              return '';
-       }
-
-       const rawMarkup = schemaMarkup.trim();
-       if (!rawMarkup) {
-              return '';
-       }
-
-       try {
-              const parsed = JSON.parse(rawMarkup);
-              return JSON.stringify(parsed);
-       } catch (error) {
-              const normalizedMarkup = rawMarkup
-                     .replace(/^\s*html\s*/i, '')
-                     .replace(/<script[^>]*type=["']application\/ld\+json["'][^>]*>/i, '')
-                     .replace(/<\/script>\s*$/i, '')
-                     .trim();
-
-              if (!normalizedMarkup) {
-                     return '';
-              }
-
-              try {
-                     const parsed = JSON.parse(normalizedMarkup);
-                     return JSON.stringify(parsed);
-              } catch (nestedError) {
-                     return '';
-              }
-       }
-};
-
-const extractSchemaMarkupBlocks = (schemaMarkup) => {
-       if (typeof schemaMarkup !== 'string') {
-              return [];
-       }
-
-       const rawMarkup = schemaMarkup.trim();
-       if (!rawMarkup) {
-              return [];
-       }
-
-       const scriptMatches = [...rawMarkup.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
-       if (scriptMatches.length > 0) {
-              return scriptMatches
-                     .map((match) => normalizeSchemaMarkup(match[1] || ''))
-                     .filter(Boolean);
-       }
-
-       const normalizedMarkup = normalizeSchemaMarkup(rawMarkup);
-       return normalizedMarkup ? [normalizedMarkup] : [];
-};
-
 export default function Show({ auction, bids, related, highestBid, winnerDetails, isFavorite, dynamicFields = [], liveVideoId = null, liveActiveAuction = null, marketplaceBackUrl = null }) {
        const { auth } = usePage().props;
        const listingType = String(auction?.listing_type || '').toLowerCase();
@@ -117,7 +64,6 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
        const [mobileBidAmount, setMobileBidAmount] = useState('');
        const [mobileBidSending, setMobileBidSending] = useState(false);
        const activeLiveVideoId = liveVideoId || auction?.youtube_video_id;
-       const schemaMarkupBlocks = extractSchemaMarkupBlocks(auction?.category?.schema_markup);
 
        // Bids update automatically via Inertia props after a successful POST
        const categoryFeatures = auction?.category_features && typeof auction.category_features === 'object'
@@ -253,14 +199,8 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
                            <Head>
                                    <title>{auction.title}</title>
                                    <meta name="description" content={auction.description?.substring(0, 160)} />
-                                   {schemaMarkupBlocks.map((schemaMarkup, index) => (
-                                          <script
-                                                 key={`auction-schema-${index}`}
-                                                 type="application/ld+json"
-                                                 dangerouslySetInnerHTML={{ __html: schemaMarkup }}
-                                          />
-                                   ))}
                             </Head>
+                            <JsonLdScripts markup={auction?.category?.schema_markup} idPrefix="auction-schema" />
 
                             <main className="live-product-detail-page">
                                    <div className="live-product-detail-grid">
@@ -1019,14 +959,8 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
               <AppLayout title={auction.title}>
                      <Head>
                             <meta name="description" content={auction.description?.substring(0, 160)} />
-                            {schemaMarkupBlocks.map((schemaMarkup, index) => (
-                                   <script
-                                          key={`auction-live-schema-${index}`}
-                                          type="application/ld+json"
-                                          dangerouslySetInnerHTML={{ __html: schemaMarkup }}
-                                   />
-                            ))}
                      </Head>
+                     <JsonLdScripts markup={auction?.category?.schema_markup} idPrefix="auction-schema" />
 
                      <ProductHeader
                             views={auction.views}

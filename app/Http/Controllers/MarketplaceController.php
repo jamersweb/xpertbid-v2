@@ -7,6 +7,7 @@ use App\Models\AuctionCategory;
 use App\Models\Favorite;
 use App\Models\DynamicField;
 use App\Models\Country;
+use App\Models\Seo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -612,6 +613,17 @@ class MarketplaceController extends Controller
             ->paginate(6)
             ->withQueryString();
 
+        $pagePath = '/' . ltrim((string) $request->path(), '/');
+        $pageSeo = Seo::query()
+            ->whereIn('slug', array_values(array_unique(array_filter([
+                $request->path(),
+                $pagePath,
+                'marketplace',
+                '/marketplace',
+            ]))))
+            ->orderByRaw("CASE WHEN slug IN ('marketplace', '/marketplace') THEN 1 ELSE 0 END")
+            ->first();
+
         return Inertia::render('Marketplace/Index', [
             'products' => $products,
             'categories' => $categories,
@@ -627,6 +639,7 @@ class MarketplaceController extends Controller
             'mostViewedProducts' => $mostViewedProducts,
             'filters' => $request->all(),
             'currentType' => $type,
+            'pageSeo' => $pageSeo,
         ]);
     }
 

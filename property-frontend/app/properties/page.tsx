@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LoadMoreProperties } from "@/components/LoadMoreProperties";
 import { MarketplaceBrowseChrome } from "@/components/MarketplaceBrowseChrome";
+import { JsonLdScripts } from "@/components/JsonLdScripts";
 import { getProperties, getPropertyCategories, getCountries } from "@/lib/api/client";
 import type { CategoryNode, PropertyFilters } from "@/types/property";
 
@@ -91,6 +92,23 @@ export async function generateMetadata({
   searchParams: Promise<SearchParams>;
 }): Promise<Metadata> {
   const sp = await searchParams;
+  const filters = parseFilters(sp);
+
+  try {
+    const tree = await getPropertyCategories();
+    const purpose = findPurpose(tree, filters.sub_category);
+    const selectedChild = findChild(purpose, filters.child_category);
+    const active = selectedChild || purpose || tree;
+    if (active?.meta_title || active?.meta_description) {
+      return {
+        title: active.meta_title || active.name,
+        description: active.meta_description || undefined,
+      };
+    }
+  } catch {
+    // fall through
+  }
+
   const sub = first(sp.sub_category);
   const child = first(sp.child_category);
 
@@ -147,6 +165,8 @@ export default async function PropertiesPage({
   const title = selectedChild?.name || purpose?.name || "Properties";
   const heroImage =
     selectedChild?.image_url || purpose?.image_url || tree?.image_url || FALLBACK_HERO;
+  const schemaMarkup =
+    selectedChild?.schema_markup || purpose?.schema_markup || tree?.schema_markup;
 
   const listingTabs = [
     { key: "auction", label: "Auctions", mobileLabel: "Auction" },
@@ -172,6 +192,7 @@ export default async function PropertiesPage({
 
   return (
     <div className="pb-5 bg-light min-vh-100">
+      <JsonLdScripts markup={schemaMarkup} idPrefix="properties-schema" />
       <div
         className="marketplace-topbar-wrap"
         style={{

@@ -44,7 +44,17 @@ class RenovationCategoryController extends Controller
     protected function buildTreeForRoot(AuctionCategory $root): array
     {
         $subs = AuctionCategory::query()
-            ->select(['id', 'name', 'slug', 'parent_id', 'sub_category_id', 'image'])
+            ->select([
+                'id',
+                'name',
+                'slug',
+                'parent_id',
+                'sub_category_id',
+                'image',
+                'meta_title',
+                'meta_description',
+                'schema_markup',
+            ])
             ->where('parent_id', $root->id)
             ->whereNull('sub_category_id')
             ->orderBy('id')
@@ -54,7 +64,17 @@ class RenovationCategoryController extends Controller
         $childrenBySub = $subIds === []
             ? collect()
             : AuctionCategory::query()
-                ->select(['id', 'name', 'slug', 'parent_id', 'sub_category_id', 'image'])
+                ->select([
+                'id',
+                'name',
+                'slug',
+                'parent_id',
+                'sub_category_id',
+                'image',
+                'meta_title',
+                'meta_description',
+                'schema_markup',
+            ])
                 ->whereIn('sub_category_id', $subIds)
                 ->orderBy('id')
                 ->get()
@@ -66,6 +86,9 @@ class RenovationCategoryController extends Controller
                 'name' => $cat->name,
                 'slug' => $cat->slug,
                 'image_url' => $cat->image_url,
+                'meta_title' => $cat->meta_title,
+                'meta_description' => $cat->meta_description,
+                'schema_markup' => $cat->schema_markup,
                 'children' => $kids,
             ];
         };
@@ -87,6 +110,9 @@ class RenovationCategoryController extends Controller
             'name' => $root->name,
             'slug' => $root->slug,
             'image_url' => $root->image_url,
+            'meta_title' => $root->meta_title,
+            'meta_description' => $root->meta_description,
+            'schema_markup' => $root->schema_markup,
             'children' => $tree,
         ];
     }

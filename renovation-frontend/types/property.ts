@@ -86,6 +86,9 @@ export type CategoryNode = {
   name: string;
   slug: string;
   image_url?: string | null;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  schema_markup?: string | null;
   children: CategoryNode[];
   main_categories?: CategoryNode[];
 };

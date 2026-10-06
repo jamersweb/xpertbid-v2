@@ -3,6 +3,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import AuctionCard from '@/Components/AuctionCard';
 import { getCategoryBrowseUrl } from '@/Utils/categoryBrowseUrl';
+import JsonLdScripts from '@/Components/JsonLdScripts';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
 import 'swiper/css';
@@ -66,60 +67,6 @@ const sanitizeSeoHtml = (html) => {
               .replace(/<p\b[^>]*>(?:\s|&nbsp;|&#160;|<br\s*\/?>|<span\b[^>]*>\s*<\/span>)*<\/p>/gi, '')
               .replace(/<ul\b([^>]*)>\s*<\/ul>/gi, '<ul$1></ul>')
               .replace(/<ol\b([^>]*)>\s*<\/ol>/gi, '<ol$1></ol>');
-};
-
-const normalizeSchemaMarkup = (schemaMarkup) => {
-       if (typeof schemaMarkup !== 'string') {
-              return '';
-       }
-
-       const rawMarkup = schemaMarkup.trim();
-       if (!rawMarkup) {
-              return '';
-       }
-
-       try {
-              const parsed = JSON.parse(rawMarkup);
-              return JSON.stringify(parsed);
-       } catch (error) {
-              const normalizedMarkup = rawMarkup
-                     .replace(/^\s*html\s*/i, '')
-                     .replace(/<script[^>]*type=["']application\/ld\+json["'][^>]*>/i, '')
-                     .replace(/<\/script>\s*$/i, '')
-                     .trim();
-
-              if (!normalizedMarkup) {
-                     return '';
-              }
-
-              try {
-                     const parsed = JSON.parse(normalizedMarkup);
-                     return JSON.stringify(parsed);
-              } catch (nestedError) {
-                     return '';
-              }
-       }
-};
-
-const extractSchemaMarkupBlocks = (schemaMarkup) => {
-       if (typeof schemaMarkup !== 'string') {
-              return [];
-       }
-
-       const rawMarkup = schemaMarkup.trim();
-       if (!rawMarkup) {
-              return [];
-       }
-
-       const scriptMatches = [...rawMarkup.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
-       if (scriptMatches.length > 0) {
-              return scriptMatches
-                     .map((match) => normalizeSchemaMarkup(match[1] || ''))
-                     .filter(Boolean);
-       }
-
-       const normalizedMarkup = normalizeSchemaMarkup(rawMarkup);
-       return normalizedMarkup ? [normalizedMarkup] : [];
 };
 
 const CuratedMarketplaceSection = ({ title, items = [], slider = false }) => {
@@ -242,6 +189,7 @@ export default function Index({
        mostViewedProducts = [],
        filters = {},
        currentType: serverCurrentType = 'auction',
+       pageSeo = null,
 }) {
        const { propertyFrontendUrl, propertyRootCategoryId } = usePage().props;
        const [searchTerm, setSearchTerm] = useState(filters?.search || '');
@@ -274,7 +222,10 @@ export default function Index({
        const latestGridTitle = sectionTitleMap[sectionMode] || `Latest ${sectionEntityName}`;
        const seoShortContent = sanitizeSeoHtml(currentCategory?.seo_short_content);
        const seoContent = sanitizeSeoHtml(currentCategory?.seo_content);
-       const schemaMarkupBlocks = extractSchemaMarkupBlocks(currentCategory?.schema_markup);
+       const schemaMarkupSource =
+              currentCategory?.schema_markup
+              || currentTopCategory?.schema_markup
+              || pageSeo?.schema_markup;
        const filterDrawerCloseTimerRef = useRef(null);
        const filterDrawerOpenRafRef = useRef(null);
 
@@ -675,21 +626,15 @@ export default function Index({
        };
 
        return (
-              <AppLayout title={currentCategory?.meta_title || 'Marketplace'}>
+              <AppLayout title={currentCategory?.meta_title || pageSeo?.meta_title || 'Marketplace'}>
                      <Head>
-                            <title>{currentCategory?.meta_title || 'Marketplace | XpertBid'}</title>
+                            <title>{currentCategory?.meta_title || pageSeo?.meta_title || 'Marketplace | XpertBid'}</title>
                             <meta
                                    name="description"
-                                   content={currentCategory?.meta_description || 'Explore our marketplace for the best deals.'}
+                                   content={currentCategory?.meta_description || pageSeo?.meta_description || 'Explore our marketplace for the best deals.'}
                             />
-                            {schemaMarkupBlocks.map((schemaMarkup, index) => (
-                                   <script
-                                          key={`category-schema-${index}`}
-                                          type="application/ld+json"
-                                          dangerouslySetInnerHTML={{ __html: schemaMarkup }}
-                                   />
-                            ))}
                      </Head>
+                     <JsonLdScripts markup={schemaMarkupSource} idPrefix="marketplace-schema" />
 
                      <div className="pb-5 bg-light min-vh-100">
                             <div

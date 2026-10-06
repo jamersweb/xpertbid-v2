@@ -1,11 +1,11 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import JsonLdScripts from '@/Components/JsonLdScripts';
 
 export default function Show({ blog }) {
        const blogTitle = typeof blog?.title === 'string' ? blog.title : 'Blog';
        const blogImage = typeof blog?.image === 'string' ? blog.image.trim() : '';
-       const rawSchemaMarkup = typeof blog?.schema_markup === 'string' ? blog.schema_markup.trim() : '';
        const blogContent =
               typeof blog?.content === 'string'
                      ? blog.content
@@ -35,29 +35,6 @@ export default function Show({ blog }) {
                      ? blog.canonical_url.trim()
                      : shareUrl;
        const shareText = blogTitle;
-       const schemaMarkup = (() => {
-              if (!rawSchemaMarkup) return '';
-
-              try {
-                     const parsed = JSON.parse(rawSchemaMarkup);
-                     return JSON.stringify(parsed);
-              } catch (error) {
-                     const normalizedMarkup = rawSchemaMarkup
-                            .replace(/^\s*html\s*/i, '')
-                            .replace(/<script[^>]*type=["']application\/ld\+json["'][^>]*>/i, '')
-                            .replace(/<\/script>\s*$/i, '')
-                            .trim();
-
-                     if (!normalizedMarkup) return '';
-
-                     try {
-                            const parsed = JSON.parse(normalizedMarkup);
-                            return JSON.stringify(parsed);
-                     } catch (nestedError) {
-                            return '';
-                     }
-              }
-       })();
 
        const openShareTab = (url) => {
               if (typeof window === 'undefined') return;
@@ -129,13 +106,8 @@ export default function Show({ blog }) {
                             <meta name="description" content={blogDescription} />
                             {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
                             {blog.meta_keywords && <meta name="keywords" content={blog.meta_keywords} />}
-                            {schemaMarkup && (
-                                   <script
-                                          type="application/ld+json"
-                                          dangerouslySetInnerHTML={{ __html: schemaMarkup }}
-                                   />
-                            )}
                      </Head>
+                     <JsonLdScripts markup={blog?.schema_markup} idPrefix="blog-schema" />
 
                      <div className="bg-white min-vh-100 pb-5">
                             {/* Hero Header with Image */}

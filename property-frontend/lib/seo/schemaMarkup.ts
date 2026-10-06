@@ -1,0 +1,107 @@
+function normalizeJsonText(value: string) {
+  return value
+    .replace(/^\uFEFF/, "")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<script\b[^>]*>/gi, " ")
+    .replace(/<\/script>/gi, " ")
+    .trim();
+}
+
+function readJsonValue(text: string, start: number): { value: unknown; end: number } | null {
+  const opener = text[start];
+  if (opener !== "{" && opener !== "[") {
+    return null;
+  }
+
+  const pair: Record<string, string> = { "{": "}", "[": "]" };
+  const stack = [opener];
+  let inString = false;
+  let escaped = false;
+
+  for (let index = start + 1; index < text.length; index += 1) {
+    const char = text[index];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+      if (char === "\\") {
+        escaped = true;
+        continue;
+      }
+      if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (char === "{" || char === "[") {
+      stack.push(char);
+      continue;
+    }
+
+    if (char === "}" || char === "]") {
+      const last = stack[stack.length - 1];
+      if (!last || pair[last] !== char) {
+        return null;
+      }
+      stack.pop();
+      if (stack.length === 0) {
+        const slice = text.slice(start, index + 1);
+        try {
+          return { value: JSON.parse(slice), end: index + 1 };
+        } catch {
+          return null;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+export function extractSchemaMarkupBlocks(schemaMarkup?: string | null): string[] {
+  if (typeof schemaMarkup !== "string") {
+    return [];
+  }
+
+  const rawMarkup = schemaMarkup.trim();
+  if (!rawMarkup) {
+    return [];
+  }
+
+  const searchable = normalizeJsonText(rawMarkup);
+  if (!searchable) {
+    return [];
+  }
+
+  const blocks: string[] = [];
+  let cursor = 0;
+
+  while (cursor < searchable.length) {
+    const objectStart = searchable.indexOf("{", cursor);
+    const arrayStart = searchable.indexOf("[", cursor);
+    const starts = [objectStart, arrayStart].filter((value) => value >= 0);
+    if (starts.length === 0) {
+      break;
+    }
+
+    const start = Math.min(...starts);
+    const parsed = readJsonValue(searchable, start);
+    if (!parsed) {
+      cursor = start + 1;
+      continue;
+    }
+
+    blocks.push(JSON.stringify(parsed.value).replace(/</g, "\\u003c"));
+    cursor = parsed.end;
+  }
+
+  return blocks;
+}
