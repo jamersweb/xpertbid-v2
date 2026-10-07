@@ -12,7 +12,15 @@ return [
     |
     */
 
-    'root_category_id' => (int) env('RENOVATION_ROOT_CATEGORY_ID', 1163),
+    'root_category_id' => (int) env('RENOVATION_ROOT_CATEGORY_ID', 1176),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Home Builder Root Category
+    |--------------------------------------------------------------------------
+    */
+
+    'builder_root_category_id' => (int) env('BUILDER_ROOT_CATEGORY_ID', 1307),
 
     /*
     |--------------------------------------------------------------------------

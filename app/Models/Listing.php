@@ -443,22 +443,21 @@ class Listing extends Model
      */
     public static function renovationCategoryIds(?int $rootId = null): array
     {
-        $configuredId = $rootId ?? (int) config('renovation.root_category_id', 1163);
+        $renovationRootId = $rootId ?? (int) config('renovation.root_category_id');
+        $builderRootId = (int) config('renovation.builder_root_category_id');
 
-        $rootIds = AuctionCategory::query()
-            ->where('id', $configuredId)
-            ->orWhere('id', 1294)
-            ->orWhere('slug', 'like', '%home-renovation%')
-            ->orWhere('slug', 'like', '%home-builder%')
-            ->orWhere('name', 'like', '%Home Renovation%')
-            ->orWhere('name', 'like', '%Home Builder%')
+        $rootIds = array_values(array_unique(array_filter([
+            $renovationRootId,
+            $builderRootId,
+        ], fn ($id) => $id > 0)));
+
+        $existingRootIds = AuctionCategory::query()
+            ->whereIn('id', $rootIds)
             ->pluck('id')
             ->map(fn ($id) => (int) $id)
             ->all();
 
-        if (empty($rootIds)) {
-            $rootIds = [$configuredId];
-        }
+        $rootIds = $existingRootIds !== [] ? $existingRootIds : $rootIds;
 
         $ids = $rootIds;
 

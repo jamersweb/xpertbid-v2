@@ -145,7 +145,8 @@ class HandleInertiaRequests extends Middleware
             'propertyFrontendUrl' => rtrim((string) config('property.frontend_url'), '/') ?: 'https://property.xpertbid.com',
             'propertyRootCategoryId' => (int) config('property.root_category_id', 222),
             'renovationFrontendUrl' => rtrim((string) config('renovation.frontend_url'), '/') ?: 'https://home.xpertbid.com',
-            'renovationRootCategoryId' => (int) config('renovation.root_category_id', 1163),
+            'renovationRootCategoryId' => (int) config('renovation.root_category_id'),
+            'builderRootCategoryId' => (int) config('renovation.builder_root_category_id'),
             'locale' => [
                 'current' => $currentLocale,
                 'fallback' => config('app.fallback_locale', 'en'),

@@ -20,9 +20,14 @@ export const buildProductHref = (slugOrListing, maybeListing = null) => {
               return listing.property_url;
        }
 
+       const renovationRootIds = [
+              Number(typeof window !== 'undefined' && window.renovationRootCategoryId) || 1176,
+              Number(typeof window !== 'undefined' && window.builderRootCategoryId) || 1307,
+       ].filter((id) => Number.isFinite(id) && id > 0);
+
        // If listing is flagged as renovation or belongs to renovation/builder categories
        const isRenovation = listing?.is_renovation === true ||
-              [1163, 1294].includes(Number(listing?.category_id)) ||
+              renovationRootIds.includes(Number(listing?.category_id)) ||
               listing?.category?.slug?.includes('renovation') ||
               listing?.category?.slug?.includes('builder');
 

@@ -10,15 +10,15 @@ class RenovationCategoryController extends Controller
 {
     public function index(): JsonResponse
     {
-        $renovationRoot = AuctionCategory::query()
-            ->where('id', (int) config('renovation.root_category_id', 1163))
-            ->orWhere('slug', 'like', '%home-renovation%')
-            ->first();
+        $renovationRoot = $this->resolveRootCategory(
+            (int) config('renovation.root_category_id'),
+            '%home-renovation%'
+        );
 
-        $builderRoot = AuctionCategory::query()
-            ->where('id', 1294)
-            ->orWhere('slug', 'like', '%home-builder%')
-            ->first();
+        $builderRoot = $this->resolveRootCategory(
+            (int) config('renovation.builder_root_category_id'),
+            '%home-builder%'
+        );
 
         $roots = collect([$renovationRoot, $builderRoot])->filter()->unique('id');
 
@@ -27,7 +27,7 @@ class RenovationCategoryController extends Controller
         })->values()->all();
 
         $primaryTree = $mainTrees[0] ?? [
-            'id' => 1163,
+            'id' => (int) config('renovation.root_category_id'),
             'name' => 'Home Renovation',
             'slug' => 'home-renovation',
             'image_url' => null,
@@ -39,6 +39,21 @@ class RenovationCategoryController extends Controller
                 'main_categories' => $mainTrees,
             ]),
         ]);
+    }
+
+    protected function resolveRootCategory(int $id, string $slugPattern): ?AuctionCategory
+    {
+        if ($id > 0) {
+            $byId = AuctionCategory::query()->find($id);
+            if ($byId) {
+                return $byId;
+            }
+        }
+
+        return AuctionCategory::query()
+            ->where('slug', 'like', $slugPattern)
+            ->whereNull('parent_id')
+            ->first();
     }
 
     protected function buildTreeForRoot(AuctionCategory $root): array

@@ -141,9 +141,9 @@ export async function getRelatedProperties(slug: string): Promise<PropertyCard[]
 export async function getPropertyCategories(): Promise<CategoryNode> {
   try {
     const json = await apiFetch<{ data: CategoryNode }>("/renovation-categories");
-    return json.data ?? { id: 1163, name: "Home Renovation", slug: "home-renovation", children: [] };
+    return json.data ?? { id: 1176, name: "Home Renovation", slug: "home-renovation", children: [] };
   } catch {
-    return { id: 1163, name: "Home Renovation", slug: "home-renovation", children: [] };
+    return { id: 1176, name: "Home Renovation", slug: "home-renovation", children: [] };
   }
 }
 

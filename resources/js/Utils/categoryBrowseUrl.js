@@ -30,20 +30,26 @@ export function isPropertyCategory(category, propertyRootCategoryId = 222) {
        return false;
 }
 
-const RENOVATION_ROOT_IDS = [1163, 1294];
+export function getRenovationRootCategoryIds(options = {}) {
+       const renovationId = Number(options.renovationRootCategoryId ?? 1176);
+       const builderId = Number(options.builderRootCategoryId ?? 1307);
 
-export function isRenovationCategory(category) {
+       return [renovationId, builderId].filter((id) => Number.isFinite(id) && id > 0);
+}
+
+export function isRenovationCategory(category, options = {}) {
        if (!category) return false;
 
+       const renovationRootIds = getRenovationRootCategoryIds(options);
        const id = Number(category.id ?? category.category_id);
        const parentId = Number(category.parent_id);
        const subCategoryId = Number(category.sub_category_id);
        const slug = String(category.slug || '').trim().toLowerCase();
        const name = String(category.name || '').trim().toLowerCase();
 
-       if (RENOVATION_ROOT_IDS.includes(id)) return true;
-       if (RENOVATION_ROOT_IDS.includes(parentId)) return true;
-       if (RENOVATION_ROOT_IDS.includes(subCategoryId)) return true;
+       if (renovationRootIds.includes(id)) return true;
+       if (renovationRootIds.includes(parentId)) return true;
+       if (renovationRootIds.includes(subCategoryId)) return true;
        if (slug.includes('home-renovation') || slug.includes('home-builder')) return true;
        if (name.includes('renovation') || name.includes('builder')) return true;
 
@@ -75,9 +81,10 @@ export function getCategoryBrowseUrl(category, options = {}) {
               };
        }
 
-       if (isRenovationCategory(category)) {
+       if (isRenovationCategory(category, options)) {
+              const renovationRootIds = getRenovationRootCategoryIds(options);
               const id = Number(category?.id ?? category?.category_id);
-              const isRoot = RENOVATION_ROOT_IDS.includes(id);
+              const isRoot = renovationRootIds.includes(id);
 
               return {
                      href: isRoot
