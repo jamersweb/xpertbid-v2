@@ -1,6 +1,6 @@
 # XpertBid Home Renovation Frontend
 
-Next.js 15 (App Router) site for **renovation.xpertbid.com**. Reads public home renovation services, contractors, packages, and 3-level categories from the Laravel API at `/api/v1` on the main XpertBid host.
+Next.js 15 (App Router) site for **home.xpertbid.com**. Reads public home renovation services, contractors, packages, and 3-level categories from the Laravel API at `/api/v1` on the main XpertBid host.
 
 ## Local development
 
@@ -21,7 +21,7 @@ Open [http://localhost:3000](http://localhost:3000) (or assigned port).
 | Variable | Default / Example |
 |---|---|
 | `NEXT_PUBLIC_API_BASE_URL` | `http://127.0.0.1:8000/api/v1` |
-| `NEXT_PUBLIC_SITE_URL` | `https://renovation.xpertbid.com` |
+| `NEXT_PUBLIC_SITE_URL` | `https://home.xpertbid.com` |
 | `NEXT_PUBLIC_MAIN_SITE_URL` | `https://xpertbid.com` |
 | `API_REVALIDATE_SECONDS` | `120` |
 

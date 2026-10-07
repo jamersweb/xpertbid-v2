@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import type { PropertyCard, PropertyDetail } from "@/types/property";
 
-export const SITE_NAME = "XpertBid Property";
+export const SITE_NAME = "XpertBid Home Renovation";
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "https://property.xpertbid.com";
+  "https://home.xpertbid.com";
 
 export function absoluteUrl(path: string) {
   if (path.startsWith("http")) return path;

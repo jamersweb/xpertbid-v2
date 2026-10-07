@@ -28,7 +28,7 @@ export const buildProductHref = (slugOrListing, maybeListing = null) => {
 
        if (isRenovation) {
               const renovationBase = (typeof window !== 'undefined' && (window.__RENOVATION_FRONTEND_URL__ || window.renovationFrontendUrl))
-                     || 'https://renovation.xpertbid.com';
+                     || 'https://home.xpertbid.com';
               return `${renovationBase.replace(/\/+$/, '')}/properties/${encodeURIComponent(slug)}`;
        }
 

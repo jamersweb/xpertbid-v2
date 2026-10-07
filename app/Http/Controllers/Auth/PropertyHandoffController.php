@@ -8,8 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * Main site → property frontend SSO.
- * Property visits this while holding a first-party Laravel session cookie,
+ * Main site → satellite Next frontend SSO (property + home renovation).
+ * The frontend visits this while holding a first-party Laravel session cookie,
  * then gets redirected back with a Sanctum auth_token for localStorage.
  */
 class PropertyHandoffController extends Controller
@@ -24,7 +24,7 @@ class PropertyHandoffController extends Controller
 
         $user = Auth::user();
 
-        // Keep a single property web token per user.
+        // Keep a single satellite web token per user.
         $user->tokens()->where('name', 'property_web')->delete();
         $plain = $user->createToken('property_web')->plainTextToken;
 
@@ -33,21 +33,20 @@ class PropertyHandoffController extends Controller
 
     protected function resolveReturnTo(mixed $returnTo): string
     {
+        $fallback = rtrim((string) config('property.frontend_url'), '/') ?: 'https://property.xpertbid.com';
         $candidate = AuthBridge::sanitizeReturnTo(is_string($returnTo) ? $returnTo : null);
         $parts = parse_url($candidate);
 
         if (! is_array($parts) || empty($parts['scheme']) || empty($parts['host'])) {
-            return rtrim((string) config('property.frontend_url'), '/') ?: 'https://property.xpertbid.com';
+            return $fallback;
         }
 
         $origin = strtolower(
             $parts['scheme'].'://'.$parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : '')
         );
 
-        $allowed = AuthBridge::allowedOrigins();
-
-        if (! in_array($origin, $allowed, true)) {
-            return rtrim((string) config('renovation.frontend_url', config('property.frontend_url')), '/') ?: 'https://property.xpertbid.com';
+        if (! in_array($origin, AuthBridge::allowedOrigins(), true)) {
+            return $fallback;
         }
 
         return $candidate;

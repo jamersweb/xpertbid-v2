@@ -33,6 +33,8 @@ class AuthBridge
 
     public static function sanitizeReturnTo(?string $returnTo): string
     {
+        // Prefer the caller-supplied return_to. Only fall back when missing/invalid.
+        // Do not force property.xpertbid.com when the request came from home/renovation.
         $fallback = rtrim((string) config('property.frontend_url'), '/') ?: url('/');
 
         if (! $returnTo) {
@@ -81,6 +83,12 @@ class AuthBridge
             'http://property.xpertbid.com',
             'https://www.property.xpertbid.com',
             'http://www.property.xpertbid.com',
+            // Live home-renovation frontend
+            'https://home.xpertbid.com',
+            'http://home.xpertbid.com',
+            'https://www.home.xpertbid.com',
+            'http://www.home.xpertbid.com',
+            // Legacy hostname (keep until DNS fully cut over)
             'https://renovation.xpertbid.com',
             'http://renovation.xpertbid.com',
             'https://www.renovation.xpertbid.com',

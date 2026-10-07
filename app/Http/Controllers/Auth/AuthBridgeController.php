@@ -48,8 +48,8 @@ class AuthBridgeController extends Controller
         // Keep Laravel's "intended" URL aligned with the requested destination.
         $request->session()->put('url.intended', $returnTo);
 
-        // Append one-time token for property frontend (Google OAuth path).
-        if ($request->boolean('with_token') || $this->isPropertyOrigin($returnTo)) {
+        // Append one-time Sanctum token for satellite Next frontends (property + home).
+        if ($request->boolean('with_token') || $this->isSatelliteFrontendOrigin($returnTo)) {
             $plain = $user->createToken('property_web')->plainTextToken;
             $separator = str_contains($returnTo, '?') ? '&' : '?';
             $returnTo .= $separator.'auth_token='.urlencode($plain);
@@ -58,7 +58,7 @@ class AuthBridgeController extends Controller
         return redirect()->to($returnTo);
     }
 
-    protected function isPropertyOrigin(string $url): bool
+    protected function isSatelliteFrontendOrigin(string $url): bool
     {
         $parts = parse_url($url);
         if (! is_array($parts) || empty($parts['scheme']) || empty($parts['host'])) {
@@ -67,15 +67,25 @@ class AuthBridgeController extends Controller
 
         $origin = strtolower($parts['scheme'].'://'.$parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : ''));
         $property = rtrim((string) config('property.frontend_url'), '/');
+        $renovation = rtrim((string) config('renovation.frontend_url'), '/');
 
         return in_array($origin, array_filter([
             $property,
+            $renovation,
             'http://localhost:3000',
             'http://127.0.0.1:3000',
+            'http://localhost:3001',
+            'http://127.0.0.1:3001',
             'https://property.xpertbid.com',
             'http://property.xpertbid.com',
             'https://www.property.xpertbid.com',
             'http://www.property.xpertbid.com',
+            'https://home.xpertbid.com',
+            'http://home.xpertbid.com',
+            'https://www.home.xpertbid.com',
+            'http://www.home.xpertbid.com',
+            'https://renovation.xpertbid.com',
+            'http://renovation.xpertbid.com',
         ]), true);
     }
 }
