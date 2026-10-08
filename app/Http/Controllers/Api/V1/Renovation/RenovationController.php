@@ -167,23 +167,27 @@ class RenovationController extends Controller
         }
 
         if ($listingType = $request->input('listing_type')) {
-            $query->where('listing_type', $listingType);
+            if ($listingType === 'normal') {
+                $query->whereIn('listing_type', ['normal', 'normal_list']);
+            } elseif ($listingType === 'auction') {
+                $query->whereIn('listing_type', ['auction', 'live_auction']);
+            } else {
+                $query->where('listing_type', $listingType);
+            }
         }
 
-        if ($request->filled('category_id')) {
-            $query->where('category_id', (int) $request->input('category_id'));
-        } elseif ($request->filled('category')) {
-            $this->applyCategorySlugFilter($query, 'category', 'category_id', $request->input('category'));
-        } elseif ($request->filled('type')) {
-            $this->applyCategorySlugFilter($query, 'category', 'category_id', $request->input('type'));
-        }
-
-        if ($request->filled('sub_category')) {
-            $this->applyCategorySlugFilter($query, 'subCategory', 'sub_category_id', $request->input('sub_category'));
-        }
-
+        // Most-specific category filter wins. Do NOT AND root `type` with
+        // sub/child filters — that hides correctly tagged listings.
         if ($request->filled('child_category')) {
-            $this->applyCategorySlugFilter($query, 'childCategory', 'child_category_id', $request->input('child_category'));
+            $this->applyCategoryTreeFilter($query, $request->input('child_category'), 'child');
+        } elseif ($request->filled('sub_category')) {
+            $this->applyCategoryTreeFilter($query, $request->input('sub_category'), 'sub');
+        } elseif ($request->filled('category_id')) {
+            $this->applyCategoryTreeFilter($query, (int) $request->input('category_id'), 'root');
+        } elseif ($request->filled('category')) {
+            $this->applyCategoryTreeFilter($query, $request->input('category'), 'root');
+        } elseif ($request->filled('type')) {
+            $this->applyCategoryTreeFilter($query, $request->input('type'), 'root');
         }
 
         if ($request->filled('price_min')) {
@@ -220,32 +224,104 @@ class RenovationController extends Controller
         }
     }
 
-    protected function applyCategorySlugFilter(Builder $query, string $relationHint, string $column, mixed $value): void
+    /**
+     * Filter listings by a category node and its descendants.
+     *
+     * @param  'root'|'sub'|'child'  $level
+     */
+    protected function applyCategoryTreeFilter(Builder $query, mixed $value, string $level): void
     {
         if ($value === null || $value === '') {
             return;
         }
 
-        if (is_numeric($value)) {
-            $query->where($column, (int) $value);
+        $category = $this->resolveCategory($value);
+        if (! $category) {
+            $query->whereRaw('1 = 0');
+
             return;
         }
 
-        $slug = (string) $value;
-        $category = AuctionCategory::query()
+        $ids = $this->categoryTreeIds($category, $level);
+        if ($ids === []) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+
+        $query->where(function (Builder $q) use ($ids) {
+            $q->whereIn('category_id', $ids)
+                ->orWhereIn('sub_category_id', $ids)
+                ->orWhereIn('child_category_id', $ids);
+        });
+    }
+
+    protected function resolveCategory(mixed $value): ?AuctionCategory
+    {
+        if (is_numeric($value)) {
+            return AuctionCategory::query()->find((int) $value);
+        }
+
+        $slug = trim((string) $value);
+        if ($slug === '') {
+            return null;
+        }
+
+        return AuctionCategory::query()
             ->where(function (Builder $q) use ($slug) {
                 $q->where('slug', $slug)
-                    ->orWhere('slug', 'like', "{$slug}-p%")
-                    ->orWhere('slug', 'like', "{$slug}-s%")
-                    ->orWhere('name', $slug);
+                    ->orWhere('slug', 'like', $slug.'-p%')
+                    ->orWhere('slug', 'like', $slug.'-s%')
+                    ->orWhere('name', $slug)
+                    ->orWhere('name', 'like', '%'.str_replace('-', ' ', $slug).'%');
             })
+            ->orderByRaw('CASE WHEN slug = ? THEN 0 WHEN slug LIKE ? THEN 1 ELSE 2 END', [$slug, $slug.'-%'])
             ->first();
+    }
 
-        if ($category) {
-            $query->where($column, $category->id);
-        } else {
-            $query->whereRaw('1 = 0');
+    /**
+     * @param  'root'|'sub'|'child'  $level
+     * @return list<int>
+     */
+    protected function categoryTreeIds(AuctionCategory $category, string $level): array
+    {
+        $ids = [(int) $category->id];
+
+        if ($level === 'child') {
+            return $ids;
         }
+
+        if ($level === 'sub') {
+            $childIds = AuctionCategory::query()
+                ->where('sub_category_id', $category->id)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            return array_values(array_unique(array_merge($ids, $childIds)));
+        }
+
+        // Root vertical (Home Renovation / Home Builder): include all subs + children.
+        $subIds = AuctionCategory::query()
+            ->where('parent_id', $category->id)
+            ->whereNull('sub_category_id')
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $ids = array_merge($ids, $subIds);
+
+        if ($subIds !== []) {
+            $childIds = AuctionCategory::query()
+                ->whereIn('sub_category_id', $subIds)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $ids = array_merge($ids, $childIds);
+        }
+
+        return array_values(array_unique($ids));
     }
 
     protected function applySort(Builder $query, string $sort): void

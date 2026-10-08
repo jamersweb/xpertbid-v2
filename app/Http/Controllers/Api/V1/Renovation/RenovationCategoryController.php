@@ -43,17 +43,39 @@ class RenovationCategoryController extends Controller
 
     protected function resolveRootCategory(int $id, string $slugPattern): ?AuctionCategory
     {
+        $needle = strtolower(trim($slugPattern, '%'));
+        $nameNeedle = str_replace('-', ' ', $needle);
+
+        // Prefer real root categories by slug/name so wrong env IDs
+        // (common across local vs live DBs) cannot break the header nav.
+        $bySlugOrName = AuctionCategory::query()
+            ->whereNull('parent_id')
+            ->where(function ($q) use ($slugPattern, $nameNeedle) {
+                $q->where('slug', 'like', $slugPattern)
+                    ->orWhere('name', 'like', '%'.$nameNeedle.'%');
+            })
+            ->orderBy('id')
+            ->first();
+
+        if ($bySlugOrName) {
+            return $bySlugOrName;
+        }
+
         if ($id > 0) {
             $byId = AuctionCategory::query()->find($id);
-            if ($byId) {
+            if (
+                $byId
+                && $byId->parent_id === null
+                && (
+                    str_contains(strtolower((string) $byId->slug), $needle)
+                    || str_contains(strtolower((string) $byId->name), $nameNeedle)
+                )
+            ) {
                 return $byId;
             }
         }
 
-        return AuctionCategory::query()
-            ->where('slug', 'like', $slugPattern)
-            ->whereNull('parent_id')
-            ->first();
+        return null;
     }
 
     protected function buildTreeForRoot(AuctionCategory $root): array

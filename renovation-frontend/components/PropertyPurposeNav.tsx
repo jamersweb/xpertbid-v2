@@ -97,7 +97,15 @@ export function PropertyPurposeNav({ purposes, onNavigate }: Props) {
               <Link
                 href={`/properties?type=${encodeURIComponent(category.slug)}&listing_type=normal`}
                 className="nav-link property-nav-link d-inline-flex align-items-center gap-1"
-                onClick={handleLinkClick}
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    const hint = category.slug?.toLowerCase().includes("builder")
+                      ? "builder"
+                      : "renovation";
+                    window.sessionStorage.setItem("home_vertical", hint);
+                  }
+                  handleLinkClick();
+                }}
               >
                 <span>{category.name}</span>
               </Link>
@@ -173,7 +181,15 @@ export function PropertyPurposeNav({ purposes, onNavigate }: Props) {
                   <Link
                     href={`/properties?type=${encodeURIComponent(category.slug)}&listing_type=normal`}
                     className="view-all-mega-btn"
-                    onClick={handleLinkClick}
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        const hint = category.slug?.toLowerCase().includes("builder")
+                          ? "builder"
+                          : "renovation";
+                        window.sessionStorage.setItem("home_vertical", hint);
+                      }
+                      handleLinkClick();
+                    }}
                   >
                     <span>Browse All {category.name}</span>
                     <i className="fa-solid fa-arrow-right" />
@@ -184,11 +200,21 @@ export function PropertyPurposeNav({ purposes, onNavigate }: Props) {
                   {subcategories.map((sub) => (
                     <Link
                       key={sub.id}
-                      href={`/properties?sub_category=${encodeURIComponent(
+                      href={`/properties?type=${encodeURIComponent(
+                        category.slug
+                      )}&sub_category=${encodeURIComponent(
                         sub.slug
                       )}&listing_type=normal`}
                       className="subcategory-item-link"
-                      onClick={handleLinkClick}
+                      onClick={() => {
+                        if (typeof window !== "undefined") {
+                          const hint = category.slug?.toLowerCase().includes("builder")
+                            ? "builder"
+                            : "renovation";
+                          window.sessionStorage.setItem("home_vertical", hint);
+                        }
+                        handleLinkClick();
+                      }}
                     >
                       <i className="fa-solid fa-chevron-right subcategory-bullet" />
                       <span className="subcategory-name">{sub.name}</span>

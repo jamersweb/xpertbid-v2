@@ -164,35 +164,26 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
   const profileSrc = resolveProfileImage(user);
 
   return (
-    <header className="bg-white" style={{ zIndex: 1050 }}>
+    <header className="bg-white site-header-sticky" style={{ zIndex: 1050 }}>
       <nav className="navbar navbar-expand-lg navbar-light bg-white py-2" id="mainNavbar">
-        <div className="container-fluid px-lg-5 my-2">
-          <Link className="navbar-brand d-flex align-items-center me-0 me-lg-4" href="/">
+        <div className="container-fluid px-3 px-lg-5 my-1 my-lg-2">
+          <Link className="navbar-brand d-flex align-items-center me-0 me-lg-4 flex-shrink-1 min-w-0" href="/">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={assetImage("xp-renovation-logo-clean.svg")}
-              alt="Xpert Home Renovation"
-              width={220}
-              height={48}
+              src={assetImage("xpertbuildlogo.png")}
+              alt="Xpert Build"
+              width={180}
+              height={40}
               className="logo-image property-header-logo"
             />
           </Link>
 
-          <div className="mobile-header-actions d-flex d-lg-none align-items-center gap-2 ms-auto me-2">
+          <div className="mobile-header-actions d-flex d-lg-none align-items-center gap-1 ms-auto me-1">
             {user ? <NotificationDropdown /> : null}
             {!user && !loading ? (
-              <>
-                <button type="button" className="mobile-auth-btn mobile-auth-login" onClick={openLogin}>
-                  Login
-                </button>
-                <button
-                  type="button"
-                  className="mobile-auth-btn mobile-auth-signup"
-                  onClick={openRegister}
-                >
-                  Sign Up
-                </button>
-              </>
+              <button type="button" className="mobile-auth-btn mobile-auth-login" onClick={openLogin}>
+                Login
+              </button>
             ) : null}
             {user ? (
               <div className="header-profile-root" style={{ position: "relative" }}>
@@ -207,8 +198,8 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
                     src={profileSrc}
                     alt="Profile"
                     className="header-avatar-img-mobile rounded-circle"
-                    width={32}
-                    height={32}
+                    width={30}
+                    height={30}
                     referrerPolicy="no-referrer"
                     onError={(e) => {
                       e.currentTarget.onerror = null;
@@ -275,6 +266,18 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
               ) : null}
 
               <div className="d-flex d-lg-none flex-column w-100 gap-2 mt-2 mobile-menu-extra">
+                {!user && !loading ? (
+                  <button
+                    type="button"
+                    className="mobile-menu-signup-btn w-100"
+                    onClick={() => {
+                      closeMobileMenu();
+                      openRegister();
+                    }}
+                  >
+                    Sign Up
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="sellnow w-100 justify-content-center"

@@ -4381,9 +4381,12 @@ a.nav-link {
 }
 
 .mobile-bottom-nav__dropdown {
-    bottom: calc(100% + 16px);
+    position: fixed;
+    left: 12px;
+    right: 12px;
     top: auto;
-    right: 0;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    z-index: 1200;
 }
 
 .mobile-bottom-nav__dropdown .user-profile-setting-content {

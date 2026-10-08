@@ -57,7 +57,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const property = await getProperty(slug);
   if (!property) {
-    return { title: "Property not found" };
+    return { title: "Product not found" };
   }
   return propertyMetadata(property);
 }
@@ -107,7 +107,7 @@ export default async function PropertyDetailPage({ params }: Props) {
           __html: JSON.stringify(
             breadcrumbJsonLd([
               { name: "Home", path: "/" },
-              { name: "Properties", path: "/properties" },
+              { name: "Products", path: "/properties" },
               { name: property.title, path: `/properties/${property.slug}` },
             ])
           ),
@@ -248,7 +248,7 @@ export default async function PropertyDetailPage({ params }: Props) {
                   ) : null}
 
                   {(property.map_url || property.latitude || property.product_location || property.location_url || property.attributes?.map_url) ? (
-                    <AccordionItem title="Property Location Map" defaultOpen>
+                    <AccordionItem title="Location Map" defaultOpen>
                       <GooglePropertyMap
                         mapUrl={property.map_url || property.location_url || (property.attributes?.map_url as string)}
                         latitude={property.latitude || (property.attributes?.latitude as string)}

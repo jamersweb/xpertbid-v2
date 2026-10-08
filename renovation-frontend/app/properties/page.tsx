@@ -46,20 +46,97 @@ function parseFilters(sp: SearchParams): PropertyFilters {
   };
 }
 
-function findPurpose(tree: CategoryNode | null, slug?: string) {
+function slugMatches(a?: string | null, b?: string | null) {
+  if (!a || !b) return false;
+  const left = a.toLowerCase();
+  const right = b.toLowerCase();
+  if (left === right) return true;
+  // Seeded slugs often look like `kitchen-renovation-p1176`
+  if (left.startsWith(`${right}-p`) || left.startsWith(`${right}-s`)) return true;
+  if (right.startsWith(`${left}-p`) || right.startsWith(`${left}-s`)) return true;
+  return false;
+}
+
+function findMainCategory(tree: CategoryNode | null, slug?: string) {
+  if (!tree || !slug) return null;
+  const mains = tree.main_categories?.length
+    ? tree.main_categories
+    : tree.slug
+      ? [tree]
+      : [];
+
+  const exact =
+    mains.find(
+      (main) =>
+        slugMatches(main.slug, slug) ||
+        main.name?.toLowerCase() === slug.toLowerCase()
+    ) || null;
+  if (exact) return exact;
+
+  const value = slug.toLowerCase();
+  if (value.includes("builder")) {
+    return (
+      mains.find(
+        (main) =>
+          main.slug?.toLowerCase().includes("builder") ||
+          main.name?.toLowerCase().includes("builder")
+      ) || null
+    );
+  }
+  if (value.includes("renovation")) {
+    return (
+      mains.find(
+        (main) =>
+          main.slug?.toLowerCase().includes("renovation") ||
+          main.name?.toLowerCase().includes("renovation")
+      ) || null
+    );
+  }
+
+  return null;
+}
+
+function findMainForSubcategory(tree: CategoryNode | null, subSlug?: string) {
+  if (!tree?.main_categories?.length || !subSlug) return null;
+  for (const main of tree.main_categories) {
+    if ((main.children || []).some((child) => slugMatches(child.slug, subSlug))) {
+      return main;
+    }
+  }
+  return null;
+}
+
+function findPurpose(tree: CategoryNode | null, slug?: string, mainSlug?: string) {
   if (!tree || !slug) return null;
   if (tree.main_categories && tree.main_categories.length > 0) {
-    for (const main of tree.main_categories) {
-      const found = (main.children || []).find((c) => c.slug === slug);
+    const mains = mainSlug
+      ? tree.main_categories.filter((main) => slugMatches(main.slug, mainSlug))
+      : tree.main_categories;
+    for (const main of mains) {
+      const found = (main.children || []).find((c) => slugMatches(c.slug, slug));
       if (found) return found;
     }
   }
-  return (tree.children || []).find((c) => c.slug === slug) || null;
+  return (tree.children || []).find((c) => slugMatches(c.slug, slug)) || null;
 }
 
 function findChild(purpose: CategoryNode | null, slug?: string) {
   if (!purpose || !slug) return null;
-  return (purpose.children || []).find((c) => c.slug === slug) || null;
+  return (purpose.children || []).find((c) => slugMatches(c.slug, slug)) || null;
+}
+
+/** Fallback title when API slug lookup fails but `type` is in the URL. */
+function titleFromTypeParam(type?: string | null) {
+  if (!type) return null;
+  const value = type.toLowerCase();
+  if (value.includes("builder")) return "Home Builder";
+  if (value.includes("renovation")) return "Home Renovation";
+  return type
+    .replace(/-p\d+/gi, "")
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 function hrefWith(
@@ -78,7 +155,6 @@ function hrefWith(
     "sub_category",
     "child_category",
     "listing_type",
-    "bedrooms",
     "price_min",
     "price_max",
     "sort",
@@ -103,27 +179,33 @@ export async function generateMetadata({
 
   try {
     const tree = await getPropertyCategories();
-    const purpose = findPurpose(tree, filters.sub_category);
+    const purpose = findPurpose(tree, filters.sub_category, filters.type);
+    const mainCategory =
+      findMainCategory(tree, filters.type) ||
+      findMainForSubcategory(tree, filters.sub_category);
     const selectedChild = findChild(purpose, filters.child_category);
-    const active = selectedChild || purpose || tree;
+    const active = selectedChild || purpose || mainCategory || tree;
     if (active?.meta_title || active?.meta_description) {
       return {
         title: active.meta_title || active.name,
         description: active.meta_description || undefined,
       };
     }
-    if (purpose) {
+    if (selectedChild || purpose || mainCategory) {
       return {
         title: selectedChild
-          ? `${selectedChild.name} | ${purpose.name}`
-          : purpose.name,
+          ? `${selectedChild.name} | ${purpose?.name || mainCategory?.name}`
+          : purpose?.name || mainCategory?.name,
       };
     }
+
+    const fromType = titleFromTypeParam(filters.type);
+    if (fromType) return { title: fromType };
   } catch {
     // fall through
   }
 
-  return { title: "Browse Home Renovation & Builder Products" };
+  return { title: titleFromTypeParam(filters.type) || "Browse Home Renovation & Builder Products" };
 }
 
 export default async function PropertiesPage({
@@ -146,12 +228,27 @@ export default async function PropertiesPage({
     countries = [];
   }
 
-  const purpose = findPurpose(tree, filters.sub_category);
+  const purpose = findPurpose(tree, filters.sub_category, filters.type);
+  const mainCategory =
+    findMainCategory(tree, filters.type) ||
+    findMainForSubcategory(tree, filters.sub_category);
   const selectedChild = findChild(purpose, filters.child_category);
   const childOptions = purpose?.children || [];
-  const purposeTabs =
-    tree?.main_categories && tree.main_categories.length > 0
-      ? tree.main_categories.flatMap((m) => m.children || [])
+  const mainVerticals = (tree?.main_categories || []).filter((category) => {
+    const slug = category.slug?.toLowerCase() || "";
+    const name = category.name?.toLowerCase() || "";
+    return (
+      slug.includes("home-renovation") ||
+      slug.includes("home-builder") ||
+      name.includes("home renovation") ||
+      name.includes("home builder")
+    );
+  });
+
+  const purposeTabs = mainCategory
+    ? mainCategory.children || []
+    : mainVerticals.length > 0
+      ? mainVerticals
       : tree?.children || [];
 
   let result: Awaited<ReturnType<typeof getProperties>> = {
@@ -165,11 +262,23 @@ export default async function PropertiesPage({
     // empty
   }
 
-  const title = selectedChild?.name || purpose?.name || "Properties";
+  const title =
+    selectedChild?.name ||
+    purpose?.name ||
+    mainCategory?.name ||
+    titleFromTypeParam(filters.type) ||
+    "Home Renovation & Builder";
   const heroImage =
-    selectedChild?.image_url || purpose?.image_url || tree?.image_url || FALLBACK_HERO;
+    selectedChild?.image_url ||
+    purpose?.image_url ||
+    mainCategory?.image_url ||
+    tree?.image_url ||
+    FALLBACK_HERO;
   const schemaMarkup =
-    selectedChild?.schema_markup || purpose?.schema_markup || tree?.schema_markup;
+    selectedChild?.schema_markup ||
+    purpose?.schema_markup ||
+    mainCategory?.schema_markup ||
+    tree?.schema_markup;
 
   const listingTabs = [
     { key: "auction", label: "Auctions", mobileLabel: "Auction" },
@@ -183,10 +292,10 @@ export default async function PropertiesPage({
     filters.city_id,
     filters.state_id,
     filters.country_id,
+    filters.type,
     filters.sub_category,
     filters.child_category,
     filters.listing_type,
-    filters.bedrooms,
     filters.price_min,
     filters.price_max,
     filters.sort,
@@ -208,32 +317,58 @@ export default async function PropertiesPage({
 
             {!purpose ? (
               <div className="marketplace-subcategory-tabs mb-3">
-                {purposeTabs.map((tab) => (
-                  <Link
-                    key={tab.id}
-                    href={hrefWith(filters, {
-                      sub_category: tab.slug,
-                      child_category: undefined,
-                      page: undefined,
-                    })}
-                    className="marketplace-subcategory-tab"
-                  >
-                    {tab.name}
-                  </Link>
-                ))}
+                {purposeTabs.map((tab) => {
+                  const selectingMain = !mainCategory;
+                  const href = selectingMain
+                    ? hrefWith(filters, {
+                        type: tab.slug,
+                        sub_category: undefined,
+                        child_category: undefined,
+                        page: undefined,
+                      })
+                    : hrefWith(filters, {
+                        type: mainCategory.slug,
+                        sub_category: tab.slug,
+                        child_category: undefined,
+                        page: undefined,
+                      });
+                  const isActive = selectingMain
+                    ? slugMatches(filters.type, tab.slug)
+                    : slugMatches(filters.sub_category, tab.slug);
+
+                  return (
+                    <Link
+                      key={tab.id}
+                      href={href}
+                      className={`marketplace-subcategory-tab${isActive ? " is-active" : ""}`}
+                    >
+                      {tab.name}
+                    </Link>
+                  );
+                })}
               </div>
             ) : (
               <div className="marketplace-subcategory-tabs mb-3">
                 <Link
-                  href="/properties"
+                  href={
+                    mainCategory
+                      ? hrefWith(filters, {
+                          type: mainCategory.slug,
+                          sub_category: undefined,
+                          child_category: undefined,
+                          page: undefined,
+                        })
+                      : "/properties"
+                  }
                   className="marketplace-subcategory-back"
-                  aria-label="Back to all properties"
+                  aria-label="Back to categories"
                 >
                   <span aria-hidden="true">&larr;</span>
                 </Link>
 
                 <Link
                   href={hrefWith(filters, {
+                    type: filters.type || mainCategory?.slug,
                     sub_category: purpose.slug,
                     child_category: undefined,
                     page: undefined,
@@ -247,6 +382,7 @@ export default async function PropertiesPage({
                   <Link
                     key={child.id}
                     href={hrefWith(filters, {
+                      type: filters.type || mainCategory?.slug,
                       sub_category: purpose.slug,
                       child_category: child.slug,
                       page: undefined,
@@ -268,10 +404,10 @@ export default async function PropertiesPage({
                 country_id: filters.country_id,
                 state_id: filters.state_id,
                 city_id: filters.city_id,
-                bedrooms: filters.bedrooms,
                 price_min: filters.price_min,
                 price_max: filters.price_max,
                 sort: filters.sort,
+                type: filters.type,
                 sub_category: filters.sub_category,
                 child_category: filters.child_category,
                 listing_type: filters.listing_type || "normal",
@@ -303,7 +439,13 @@ export default async function PropertiesPage({
       <div className="container-fluid px-3 px-lg-5 pt-4">
         <section className="marketplace-latest-grid-section">
           <div className="marketplace-curated-header">
-            <h3>Latest {purpose?.name || "Properties"}</h3>
+            <h3>
+              Latest{" "}
+              {selectedChild?.name ||
+                purpose?.name ||
+                mainCategory?.name ||
+                "Products"}
+            </h3>
           </div>
 
           {result.data.length ? (

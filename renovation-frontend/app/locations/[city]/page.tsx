@@ -14,8 +14,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const label = decodeURIComponent(city).replace(/-/g, " ");
   const titled = label.replace(/\b\w/g, (c) => c.toUpperCase());
   return {
-    title: `Properties in ${titled}`,
-    description: `Browse homes and land for sale or rent in ${titled}.`,
+    title: `Home renovation & builder products in ${titled}`,
+    description: `Browse home renovation and builder products in ${titled}.`,
   };
 }
 
@@ -44,14 +44,14 @@ export default async function LocationPage({ params }: Props) {
               <Link href="/">Home</Link>
             </li>
             <li className="breadcrumb-item">
-              <Link href="/properties">Properties</Link>
+              <Link href="/properties">Products</Link>
             </li>
             <li className="breadcrumb-item active">{cityName}</li>
           </ol>
         </nav>
 
-        <h1 className="property-browse-title mb-2">Properties in {cityName}</h1>
-        <p className="text-muted mb-4">Active listings matching this city.</p>
+        <h1 className="property-browse-title mb-2">Products in {cityName}</h1>
+        <p className="text-muted mb-4">Active renovation & builder listings matching this city.</p>
 
         {result.data.length ? (
           <LoadMoreProperties
@@ -63,7 +63,7 @@ export default async function LocationPage({ params }: Props) {
             itemClassName="col-md-6 col-xl-4"
           />
         ) : (
-          <div className="property-empty">No properties found for {cityName}.</div>
+          <div className="property-empty">No products found for {cityName}.</div>
         )}
       </div>
     </div>

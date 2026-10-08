@@ -10,7 +10,14 @@ import useTranslate from '@/hooks/useTranslate';
 import useSessionKeepAlive from '@/hooks/useSessionKeepAlive';
 
 export default function AppLayout({ children, title }) {
-       const { flash, auth, ziggy, locale, propertyFrontendUrl: propertyUrlProp } = usePage().props;
+       const {
+              flash,
+              auth,
+              ziggy,
+              locale,
+              propertyFrontendUrl: propertyUrlProp,
+              renovationFrontendUrl: renovationUrlProp,
+       } = usePage().props;
        const { t } = useTranslate();
        const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
        const [isHiding, setIsHiding] = useState(false);
@@ -18,6 +25,7 @@ export default function AppLayout({ children, title }) {
        const currentDirection = locale?.supported?.[currentLocale]?.direction || (currentLocale === 'ur' ? 'rtl' : 'ltr');
        const supportedLocales = Object.entries(locale?.supported || {});
        const propertyFrontendUrl = propertyUrlProp || 'https://property.xpertbid.com';
+       const renovationFrontendUrl = renovationUrlProp || 'https://home.xpertbid.com';
 
        const individualVerificationStatus =
               auth?.verification?.individual_status
@@ -131,6 +139,13 @@ export default function AppLayout({ children, title }) {
                                                  <Link className="xp-brand-link" href="/marketplace/vehicles?type=auction" aria-label="View vehicle marketplace">
                                                         <img className="xp-brand-logo xp-brand-logo-vehicle" src="/assets/images/xp-vehicle-logo-clean.png" alt="XpertBid Vehicle" />
                                                  </Link>
+                                                 <a
+                                                        className="xp-brand-link"
+                                                        href={renovationFrontendUrl}
+                                                        aria-label="View Xpert Build"
+                                                 >
+                                                        <img className="xp-brand-logo xp-brand-logo-home" src="/assets/images/xpertbuildlogo.png" alt="Xpert Build" />
+                                                 </a>
                                           </div>
                                           <div className="xp-brand-controls d-none d-lg-flex">
                                                  <select
@@ -263,6 +278,10 @@ export default function AppLayout({ children, title }) {
                                           width: 180px;
                                           max-height: 46px;
                                    }
+                                   .xp-brand-logo-home {
+                                          width: 180px;
+                                          max-height: 46px;
+                                   }
                                    .xp-brand-logo-mandi {
                                           width: 180px;
                                           max-height: 46px;
@@ -313,15 +332,19 @@ export default function AppLayout({ children, title }) {
                                                  width: 100%;
                                           }
                                           .xp-brand-logo-prop {
-                                                 width: min(32vw, 170px);
+                                                 width: min(28vw, 150px);
                                                  max-height: 42px;
                                           }
                                           .xp-brand-logo-vehicle {
-                                                 width: min(32vw, 170px);
+                                                 width: min(28vw, 150px);
+                                                 max-height: 36px;
+                                          }
+                                          .xp-brand-logo-home {
+                                                 width: min(28vw, 150px);
                                                  max-height: 36px;
                                           }
                                           .xp-brand-logo-mandi {
-                                                 width: min(32vw, 170px);
+                                                 width: min(28vw, 150px);
                                                  max-height: 36px;
                                           }
                                           .global-verify-account-btn {

@@ -26,7 +26,7 @@ export function ProductDetailHeader({ views = 0, slug, shareUrl }: Props) {
         <div className="row">
           <div className="col-md-6">
             <div className="product-back-and-head">
-              <Link href="/properties" aria-label="Back to properties">
+              <Link href="/properties" aria-label="Back to products">
                 <i className="fa-solid fa-chevron-left" />
               </Link>
               <h3>Product Detail</h3>

@@ -31,8 +31,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const cat = findCategory(tree, slug);
     if (!cat) return { title: "Category" };
     return {
-      title: `${cat.name} properties`,
-      description: `Browse ${cat.name} listings on XpertBid Property.`,
+      title: `${cat.name} products`,
+      description: `Browse ${cat.name} renovation and builder listings on XpertBid Home.`,
     };
   } catch {
     return { title: "Category" };
@@ -79,14 +79,14 @@ export default async function CategoryPage({ params }: Props) {
               <Link href="/">Home</Link>
             </li>
             <li className="breadcrumb-item">
-              <Link href="/properties">Properties</Link>
+              <Link href="/properties">Products</Link>
             </li>
             <li className="breadcrumb-item active">{category.name}</li>
           </ol>
         </nav>
 
         <h1 className="property-browse-title mb-2">{category.name}</h1>
-        <p className="text-muted mb-4">Properties in the {category.name} category.</p>
+        <p className="text-muted mb-4">Products in the {category.name} category.</p>
 
         {category.children?.length ? (
           <div className="d-flex flex-wrap gap-2 mb-4">

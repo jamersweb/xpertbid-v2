@@ -12,10 +12,10 @@ type Props = {
     country_id?: number;
     state_id?: number;
     city_id?: number;
-    bedrooms?: number;
     price_min?: number;
     price_max?: number;
     sort?: string;
+    type?: string;
     sub_category?: string;
     child_category?: string;
     listing_type?: string;
@@ -52,9 +52,6 @@ export function MarketplaceBrowseChrome({ countries, defaults }: Props) {
   const [states, setStates] = useState<LocationItem[]>([]);
   const [cities, setCities] = useState<LocationItem[]>([]);
 
-  const [bedrooms, setBedrooms] = useState(
-    defaults.bedrooms != null ? String(defaults.bedrooms) : ""
-  );
   const [priceMin, setPriceMin] = useState(
     defaults.price_min != null ? String(defaults.price_min) : ""
   );
@@ -64,6 +61,7 @@ export function MarketplaceBrowseChrome({ countries, defaults }: Props) {
   const [sort, setSort] = useState(defaults.sort || "latest");
 
   const baseParams = {
+    type: defaults.type,
     sub_category: defaults.sub_category,
     child_category: defaults.child_category,
     listing_type: defaults.listing_type || "normal",
@@ -75,7 +73,6 @@ export function MarketplaceBrowseChrome({ countries, defaults }: Props) {
     country_id: countryId || undefined,
     state_id: stateId || undefined,
     city_id: cityId || undefined,
-    bedrooms: bedrooms || undefined,
     price_min: priceMin || undefined,
     price_max: priceMax || undefined,
     sort: sort || undefined,
@@ -143,7 +140,6 @@ export function MarketplaceBrowseChrome({ countries, defaults }: Props) {
     setCountryId(defaults.country_id ? String(defaults.country_id) : "");
     setStateId(defaults.state_id ? String(defaults.state_id) : "");
     setCityId(defaults.city_id ? String(defaults.city_id) : "");
-    setBedrooms(defaults.bedrooms != null ? String(defaults.bedrooms) : "");
     setPriceMin(defaults.price_min != null ? String(defaults.price_min) : "");
     setPriceMax(defaults.price_max != null ? String(defaults.price_max) : "");
     setSort(defaults.sort || "latest");
@@ -152,7 +148,6 @@ export function MarketplaceBrowseChrome({ countries, defaults }: Props) {
     defaults.country_id,
     defaults.state_id,
     defaults.city_id,
-    defaults.bedrooms,
     defaults.price_min,
     defaults.price_max,
     defaults.sort,
@@ -242,7 +237,6 @@ export function MarketplaceBrowseChrome({ countries, defaults }: Props) {
     setCityId("");
     setStates([]);
     setCities([]);
-    setBedrooms("");
     setPriceMin("");
     setPriceMax("");
     setSort("latest");
@@ -355,22 +349,6 @@ export function MarketplaceBrowseChrome({ countries, defaults }: Props) {
                   {cities.map((city) => (
                     <option key={city.id} value={city.id}>
                       {city.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="marketplace-filter-group">
-                <label htmlFor="filter-bedrooms">Bedrooms</label>
-                <select
-                  id="filter-bedrooms"
-                  value={bedrooms}
-                  onChange={(e) => setBedrooms(e.target.value)}
-                >
-                  <option value="">Any</option>
-                  {[1, 2, 3, 4, 5, 6].map((n) => (
-                    <option key={n} value={String(n)}>
-                      {n}+
                     </option>
                   ))}
                 </select>

@@ -443,21 +443,45 @@ class Listing extends Model
      */
     public static function renovationCategoryIds(?int $rootId = null): array
     {
-        $renovationRootId = $rootId ?? (int) config('renovation.root_category_id');
-        $builderRootId = (int) config('renovation.builder_root_category_id');
-
-        $rootIds = array_values(array_unique(array_filter([
-            $renovationRootId,
-            $builderRootId,
+        $configuredIds = array_values(array_unique(array_filter([
+            $rootId ?? (int) config('renovation.root_category_id'),
+            (int) config('renovation.builder_root_category_id'),
         ], fn ($id) => $id > 0)));
 
-        $existingRootIds = AuctionCategory::query()
-            ->whereIn('id', $rootIds)
+        // Resolve by name/slug first so local/live ID drift does not pull wrong trees.
+        $rootIds = AuctionCategory::query()
+            ->whereNull('parent_id')
+            ->where(function ($q) use ($configuredIds) {
+                $q->where('slug', 'like', '%home-renovation%')
+                    ->orWhere('slug', 'like', '%home-builder%')
+                    ->orWhere('name', 'like', '%Home Renovation%')
+                    ->orWhere('name', 'like', '%Home Builder%');
+
+                if ($configuredIds !== []) {
+                    $q->orWhereIn('id', $configuredIds);
+                }
+            })
             ->pluck('id')
             ->map(fn ($id) => (int) $id)
             ->all();
 
-        $rootIds = $existingRootIds !== [] ? $existingRootIds : $rootIds;
+        // Keep only true roots that match renovation/builder (ignore wrong configured IDs).
+        $rootIds = AuctionCategory::query()
+            ->whereIn('id', $rootIds)
+            ->whereNull('parent_id')
+            ->where(function ($q) {
+                $q->where('slug', 'like', '%home-renovation%')
+                    ->orWhere('slug', 'like', '%home-builder%')
+                    ->orWhere('name', 'like', '%Home Renovation%')
+                    ->orWhere('name', 'like', '%Home Builder%');
+            })
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        if ($rootIds === [] && $configuredIds !== []) {
+            $rootIds = $configuredIds;
+        }
 
         $ids = $rootIds;
 

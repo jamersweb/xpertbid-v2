@@ -6,14 +6,14 @@ export default function NotFound() {
       <div className="container text-center">
         <h1 className="property-browse-title mb-3">Page not found</h1>
         <p className="text-muted mb-4">
-          That property or page is unavailable. It may have been sold or removed.
+          That product or page is unavailable. It may have been sold or removed.
         </p>
         <Link
           href="/properties"
           className="btn"
           style={{ background: "#23262F", color: "#fff", borderRadius: 8, padding: "12px 20px" }}
         >
-          Browse properties
+          Browse products
         </Link>
       </div>
     </div>

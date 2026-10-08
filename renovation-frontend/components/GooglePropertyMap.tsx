@@ -91,7 +91,7 @@ export function GooglePropertyMap({
   latitude,
   longitude,
   locationAddress,
-  title = "Property Location",
+  title = "Location",
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<GoogleMapsMap | null>(null);
@@ -257,7 +257,7 @@ export function GooglePropertyMap({
         <div className="d-flex justify-content-between align-items-center mt-2 px-1">
           <span className="text-muted small">
             <i className="fa-solid fa-location-dot text-danger me-1"></i>
-            {locationAddress || "Pinpointed property location"}
+            {locationAddress || "Pinpointed location"}
           </span>
           {directGoogleMapsUrl ? (
             <a
@@ -290,7 +290,7 @@ export function GooglePropertyMap({
       <div className="d-flex justify-content-between align-items-center mt-2 px-1">
         <span className="text-muted small">
           <i className="fa-solid fa-location-dot text-danger me-1"></i>
-          {locationAddress || "Pinpointed property location"}
+          {locationAddress || "Pinpointed location"}
         </span>
         <a
           href={directGoogleMapsUrl}
