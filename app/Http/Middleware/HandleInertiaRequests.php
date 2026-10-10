@@ -147,6 +147,11 @@ class HandleInertiaRequests extends Middleware
             'renovationFrontendUrl' => rtrim((string) config('renovation.frontend_url'), '/') ?: 'https://home.xpertbid.com',
             'renovationRootCategoryId' => (int) config('renovation.root_category_id'),
             'builderRootCategoryId' => (int) config('renovation.builder_root_category_id'),
+            'brandLogos' => [
+                'property' => asset('assets/images/xp-prop-logo-clean.png'),
+                'vehicle' => asset('assets/images/xp-vehicle-logo-clean.png'),
+                'home' => asset('assets/images/xpertbuildlogo.png'),
+            ],
             'locale' => [
                 'current' => $currentLocale,
                 'fallback' => config('app.fallback_locale', 'en'),
