@@ -199,6 +199,13 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
                 <div className="registration-btns d-none d-lg-flex align-items-center">
                   <button
                     type="button"
+                    className="signup me-2"
+                    onClick={openStartBuilding}
+                  >
+                    Start Building
+                  </button>
+                  <button
+                    type="button"
                     className="login me-4"
                     onClick={openLogin}
                     style={{
@@ -212,20 +219,6 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
                   </button>
                   <button type="button" className="signup me-2" onClick={openRegister}>
                     Sign Up
-                  </button>
-                  <button
-                    type="button"
-                    className="start-building-btn mx-2 px-3 d-none d-lg-inline-flex align-items-center"
-                    onClick={openStartBuilding}
-                  >
-                    Start Building
-                  </button>
-                  <button
-                    type="button"
-                    className="sellnow mx-3 px-3 d-none d-lg-inline-flex align-items-center"
-                    onClick={handleSellClick}
-                  >
-                    Sell Now
                   </button>
                 </div>
               ) : null}
@@ -277,7 +270,7 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
 
                   <button
                     type="button"
-                    className="start-building-btn d-none d-lg-inline-flex align-items-center"
+                    className="signup me-2"
                     onClick={openStartBuilding}
                   >
                     Start Building
@@ -285,7 +278,7 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
 
                   <button
                     type="button"
-                    className="sellnow header-sell-btn d-none d-lg-inline-flex align-items-center"
+                    className="sellnow header-sell-btn me-2"
                     onClick={handleSellClick}
                   >
                     Sell Now
