@@ -28,7 +28,7 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'frontend_url' => rtrim(env('FRONTEND_RENOVATION_URL', 'https://home.xpertbid.com'), '/'),
+    'frontend_url' => rtrim(env('FRONTEND_RENOVATION_URL', 'https://build.xpertbid.com'), '/'),
 
     /*
     |--------------------------------------------------------------------------

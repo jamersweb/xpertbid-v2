@@ -26,7 +26,7 @@ export default function AppLayout({ children, title }) {
        const currentDirection = locale?.supported?.[currentLocale]?.direction || (currentLocale === 'ur' ? 'rtl' : 'ltr');
        const supportedLocales = Object.entries(locale?.supported || {});
        const propertyFrontendUrl = propertyUrlProp || 'https://property.xpertbid.com';
-       const renovationFrontendUrl = renovationUrlProp || 'https://home.xpertbid.com';
+       const renovationFrontendUrl = renovationUrlProp || 'https://build.xpertbid.com';
        const appOrigin = String(ziggy?.url || '').replace(/\/$/, '') || '';
        const propertyLogoSrc = brandLogos?.property || `${appOrigin}/assets/images/xp-prop-logo-clean.png`;
        const vehicleLogoSrc = brandLogos?.vehicle || `${appOrigin}/assets/images/xp-vehicle-logo-clean.png`;

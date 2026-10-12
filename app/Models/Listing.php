@@ -523,7 +523,7 @@ class Listing extends Model
      */
     public function renovationFrontendUrl(): string
     {
-        $base = rtrim((string) config('renovation.frontend_url', 'https://home.xpertbid.com'), '/');
+        $base = rtrim((string) config('renovation.frontend_url', 'https://build.xpertbid.com'), '/');
 
         return $base . '/properties/' . ltrim((string) $this->slug, '/');
     }

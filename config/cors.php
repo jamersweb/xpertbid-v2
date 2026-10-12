@@ -6,6 +6,13 @@ $propertyOrigins = array_values(array_filter(array_unique([
     'http://property.xpertbid.com',
     'https://www.property.xpertbid.com',
     'http://www.property.xpertbid.com',
+    env('FRONTEND_RENOVATION_URL', 'https://build.xpertbid.com'),
+    'https://build.xpertbid.com',
+    'http://build.xpertbid.com',
+    'https://www.build.xpertbid.com',
+    'http://www.build.xpertbid.com',
+    'https://home.xpertbid.com',
+    'http://home.xpertbid.com',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
 ])));

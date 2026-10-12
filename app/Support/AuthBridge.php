@@ -83,12 +83,16 @@ class AuthBridge
             'http://property.xpertbid.com',
             'https://www.property.xpertbid.com',
             'http://www.property.xpertbid.com',
-            // Live home-renovation frontend
+            // Live home-builder / renovation frontend
+            'https://build.xpertbid.com',
+            'http://build.xpertbid.com',
+            'https://www.build.xpertbid.com',
+            'http://www.build.xpertbid.com',
+            // Legacy hostnames (keep until DNS fully cut over)
             'https://home.xpertbid.com',
             'http://home.xpertbid.com',
             'https://www.home.xpertbid.com',
             'http://www.home.xpertbid.com',
-            // Legacy hostname (keep until DNS fully cut over)
             'https://renovation.xpertbid.com',
             'http://renovation.xpertbid.com',
             'https://www.renovation.xpertbid.com',

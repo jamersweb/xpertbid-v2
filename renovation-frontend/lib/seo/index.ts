@@ -4,7 +4,7 @@ import type { PropertyCard, PropertyDetail } from "@/types/property";
 export const SITE_NAME = "XpertBid Home Renovation";
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "https://home.xpertbid.com";
+  "https://build.xpertbid.com";
 
 export function absoluteUrl(path: string) {
   if (path.startsWith("http")) return path;

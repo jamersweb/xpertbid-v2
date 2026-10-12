@@ -65,7 +65,7 @@ export function isRenovationCategory(category, options = {}) {
 export function getCategoryBrowseUrl(category, options = {}) {
        const propertyFrontendUrl = String(options.propertyFrontendUrl || 'https://property.xpertbid.com').replace(/\/+$/, '');
        const propertyRootCategoryId = getPropertyRootCategoryId(options.propertyRootCategoryId);
-       const renovationFrontendUrl = String(options.renovationFrontendUrl || 'https://home.xpertbid.com').replace(/\/+$/, '');
+       const renovationFrontendUrl = String(options.renovationFrontendUrl || 'https://build.xpertbid.com').replace(/\/+$/, '');
        const slug = category?.slug;
 
        if (isPropertyCategory(category, propertyRootCategoryId)) {
