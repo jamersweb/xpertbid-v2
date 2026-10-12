@@ -113,13 +113,6 @@ img.property-header-logo.logo-image {
   object-fit: contain !important;
 }
 
-.site-header-sticky {
-  position: sticky;
-  top: 0;
-  background: #fff;
-  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06);
-}
-
 #mainNavbar.navbar {
   display: flex;
   align-items: center;
@@ -183,7 +176,7 @@ img.property-header-logo.logo-image {
   #mainNavbar .navbar-brand {
     flex: 1 1 auto;
     min-width: 0;
-    max-width: calc(100% - 148px);
+    max-width: calc(100% - 168px);
     margin-right: 4px !important;
     padding-top: 0;
     padding-bottom: 0;
@@ -192,27 +185,11 @@ img.property-header-logo.logo-image {
   #mainNavbar .mobile-header-actions {
     flex: 0 0 auto;
     margin-left: auto !important;
-    margin-right: 6px !important;
-  }
-
-  #mainNavbar .navbar-toggler {
-    flex: 0 0 auto;
+    margin-right: 0 !important;
   }
 
   #mainNavbar .xpert-mobile-menu {
     display: none !important;
-    width: 100%;
-    flex: 0 0 100%;
-    order: 10;
-  }
-
-  #mainNavbar .xpert-mobile-menu.show {
-    display: block !important;
-    background: #fff;
-    padding: 0.85rem 0.15rem 1rem;
-    border-radius: 0 0 12px 12px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    margin-top: 0.5rem;
   }
 
   #mainNavbar .property-purpose-nav {
@@ -302,6 +279,7 @@ img.property-header-logo.logo-image {
   }
 
   #mainNavbar .mobile-menu-extra .sellnow,
+  #mainNavbar .mobile-menu-extra .start-building-btn,
   #mainNavbar .mobile-menu-extra .mobile-menu-signup-btn {
     height: 44px;
     border-radius: 10px;
@@ -650,6 +628,37 @@ img.property-header-logo.logo-image {
   color: #FFFFFF !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(35, 38, 47, 0.2);
+}
+
+#mainNavbar .start-building-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 38px !important;
+  padding: 0 18px !important;
+  border-radius: 8px !important;
+  background-color: transparent !important;
+  color: #43ace9 !important;
+  font-family: "Inter", sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  border: 1.5px solid #43ace9 !important;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease,
+    box-shadow 0.2s ease !important;
+}
+
+#mainNavbar .start-building-btn:hover {
+  background-color: #43ace9 !important;
+  color: #fff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(67, 172, 233, 0.28);
+}
+
+#mainNavbar .header-user-actions .start-building-btn {
+  margin-right: 10px !important;
 }
 
 @media (max-width: 768px) {
@@ -1039,11 +1048,19 @@ button.login {
 .mobile-auth-login {
   background: #23262f;
   color: #fff !important;
+  border: none;
 }
 
 .mobile-auth-signup {
   background: #43ace9;
   color: #fff !important;
+  border: none;
+}
+
+.mobile-auth-sell {
+  background: #23262f;
+  color: #fff !important;
+  border: none;
 }
 
 .property-purpose-nav .property-nav-link {
@@ -1697,5 +1714,127 @@ button.login {
   .property-purpose-nav .property-nav-link {
     font-size: 12px !important;
     padding: 0.35rem 0.45rem !important;
+  }
+}
+
+/* Start Building wizard modal */
+.startBuildingModal .startBuildingModal-content {
+  text-align: center;
+  max-width: 520px;
+  width: calc(100% - 32px);
+  padding: 28px 24px 32px;
+  position: relative;
+}
+
+.startBuildingModal #closeStartBuildingModal {
+  position: absolute;
+  cursor: pointer;
+  right: 20px;
+  top: 18px;
+  z-index: 2;
+}
+
+.startBuildingModal #closeStartBuildingModal i {
+  background-color: #ededed;
+  color: #23262f;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 100%;
+}
+
+.startBuilding-back {
+  position: absolute;
+  left: 20px;
+  top: 18px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.startBuilding-back i {
+  background-color: #ededed;
+  color: #23262f;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 100%;
+}
+
+.startBuilding-lead {
+  font-family: "Inter", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0;
+}
+
+.startBuilding-fallback {
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  color: #43ace9;
+  margin: 0;
+}
+
+.startBuilding-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.startBuilding-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  padding: 16px 18px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #fafafa;
+  box-shadow: 8px 10px 28px 0 #0000000f;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.startBuilding-option:hover {
+  border-color: #43ace9;
+  background: #f0f9ff;
+  transform: translateY(-1px);
+}
+
+.startBuilding-option-icon {
+  color: #43ace9;
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+
+.startBuilding-option-title {
+  font-family: "Inter", sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #23262f;
+  line-height: 1.3;
+}
+
+.startBuilding-option-sub {
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  line-height: 1.3;
+}
+
+@media (max-width: 575.98px) {
+  .startBuildingModal .startBuildingModal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    padding: 28px 20px;
   }
 }

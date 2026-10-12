@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuthModal } from "@/components/auth/AuthModalProvider";
 import { resolveProfileImage, useAuth } from "@/components/auth/AuthProvider";
+import { useStartBuilding } from "@/components/start-building/StartBuildingProvider";
 import { assetImage } from "@/lib/site";
 import type { CategoryNode } from "@/types/property";
 
@@ -62,6 +63,7 @@ export function MobileBottomNav({ purposes = [] }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { openLogin } = useAuthModal();
+  const { openStartBuilding } = useStartBuilding();
   const { user, logout, openMainPath } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
   const [storedVertical, setStoredVertical] = useState<Vertical | null>(null);
@@ -143,14 +145,6 @@ export function MobileBottomNav({ purposes = [] }: Props) {
     setStoredVertical(vertical);
   };
 
-  const handleSell = () => {
-    if (!user) {
-      openLogin();
-      return;
-    }
-    void openMainPath("/sell");
-  };
-
   const handleLogout = async () => {
     setProfileOpen(false);
     await logout();
@@ -186,11 +180,11 @@ export function MobileBottomNav({ purposes = [] }: Props) {
       <button
         type="button"
         className="mobile-bottom-nav__item mobile-bottom-nav__item--action"
-        aria-label="Sell"
-        onClick={handleSell}
+        aria-label="Start Building"
+        onClick={openStartBuilding}
       >
-        <i className="fa-solid fa-plus mobile-bottom-nav__icon" />
-        <span className="mobile-bottom-nav__label">Sell</span>
+        <i className="fa-solid fa-helmet-safety mobile-bottom-nav__icon" />
+        <span className="mobile-bottom-nav__label">Build</span>
       </button>
 
       <Link

@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useEffect, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useAuthModal } from "@/components/auth/AuthModalProvider";
 import { resolveProfileImage, useAuth } from "@/components/auth/AuthProvider";
+import { useStartBuilding } from "@/components/start-building/StartBuildingProvider";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
 import { PropertyPurposeNav } from "@/components/PropertyPurposeNav";
 import { assetImage, mainUrl } from "@/lib/site";
@@ -113,13 +114,10 @@ function ProfileMenu({
 
 export function SiteHeader({ purposes = [] }: HeaderProps) {
   const { openLogin, openRegister } = useAuthModal();
+  const { openStartBuilding } = useStartBuilding();
   const { user, loading, logout, openMainPath } = useAuth();
   const pathname = usePathname();
   const [profileOpen, setProfileOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
-
-  const closeMobileMenu = () => setMenuOpen(false);
 
   useEffect(() => {
     const onClick = (event: Event) => {
@@ -127,27 +125,17 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
       if (!target.closest(".header-profile-root")) {
         setProfileOpen(false);
       }
-      if (
-        menuOpen &&
-        mobileMenuRef.current &&
-        !mobileMenuRef.current.contains(target) &&
-        !target.closest(".navbar-toggler")
-      ) {
-        setMenuOpen(false);
-      }
     };
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
-  }, [menuOpen]);
+  }, []);
 
   useEffect(() => {
-    setMenuOpen(false);
     setProfileOpen(false);
   }, [pathname]);
 
   const handleSellClick = (e: ReactMouseEvent) => {
     e.preventDefault();
-    closeMobileMenu();
     if (!user) {
       openLogin();
       return;
@@ -157,14 +145,13 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
 
   const handleLogout = async () => {
     setProfileOpen(false);
-    closeMobileMenu();
     await logout();
   };
 
   const profileSrc = resolveProfileImage(user);
 
   return (
-    <header className="bg-white site-header-sticky" style={{ zIndex: 1050 }}>
+    <header className="bg-white" style={{ zIndex: 1050 }}>
       <nav className="navbar navbar-expand-lg navbar-light bg-white py-2" id="mainNavbar">
         <div className="container-fluid px-3 px-lg-5 my-1 my-lg-2">
           <Link className="navbar-brand d-flex align-items-center me-0 me-lg-4 flex-shrink-1 min-w-0" href="/">
@@ -178,63 +165,34 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
             />
           </Link>
 
-          <div className="mobile-header-actions d-flex d-lg-none align-items-center gap-1 ms-auto me-1">
-            {user ? <NotificationDropdown /> : null}
+          {/* Mobile: guest = Login + Sign Up; logged-in = notifications + Sell (no profile / no hamburger) */}
+          <div className="mobile-header-actions d-flex d-lg-none align-items-center gap-2 ms-auto">
             {!user && !loading ? (
-              <button type="button" className="mobile-auth-btn mobile-auth-login" onClick={openLogin}>
-                Login
-              </button>
+              <>
+                <button type="button" className="mobile-auth-btn mobile-auth-login" onClick={openLogin}>
+                  Login
+                </button>
+                <button type="button" className="mobile-auth-btn mobile-auth-signup" onClick={openRegister}>
+                  Sign Up
+                </button>
+              </>
             ) : null}
             {user ? (
-              <div className="header-profile-root" style={{ position: "relative" }}>
+              <>
+                <NotificationDropdown />
                 <button
                   type="button"
-                  className="btn btn-link p-0"
-                  onClick={() => setProfileOpen((v) => !v)}
-                  aria-label="Profile menu"
+                  className="mobile-auth-btn mobile-auth-sell"
+                  onClick={handleSellClick}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={profileSrc}
-                    alt="Profile"
-                    className="header-avatar-img-mobile rounded-circle"
-                    width={30}
-                    height={30}
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = assetImage("user.jpg");
-                    }}
-                  />
+                  Sell Now
                 </button>
-                {profileOpen ? (
-                  <ProfileMenu
-                    onClose={() => setProfileOpen(false)}
-                    onLogout={handleLogout}
-                    openMainPath={openMainPath}
-                  />
-                ) : null}
-              </div>
+              </>
             ) : null}
           </div>
 
-          <button
-            className="navbar-toggler d-lg-none"
-            type="button"
-            onClick={() => setMenuOpen((open) => !open)}
-            aria-controls="navbarSupportedContent"
-            aria-expanded={menuOpen}
-            aria-label="Toggle navigation"
-          >
-            <i className={`fa-solid ${menuOpen ? "fa-xmark" : "fa-bars"}`} aria-hidden="true" />
-          </button>
-
-          <div
-            ref={mobileMenuRef}
-            className={`navbar-collapse xpert-mobile-menu ${menuOpen ? "show" : ""}`}
-            id="navbarSupportedContent"
-          >
-            <PropertyPurposeNav purposes={purposes} onNavigate={closeMobileMenu} />
+          <div className="navbar-collapse xpert-mobile-menu d-none d-lg-flex" id="navbarSupportedContent">
+            <PropertyPurposeNav purposes={purposes} />
 
             <div className="d-flex align-items-center mt-3 mt-lg-0 header-account-cluster">
               {!user && !loading ? (
@@ -257,6 +215,13 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
                   </button>
                   <button
                     type="button"
+                    className="start-building-btn mx-2 px-3 d-none d-lg-inline-flex align-items-center"
+                    onClick={openStartBuilding}
+                  >
+                    Start Building
+                  </button>
+                  <button
+                    type="button"
                     className="sellnow mx-3 px-3 d-none d-lg-inline-flex align-items-center"
                     onClick={handleSellClick}
                   >
@@ -264,28 +229,6 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
                   </button>
                 </div>
               ) : null}
-
-              <div className="d-flex d-lg-none flex-column w-100 gap-2 mt-2 mobile-menu-extra">
-                {!user && !loading ? (
-                  <button
-                    type="button"
-                    className="mobile-menu-signup-btn w-100"
-                    onClick={() => {
-                      closeMobileMenu();
-                      openRegister();
-                    }}
-                  >
-                    Sign Up
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  className="sellnow w-100 justify-content-center"
-                  onClick={handleSellClick}
-                >
-                  Sell Now
-                </button>
-              </div>
 
               {user ? (
                 <div
@@ -331,6 +274,14 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
                       />
                     ) : null}
                   </div>
+
+                  <button
+                    type="button"
+                    className="start-building-btn d-none d-lg-inline-flex align-items-center"
+                    onClick={openStartBuilding}
+                  >
+                    Start Building
+                  </button>
 
                   <button
                     type="button"

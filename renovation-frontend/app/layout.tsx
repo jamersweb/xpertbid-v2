@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AuthModalProvider } from "@/components/auth/AuthModalProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { StartBuildingProvider } from "@/components/start-building/StartBuildingProvider";
 import { Suspense } from "react";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { SiteFooter, SiteHeader, WhatsAppFab } from "@/components/SiteChrome";
@@ -78,17 +79,19 @@ export default async function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
-          <AuthModalProvider>
-            <div className="min-h-screen bg-white has-mobile-bottom-nav">
-              <SiteHeader purposes={purposes} />
-              <main>{children}</main>
-              <SiteFooter />
-            </div>
-            <Suspense fallback={null}>
-              <MobileBottomNav purposes={purposes} />
-            </Suspense>
-            <WhatsAppFab />
-          </AuthModalProvider>
+          <StartBuildingProvider purposes={purposes}>
+            <AuthModalProvider>
+              <div className="min-h-screen bg-white has-mobile-bottom-nav">
+                <SiteHeader purposes={purposes} />
+                <main>{children}</main>
+                <SiteFooter />
+              </div>
+              <Suspense fallback={null}>
+                <MobileBottomNav purposes={purposes} />
+              </Suspense>
+              <WhatsAppFab />
+            </AuthModalProvider>
+          </StartBuildingProvider>
         </AuthProvider>
       </body>
     </html>
