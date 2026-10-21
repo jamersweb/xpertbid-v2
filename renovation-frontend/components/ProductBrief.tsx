@@ -1,7 +1,7 @@
 "use client";
 
 import type { PropertyDetail } from "@/types/property";
-import { formatPrice } from "@/lib/seo";
+import { FormattedPrice } from "@/components/FormattedPrice";
 import { assetImage, mainUrl } from "@/lib/site";
 
 type Props = {
@@ -37,7 +37,6 @@ export function ProductBrief({ property }: Props) {
       : Number(property.minimum_bid ?? property.price?.amount ?? 0);
   const startPrice = Number(property.minimum_bid ?? property.price?.amount ?? 0);
   const reserve = Number(property.reserve_price ?? 0);
-  const currency = property.price?.currency || "PKR";
   const sellerName = property.seller?.name || "Seller";
   const supportMessage = encodeURIComponent(
     `Hello XpertBid Support, I need help with this listing: ${property.title}`
@@ -110,7 +109,9 @@ export function ProductBrief({ property }: Props) {
           <div className="bid-rank-and-time detail-auction-strip mb-3">
             <div className="detail-auction-meta">
               <span className="rank">Highest Bid</span>
-              <div className="price">{formatPrice(highestBid, currency)}</div>
+              <div className="price">
+                <FormattedPrice amount={highestBid} />
+              </div>
             </div>
           </div>
 
@@ -136,11 +137,15 @@ export function ProductBrief({ property }: Props) {
           <div className="min-bid-and-estimate d-flex justify-content-between mt-2">
             <div className="minimum-bid text-muted small">
               Starting bid price:{" "}
-              <span className="text-dark fw-semibold">{formatPrice(startPrice, currency)}</span>
+              <span className="text-dark fw-semibold">
+                <FormattedPrice amount={startPrice} />
+              </span>
             </div>
             <div className="estimate-bid text-muted small">
               Market Value:{" "}
-              <span className="text-dark fw-semibold">{formatPrice(reserve || startPrice, currency)}</span>
+              <span className="text-dark fw-semibold">
+                <FormattedPrice amount={reserve || startPrice} />
+              </span>
             </div>
           </div>
         </>
@@ -152,7 +157,7 @@ export function ProductBrief({ property }: Props) {
                 <span className="rank text-muted small fw-semibold">Price</span>
                 <div className="price fw-bold d-flex align-items-center gap-2">
                   <span className="text-dark" style={{ fontSize: 28 }}>
-                    {formatPrice(property.price?.amount, currency)}
+                    <FormattedPrice amount={property.price?.amount} />
                   </span>
                 </div>
               </div>

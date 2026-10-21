@@ -3,6 +3,7 @@ import { AuthModalProvider } from "@/components/auth/AuthModalProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { StartBuildingProvider } from "@/components/start-building/StartBuildingProvider";
 import { Suspense } from "react";
+import { BrandTopBanner } from "@/components/BrandTopBanner";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { SiteFooter, SiteHeader, WhatsAppFab } from "@/components/SiteChrome";
 import { getPropertyCategories } from "@/lib/api/client";
@@ -82,6 +83,7 @@ export default async function RootLayout({
           <StartBuildingProvider purposes={purposes}>
             <AuthModalProvider>
               <div className="min-h-screen bg-white has-mobile-bottom-nav">
+                <BrandTopBanner />
                 <SiteHeader purposes={purposes} />
                 <main>{children}</main>
                 <SiteFooter />
