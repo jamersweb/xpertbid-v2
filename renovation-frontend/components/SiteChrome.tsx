@@ -314,8 +314,8 @@ export function SiteFooter() {
               <a href={mainUrl("/")} onClick={goMainHome}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={assetImage("footer-logo.png")}
-                  alt="XpertBid Footer Logo"
+                  src={assetImage("xpertbuildlogo.png")}
+                  alt="XpertBuild Footer Logo"
                   width={200}
                   height={60}
                   className="quality-90"
@@ -323,10 +323,10 @@ export function SiteFooter() {
               </a>
             </div>
             <p>
-              First ever UAE based auction platform, providing you a one stop shop,
-              auction marketplace/platform. From real estate, vehicles, bulk goods
-              and much more, XpertBid powers auctions that deliver value, security,
-              and results one auction at a time.
+              XpertBuild is your one-stop marketplace for home construction and
+              renovation in Pakistan. Find raw materials, contractors, architects,
+              electrical, plumbing, and more — everything you need to build or
+              upgrade your home in one place.
             </p>
             <div className="social-icons my-3">
               <a
