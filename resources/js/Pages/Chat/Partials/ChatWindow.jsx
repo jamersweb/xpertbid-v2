@@ -3,16 +3,25 @@ import axios from 'axios';
 import { Link } from '@inertiajs/react';
 import Price from '../../../Components/Price';
 
-const ChatWindow = ({ conversationId, currentUser, onBack, isAdminView = false }) => {
+const ChatWindow = ({ conversationId, currentUser, onBack, onUnauthorized, isAdminView = false }) => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [attachment, setAttachment] = useState(null);
     const messagesEndRef = useRef(null);
     const [otherUser, setOtherUser] = useState(null);
     const [product, setProduct] = useState(null);
+    const [buyerRequestOffer, setBuyerRequestOffer] = useState(null);
     const [conversation, setConversation] = useState(null);
     const [loading, setLoading] = useState(false);
     const [showOptions, setShowOptions] = useState(false);
+
+    const clearLocalState = () => {
+        setConversation(null);
+        setMessages([]);
+        setOtherUser(null);
+        setProduct(null);
+        setBuyerRequestOffer(null);
+    };
 
     const fetchData = async () => {
         if (conversationId) {
@@ -28,7 +37,18 @@ const ChatWindow = ({ conversationId, currentUser, onBack, isAdminView = false }
                     : (data.user_one_id === currentUser.id ? data.user_two : data.user_one);
                 setOtherUser(other);
                 setProduct(data.product);
+                setBuyerRequestOffer(data.buyer_request_offer || data.buyerRequestOffer || null);
             } catch (error) {
+                const status = error?.response?.status;
+                if (status === 403 || status === 404) {
+                    clearLocalState();
+                    if (typeof onUnauthorized === 'function') {
+                        onUnauthorized();
+                    } else if (typeof onBack === 'function') {
+                        onBack();
+                    }
+                    return;
+                }
                 console.error("Error fetching messages:", error);
             }
         }
@@ -257,6 +277,54 @@ const ChatWindow = ({ conversationId, currentUser, onBack, isAdminView = false }
                         </Link>
                     </div>
                 )}
+
+                {/* Buyer request offer bar */}
+                {!product && buyerRequestOffer && (() => {
+                    const request = buyerRequestOffer.buyer_request || buyerRequestOffer.buyerRequest || {};
+                    const firstImage = (request.images || [])[0];
+                    const imageUrl = firstImage?.url || firstImage?.path || '';
+                    const hasImage = Boolean(String(imageUrl || '').trim());
+                    const offerPrice = Number(buyerRequestOffer.price || 0);
+                    const requestHref = request.slug || request.id
+                        ? route('buyer-requests.show', request.slug || request.id)
+                        : null;
+
+                    return (
+                        <div className="bg-sky-50 px-4 py-2 border-t border-sky-100 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 overflow-hidden min-w-0">
+                                {hasImage && (
+                                    <img
+                                        src={getAssetUrl(imageUrl)}
+                                        alt={request.title || 'Buyer request'}
+                                        className="w-10 h-10 rounded object-cover border border-sky-100 bg-white"
+                                        onError={(e) => {
+                                            e.currentTarget.style.display = 'none';
+                                        }}
+                                    />
+                                )}
+                                <div className="min-w-0">
+                                    <div className="text-[10px] font-semibold uppercase tracking-wide text-sky-700">
+                                        Buyer request
+                                    </div>
+                                    <h4 className="text-xs font-semibold text-gray-900 truncate max-w-[200px]">
+                                        {request.title || 'Request'}
+                                    </h4>
+                                    <p className="text-sm font-bold text-gray-800">
+                                        Offer: <Price amountPKR={offerPrice} />
+                                    </p>
+                                </div>
+                            </div>
+                            {requestHref && (
+                                <Link
+                                    href={requestHref}
+                                    className="bg-gray-900 hover:bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap no-underline"
+                                >
+                                    View
+                                </Link>
+                            )}
+                        </div>
+                    );
+                })()}
             </div>
 
             {/* Messages Area */}

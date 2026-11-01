@@ -83,6 +83,20 @@ export default function Dashboard({ listingsCount, biddingsCount, listings }) {
                     </div>
                 </section>
 
+                <div className="container mb-4">
+                    <div className="d-flex flex-wrap gap-2 mx-4 px-3">
+                        <Link href={route('buyer-requests.index')} className="btn btn-outline-primary rounded-pill">
+                            {t('Buyer Requests')}
+                        </Link>
+                        <Link href={route('buyer-requests.create')} className="btn btn-primary rounded-pill">
+                            + {t('New request')}
+                        </Link>
+                        <Link href={route('seller.buyer-requests.browse')} className="btn btn-outline-secondary rounded-pill">
+                            {t('Request Leads')}
+                        </Link>
+                    </div>
+                </div>
+
                 <div className="container">
                     <div className="d-flex justify-content-between align-items-center mx-4 px-3">
                         <h2 className="mb-0" style={{ fontSize: '34px', fontWeight: '700', color: '#23262F' }}>{t('My Listings')}</h2>

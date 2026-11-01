@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useAuthModal } from "@/components/auth/AuthModalProvider";
 import { resolveProfileImage, useAuth } from "@/components/auth/AuthProvider";
@@ -14,11 +14,19 @@ type HeaderProps = {
   purposes?: CategoryNode[];
 };
 
+const LOCAL_PROFILE_PATHS = new Set([
+  "/buyer-requests",
+  "/seller/buyer-requests",
+  "/seller/buyer-request-preferences",
+]);
+
 const PROFILE_LINKS = [
   { label: "Account Settings", path: "/account-settings", icon: "profile-setting.svg" },
   { label: "Messages", path: "/chat", fa: "fa-comment-dots" },
   { label: "My Favorites", path: "/favorites", icon: "setting-heart.svg" },
   { label: "My Listings", path: "/my-listings", icon: "mainListing.svg" },
+  { label: "Buyer Requests", path: "/buyer-requests", fa: "fa-clipboard-list", local: true },
+  { label: "Request Leads", path: "/seller/buyer-requests", fa: "fa-handshake", local: true },
   { label: "My Bids", path: "/my-bids", icon: "myBids.svg" },
   { label: "My Orders", path: "/my-orders", fa: "fa-box-open" },
   { label: "Payment Request", path: "/payment-requests", fa: "fa-money-check" },
@@ -34,6 +42,7 @@ function ProfileMenu({
   onLogout: () => void;
   openMainPath: (path: string) => Promise<void>;
 }) {
+  const router = useRouter();
   return (
     <div
       id="userProfileSettingPopup"
@@ -77,6 +86,12 @@ function ProfileMenu({
                 }}
                 onClick={() => {
                   onClose();
+                  const isLocal =
+                    ("local" in item && item.local) || LOCAL_PROFILE_PATHS.has(item.path);
+                  if (isLocal) {
+                    router.push(item.path);
+                    return;
+                  }
                   void openMainPath(item.path);
                 }}
               >

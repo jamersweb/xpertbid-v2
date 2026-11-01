@@ -36,17 +36,35 @@ export default function AdminLayout({ children, title }) {
               document.body.classList.toggle('locale-rtl', currentDirection === 'rtl');
        }, [currentLocale, currentDirection]);
 
+       // Keep document from scrolling so only <main> scrolls (avoids double scrollbars).
+       useEffect(() => {
+              if (typeof document === 'undefined') return;
+
+              const html = document.documentElement;
+              const body = document.body;
+              const prevHtmlOverflow = html.style.overflow;
+              const prevBodyOverflow = body.style.overflow;
+
+              html.style.overflow = 'hidden';
+              body.style.overflow = 'hidden';
+
+              return () => {
+                     html.style.overflow = prevHtmlOverflow;
+                     body.style.overflow = prevBodyOverflow;
+              };
+       }, []);
+
        return (
-              <div className="admin-layout flex min-h-screen bg-gray-50">
+              <div className="admin-layout flex h-screen overflow-hidden bg-gray-50">
                      <Head title={`Admin - ${title}`} />
 
                      {/* Sidebar */}
                      <AdminSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-                     {/* Main Content Area */}
-                     <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-20'}`}>
+                     {/* Main Content Area — min-w-0 keeps wide tables inside overflow-x, not the page */}
+                     <div className={`flex min-h-0 min-w-0 flex-1 flex-col transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-20'}`}>
                             {/* Admin Header */}
-                            <header className="h-16 bg-white border-bottom border-gray-200 sticky top-0 z-30 px-6 flex items-center justify-between shadow-sm">
+                            <header className="h-16 shrink-0 bg-white border-bottom border-gray-200 z-30 px-6 flex items-center justify-between shadow-sm">
                                    <div className="flex items-center gap-4">
                                           <button
                                                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -106,8 +124,8 @@ export default function AdminLayout({ children, title }) {
                                    </div>
                             </header>
 
-                            {/* Page Content */}
-                            <main className="p-6">
+                            {/* Page Content — single vertical scroll surface */}
+                            <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-6">
                                    {children}
                             </main>
                      </div>

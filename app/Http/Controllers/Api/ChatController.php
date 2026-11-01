@@ -97,9 +97,17 @@ class ChatController extends Controller
             $userId = Auth::id();
             $adminView = $this->isAdminView($request);
 
+            $conversationRelations = [
+                'userOne',
+                'userTwo',
+                'product',
+                'buyerRequestOffer:id,buyer_request_id,seller_id,price,status',
+                'buyerRequestOffer.buyerRequest:id,title,slug,status',
+            ];
+
             if ($adminView) {
                 $participantId = (int) $request->input('participant_id');
-                $query = Conversation::with(['userOne', 'userTwo'])->orderByDesc('updated_at');
+                $query = Conversation::with($conversationRelations)->orderByDesc('updated_at');
 
                 if ($participantId > 0) {
                     $query->where(function ($q) use ($participantId) {
@@ -116,7 +124,7 @@ class ChatController extends Controller
                         return $conversation;
                     });
             } else {
-                $conversations = Conversation::with(['userOne', 'userTwo'])
+                $conversations = Conversation::with($conversationRelations)
                     ->where(function ($query) use ($userId) {
                         $query->where('user_one_id', $userId)
                             ->where('user_one_deleted', false);
@@ -150,7 +158,15 @@ class ChatController extends Controller
         $this->touchPresence();
         $userId = Auth::id();
         $adminView = $this->isAdminView($request);
-        $conversation = Conversation::with(['messages.sender', 'product', 'userOne', 'userTwo'])->findOrFail($id);
+        $conversation = Conversation::with([
+            'messages.sender',
+            'product',
+            'buyerRequestOffer.buyerRequest.images',
+            'buyerRequestOffer.buyerRequest.category:id,name',
+            'buyerRequestOffer.seller:id,name,profile_pic',
+            'userOne',
+            'userTwo',
+        ])->findOrFail($id);
 
         if (!$adminView && $conversation->user_one_id != $userId && $conversation->user_two_id != $userId) {
             return response()->json(['message' => 'Unauthorized'], 403);
@@ -187,6 +203,7 @@ class ChatController extends Controller
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'product_id' => 'nullable|exists:listings,id',
+            'buyer_request_offer_id' => 'nullable|exists:buyer_request_offers,id',
         ]);
 
         $authUserId = Auth::id();
@@ -195,6 +212,9 @@ class ChatController extends Controller
         if ($authUserId == $otherUserId) {
             return response()->json(['message' => 'Cannot chat with yourself'], 400);
         }
+
+        $productId = $request->filled('buyer_request_offer_id') ? null : $request->product_id;
+        $offerId = $request->buyer_request_offer_id;
 
         $conversation = Conversation::where(function ($query) use ($authUserId, $otherUserId) {
             $query->where(function ($nested) use ($authUserId, $otherUserId) {
@@ -205,14 +225,16 @@ class ChatController extends Controller
                     ->where('user_two_id', $authUserId);
             });
         })
-            ->where('product_id', $request->product_id)
+            ->where('product_id', $productId)
+            ->where('buyer_request_offer_id', $offerId)
             ->first();
 
         if (!$conversation) {
             $conversation = Conversation::create([
                 'user_one_id' => $authUserId,
                 'user_two_id' => $otherUserId,
-                'product_id' => $request->product_id,
+                'product_id' => $productId,
+                'buyer_request_offer_id' => $offerId,
             ]);
         }
 

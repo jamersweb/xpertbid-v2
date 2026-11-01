@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BuyerRequestController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\Property\LocationController;
 use App\Http\Controllers\Api\V1\Property\PropertyCategoryController;
@@ -29,6 +31,24 @@ Route::prefix('v1')->group(function () {
         Route::post('/notifications/read-all', [AuthController::class, 'markAllNotificationsRead']);
         Route::post('/notifications/read/{id}', [AuthController::class, 'markNotificationRead']);
         Route::delete('/notifications/{id}', [AuthController::class, 'deleteNotification']);
+
+        // Buyer Requests (reverse marketplace)
+        Route::get('/buyer-requests', [BuyerRequestController::class, 'index']);
+        Route::post('/buyer-requests', [BuyerRequestController::class, 'store']);
+        Route::get('/buyer-requests/matched', [BuyerRequestController::class, 'matched']);
+        Route::get('/buyer-requests/{buyerRequest}', [BuyerRequestController::class, 'show']);
+        Route::put('/buyer-requests/{buyerRequest}', [BuyerRequestController::class, 'update']);
+        Route::post('/buyer-requests/{buyerRequest}/close', [BuyerRequestController::class, 'close']);
+        Route::post('/buyer-requests/{buyerRequest}/offers', [BuyerRequestController::class, 'storeOffer']);
+        Route::post('/buyer-requests/{buyerRequest}/offers/{offer}/accept', [BuyerRequestController::class, 'acceptOffer']);
+        Route::post('/buyer-requests/{buyerRequest}/offers/{offer}/reject', [BuyerRequestController::class, 'rejectOffer']);
+        Route::put('/buyer-request-offers/{offer}', [BuyerRequestController::class, 'updateOffer']);
+        Route::delete('/buyer-request-offers/{offer}', [BuyerRequestController::class, 'destroyOffer']);
+        Route::get('/seller/buyer-request-preferences', [BuyerRequestController::class, 'preferences']);
+        Route::put('/seller/buyer-request-preferences', [BuyerRequestController::class, 'savePreferences']);
+
+        // Chat (Sanctum) — used by property/renovation frontends before bridging to main /chat
+        Route::post('/chat/initiate', [ChatController::class, 'initiate']);
     });
 
     // Property vertical routes

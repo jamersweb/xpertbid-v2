@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from '@inertiajs/react';
+import Price from '../../../Components/Price';
 
 const ChatList = ({ onSelectConversation, selectedConversationId, currentUser, isAdminView = false, participantId = null }) => {
     const [conversations, setConversations] = useState([]);
@@ -190,6 +191,19 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser, i
                                     {conv.product && (
                                         <div className="text-xs font-semibold text-gray-700 truncate mb-1">
                                             {conv.product.title}
+                                        </div>
+                                    )}
+                                    {!conv.product && (conv.buyer_request_offer || conv.buyerRequestOffer) && (
+                                        <div className="text-xs font-semibold text-sky-700 truncate mb-1">
+                                            {(conv.buyer_request_offer || conv.buyerRequestOffer)?.buyer_request?.title
+                                                || (conv.buyer_request_offer || conv.buyerRequestOffer)?.buyerRequest?.title
+                                                || 'Buyer request'}
+                                            {(conv.buyer_request_offer || conv.buyerRequestOffer)?.price != null && (
+                                                <span className="text-gray-600 font-medium">
+                                                    {' · Offer '}
+                                                    <Price amountPKR={(conv.buyer_request_offer || conv.buyerRequestOffer).price} />
+                                                </span>
+                                            )}
                                         </div>
                                     )}
 

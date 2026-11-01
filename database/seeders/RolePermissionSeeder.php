@@ -30,7 +30,8 @@ class RolePermissionSeeder extends Seeder
             'promotion-list', 'individual-verification-list',
             'corporate-verification-list', 'payment-request-list',
             'payment-verification-list', 'order-list',
-            'blog-list', 'identity-list'
+            'blog-list', 'identity-list',
+            'buyer-request-list',
         ];
 
         foreach ($permissions as $permission) {

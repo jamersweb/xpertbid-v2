@@ -226,6 +226,28 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Bid::class);
     }
 
+    public function buyerRequests()
+    {
+        return $this->hasMany(BuyerRequest::class);
+    }
+
+    public function buyerRequestOffers()
+    {
+        return $this->hasMany(BuyerRequestOffer::class, 'seller_id');
+    }
+
+    public function sellerBuyerRequestPreference()
+    {
+        return $this->hasOne(SellerBuyerRequestPreference::class);
+    }
+
+    public function isCorporateVerified(): bool
+    {
+        $status = strtolower((string) ($this->corporateVerification?->status ?? ''));
+
+        return in_array($status, ['verified', 'approved'], true);
+    }
+
     /**
      * Accessors for frontend compatibility (mapping shippingAddress fields)
      */

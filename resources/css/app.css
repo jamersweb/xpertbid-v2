@@ -1250,6 +1250,22 @@ button.signUpContinueIcon {
   font-weight: 500;
   line-height: 20px;
   font-family: "Inter", sans-serif;
+  text-decoration: none;
+  display: inline-block;
+}
+
+a.button-style-2,
+a.button-style-2:visited,
+a.button-style-2:hover,
+a.button-style-2:focus,
+a.button-style-2:active,
+.button-style-2:hover,
+.button-style-2:focus,
+.button-style-2:active {
+  color: #fff !important;
+  text-decoration: none !important;
+  background-color: #23262F;
+  border-color: #23262F;
 }
 
 .button-style-3 {
@@ -1265,6 +1281,21 @@ button.signUpContinueIcon {
   line-height: 20px;
   font-family: "Inter", sans-serif;
   text-decoration: none;
+  display: inline-block;
+}
+
+a.button-style-3,
+a.button-style-3:visited,
+a.button-style-3:hover,
+a.button-style-3:focus,
+a.button-style-3:active,
+.button-style-3:hover,
+.button-style-3:focus,
+.button-style-3:active {
+  color: #23262F !important;
+  text-decoration: none !important;
+  background-color: transparent;
+  border-color: #23262F;
 }
 
 .button-style-4 {

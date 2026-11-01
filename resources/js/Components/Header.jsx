@@ -298,6 +298,16 @@ export default function Header() {
                                                                                                                 </Link>
                                                                                                          </li>
                                                                                                          <li style={{ borderBottom: '1px solid #EDEDED', padding: '0px 0', fontSize: '16px', fontWeight: '400', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={profileMenuItemStyle} href={route('buyer-requests.index')}>
+                                                                                                                       {renderProfileMenuContent(t('Buyer Requests'), <i className="fa-solid fa-clipboard-list text-center" style={{ width: '20px', fontSize: '18px' }}></i>)}
+                                                                                                                </Link>
+                                                                                                         </li>
+                                                                                                         <li style={{ borderBottom: '1px solid #EDEDED', padding: '0px 0', fontSize: '16px', fontWeight: '400', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                                                                                <Link className="d-flex align-items-center gap-2 text-decoration-none" style={profileMenuItemStyle} href={route('seller.buyer-requests.browse')}>
+                                                                                                                       {renderProfileMenuContent(t('Request Leads'), <i className="fa-solid fa-handshake text-center" style={{ width: '20px', fontSize: '18px' }}></i>)}
+                                                                                                                </Link>
+                                                                                                         </li>
+                                                                                                         <li style={{ borderBottom: '1px solid #EDEDED', padding: '0px 0', fontSize: '16px', fontWeight: '400', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
                                                                                                                 <Link className="d-flex align-items-center gap-2 text-decoration-none" style={profileMenuItemStyle} href={route('bids.index')}>
                                                                                                                        {renderProfileMenuContent(t('My Bids'), <img src="/assets/images/myBids.svg" alt="Bids" width={20} height={20} />)}
                                                                                                                 </Link>

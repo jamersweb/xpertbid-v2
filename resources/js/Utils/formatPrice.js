@@ -15,6 +15,13 @@ export function convertPKRTo(amountPKRMajor, meta) {
 // Deprecated alias for PKR base
 export const convertAEDTo = convertPKRTo;
 
+// Convert an amount entered in the selected currency into PKR for storage.
+export function convertToPKR(amountInSelected, meta) {
+       if (!meta || meta.code === "PKR") return Number(amountInSelected || 0);
+       const rate = Number(meta.manual_rate_to_aed || 1);
+       return Number(amountInSelected || 0) * rate;
+}
+
 export function formatWithMeta(amountMajor, meta) {
        const decimals = Number(meta?.decimals ?? 2);
        const num = Number(amountMajor ?? 0);

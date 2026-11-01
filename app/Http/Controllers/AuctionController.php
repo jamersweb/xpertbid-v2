@@ -1427,46 +1427,125 @@ class AuctionController extends Controller
     {
         $ip = $request->ip();
 
-        if (in_array($ip, ['127.0.0.1', '::1'], true) || str_starts_with((string) $ip, '192.168.') || str_starts_with((string) $ip, '10.') || str_starts_with((string) $ip, '172.16.')) {
+        if (
+            in_array($ip, ['127.0.0.1', '::1'], true)
+            || str_starts_with((string) $ip, '192.168.')
+            || str_starts_with((string) $ip, '10.')
+            || preg_match('/^172\.(1[6-9]|2[0-9]|3[0-1])\./', (string) $ip)
+        ) {
             $ip = null;
         }
 
-        try {
-            $ipApiUrl = $ip ? "https://ipapi.co/{$ip}/json/" : 'https://ipapi.co/json/';
-            $ipApi = Http::timeout(8)->acceptJson()->get($ipApiUrl);
-            if ($ipApi->ok()) {
-                $data = $ipApi->json();
-                if (!empty($data['country_name']) || !empty($data['region']) || !empty($data['city'])) {
-                    return response()->json([
-                        'country' => $data['country_name'] ?? null,
-                        'state' => $data['region'] ?? null,
-                        'city' => $data['city'] ?? null,
-                        'source' => 'ipapi',
-                    ]);
+        $providers = [
+            // ip-api (HTTP free tier) — usually works from server even when others rate-limit
+            function () use ($ip) {
+                $url = $ip
+                    ? "http://ip-api.com/json/{$ip}?fields=status,message,country,regionName,city,lat,lon"
+                    : 'http://ip-api.com/json/?fields=status,message,country,regionName,city,lat,lon';
+                $res = Http::timeout(8)->acceptJson()->get($url);
+                if (! $res->ok()) {
+                    return null;
                 }
-            }
+                $data = $res->json();
+                if (($data['status'] ?? '') !== 'success') {
+                    return null;
+                }
 
-            $ipWhoUrl = $ip ? "https://ipwho.is/{$ip}" : 'https://ipwho.is/';
-            $ipWho = Http::timeout(8)->acceptJson()->get($ipWhoUrl);
-            if ($ipWho->ok()) {
-                $data = $ipWho->json();
-                if (($data['success'] ?? false) || !empty($data['country']) || !empty($data['region'])) {
-                    return response()->json([
-                        'country' => $data['country'] ?? null,
-                        'state' => $data['region'] ?? null,
-                        'city' => $data['city'] ?? null,
-                        'source' => 'ipwhois',
-                    ]);
+                return [
+                    'country' => $data['country'] ?? null,
+                    'state' => $data['regionName'] ?? null,
+                    'city' => $data['city'] ?? null,
+                    'latitude' => isset($data['lat']) ? (float) $data['lat'] : null,
+                    'longitude' => isset($data['lon']) ? (float) $data['lon'] : null,
+                    'source' => 'ip-api',
+                ];
+            },
+            // geojs
+            function () {
+                $res = Http::timeout(8)->acceptJson()->get('https://get.geojs.io/v1/ip/geo.json');
+                if (! $res->ok()) {
+                    return null;
                 }
+                $data = $res->json();
+                if (empty($data['country']) && empty($data['city']) && empty($data['region'])) {
+                    return null;
+                }
+
+                return [
+                    'country' => $data['country'] ?? null,
+                    'state' => $data['region'] ?? null,
+                    'city' => $data['city'] ?? null,
+                    'latitude' => isset($data['latitude']) ? (float) $data['latitude'] : null,
+                    'longitude' => isset($data['longitude']) ? (float) $data['longitude'] : null,
+                    'source' => 'geojs',
+                ];
+            },
+            // ipwho.is
+            function () use ($ip) {
+                $url = $ip ? "https://ipwho.is/{$ip}" : 'https://ipwho.is/';
+                $res = Http::timeout(8)->acceptJson()->get($url);
+                if (! $res->ok()) {
+                    return null;
+                }
+                $data = $res->json();
+                if (! (($data['success'] ?? false) || ! empty($data['country']) || ! empty($data['region']))) {
+                    return null;
+                }
+
+                return [
+                    'country' => $data['country'] ?? null,
+                    'state' => $data['region'] ?? null,
+                    'city' => $data['city'] ?? null,
+                    'latitude' => isset($data['latitude']) ? (float) $data['latitude'] : null,
+                    'longitude' => isset($data['longitude']) ? (float) $data['longitude'] : null,
+                    'source' => 'ipwhois',
+                ];
+            },
+            // ipapi.co (often rate-limited)
+            function () use ($ip) {
+                $url = $ip ? "https://ipapi.co/{$ip}/json/" : 'https://ipapi.co/json/';
+                $res = Http::timeout(8)->acceptJson()->get($url);
+                if (! $res->ok()) {
+                    return null;
+                }
+                $data = $res->json();
+                if (! empty($data['error']) || (empty($data['country_name']) && empty($data['city']))) {
+                    return null;
+                }
+
+                return [
+                    'country' => $data['country_name'] ?? null,
+                    'state' => $data['region'] ?? null,
+                    'city' => $data['city'] ?? null,
+                    'latitude' => isset($data['latitude']) ? (float) $data['latitude'] : null,
+                    'longitude' => isset($data['longitude']) ? (float) $data['longitude'] : null,
+                    'source' => 'ipapi',
+                ];
+            },
+        ];
+
+        foreach ($providers as $provider) {
+            try {
+                $payload = $provider();
+                if (is_array($payload) && (
+                    ! empty($payload['country'])
+                    || ! empty($payload['state'])
+                    || ! empty($payload['city'])
+                    || (isset($payload['latitude']) && isset($payload['longitude']))
+                )) {
+                    return response()->json($payload);
+                }
+            } catch (\Throwable $e) {
+                // try next provider
             }
-        } catch (\Throwable $e) {
-            // Silent fail with empty payload for frontend fallback behavior.
         }
 
         return response()->json([
             'country' => null,
             'state' => null,
             'city' => null,
+            'latitude' => null,
+            'longitude' => null,
             'source' => 'none',
         ]);
     }

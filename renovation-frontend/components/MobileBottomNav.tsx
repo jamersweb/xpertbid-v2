@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuthModal } from "@/components/auth/AuthModalProvider";
 import { resolveProfileImage, useAuth } from "@/components/auth/AuthProvider";
@@ -17,11 +17,19 @@ type Vertical = "renovation" | "builder";
 
 const VERTICAL_KEY = "home_vertical";
 
+const LOCAL_PROFILE_PATHS = new Set([
+  "/buyer-requests",
+  "/seller/buyer-requests",
+  "/seller/buyer-request-preferences",
+]);
+
 const PROFILE_LINKS = [
   { label: "Account Settings", path: "/account-settings", icon: "profile-setting.svg" },
   { label: "Messages", path: "/chat", fa: "fa-comment-dots" },
   { label: "My Favorites", path: "/favorites", icon: "setting-heart.svg" },
   { label: "My Listings", path: "/my-listings", icon: "mainListing.svg" },
+  { label: "Buyer Requests", path: "/buyer-requests", fa: "fa-clipboard-list", local: true },
+  { label: "Request Leads", path: "/seller/buyer-requests", fa: "fa-handshake", local: true },
   { label: "My Bids", path: "/my-bids", icon: "myBids.svg" },
   { label: "My Orders", path: "/my-orders", fa: "fa-box-open" },
   { label: "Payment Request", path: "/payment-requests", fa: "fa-money-check" },
@@ -65,6 +73,7 @@ export function MobileBottomNav({ purposes = [] }: Props) {
   const { openLogin } = useAuthModal();
   const { openStartBuilding } = useStartBuilding();
   const { user, logout, openMainPath } = useAuth();
+  const router = useRouter();
   const [profileOpen, setProfileOpen] = useState(false);
   const [storedVertical, setStoredVertical] = useState<Vertical | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -241,6 +250,12 @@ export function MobileBottomNav({ purposes = [] }: Props) {
                       type="button"
                       onClick={() => {
                         setProfileOpen(false);
+                        const isLocal =
+                          ("local" in item && item.local) || LOCAL_PROFILE_PATHS.has(item.path);
+                        if (isLocal) {
+                          router.push(item.path);
+                          return;
+                        }
                         void openMainPath(item.path);
                       }}
                     >

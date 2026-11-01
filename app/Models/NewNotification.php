@@ -30,6 +30,8 @@ class NewNotification extends Model
             'bid' => '/assets/images/message-text.svg',
             'auction' => '/assets/images/message-text.svg',
             'order' => '/assets/images/message-text.svg',
+            'buyer_request' => '/assets/images/message-text.svg',
+            'request' => '/assets/images/message-text.svg',
         ];
 
         return $images[$type] ?? '/assets/images/message-text.svg';

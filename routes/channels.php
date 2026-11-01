@@ -21,3 +21,22 @@ Broadcast::channel('listing-live-chat.{listingId}', function ($user, $listingId)
 
     return \App\Models\Listing::where('id', (int) $listingId)->exists();
 });
+
+Broadcast::channel('buyer-request.{buyerRequestId}', function ($user, $buyerRequestId) {
+    if (! $user) {
+        return false;
+    }
+
+    $request = \App\Models\BuyerRequest::query()->find((int) $buyerRequestId);
+    if (! $request) {
+        return false;
+    }
+
+    if ((int) $request->user_id === (int) $user->id) {
+        return true;
+    }
+
+    $user->loadMissing('corporateVerification');
+
+    return $user->isCorporateVerified();
+});

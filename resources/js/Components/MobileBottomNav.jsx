@@ -162,7 +162,18 @@ export default function MobileBottomNav() {
                                                                       </Link>
                                                                </li>
                                                                <li>
-
+                                                                      <Link href={route('buyer-requests.index')} onClick={() => setIsUserMenuOpen(false)}>
+                                                                             <i className="fa-solid fa-clipboard-list text-center" style={{ width: '20px', fontSize: '18px' }}></i>
+                                                                             {t('Buyer Requests')}
+                                                                      </Link>
+                                                               </li>
+                                                               <li>
+                                                                      <Link href={route('seller.buyer-requests.browse')} onClick={() => setIsUserMenuOpen(false)}>
+                                                                             <i className="fa-solid fa-handshake text-center" style={{ width: '20px', fontSize: '18px' }}></i>
+                                                                             {t('Request Leads')}
+                                                                      </Link>
+                                                               </li>
+                                                               <li>
                                                                       <Link href={route('bids.index')} onClick={() => setIsUserMenuOpen(false)}>
                                                                              <img src="/assets/images/myBids.svg" alt="Bids" width={20} height={20} />
                                                                              {t('My Bids')}

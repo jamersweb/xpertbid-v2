@@ -240,6 +240,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Chat Routes
     Route::group(['prefix' => 'chat', 'as' => 'chat.'], function () {
         Route::get('/', [\App\Http\Controllers\ChatController::class, 'index'])->name('index');
+        Route::get('/open/{conversation}', [\App\Http\Controllers\ChatController::class, 'open'])->name('open');
         Route::get('/conversations', [\App\Http\Controllers\Api\ChatController::class, 'index'])->name('conversations.index');
         Route::get('/conversations/{id}', [\App\Http\Controllers\Api\ChatController::class, 'show'])->name('conversations.show');
         Route::post('/initiate', [\App\Http\Controllers\Api\ChatController::class, 'initiate'])->name('initiate');
@@ -257,6 +258,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Invoices
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('/api/invoices', [InvoiceController::class, 'apiIndex'])->name('invoices.api');
+
+    // Buyer Requests (reverse marketplace)
+    Route::get('/buyer-requests', [\App\Http\Controllers\BuyerRequestController::class, 'index'])->name('buyer-requests.index');
+    Route::get('/buyer-requests/create', [\App\Http\Controllers\BuyerRequestController::class, 'create'])->name('buyer-requests.create');
+    Route::post('/buyer-requests', [\App\Http\Controllers\BuyerRequestController::class, 'store'])->name('buyer-requests.store');
+    Route::get('/buyer-requests/{buyerRequest}/edit', [\App\Http\Controllers\BuyerRequestController::class, 'edit'])->name('buyer-requests.edit');
+    Route::put('/buyer-requests/{buyerRequest}', [\App\Http\Controllers\BuyerRequestController::class, 'update'])->name('buyer-requests.update');
+    Route::get('/buyer-requests/{buyerRequest}', [\App\Http\Controllers\BuyerRequestController::class, 'show'])->name('buyer-requests.show');
+    Route::post('/buyer-requests/{buyerRequest}/close', [\App\Http\Controllers\BuyerRequestController::class, 'close'])->name('buyer-requests.close');
+    Route::post('/buyer-requests/{buyerRequest}/offers', [\App\Http\Controllers\BuyerRequestController::class, 'storeOffer'])->name('buyer-requests.offers.store');
+    Route::post('/buyer-requests/{buyerRequest}/offers/{offer}/accept', [\App\Http\Controllers\BuyerRequestController::class, 'acceptOffer'])->name('buyer-requests.offers.accept');
+    Route::post('/buyer-requests/{buyerRequest}/offers/{offer}/reject', [\App\Http\Controllers\BuyerRequestController::class, 'rejectOffer'])->name('buyer-requests.offers.reject');
+    Route::put('/buyer-request-offers/{offer}', [\App\Http\Controllers\BuyerRequestController::class, 'updateOffer'])->name('buyer-request-offers.update');
+    Route::delete('/buyer-request-offers/{offer}', [\App\Http\Controllers\BuyerRequestController::class, 'destroyOffer'])->name('buyer-request-offers.destroy');
+
+    Route::get('/seller/buyer-requests', [\App\Http\Controllers\SellerBuyerRequestController::class, 'browse'])->name('seller.buyer-requests.browse');
+    Route::get('/seller/buyer-request-preferences', [\App\Http\Controllers\SellerBuyerRequestController::class, 'preferences'])->name('seller.buyer-request-preferences.edit');
+    Route::put('/seller/buyer-request-preferences', [\App\Http\Controllers\SellerBuyerRequestController::class, 'savePreferences'])->name('seller.buyer-request-preferences.update');
 
 });
 
@@ -337,6 +356,17 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/orders/export', [App\Http\Controllers\Admin\OrderController::class, 'export'])->name('orders.export');
     Route::get('/orders/{id}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{id}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('orders.update-status');
+
+    // Buyer Requests (reverse marketplace)
+    Route::get('/buyer-requests', [App\Http\Controllers\Admin\BuyerRequestController::class, 'index'])->name('buyer-requests.index');
+    Route::get('/buyer-requests/{id}', [App\Http\Controllers\Admin\BuyerRequestController::class, 'show'])->whereNumber('id')->name('buyer-requests.show');
+    Route::post('/buyer-requests/{id}/close', [App\Http\Controllers\Admin\BuyerRequestController::class, 'close'])->whereNumber('id')->name('buyer-requests.close');
+    Route::delete('/buyer-requests/{id}', [App\Http\Controllers\Admin\BuyerRequestController::class, 'destroy'])->whereNumber('id')->name('buyer-requests.destroy');
+    Route::get('/buyer-request-offers', [App\Http\Controllers\Admin\BuyerRequestOfferController::class, 'index'])->name('buyer-request-offers.index');
+    Route::get('/buyer-request-alerts', [App\Http\Controllers\Admin\BuyerRequestAlertLogController::class, 'index'])->name('buyer-request-alerts.index');
+    Route::get('/buyer-request-alerts/export', [App\Http\Controllers\Admin\BuyerRequestAlertLogController::class, 'export'])->name('buyer-request-alerts.export');
+    Route::get('/buyer-request-alerts/{log}', [App\Http\Controllers\Admin\BuyerRequestAlertLogController::class, 'show'])->name('buyer-request-alerts.show');
+    Route::post('/buyer-request-alerts/{log}/resend', [App\Http\Controllers\Admin\BuyerRequestAlertLogController::class, 'resend'])->name('buyer-request-alerts.resend');
 
     // Referral Rewards
     Route::get('/referral-rewards', [App\Http\Controllers\Admin\ReferralRewardController::class, 'index'])->name('referral-rewards.index');

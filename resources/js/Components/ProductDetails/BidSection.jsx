@@ -248,7 +248,7 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                      });
 
                      if (response.data && response.data.id) {
-                            router.visit(`/chat?conversation_id=${response.data.id}`);
+                            router.visit(route('chat.open', response.data.id));
                      }
               } catch (error) {
                      console.error("Error initiating chat:", error);

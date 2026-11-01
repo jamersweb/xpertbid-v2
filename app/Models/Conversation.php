@@ -6,7 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Conversation extends Model
 {
-    protected $fillable = ['user_one_id', 'user_two_id', 'product_id', 'user_one_deleted', 'user_two_deleted', 'user_one_important', 'user_two_important'];
+    protected $fillable = [
+        'user_one_id',
+        'user_two_id',
+        'product_id',
+        'buyer_request_offer_id',
+        'user_one_deleted',
+        'user_two_deleted',
+        'user_one_important',
+        'user_two_important',
+    ];
 
     public function messages()
     {
@@ -26,5 +35,10 @@ class Conversation extends Model
     public function product()
     {
         return $this->belongsTo(Listing::class, 'product_id');
+    }
+
+    public function buyerRequestOffer()
+    {
+        return $this->belongsTo(BuyerRequestOffer::class, 'buyer_request_offer_id');
     }
 }
