@@ -52,11 +52,13 @@ class BuyerRequestResource extends JsonResource
             ),
             'accepted_offer_id' => $this->when(! $isMatchedLead, $this->accepted_offer_id),
             // Leads list: only public buyer identity (no email / phone)
-            'user' => $this->whenLoaded('user', fn () => [
-                'id' => $this->user?->id,
-                'name' => $this->user?->name,
-                'profile_pic' => $this->user?->profile_pic,
-            ]),
+            'user' => $this->whenLoaded('user', function () {
+                if (! $this->user) {
+                    return null;
+                }
+
+                return $this->user->toPublicIdentityCard();
+            }),
             'my_offer' => $this->when(isset($this->my_offer), function () {
                 if (! $this->my_offer) {
                     return null;

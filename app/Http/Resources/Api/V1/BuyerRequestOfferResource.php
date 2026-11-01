@@ -18,11 +18,13 @@ class BuyerRequestOfferResource extends JsonResource
             'message' => $this->message,
             'status' => $this->status,
             // Public seller card only — never expose email / phone
-            'seller' => $this->whenLoaded('seller', fn () => [
-                'id' => $this->seller?->id,
-                'name' => $this->seller?->name,
-                'profile_pic' => $this->seller?->profile_pic,
-            ]),
+            'seller' => $this->whenLoaded('seller', function () {
+                if (! $this->seller) {
+                    return null;
+                }
+
+                return $this->seller->toPublicIdentityCard();
+            }),
             'created_at' => optional($this->created_at)?->toIso8601String(),
             'updated_at' => optional($this->updated_at)?->toIso8601String(),
         ];

@@ -6,6 +6,7 @@ import { useAuthModal } from "@/components/auth/AuthModalProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
   BrStyles,
+  PublicIdentityRow,
   categoryLine,
   formatPostedDate,
   stripHtml,
@@ -59,8 +60,7 @@ export default function SellerBuyerRequestsPage() {
     const all = items.length;
     const offered = items.filter((r) => !!r.my_offer).length;
     const available = items.filter((r) => !r.my_offer).length;
-    const withBudget = items.filter((r) => r.budget != null && Number(r.budget) > 0).length;
-    return { all, offered, available, withBudget };
+    return { all, offered, available };
   }, [items]);
 
   const filtered = useMemo(() => {
@@ -69,9 +69,6 @@ export default function SellerBuyerRequestsPage() {
 
     if (navFilter === "available") list = list.filter((r) => !r.my_offer);
     else if (navFilter === "offered") list = list.filter((r) => !!r.my_offer);
-    else if (navFilter === "budget") {
-      list = list.filter((r) => r.budget != null && Number(r.budget) > 0);
-    }
 
     if (q) {
       list = list.filter((r) => {
@@ -104,7 +101,6 @@ export default function SellerBuyerRequestsPage() {
     { key: "all", label: "All Leads", count: counts.all },
     { key: "available", label: "Open to offer", count: counts.available },
     { key: "offered", label: "My offers", count: counts.offered },
-    { key: "budget", label: "With budget", count: counts.withBudget },
   ];
 
   const scrollToLeads = (filter?: string) => {
@@ -246,6 +242,8 @@ export default function SellerBuyerRequestsPage() {
                     </div>
 
                     <h2 className="br-card__title">{item.title}</h2>
+
+                    <PublicIdentityRow person={item.user} role="buyer" size="sm" />
 
                     <div className="br-meta">
                       <div className="br-meta__row">

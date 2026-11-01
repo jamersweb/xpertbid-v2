@@ -35,6 +35,48 @@ function imageSrc(img) {
     return img?.url || (img?.path ? `/${img.path}` : '');
 }
 
+function isUserVerified(person) {
+    if (!person) return false;
+    if (person.is_verified) return true;
+    if (person.verification_type) return true;
+    const statuses = [
+        person.corporate_verification?.status,
+        person.corporateVerification?.status,
+        person.individual_verification?.status,
+        person.individualVerification?.status,
+    ];
+    return statuses.some((status) => ['verified', 'approved'].includes(String(status || '').toLowerCase()));
+}
+
+function verificationLabel(person) {
+    const corporateOk = ['verified', 'approved'].includes(
+        String(person?.corporateVerification?.status || person?.corporate_verification?.status || '').toLowerCase()
+    );
+    const type = person?.verification_type || (corporateOk ? 'corporate' : 'individual');
+    return type === 'corporate' ? 'Verified business' : 'Verified buyer';
+}
+
+/** Same pattern as desktop Header.jsx profile avatar. */
+function userAvatarSrc(person) {
+    const src = person?.profile_pic || person?.profile;
+    if (!src) return '/assets/images/user.jpg';
+    if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('/')) {
+        return src;
+    }
+    return `/${String(src).replace(/^\/+/, '')}`;
+}
+
+function VerifiedBadge({ title }) {
+    return (
+        <span className="inline-flex shrink-0 items-center" title={title} aria-label={title}>
+            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" aria-hidden="true">
+                <circle cx="10" cy="10" r="8" fill="#2F80ED" />
+                <path d="M6.8 10.2L8.9 12.3L13.3 7.9" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+        </span>
+    );
+}
+
 export default function Browse({
     requests = [],
     isCorporateVerified = false,
@@ -98,8 +140,7 @@ export default function Browse({
         const all = requests.length;
         const offered = requests.filter((r) => !!r.my_offer).length;
         const available = requests.filter((r) => !r.my_offer).length;
-        const withBudget = requests.filter((r) => r.budget != null && Number(r.budget) > 0).length;
-        return { all, offered, available, withBudget };
+        return { all, offered, available };
     }, [requests]);
 
     const filtered = useMemo(() => {
@@ -110,8 +151,6 @@ export default function Browse({
             list = list.filter((r) => !r.my_offer);
         } else if (navFilter === 'offered') {
             list = list.filter((r) => !!r.my_offer);
-        } else if (navFilter === 'budget') {
-            list = list.filter((r) => r.budget != null && Number(r.budget) > 0);
         }
 
         if (q) {
@@ -143,7 +182,6 @@ export default function Browse({
         { key: 'all', label: t('All Leads'), count: counts.all },
         { key: 'available', label: t('Open to offer'), count: counts.available },
         { key: 'offered', label: t('My offers'), count: counts.offered },
-        { key: 'budget', label: t('With budget'), count: counts.withBudget },
     ];
 
     const spotlightLeads = useMemo(() => {
@@ -498,6 +536,27 @@ export default function Browse({
                                                     <h2 className="mt-3 line-clamp-1 text-lg font-bold text-gray-900">
                                                         {item.title}
                                                     </h2>
+
+                                                    {item.user && (
+                                                        <div className="mt-2.5 flex items-center gap-2">
+                                                            <img
+                                                                src={userAvatarSrc(item.user)}
+                                                                alt={item.user.name || t('Buyer')}
+                                                                className="h-7 w-7 shrink-0 rounded-full border border-slate-200 bg-slate-100 object-cover"
+                                                                onError={(e) => {
+                                                                    e.currentTarget.src = '/assets/images/user.jpg';
+                                                                }}
+                                                            />
+                                                            <div className="min-w-0 flex items-center gap-1">
+                                                                <span className="truncate text-xs font-semibold text-slate-800">
+                                                                    {item.user.name || t('Buyer')}
+                                                                </span>
+                                                                {isUserVerified(item.user) && (
+                                                                    <VerifiedBadge title={t(verificationLabel(item.user))} />
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
 
                                                     <div className="mt-2.5 space-y-1.5 text-xs text-slate-500">
                                                         <div className="flex min-w-0 items-start gap-1.5">

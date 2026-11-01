@@ -110,6 +110,8 @@ class BuyerRequestController extends Controller
             'childCategory:id,name',
             'images:id,buyer_request_id,path,sort_order',
             'user:id,name,profile_pic',
+            'user.corporateVerification:id,user_id,status',
+            'user.individualVerification:id,user_id,status',
             'offers' => function ($q) {
                 $q->with([
                     'seller:id,name,profile_pic',

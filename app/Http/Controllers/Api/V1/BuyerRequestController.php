@@ -84,7 +84,11 @@ class BuyerRequestController extends Controller
             'childCategory:id,name',
             'images:id,buyer_request_id,path,sort_order',
             'user:id,name,profile_pic',
+            'user.corporateVerification:id,user_id,status',
+            'user.individualVerification:id,user_id,status',
             'offers.seller:id,name,profile_pic',
+            'offers.seller.corporateVerification:id,user_id,status',
+            'offers.seller.individualVerification:id,user_id,status',
         ]);
 
         $authId = (int) $request->user()->id;

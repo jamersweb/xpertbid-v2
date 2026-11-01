@@ -1,12 +1,21 @@
 import { getStoredToken } from "@/lib/api/auth";
 
+export type PublicIdentity = {
+  id: number;
+  name?: string | null;
+  profile_pic?: string | null;
+  profile?: string | null;
+  is_verified?: boolean;
+  verification_type?: "corporate" | "individual" | string | null;
+};
+
 export type BuyerRequestOffer = {
   id: number;
   price: number;
   currency?: string;
   message?: string | null;
   status: string;
-  seller?: { id: number; name?: string; profile_pic?: string | null };
+  seller?: PublicIdentity | null;
 };
 
 export type BuyerRequestItem = {
@@ -31,7 +40,7 @@ export type BuyerRequestItem = {
   images?: { id: number; url: string; sort_order?: number }[];
   offers_count?: number;
   offers?: BuyerRequestOffer[];
-  user?: { id: number; name?: string; profile_pic?: string | null };
+  user?: PublicIdentity | null;
   my_offer?: BuyerRequestOffer | null;
   created_at?: string;
 };

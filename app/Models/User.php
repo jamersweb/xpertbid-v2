@@ -248,6 +248,49 @@ class User extends Authenticatable implements MustVerifyEmail
         return in_array($status, ['verified', 'approved'], true);
     }
 
+    public function isIndividualVerified(): bool
+    {
+        $status = strtolower((string) ($this->individualVerification?->status ?? ''));
+
+        return in_array($status, ['verified', 'approved'], true);
+    }
+
+    /** Public marketplace badge — corporate preferred over individual. */
+    public function publicVerificationType(): ?string
+    {
+        if ($this->isCorporateVerified()) {
+            return 'corporate';
+        }
+        if ($this->isIndividualVerified()) {
+            return 'individual';
+        }
+
+        return null;
+    }
+
+    public function isIdentityVerified(): bool
+    {
+        return $this->publicVerificationType() !== null;
+    }
+
+    /**
+     * Minimal public identity for buyer-request / offer cards (no email/phone).
+     *
+     * @return array{id: int|null, name: string|null, profile_pic: string|null, is_verified: bool, verification_type: string|null}
+     */
+    public function toPublicIdentityCard(): array
+    {
+        $type = $this->publicVerificationType();
+
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'profile_pic' => $this->profile_pic,
+            'is_verified' => $type !== null,
+            'verification_type' => $type,
+        ];
+    }
+
     /**
      * Accessors for frontend compatibility (mapping shippingAddress fields)
      */

@@ -55,7 +55,8 @@ function clearSyncFlags() {
   keys.forEach((key) => window.sessionStorage.removeItem(key));
 }
 
-function profileImageUrl(src?: string | null) {
+/** Same pattern as desktop header avatar (SiteChrome / MobileBottomNav). */
+export function resolveProfileImageSrc(src?: string | null) {
   if (!src) return "/assets/images/user.jpg";
   if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("/")) {
     return src.startsWith("/") && !src.startsWith("//")
@@ -66,7 +67,7 @@ function profileImageUrl(src?: string | null) {
 }
 
 export function resolveProfileImage(user: AuthUser | null) {
-  return profileImageUrl(user?.profile_pic);
+  return resolveProfileImageSrc(user?.profile_pic);
 }
 
 function stripAuthParamsFromUrl() {

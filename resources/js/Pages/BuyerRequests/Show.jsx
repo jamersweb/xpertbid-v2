@@ -49,23 +49,49 @@ function stripHtml(html = '') {
     return String(html).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-function sellerAvatarSrc(seller) {
-    const pic = seller?.profile_pic || seller?.profile || '';
-    if (!pic) return '/assets/images/user.jpg';
-    if (String(pic).startsWith('http') || String(pic).startsWith('/')) return pic;
-    return `/${String(pic).replace(/^\/+/, '')}`;
-}
-
-function isSellerVerified(seller) {
-    if (!seller) return false;
-    if (seller.is_verified) return true;
+function isUserVerified(person) {
+    if (!person) return false;
+    if (person.is_verified) return true;
+    if (person.verification_type) return true;
     const statuses = [
-        seller.corporate_verification?.status,
-        seller.corporateVerification?.status,
-        seller.individual_verification?.status,
-        seller.individualVerification?.status,
+        person.corporate_verification?.status,
+        person.corporateVerification?.status,
+        person.individual_verification?.status,
+        person.individualVerification?.status,
     ];
     return statuses.some((status) => ['verified', 'approved'].includes(String(status || '').toLowerCase()));
+}
+
+function verificationLabel(person, role = 'seller') {
+    const corporateOk = ['verified', 'approved'].includes(
+        String(person?.corporateVerification?.status || person?.corporate_verification?.status || '').toLowerCase()
+    );
+    const type = person?.verification_type || (corporateOk ? 'corporate' : 'individual');
+    if (role === 'buyer') {
+        return type === 'corporate' ? 'Verified business' : 'Verified buyer';
+    }
+    return type === 'corporate' ? 'Verified business' : 'Verified seller';
+}
+
+function VerifiedBadge({ title }) {
+    return (
+        <span className="inline-flex shrink-0 items-center" title={title} aria-label={title}>
+            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" aria-hidden="true">
+                <circle cx="10" cy="10" r="8" fill="#2F80ED" />
+                <path d="M6.8 10.2L8.9 12.3L13.3 7.9" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+        </span>
+    );
+}
+
+/** Same pattern as desktop Header.jsx profile avatar. */
+function userAvatarSrc(person) {
+    const src = person?.profile_pic || person?.profile;
+    if (!src) return '/assets/images/user.jpg';
+    if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('/')) {
+        return src;
+    }
+    return `/${String(src).replace(/^\/+/, '')}`;
 }
 
 export default function Show({ buyerRequest, isOwner = false, canOffer = false, myOffer = null, offersCount: offersCountProp = null }) {
@@ -361,6 +387,34 @@ export default function Show({ buyerRequest, isOwner = false, canOffer = false, 
                                     {buyerRequest.title}
                                 </h1>
 
+                                {buyerRequest.user && (
+                                    <div className="mt-3 flex items-center gap-2.5">
+                                        <img
+                                            src={userAvatarSrc(buyerRequest.user)}
+                                            alt={buyerRequest.user.name || t('Buyer')}
+                                            className="h-9 w-9 shrink-0 rounded-full border border-slate-200 bg-slate-100 object-cover"
+                                            onError={(e) => {
+                                                e.currentTarget.src = '/assets/images/user.jpg';
+                                            }}
+                                        />
+                                        <div className="min-w-0">
+                                            <div className="flex min-w-0 items-center gap-1.5">
+                                                <span className="truncate text-sm font-semibold text-slate-900">
+                                                    {buyerRequest.user.name || t('Buyer')}
+                                                </span>
+                                                {isUserVerified(buyerRequest.user) && (
+                                                    <VerifiedBadge title={t(verificationLabel(buyerRequest.user, 'buyer'))} />
+                                                )}
+                                            </div>
+                                            {isUserVerified(buyerRequest.user) && (
+                                                <div className="text-[11px] font-medium text-sky-600">
+                                                    {t(verificationLabel(buyerRequest.user, 'buyer'))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="mt-3 space-y-1.5 text-xs text-slate-500 sm:mt-3 sm:flex sm:flex-wrap sm:gap-x-4 sm:gap-y-2 sm:space-y-0 sm:text-sm">
                                     <div className="flex min-w-0 items-start gap-1.5">
                                         <HiOutlineClipboardList className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500 sm:h-4 sm:w-4" />
@@ -592,7 +646,7 @@ export default function Show({ buyerRequest, isOwner = false, canOffer = false, 
                                                         <div className="min-w-0">
                                                             <div className="flex items-center gap-2.5">
                                                                 <img
-                                                                    src={sellerAvatarSrc(offer.seller)}
+                                                                    src={userAvatarSrc(offer.seller)}
                                                                     alt={offer.seller?.name || t('Seller')}
                                                                     className="h-10 w-10 shrink-0 rounded-full border border-slate-200 object-cover bg-slate-100"
                                                                     onError={(e) => {
@@ -609,22 +663,13 @@ export default function Show({ buyerRequest, isOwner = false, canOffer = false, 
                                                                                 {t('You')}
                                                                             </span>
                                                                         )}
-                                                                        {isSellerVerified(offer.seller) && (
-                                                                            <span
-                                                                                className="inline-flex shrink-0 items-center"
-                                                                                title={t('Verified seller')}
-                                                                                aria-label={t('Verified seller')}
-                                                                            >
-                                                                                <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" aria-hidden="true">
-                                                                                    <circle cx="10" cy="10" r="8" fill="#2F80ED" />
-                                                                                    <path d="M6.8 10.2L8.9 12.3L13.3 7.9" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                                                                </svg>
-                                                                            </span>
+                                                                        {isUserVerified(offer.seller) && (
+                                                                            <VerifiedBadge title={t(verificationLabel(offer.seller, 'seller'))} />
                                                                         )}
                                                                     </div>
-                                                                    {isSellerVerified(offer.seller) && (
+                                                                    {isUserVerified(offer.seller) && (
                                                                         <div className="text-[11px] font-medium text-sky-600">
-                                                                            {t('Verified seller')}
+                                                                            {t(verificationLabel(offer.seller, 'seller'))}
                                                                         </div>
                                                                     )}
                                                                 </div>

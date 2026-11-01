@@ -1,10 +1,86 @@
-import type { BuyerRequestItem } from "@/lib/api/buyerRequests";
+import { resolveProfileImageSrc } from "@/components/auth/AuthProvider";
+import type { BuyerRequestItem, PublicIdentity } from "@/lib/api/buyerRequests";
 
 export function stripHtml(html = "") {
   return String(html)
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+export function isPublicIdentityVerified(person?: PublicIdentity | null) {
+  if (!person) return false;
+  if (person.is_verified) return true;
+  return Boolean(person.verification_type);
+}
+
+export function publicIdentityLabel(
+  person?: PublicIdentity | null,
+  role: "buyer" | "seller" = "buyer"
+) {
+  const type = person?.verification_type || "individual";
+  if (role === "buyer") {
+    return type === "corporate" ? "Verified business" : "Verified buyer";
+  }
+  return type === "corporate" ? "Verified business" : "Verified seller";
+}
+
+/** Desktop header PFP resolution (main-site absolute URL). */
+export function publicIdentityAvatarSrc(person?: PublicIdentity | null) {
+  return resolveProfileImageSrc(person?.profile_pic || person?.profile);
+}
+
+export function VerifiedBadge({ title }: { title: string }) {
+  return (
+    <span className="br-verified" title={title} aria-label={title}>
+      <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="10" cy="10" r="8" fill="#2F80ED" />
+        <path
+          d="M6.8 10.2L8.9 12.3L13.3 7.9"
+          stroke="white"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
+  );
+}
+
+export function PublicIdentityRow({
+  person,
+  role = "buyer",
+  size = "md",
+}: {
+  person?: PublicIdentity | null;
+  role?: "buyer" | "seller";
+  size?: "sm" | "md";
+}) {
+  if (!person) return null;
+  const verified = isPublicIdentityVerified(person);
+  const label = publicIdentityLabel(person, role);
+  const fallback = role === "buyer" ? "Buyer" : "Seller";
+
+  return (
+    <div className={`br-identity br-identity--${size}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={publicIdentityAvatarSrc(person)}
+        alt={person.name || fallback}
+        className="br-identity__avatar"
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).src = "/assets/images/user.jpg";
+        }}
+      />
+      <div className="br-identity__meta">
+        <div className="br-identity__name-row">
+          <span className="br-identity__name">{person.name || fallback}</span>
+          {verified ? <VerifiedBadge title={label} /> : null}
+        </div>
+        {verified && size === "md" ? <div className="br-identity__badge">{label}</div> : null}
+      </div>
+    </div>
+  );
 }
 
 export function formatPostedDate(value?: string) {
@@ -285,6 +361,61 @@ export function BrStyles() {
         background: #fffbeb;
         color: #b45309;
         box-shadow: inset 0 0 0 1px #fde68a;
+      }
+      .br-identity {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        margin-top: 0.75rem;
+      }
+      .br-identity--sm { gap: 0.5rem; margin-top: 0.65rem; }
+      .br-identity__avatar {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 999px;
+        object-fit: cover;
+        border: 1px solid #e2e8f0;
+        background: #f1f5f9;
+        flex-shrink: 0;
+      }
+      .br-identity--sm .br-identity__avatar {
+        width: 1.75rem;
+        height: 1.75rem;
+      }
+      .br-identity__meta { min-width: 0; }
+      .br-identity__name-row {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        min-width: 0;
+      }
+      .br-identity__name {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #0f172a;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .br-identity--sm .br-identity__name { font-size: 0.75rem; }
+      .br-identity__badge {
+        margin-top: 0.1rem;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        color: #0284c7;
+      }
+      .br-verified {
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+      }
+      .br-verified svg {
+        width: 1rem;
+        height: 1rem;
+      }
+      .br-identity--sm .br-verified svg {
+        width: 0.875rem;
+        height: 0.875rem;
       }
       .br-card__title {
         margin: 0.75rem 0 0;

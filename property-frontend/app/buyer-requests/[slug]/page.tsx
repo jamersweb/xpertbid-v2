@@ -8,8 +8,13 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import ConfirmModal from "@/components/buyer-requests/ConfirmModal";
 import {
   BrStyles,
+  PublicIdentityRow,
+  VerifiedBadge,
   categoryLine,
   formatPostedDate,
+  isPublicIdentityVerified,
+  publicIdentityAvatarSrc,
+  publicIdentityLabel,
   statusPill,
   stripHtml,
 } from "@/components/buyer-requests/BrUi";
@@ -41,13 +46,6 @@ function offerPill(status: string) {
     withdrawn: { bg: "#f1f5f9", color: "#475569", ring: "#e2e8f0" },
   };
   return map[status] || map.withdrawn;
-}
-
-function sellerAvatarSrc(seller?: { profile_pic?: string | null; profile?: string | null } | null) {
-  const pic = seller?.profile_pic || seller?.profile || "";
-  if (!pic) return "/assets/images/user.jpg";
-  if (String(pic).startsWith("http") || String(pic).startsWith("/")) return String(pic);
-  return `/${String(pic).replace(/^\/+/, "")}`;
 }
 
 function trackerSteps(myOffer: BuyerRequestOffer | null | undefined) {
@@ -347,6 +345,8 @@ export default function BuyerRequestShowPage() {
 
               <h1 className="br-show__title">{item.title}</h1>
 
+              <PublicIdentityRow person={item.user} role="buyer" />
+
               <div className="br-show__meta">
                 <div className="br-meta__row">
                   <i className="fa-solid fa-clipboard-list" aria-hidden />
@@ -568,7 +568,7 @@ export default function BuyerRequestShowPage() {
                             <div className="br-show__offer-seller">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
-                                src={sellerAvatarSrc(offer.seller)}
+                                src={publicIdentityAvatarSrc(offer.seller)}
                                 alt=""
                                 className="br-show__avatar"
                                 onError={(e) => {
@@ -581,10 +581,20 @@ export default function BuyerRequestShowPage() {
                                   <span className="fw-semibold text-dark text-truncate">
                                     {offer.seller?.name || "Seller"}
                                   </span>
+                                  {isPublicIdentityVerified(offer.seller) ? (
+                                    <VerifiedBadge
+                                      title={publicIdentityLabel(offer.seller, "seller")}
+                                    />
+                                  ) : null}
                                   {mine ? (
                                     <span className="br-pill br-pill--amber">You</span>
                                   ) : null}
                                 </div>
+                                {isPublicIdentityVerified(offer.seller) ? (
+                                  <div className="br-identity__badge">
+                                    {publicIdentityLabel(offer.seller, "seller")}
+                                  </div>
+                                ) : null}
                               </div>
                             </div>
                             <div className="br-show__offer-price">

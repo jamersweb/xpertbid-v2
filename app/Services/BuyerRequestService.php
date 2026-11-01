@@ -431,6 +431,8 @@ class BuyerRequestService
                 'subCategory:id,name',
                 'childCategory:id,name',
                 'user:id,name,profile_pic',
+                'user.corporateVerification:id,user_id,status',
+                'user.individualVerification:id,user_id,status',
             ])
             ->withCount([
                 'offers',
