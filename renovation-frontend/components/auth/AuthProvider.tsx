@@ -11,11 +11,13 @@ import {
 } from "react";
 import {
   clearStoredToken,
-  establishMainSiteSession,
+  establishMainSiteSessionSilent,
   fetchMe,
+  fetchSatelliteTokenFromMain,
   getSessionLink,
   getStoredToken,
   logoutApi,
+  logoutMainSiteSessionSilent,
   storeToken,
   type AuthUser,
 } from "@/lib/api/auth";
@@ -24,7 +26,12 @@ import { MAIN_SITE_URL, mainUrl } from "@/lib/site";
 type AuthContextValue = {
   user: AuthUser | null;
   loading: boolean;
-  setSession: (token: string, user: AuthUser, redirectUrl?: string) => Promise<void>;
+  setSession: (
+    token: string,
+    user: AuthUser,
+    redirectUrl?: string,
+    syncPopup?: Window | null
+  ) => Promise<void>;
   logout: () => Promise<void>;
   openMainPath: (path: string) => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -32,22 +39,20 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const LAST_HANDOFF_KEY = "xb_last_handoff_check";
+/** Cooldown for credentialed main→satellite token pulls (no full-page handoff). */
+const LAST_TOKEN_SYNC_KEY = "xb_last_satellite_token_sync";
+const TOKEN_SYNC_COOLDOWN_MS = 15000;
+const LOGGED_OUT_KEY = "xb_satellite_logged_out";
 
-function clearHandoffFlags() {
+function clearSyncFlags() {
   if (typeof window === "undefined") return;
-  window.sessionStorage.removeItem(LAST_HANDOFF_KEY);
-}
-
-function clearMainSyncFlags() {
-  if (typeof window === "undefined") return;
+  window.sessionStorage.removeItem(LAST_TOKEN_SYNC_KEY);
   const keys: string[] = [];
   for (let i = 0; i < window.sessionStorage.length; i += 1) {
     const key = window.sessionStorage.key(i);
     if (key?.startsWith("xb_main_synced_")) keys.push(key);
   }
   keys.forEach((key) => window.sessionStorage.removeItem(key));
-  clearHandoffFlags();
 }
 
 function profileImageUrl(src?: string | null) {
@@ -64,13 +69,22 @@ export function resolveProfileImage(user: AuthUser | null) {
   return profileImageUrl(user?.profile_pic);
 }
 
-/** Clean URL for handoff return_to (no auth query noise). */
-function cleanReturnUrl() {
+function stripAuthParamsFromUrl() {
   const url = new URL(window.location.href);
   url.searchParams.delete("auth_token");
   url.searchParams.delete("auth_checked");
   url.searchParams.delete("logged_out");
-  return url.toString();
+  window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
+function canAttemptTokenSync() {
+  if (window.sessionStorage.getItem(LOGGED_OUT_KEY) === "1") return false;
+  const last = Number(window.sessionStorage.getItem(LAST_TOKEN_SYNC_KEY) || 0);
+  return Date.now() - last >= TOKEN_SYNC_COOLDOWN_MS;
+}
+
+function markTokenSyncAttempt() {
+  window.sessionStorage.setItem(LAST_TOKEN_SYNC_KEY, String(Date.now()));
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -92,26 +106,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Auto-sync authentication whenever user switches back to this tab (no refresh needed)
+  const tryPullTokenFromMain = useCallback(async (): Promise<boolean> => {
+    if (!canAttemptTokenSync()) return false;
+    markTokenSyncAttempt();
+    const result = await fetchSatelliteTokenFromMain();
+    if (!result.authenticated || !result.token) return false;
+    storeToken(result.token);
+    window.sessionStorage.removeItem(LOGGED_OUT_KEY);
+    if (result.user) {
+      setUser(result.user);
+    } else {
+      try {
+        setUser(await fetchMe());
+      } catch {
+        clearStoredToken();
+        setUser(null);
+        return false;
+      }
+    }
+    return true;
+  }, []);
+
+  // Soft re-sync when returning to the tab (credentialed fetch — no redirect).
   useEffect(() => {
     const handleTabRevisit = () => {
       if (typeof document !== "undefined" && document.visibilityState && document.visibilityState !== "visible") {
         return;
       }
-
-      const token = getStoredToken();
-      if (token) {
-        // If we already have a token, verify if user is still logged in or logged out on main site
+      if (getStoredToken()) {
         void refreshUser();
-      } else {
-        // If we don't have a token, check if user logged in on the main site while away
-        const lastCheck = Number(window.sessionStorage.getItem(LAST_HANDOFF_KEY) || 0);
-        if (Date.now() - lastCheck > 2500) {
-          window.sessionStorage.setItem(LAST_HANDOFF_KEY, String(Date.now()));
-          const returnTo = encodeURIComponent(cleanReturnUrl());
-          window.location.replace(`${MAIN_SITE_URL}/auth/property-handoff?return_to=${returnTo}`);
-        }
+        return;
       }
+      void tryPullTokenFromMain();
     };
 
     window.addEventListener("focus", handleTabRevisit);
@@ -120,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("focus", handleTabRevisit);
       document.removeEventListener("visibilitychange", handleTabRevisit);
     };
-  }, [refreshUser]);
+  }, [refreshUser, tryPullTokenFromMain]);
 
   useEffect(() => {
     let cancelled = false;
@@ -132,19 +158,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const authToken = url.searchParams.get("auth_token");
       const authChecked = url.searchParams.get("auth_checked") === "1";
       const loggedOutParam = url.searchParams.get("logged_out") === "1";
-      const hadAuthToken = Boolean(authToken);
-
-      const stripAuthParams = () => {
-        url.searchParams.delete("auth_token");
-        url.searchParams.delete("auth_checked");
-        url.searchParams.delete("logged_out");
-        window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
-      };
 
       if (loggedOutParam) {
         clearStoredToken();
-        clearHandoffFlags();
-        stripAuthParams();
+        window.sessionStorage.setItem(LOGGED_OUT_KEY, "1");
+        clearSyncFlags();
+        stripAuthParamsFromUrl();
         if (!cancelled) {
           setUser(null);
           setLoading(false);
@@ -154,29 +173,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (authToken) {
         storeToken(authToken);
-        clearHandoffFlags();
-        stripAuthParams();
+        window.sessionStorage.removeItem(LOGGED_OUT_KEY);
+        stripAuthParamsFromUrl();
       } else if (authChecked) {
-        window.sessionStorage.setItem(LAST_HANDOFF_KEY, String(Date.now()));
-        stripAuthParams();
+        markTokenSyncAttempt();
+        stripAuthParamsFromUrl();
       }
 
-      const lastCheck = Number(window.sessionStorage.getItem(LAST_HANDOFF_KEY) || 0);
-      const recentlyChecked = Date.now() - lastCheck < 15000;
-
-      // If we don't have a token, check once with Laravel main site
-      if (!getStoredToken() && !authChecked && !recentlyChecked) {
-        window.sessionStorage.setItem(LAST_HANDOFF_KEY, String(Date.now()));
-        const returnTo = encodeURIComponent(cleanReturnUrl());
-        window.location.replace(`${MAIN_SITE_URL}/auth/property-handoff?return_to=${returnTo}`);
-        return;
-      }
-
+      // No local token: try silent same-site cookie SSO (live). Never full-page handoff.
       if (!getStoredToken()) {
-        if (!cancelled) {
+        const pulled = await tryPullTokenFromMain();
+        if (cancelled) return;
+        if (!pulled) {
           setUser(null);
           setLoading(false);
+          return;
         }
+        setLoading(false);
         return;
       }
 
@@ -184,19 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const me = await fetchMe();
         if (cancelled) return;
         setUser(me);
-
-        const syncedKey = `xb_main_synced_${me.id}`;
-        if (hadAuthToken) {
-          window.sessionStorage.setItem(syncedKey, "1");
-        } else if (window.sessionStorage.getItem(syncedKey) !== "1") {
-          window.sessionStorage.setItem(syncedKey, "1");
-          try {
-            await establishMainSiteSession();
-            return;
-          } catch {
-            window.sessionStorage.removeItem(syncedKey);
-          }
-        }
+        window.sessionStorage.removeItem(LOGGED_OUT_KEY);
       } catch {
         clearStoredToken();
         if (!cancelled) setUser(null);
@@ -205,17 +206,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    boot();
+    void boot();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [tryPullTokenFromMain]);
 
-  const setSession = useCallback(async (token: string, nextUser: AuthUser, redirectUrl?: string) => {
+  const setSession = useCallback(async (
+    token: string,
+    nextUser: AuthUser,
+    redirectUrl?: string,
+    syncPopup?: Window | null
+  ) => {
+    // Stay on this page; silently set main web session so other sites can SSO.
     storeToken(token);
     setUser(nextUser);
-    clearMainSyncFlags();
-    await establishMainSiteSession(redirectUrl);
+    window.sessionStorage.removeItem(LOGGED_OUT_KEY);
+    clearSyncFlags();
+    try {
+      await establishMainSiteSessionSilent(redirectUrl, syncPopup);
+    } catch {
+      // Satellite session still valid; main sync can happen on next openMainPath.
+    }
   }, []);
 
   const logout = useCallback(async () => {
@@ -224,8 +236,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       clearStoredToken();
     }
-    clearMainSyncFlags();
+    clearSyncFlags();
     setUser(null);
+    window.sessionStorage.setItem(LOGGED_OUT_KEY, "1");
+
+    const silentOk = await logoutMainSiteSessionSilent();
+    if (silentOk) return;
 
     const returnTo = encodeURIComponent(`${window.location.origin}/`);
     window.location.replace(`${MAIN_SITE_URL}/auth/property-logout?return_to=${returnTo}`);
@@ -234,14 +250,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const openMainPath = useCallback(async (path: string) => {
     const target = path.startsWith("http") ? path : mainUrl(path);
     if (!getStoredToken()) {
-      window.location.href = target;
+      window.location.assign(target);
       return;
     }
     try {
       const bridge = await getSessionLink(target);
-      window.location.replace(bridge);
+      window.location.assign(bridge);
     } catch {
-      window.location.href = target;
+      window.location.assign(target);
     }
   }, []);
 

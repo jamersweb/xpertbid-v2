@@ -3,6 +3,7 @@
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import {
   googleAuthUrl,
+  openAuthSyncPopup,
   registerWithEmail,
   sendAuthOtp,
   verifyAuthOtp,
@@ -82,6 +83,7 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Props) {
     e.preventDefault();
     setErrorMessage("");
     setLoading(true);
+    const syncPopup = openAuthSyncPopup();
     try {
       const result = await registerWithEmail({
         name: formData.name,
@@ -92,9 +94,16 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Props) {
       if (!result.token || !result.user) {
         throw new Error("Registration succeeded but session was incomplete.");
       }
-      await setSession(result.token, result.user, result.redirect_url);
+      await setSession(result.token, result.user, result.redirect_url, syncPopup);
+      setLoading(false);
+      onClose();
       return;
     } catch (err) {
+      try {
+        syncPopup?.close();
+      } catch {
+        // ignore
+      }
       setErrorMessage(err instanceof Error ? err.message : "Registration failed.");
       setLoading(false);
     }
@@ -126,6 +135,7 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Props) {
   const handleVerifyPhoneOtp = async () => {
     setLoading(true);
     setErrorMessage("");
+    const syncPopup = openAuthSyncPopup();
     try {
       const formattedPhone = `${formData.countryCode}${formData.phone.replace(/^0+/, "")}`;
       const result = await verifyAuthOtp({
@@ -137,9 +147,16 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Props) {
       if (!result.token || !result.user) {
         throw new Error("Verification succeeded but session was incomplete.");
       }
-      await setSession(result.token, result.user, result.redirect_url);
+      await setSession(result.token, result.user, result.redirect_url, syncPopup);
+      setLoading(false);
+      onClose();
       return;
     } catch (err) {
+      try {
+        syncPopup?.close();
+      } catch {
+        // ignore
+      }
       setErrorMessage(err instanceof Error ? err.message : "Invalid OTP.");
       setLoading(false);
     }

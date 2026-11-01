@@ -11,11 +11,13 @@ import {
 } from "react";
 import {
   clearStoredToken,
-  establishMainSiteSession,
+  establishMainSiteSessionSilent,
   fetchMe,
+  fetchSatelliteTokenFromMain,
   getSessionLink,
   getStoredToken,
   logoutApi,
+  logoutMainSiteSessionSilent,
   storeToken,
   type AuthUser,
 } from "@/lib/api/auth";
@@ -24,7 +26,12 @@ import { MAIN_SITE_URL, mainUrl } from "@/lib/site";
 type AuthContextValue = {
   user: AuthUser | null;
   loading: boolean;
-  setSession: (token: string, user: AuthUser, redirectUrl?: string) => Promise<void>;
+  setSession: (
+    token: string,
+    user: AuthUser,
+    redirectUrl?: string,
+    syncPopup?: Window | null
+  ) => Promise<void>;
   logout: () => Promise<void>;
   openMainPath: (path: string) => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -32,27 +39,20 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const LOGGED_OUT_KEY = "xb_property_logged_out";
-/** Mid-flight redirect to main handoff */
-const HANDOFF_PENDING_KEY = "xb_main_handoff_pending";
-/** Already asked main this tab — do not ask again */
-const HANDOFF_DONE_KEY = "xb_main_handoff_done";
+/** Cooldown for credentialed main→satellite token pulls (no full-page handoff). */
+const LAST_TOKEN_SYNC_KEY = "xb_last_satellite_token_sync";
+const TOKEN_SYNC_COOLDOWN_MS = 15000;
+const LOGGED_OUT_KEY = "xb_satellite_logged_out";
 
-function clearHandoffFlags() {
+function clearSyncFlags() {
   if (typeof window === "undefined") return;
-  window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
-  window.sessionStorage.removeItem(HANDOFF_DONE_KEY);
-}
-
-function clearMainSyncFlags() {
-  if (typeof window === "undefined") return;
+  window.sessionStorage.removeItem(LAST_TOKEN_SYNC_KEY);
   const keys: string[] = [];
   for (let i = 0; i < window.sessionStorage.length; i += 1) {
     const key = window.sessionStorage.key(i);
     if (key?.startsWith("xb_main_synced_")) keys.push(key);
   }
   keys.forEach((key) => window.sessionStorage.removeItem(key));
-  clearHandoffFlags();
 }
 
 function profileImageUrl(src?: string | null) {
@@ -69,13 +69,22 @@ export function resolveProfileImage(user: AuthUser | null) {
   return profileImageUrl(user?.profile_pic);
 }
 
-/** Clean URL for handoff return_to (no auth query noise). */
-function cleanReturnUrl() {
+function stripAuthParamsFromUrl() {
   const url = new URL(window.location.href);
   url.searchParams.delete("auth_token");
   url.searchParams.delete("auth_checked");
   url.searchParams.delete("logged_out");
-  return url.toString();
+  window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
+function canAttemptTokenSync() {
+  if (window.sessionStorage.getItem(LOGGED_OUT_KEY) === "1") return false;
+  const last = Number(window.sessionStorage.getItem(LAST_TOKEN_SYNC_KEY) || 0);
+  return Date.now() - last >= TOKEN_SYNC_COOLDOWN_MS;
+}
+
+function markTokenSyncAttempt() {
+  window.sessionStorage.setItem(LAST_TOKEN_SYNC_KEY, String(Date.now()));
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -97,6 +106,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const tryPullTokenFromMain = useCallback(async (): Promise<boolean> => {
+    if (!canAttemptTokenSync()) return false;
+    markTokenSyncAttempt();
+    const result = await fetchSatelliteTokenFromMain();
+    if (!result.authenticated || !result.token) return false;
+    storeToken(result.token);
+    window.sessionStorage.removeItem(LOGGED_OUT_KEY);
+    if (result.user) {
+      setUser(result.user);
+    } else {
+      try {
+        setUser(await fetchMe());
+      } catch {
+        clearStoredToken();
+        setUser(null);
+        return false;
+      }
+    }
+    return true;
+  }, []);
+
+  // Soft re-sync when returning to the tab (credentialed fetch — no redirect).
+  useEffect(() => {
+    const handleTabRevisit = () => {
+      if (typeof document !== "undefined" && document.visibilityState && document.visibilityState !== "visible") {
+        return;
+      }
+      if (getStoredToken()) {
+        void refreshUser();
+        return;
+      }
+      void tryPullTokenFromMain();
+    };
+
+    window.addEventListener("focus", handleTabRevisit);
+    document.addEventListener("visibilitychange", handleTabRevisit);
+    return () => {
+      window.removeEventListener("focus", handleTabRevisit);
+      document.removeEventListener("visibilitychange", handleTabRevisit);
+    };
+  }, [refreshUser, tryPullTokenFromMain]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -107,20 +158,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const authToken = url.searchParams.get("auth_token");
       const authChecked = url.searchParams.get("auth_checked") === "1";
       const loggedOutParam = url.searchParams.get("logged_out") === "1";
-      const hadAuthToken = Boolean(authToken);
-
-      const stripAuthParams = () => {
-        url.searchParams.delete("auth_token");
-        url.searchParams.delete("auth_checked");
-        url.searchParams.delete("logged_out");
-        window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
-      };
 
       if (loggedOutParam) {
         clearStoredToken();
         window.sessionStorage.setItem(LOGGED_OUT_KEY, "1");
-        clearHandoffFlags();
-        stripAuthParams();
+        clearSyncFlags();
+        stripAuthParamsFromUrl();
         if (!cancelled) {
           setUser(null);
           setLoading(false);
@@ -131,39 +174,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (authToken) {
         storeToken(authToken);
         window.sessionStorage.removeItem(LOGGED_OUT_KEY);
-        window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
-        window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
-        stripAuthParams();
+        stripAuthParamsFromUrl();
       } else if (authChecked) {
-        // Main said "not logged in" — stop. Do NOT handoff again this tab.
-        window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
-        window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
-        stripAuthParams();
+        markTokenSyncAttempt();
+        stripAuthParamsFromUrl();
       }
 
-      const explicitlyLoggedOut = window.sessionStorage.getItem(LOGGED_OUT_KEY) === "1";
-      const handoffDone = window.sessionStorage.getItem(HANDOFF_DONE_KEY) === "1";
-      const handoffPending = window.sessionStorage.getItem(HANDOFF_PENDING_KEY) === "1";
-
-      // One handoff attempt per tab unless user explicitly logs in later.
-      if (!getStoredToken() && !explicitlyLoggedOut && !handoffDone) {
-        if (handoffPending) {
-          // Returned without params — treat as done/guest, never loop.
-          window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
-          window.sessionStorage.removeItem(HANDOFF_PENDING_KEY);
-        } else {
-          window.sessionStorage.setItem(HANDOFF_PENDING_KEY, "1");
-          const returnTo = encodeURIComponent(cleanReturnUrl());
-          window.location.replace(`${MAIN_SITE_URL}/auth/property-handoff?return_to=${returnTo}`);
-          return;
-        }
-      }
-
+      // No local token: try silent same-site cookie SSO (live). Never full-page handoff.
       if (!getStoredToken()) {
-        if (!cancelled) {
+        const pulled = await tryPullTokenFromMain();
+        if (cancelled) return;
+        if (!pulled) {
           setUser(null);
           setLoading(false);
+          return;
         }
+        setLoading(false);
         return;
       }
 
@@ -172,43 +198,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         setUser(me);
         window.sessionStorage.removeItem(LOGGED_OUT_KEY);
-        window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
-
-        const syncedKey = `xb_main_synced_${me.id}`;
-        if (hadAuthToken) {
-          window.sessionStorage.setItem(syncedKey, "1");
-        } else if (window.sessionStorage.getItem(syncedKey) !== "1") {
-          window.sessionStorage.setItem(syncedKey, "1");
-          try {
-            await establishMainSiteSession();
-            return;
-          } catch {
-            window.sessionStorage.removeItem(syncedKey);
-          }
-        }
       } catch {
         clearStoredToken();
-        // Do not bounce to handoff again — that caused auth_checked loops.
-        window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
         if (!cancelled) setUser(null);
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
 
-    boot();
+    void boot();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [tryPullTokenFromMain]);
 
-  const setSession = useCallback(async (token: string, nextUser: AuthUser, redirectUrl?: string) => {
+  const setSession = useCallback(async (
+    token: string,
+    nextUser: AuthUser,
+    redirectUrl?: string,
+    syncPopup?: Window | null
+  ) => {
+    // Stay on this page; silently set main web session so other sites can SSO.
     storeToken(token);
     setUser(nextUser);
     window.sessionStorage.removeItem(LOGGED_OUT_KEY);
-    clearMainSyncFlags();
-    window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
-    await establishMainSiteSession(redirectUrl);
+    clearSyncFlags();
+    try {
+      await establishMainSiteSessionSilent(redirectUrl, syncPopup);
+    } catch {
+      // Satellite session still valid; main sync can happen on next openMainPath.
+    }
   }, []);
 
   const logout = useCallback(async () => {
@@ -217,10 +236,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       clearStoredToken();
     }
-    clearMainSyncFlags();
+    clearSyncFlags();
     setUser(null);
     window.sessionStorage.setItem(LOGGED_OUT_KEY, "1");
-    window.sessionStorage.setItem(HANDOFF_DONE_KEY, "1");
+
+    const silentOk = await logoutMainSiteSessionSilent();
+    if (silentOk) return;
 
     const returnTo = encodeURIComponent(`${window.location.origin}/`);
     window.location.replace(`${MAIN_SITE_URL}/auth/property-logout?return_to=${returnTo}`);
@@ -229,14 +250,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const openMainPath = useCallback(async (path: string) => {
     const target = path.startsWith("http") ? path : mainUrl(path);
     if (!getStoredToken()) {
-      window.location.href = target;
+      window.location.assign(target);
       return;
     }
     try {
       const bridge = await getSessionLink(target);
-      window.location.replace(bridge);
+      window.location.assign(bridge);
     } catch {
-      window.location.href = target;
+      window.location.assign(target);
     }
   }, []);
 

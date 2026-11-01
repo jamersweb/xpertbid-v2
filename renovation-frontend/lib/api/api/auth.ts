@@ -168,21 +168,186 @@ export async function getSessionLink(to: string) {
   return json.url as string;
 }
 
-export async function establishMainSiteSession(preferredBridgeUrl?: string) {
-  if (typeof window === "undefined") return;
+type SatelliteTokenResponse = {
+  authenticated?: boolean;
+  token?: string;
+  user?: AuthUser;
+  ok?: boolean;
+};
+
+/**
+ * Pull Sanctum token from main-site web session (credentialed).
+ * Works on live when SESSION_DOMAIN=.xpertbid.com (same-site).
+ * On localhost ports (cross-site + SameSite=Lax) this usually returns guest — no bounce.
+ */
+export async function fetchSatelliteTokenFromMain(): Promise<{
+  authenticated: boolean;
+  token?: string;
+  user?: AuthUser;
+}> {
+  if (typeof window === "undefined") {
+    return { authenticated: false };
+  }
+
+  try {
+    const res = await fetch(`${MAIN_SITE_URL}/auth/satellite-token`, {
+      method: "GET",
+      credentials: "include",
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) return { authenticated: false };
+    const json = (await res.json().catch(() => ({}))) as SatelliteTokenResponse;
+    if (!json.authenticated || !json.token) {
+      return { authenticated: false };
+    }
+    return {
+      authenticated: true,
+      token: json.token,
+      user: json.user,
+    };
+  } catch {
+    return { authenticated: false };
+  }
+}
+
+/** Clear main web session when same-site cookies work. Returns false if FE should use redirect fallback. */
+export async function logoutMainSiteSessionSilent(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  try {
+    const res = await fetch(`${MAIN_SITE_URL}/auth/satellite-logout`, {
+      method: "POST",
+      credentials: "include",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: "{}",
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+function withSilentParam(bridgeUrl: string) {
+  try {
+    const u = new URL(bridgeUrl);
+    u.searchParams.set("silent", "1");
+    return u.toString();
+  } catch {
+    const join = bridgeUrl.includes("?") ? "&" : "?";
+    return `${bridgeUrl}${join}silent=1`;
+  }
+}
+
+function mainOrigin() {
+  try {
+    return new URL(MAIN_SITE_URL).origin;
+  } catch {
+    return MAIN_SITE_URL;
+  }
+}
+
+/** Open during the click handler (before await) so the browser allows the popup. */
+export function openAuthSyncPopup(): Window | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.open(
+      "about:blank",
+      "xb_auth_sync",
+      "popup=yes,width=40,height=40,left=0,top=0"
+    );
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Set Laravel web session from a satellite login without navigating the current page.
+ * Prefer a pre-opened popup (from openAuthSyncPopup) for SameSite=Lax / localhost.
+ */
+export async function establishMainSiteSessionSilent(
+  preferredBridgeUrl?: string,
+  preopenedPopup?: Window | null
+): Promise<boolean> {
+  if (typeof window === "undefined") return false;
 
   let bridgeUrl = preferredBridgeUrl || "";
   if (!bridgeUrl) {
-    bridgeUrl = await getSessionLink(window.location.href);
+    try {
+      bridgeUrl = await getSessionLink(window.location.href);
+    } catch {
+      try {
+        preopenedPopup?.close();
+      } catch {
+        // ignore
+      }
+      return false;
+    }
   }
 
-  // Full navigation is required so the Laravel session cookie is first-party.
-  window.location.replace(bridgeUrl);
+  const silentUrl = withSilentParam(bridgeUrl);
+  const expectedOrigin = mainOrigin();
+
+  return new Promise((resolve) => {
+    let settled = false;
+    let iframe: HTMLIFrameElement | null = null;
+    let popup: Window | null = preopenedPopup && !preopenedPopup.closed ? preopenedPopup : null;
+
+    const finish = (ok: boolean) => {
+      if (settled) return;
+      settled = true;
+      window.removeEventListener("message", onMessage);
+      try {
+        iframe?.remove();
+      } catch {
+        // ignore
+      }
+      try {
+        popup?.close();
+      } catch {
+        // ignore
+      }
+      resolve(ok);
+    };
+
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== expectedOrigin) return;
+      const data = event.data as { type?: string; ok?: boolean } | null;
+      if (data?.type === "xb-auth-sync") {
+        finish(Boolean(data.ok));
+      }
+    };
+
+    window.addEventListener("message", onMessage);
+
+    if (popup) {
+      try {
+        popup.location.replace(silentUrl);
+      } catch {
+        popup = null;
+      }
+    }
+
+    if (!popup || popup.closed) {
+      // Popup missing/blocked — iframe (works when same-site, e.g. live subdomains).
+      iframe = document.createElement("iframe");
+      iframe.setAttribute("title", "auth-sync");
+      iframe.style.cssText =
+        "position:absolute;width:0;height:0;border:0;clip:rect(0,0,0,0);";
+      iframe.src = silentUrl;
+      document.body.appendChild(iframe);
+    }
+
+    window.setTimeout(() => finish(true), 2500);
+  });
 }
 
-/** @deprecated use establishMainSiteSession */
+/** @deprecated use establishMainSiteSessionSilent */
+export async function establishMainSiteSession(preferredBridgeUrl?: string) {
+  return establishMainSiteSessionSilent(preferredBridgeUrl);
+}
+
+/** @deprecated */
 export function syncMainSiteSession(redirectUrl?: string) {
-  void establishMainSiteSession(redirectUrl);
+  void establishMainSiteSessionSilent(redirectUrl);
 }
 
 export function completeAuthRedirect(redirectUrl?: string) {

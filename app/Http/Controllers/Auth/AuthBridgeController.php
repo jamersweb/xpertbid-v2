@@ -16,7 +16,7 @@ class AuthBridgeController extends Controller
 
         if (! $payload || empty($payload['user_id'])) {
             if ($request->boolean('silent')) {
-                return response('expired', 410);
+                return $this->silentHtmlResponse(false, 410);
             }
 
             return redirect()
@@ -28,7 +28,7 @@ class AuthBridgeController extends Controller
 
         if (! $user) {
             if ($request->boolean('silent')) {
-                return response('missing', 404);
+                return $this->silentHtmlResponse(false, 404);
             }
 
             return redirect()
@@ -40,7 +40,7 @@ class AuthBridgeController extends Controller
         $request->session()->regenerate();
 
         if ($request->boolean('silent')) {
-            return response('ok', 200)->header('Content-Type', 'text/plain');
+            return $this->silentHtmlResponse(true, 200);
         }
 
         $returnTo = AuthBridge::sanitizeReturnTo($payload['return_to'] ?? null);
@@ -56,6 +56,19 @@ class AuthBridgeController extends Controller
         }
 
         return redirect()->to($returnTo);
+    }
+
+    protected function silentHtmlResponse(bool $ok, int $status)
+    {
+        $flag = $ok ? 'true' : 'false';
+        $html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Syncing</title></head><body>'
+            .'<script>(function(){var m={type:"xb-auth-sync",ok:'.$flag.'};'
+            .'try{if(window.opener)window.opener.postMessage(m,"*");}catch(e){}'
+            .'try{if(window.parent&&window.parent!==window)window.parent.postMessage(m,"*");}catch(e){}'
+            .'try{window.close();}catch(e){}'
+            .'})();</script>ok</body></html>';
+
+        return response($html, $status)->header('Content-Type', 'text/html; charset=UTF-8');
     }
 
     protected function isSatelliteFrontendOrigin(string $url): bool

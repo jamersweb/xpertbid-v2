@@ -26,6 +26,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'payfast/notify',
+            // Credentialed cross-subdomain SSO from property/build frontends
+            'auth/satellite-logout',
+            'auth/satellite-token',
         ]);
 
         $middleware->alias([

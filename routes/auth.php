@@ -61,6 +61,16 @@ Route::get('auth/property-handoff', App\Http\Controllers\Auth\PropertyHandoffCon
 Route::get('auth/property-logout', App\Http\Controllers\Auth\PropertyLogoutController::class)
     ->name('auth.property.logout');
 
+// Credentialed JSON SSO for satellites (no full-page bounce when same-site cookies work).
+Route::options('auth/satellite-token', [App\Http\Controllers\Auth\SatelliteTokenController::class, 'options'])
+    ->name('auth.satellite.token.options');
+Route::get('auth/satellite-token', [App\Http\Controllers\Auth\SatelliteTokenController::class, 'token'])
+    ->name('auth.satellite.token');
+Route::options('auth/satellite-logout', [App\Http\Controllers\Auth\SatelliteTokenController::class, 'options'])
+    ->name('auth.satellite.logout.options');
+Route::post('auth/satellite-logout', [App\Http\Controllers\Auth\SatelliteTokenController::class, 'logout'])
+    ->name('auth.satellite.logout');
+
 Route::middleware('auth')->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');

@@ -15,6 +15,8 @@ $propertyOrigins = array_values(array_filter(array_unique([
     'http://home.xpertbid.com',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'http://localhost:3001',
+    'http://127.0.0.1:3001',
 ])));
 
 return [
