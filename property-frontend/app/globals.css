@@ -360,7 +360,7 @@ img.property-header-logo.logo-image {
 
 #qlwapp {
   position: fixed !important;
-  right: 20px !important;
+  right: 23px !important;
   left: auto !important;
   bottom: 24px !important;
   z-index: 9999 !important;
@@ -407,17 +407,189 @@ img.property-header-logo.logo-image {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 991.98px) {
   #qlwapp {
-    right: 14px !important;
+    right: 23px !important;
     left: auto !important;
-    bottom: 18px !important;
+    bottom: 86px !important;
   }
 
   #qlwapp .gameon {
     width: 52px !important;
     height: 52px !important;
     font-size: 28px !important;
+  }
+}
+
+@media (min-width: 992px) {
+  #qlwapp {
+    right: 23px !important;
+    bottom: 24px !important;
+  }
+}
+
+/* Mobile bottom nav — property (mirrors renovation) */
+.has-mobile-bottom-nav {
+  padding-bottom: 0;
+}
+
+@media (max-width: 991.98px) {
+  .has-mobile-bottom-nav {
+    padding-bottom: 78px;
+  }
+
+  .footer {
+    margin-bottom: 0;
+  }
+}
+
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  border-top: 1px solid #e5e5e5;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
+  z-index: 1100;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+  overflow: visible !important;
+}
+
+.mobile-bottom-nav__item {
+  flex: 1;
+  text-align: center;
+  color: #606060;
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: none !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  min-width: 0;
+}
+
+.mobile-bottom-nav__item--active {
+  color: #43ace9 !important;
+}
+
+.mobile-bottom-nav__item--active .mobile-bottom-nav__label {
+  color: #43ace9 !important;
+  font-weight: 700;
+}
+
+.mobile-bottom-nav__item--active .mobile-bottom-nav__icon {
+  color: #43ace9 !important;
+}
+
+.mobile-bottom-nav__item--action .mobile-bottom-nav__icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #23262f;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
+.mobile-bottom-nav__item--action.mobile-bottom-nav__item--active .mobile-bottom-nav__icon,
+.mobile-bottom-nav__item--action:hover .mobile-bottom-nav__icon {
+  background: #43ace9;
+}
+
+.mobile-bottom-nav__icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.mobile-bottom-nav__label {
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.mobile-bottom-nav__profile {
+  position: relative;
+  overflow: visible !important;
+  z-index: 1110;
+}
+
+.mobile-bottom-nav__profile-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-bottom-nav__dropdown {
+  position: fixed !important;
+  left: 12px !important;
+  right: 12px !important;
+  top: auto !important;
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+  width: auto !important;
+  background: #fff !important;
+  border-radius: 18px;
+  overflow-y: auto;
+  max-height: min(70vh, 420px);
+  padding: 10px 0;
+  border: 1px solid #eee;
+  z-index: 1200 !important;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+}
+
+.mobile-bottom-nav__dropdown .user-setting-menu li button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  color: #333;
+  text-decoration: none;
+  font-size: 15px;
+  text-align: left;
+  width: 100%;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.mobile-bottom-nav__dropdown .user-setting-menu li:not(:last-child) {
+  border-bottom: 1px solid #ededed;
+}
+
+.mobile-bottom-nav__logout-btn {
+  color: #e94343 !important;
+}
+
+@media (min-width: 992px) {
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+
+  .has-mobile-bottom-nav {
+    padding-bottom: 0 !important;
   }
 }
 

@@ -1,12 +1,65 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import axios from 'axios';
 import { Link, usePage } from '@inertiajs/react';
 import useTranslate from '@/hooks/useTranslate';
 import { getCategoryBrowseUrl } from '@/Utils/categoryBrowseUrl';
 
+const HEADER_CATEGORY_LIMIT = 10;
+
+/** Must always appear in the logged-out desktop header dropdown when present in API data. */
+const PRIORITY_MATCHERS = [
+       (cat) => {
+              const slug = String(cat.slug || '').toLowerCase();
+              const name = String(cat.name || '').toLowerCase();
+              return slug === 'real-estate-property-auction' || name === 'properties' || name.includes('property');
+       },
+       (cat) => {
+              const slug = String(cat.slug || '').toLowerCase();
+              const name = String(cat.name || '').toLowerCase();
+              return slug.includes('vehicle') || name.includes('vehicle');
+       },
+       (cat) => {
+              const slug = String(cat.slug || '').toLowerCase();
+              const name = String(cat.name || '').toLowerCase();
+              return slug.includes('home-renovation') || name.includes('home renovation') || (name.includes('renovation') && !name.includes('builder'));
+       },
+       (cat) => {
+              const slug = String(cat.slug || '').toLowerCase();
+              const name = String(cat.name || '').toLowerCase();
+              return slug.includes('home-builder') || name.includes('home builder') || (name.includes('builder') && !name.includes('renovation'));
+       },
+];
+
+function pickHeaderCategories(all = [], limit = HEADER_CATEGORY_LIMIT) {
+       if (!Array.isArray(all) || all.length === 0) return [];
+
+       const picked = [];
+       const used = new Set();
+
+       const push = (cat) => {
+              if (!cat) return;
+              const key = String(cat.id ?? cat.slug ?? cat.name);
+              if (used.has(key)) return;
+              used.add(key);
+              picked.push(cat);
+       };
+
+       PRIORITY_MATCHERS.forEach((match) => {
+              if (picked.length >= limit) return;
+              push(all.find(match));
+       });
+
+       all.forEach((cat) => {
+              if (picked.length >= limit) return;
+              push(cat);
+       });
+
+       return picked.slice(0, limit);
+}
+
 export default function DesktopCategoriesDropdown() {
        const { t } = useTranslate();
-       const { propertyFrontendUrl, propertyRootCategoryId } = usePage().props;
+       const { propertyFrontendUrl, propertyRootCategoryId, renovationFrontendUrl } = usePage().props;
        const [categories, setCategories] = useState([]);
        const [isOpen, setIsOpen] = useState(false);
        const dropdownRef = useRef(null);
@@ -19,6 +72,11 @@ export default function DesktopCategoriesDropdown() {
                      .then(res => setCategories(res.data.categories || []))
                      .catch(err => console.error(err));
        }, []);
+
+       const headerCategories = useMemo(
+              () => pickHeaderCategories(categories, HEADER_CATEGORY_LIMIT),
+              [categories]
+       );
 
        // Bootstrap event listeners for dropdown open/close
        useEffect(() => {
@@ -82,13 +140,18 @@ export default function DesktopCategoriesDropdown() {
                      </a>
 
                      <ul className="dropdown-menu" aria-labelledby="categoriesDropdown">
-                            {categories.map(cat => {
-                                   const browse = getCategoryBrowseUrl(cat, { propertyFrontendUrl, propertyRootCategoryId });
+                            {headerCategories.map(cat => {
+                                   const browse = getCategoryBrowseUrl(cat, {
+                                          propertyFrontendUrl,
+                                          propertyRootCategoryId,
+                                          renovationFrontendUrl,
+                                   });
                                    const className = "dropdown-item";
+                                   const key = cat.id ?? cat.slug;
 
                                    if (browse.external) {
                                           return (
-                                                 <li key={cat.slug}>
+                                                 <li key={key}>
                                                         <a href={browse.href} className={className} target="_blank" rel="noopener noreferrer">
                                                                {cat.name}
                                                         </a>
@@ -97,7 +160,7 @@ export default function DesktopCategoriesDropdown() {
                                    }
 
                                    return (
-                                          <li key={cat.slug}>
+                                          <li key={key}>
                                                  <Link href={browse.href} className={className}>
                                                         {cat.name}
                                                  </Link>

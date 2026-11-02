@@ -8,6 +8,7 @@ import {
   BrStyles,
   categoryLine,
   formatPostedDate,
+  publicBuyerRequestLocation,
   statusPill,
   stripHtml,
 } from "@/components/buyer-requests/BrUi";
@@ -77,7 +78,8 @@ export default function MyBuyerRequestsPage() {
       list = list.filter((r) => {
         const hay = [
           r.title,
-          r.location_label,
+          r.city,
+          r.country,
           r.category?.name,
           r.sub_category?.name,
           stripHtml(r.description || ""),
@@ -256,10 +258,10 @@ export default function MyBuyerRequestsPage() {
                         <i className="fa-solid fa-clipboard-list" aria-hidden />
                         <span>{categoryLine(item)}</span>
                       </div>
-                      {item.location_label ? (
+                      {publicBuyerRequestLocation(item) ? (
                         <div className="br-meta__row">
                           <i className="fa-solid fa-location-dot" aria-hidden />
-                          <span>{item.location_label}</span>
+                          <span>{publicBuyerRequestLocation(item)}</span>
                         </div>
                       ) : null}
                       {item.budget != null && Number(item.budget) > 0 ? (

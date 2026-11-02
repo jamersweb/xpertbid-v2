@@ -8,6 +8,22 @@ export function stripHtml(html = "") {
     .trim();
 }
 
+/** Public buyer-request location: city + country only (never exact address / coords). */
+export function publicBuyerRequestLocation(item?: {
+  city?: string | null;
+  country?: string | null;
+} | null) {
+  if (!item) return "";
+  const rawCity = String(item.city || "").trim();
+  const cityParts = rawCity
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const city = cityParts.length > 1 ? cityParts[cityParts.length - 1] : rawCity;
+  const country = String(item.country || "").trim();
+  return [city, country].filter(Boolean).join(", ");
+}
+
 export function isPublicIdentityVerified(person?: PublicIdentity | null) {
   if (!person) return false;
   if (person.is_verified) return true;

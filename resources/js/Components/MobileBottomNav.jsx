@@ -3,6 +3,7 @@ import { route } from 'ziggy-js';
 import { useState, useEffect, useRef } from 'react';
 import { useAuthModal } from '@/Contexts/AuthModalContext';
 import useTranslate from '@/hooks/useTranslate';
+import useUnreadChatPeople from '@/hooks/useUnreadChatPeople';
 
 const UserProfile = () => {
        const { auth } = usePage().props;
@@ -28,6 +29,7 @@ export default function MobileBottomNav() {
        const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
        const menuRef = useRef(null);
        const isAuthenticated = Boolean(user);
+       const unreadChatPeople = useUnreadChatPeople();
 
        const handleLogout = () => {
               router.post(route('logout'));
@@ -82,7 +84,33 @@ export default function MobileBottomNav() {
                                           className={`mobile-bottom-nav__item ${isActive('/chat') ? 'mobile-bottom-nav__item--active' : ''}`}
                                           aria-label="Chat"
                                    >
-                                          <i className="fa-solid fa-comment-dots mobile-bottom-nav__icon" />
+                                          <span className="mobile-bottom-nav__icon-wrap">
+                                                 <i className="fa-solid fa-comment-dots mobile-bottom-nav__icon" />
+                                                 {unreadChatPeople > 0 ? (
+                                                        <span
+                                                               className="mobile-bottom-nav__chat-badge"
+                                                               style={{
+                                                                      position: 'absolute',
+                                                                      top: '-6px',
+                                                                      right: '-10px',
+                                                                      zIndex: 20,
+                                                                      minWidth: '16px',
+                                                                      height: '16px',
+                                                                      padding: '0 4px',
+                                                                      borderRadius: '999px',
+                                                                      background: '#43ACE9',
+                                                                      color: '#fff',
+                                                                      fontSize: '9px',
+                                                                      fontWeight: 700,
+                                                                      lineHeight: '16px',
+                                                                      textAlign: 'center',
+                                                                      boxShadow: '0 0 0 2px #fff',
+                                                               }}
+                                                        >
+                                                               {unreadChatPeople > 99 ? '99+' : unreadChatPeople}
+                                                        </span>
+                                                 ) : null}
+                                          </span>
                                           <span className="mobile-bottom-nav__label">{t('Chat')}</span>
                                    </Link>
                             ) : (
@@ -246,6 +274,7 @@ export default function MobileBottomNav() {
                     padding: 8px 10px;
                     z-index: 1050;
                     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+                    overflow: visible !important;
                 }
 
                 .mobile-bottom-nav__item {
@@ -262,6 +291,8 @@ export default function MobileBottomNav() {
                     gap: 2px;
                     border: none;
                     background: transparent;
+                    overflow: visible !important;
+                    position: relative;
                 }
 
                 .mobile-bottom-nav__item--active {
@@ -270,6 +301,36 @@ export default function MobileBottomNav() {
 
                 .mobile-bottom-nav__icon {
                     font-size: 18px;
+                }
+
+                .mobile-bottom-nav__icon-wrap {
+                    position: relative;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    line-height: 1;
+                    overflow: visible !important;
+                    width: 24px;
+                    height: 22px;
+                }
+
+                .mobile-bottom-nav__chat-badge {
+                    position: absolute;
+                    top: -7px;
+                    right: -11px;
+                    z-index: 2;
+                    min-width: 16px;
+                    height: 16px;
+                    padding: 0 4px;
+                    border-radius: 999px;
+                    background: #43ACE9 !important;
+                    color: #ffffff !important;
+                    font-size: 9px;
+                    font-weight: 700;
+                    line-height: 16px;
+                    text-align: center;
+                    pointer-events: none;
+                    box-shadow: 0 0 0 2px #ffffff;
                 }
 
                 .mobile-bottom-nav__profile {

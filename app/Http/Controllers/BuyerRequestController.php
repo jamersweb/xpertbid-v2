@@ -149,6 +149,11 @@ class BuyerRequestController extends Controller
         $user = Auth::user();
         $user->loadMissing('corporateVerification');
 
+        // Sellers / public viewers must not receive exact address or coordinates.
+        if (! $isOwner) {
+            $buyerRequest->makeHidden(['location_label', 'state', 'latitude', 'longitude']);
+        }
+
         return Inertia::render('BuyerRequests/Show', [
             'buyerRequest' => $buyerRequest,
             'isOwner' => $isOwner,

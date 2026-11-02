@@ -14,6 +14,7 @@ import {
   formatPostedDate,
   isPublicIdentityVerified,
   publicIdentityAvatarSrc,
+  publicBuyerRequestLocation,
   publicIdentityLabel,
   statusPill,
   stripHtml,
@@ -352,15 +353,12 @@ export default function BuyerRequestShowPage() {
                   <i className="fa-solid fa-clipboard-list" aria-hidden />
                   <span>{categoryLine(item)}</span>
                 </div>
-                {(item.location_label || item.city) && (
+                {publicBuyerRequestLocation(item) ? (
                   <div className="br-meta__row">
                     <i className="fa-solid fa-location-dot" aria-hidden />
-                    <span>
-                      {item.location_label ||
-                        [item.city, item.state, item.country].filter(Boolean).join(", ")}
-                    </span>
+                    <span>{publicBuyerRequestLocation(item)}</span>
                   </div>
-                )}
+                ) : null}
                 {item.budget != null && Number(item.budget) > 0 ? (
                   <div className="br-meta__row br-meta__row--strong">
                     <i className="fa-solid fa-coins" aria-hidden />

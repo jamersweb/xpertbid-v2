@@ -13,6 +13,7 @@ import {
 import AppLayout from '@/Layouts/AppLayout';
 import Price from '@/Components/Price';
 import useTranslate from '@/hooks/useTranslate';
+import { publicBuyerRequestLocation } from '@/Utils/buyerRequestLocation';
 
 function stripHtml(html = '') {
     return String(html).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -157,7 +158,8 @@ export default function Browse({
             list = list.filter((r) => {
                 const hay = [
                     r.title,
-                    r.location_label,
+                    r.city,
+                    r.country,
                     r.category?.name,
                     r.sub_category?.name || r.subCategory?.name,
                     stripHtml(r.description || ''),
@@ -327,10 +329,10 @@ export default function Browse({
                                                                         {item.title}
                                                                     </div>
                                                                     <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px] text-slate-500 sm:gap-2 sm:text-[11px]">
-                                                                        {item.location_label && (
+                                                                        {publicBuyerRequestLocation(item) && (
                                                                             <span className="inline-flex min-w-0 items-center gap-0.5 truncate sm:gap-1">
                                                                                 <HiOutlineLocationMarker className="h-3 w-3 shrink-0 text-[#43ACE9]" />
-                                                                                <span className="truncate">{item.location_label}</span>
+                                                                                <span className="truncate">{publicBuyerRequestLocation(item)}</span>
                                                                             </span>
                                                                         )}
                                                                         {item.budget != null && Number(item.budget) > 0 && (
@@ -563,10 +565,10 @@ export default function Browse({
                                                             <HiOutlineClipboardList className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500" />
                                                             <span className="line-clamp-1">{categoryLine}</span>
                                                         </div>
-                                                        {item.location_label && (
+                                                        {publicBuyerRequestLocation(item) && (
                                                             <div className="flex min-w-0 items-start gap-1.5">
                                                                 <HiOutlineLocationMarker className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500" />
-                                                                <span className="line-clamp-1">{item.location_label}</span>
+                                                                <span className="line-clamp-1">{publicBuyerRequestLocation(item)}</span>
                                                             </div>
                                                         )}
                                                         {item.budget != null && Number(item.budget) > 0 && (

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { publicBuyerRequestLocation } from "@/components/buyer-requests/BrUi";
 import type { BuyerRequestItem } from "@/lib/api/buyerRequests";
 
 type Props = {
@@ -113,10 +114,10 @@ export default function SellerLeadsHero({
                             <div className="br-hero__card-body">
                               <div className="br-hero__card-title">{item.title}</div>
                               <div className="br-hero__card-meta">
-                                {item.location_label ? (
+                                {publicBuyerRequestLocation(item) ? (
                                   <span>
                                     <i className="fa-solid fa-location-dot" aria-hidden />
-                                    {item.location_label}
+                                    {publicBuyerRequestLocation(item)}
                                   </span>
                                 ) : null}
                                 {item.budget != null && Number(item.budget) > 0 ? (

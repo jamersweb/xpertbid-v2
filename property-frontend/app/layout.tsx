@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { AuthModalProvider } from "@/components/auth/AuthModalProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { SiteFooter, SiteHeader, WhatsAppFab } from "@/components/SiteChrome";
 import { getPropertyCategories } from "@/lib/api/client";
 import { SITE_NAME, SITE_URL } from "@/lib/seo";
@@ -70,11 +72,14 @@ export default async function RootLayout({
       >
         <AuthProvider>
           <AuthModalProvider>
-            <div className="min-h-screen bg-white">
+            <div className="min-h-screen bg-white has-mobile-bottom-nav">
               <SiteHeader purposes={purposes} />
               <main>{children}</main>
               <SiteFooter />
             </div>
+            <Suspense fallback={null}>
+              <MobileBottomNav purposes={purposes} />
+            </Suspense>
             <WhatsAppFab />
           </AuthModalProvider>
         </AuthProvider>

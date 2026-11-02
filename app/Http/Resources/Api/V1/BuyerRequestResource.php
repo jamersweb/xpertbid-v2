@@ -12,19 +12,23 @@ class BuyerRequestResource extends JsonResource
         $isMatchedLead = $request->routeIs('api.v1.buyer-requests.matched')
             || str_contains((string) $request->path(), 'buyer-requests/matched');
 
+        $isOwner = (int) $request->user()?->id === (int) $this->user_id;
+        // Exact address / coords only for the owning buyer (edit forms). Public = city + country.
+        $showExactLocation = $isOwner && ! $isMatchedLead;
+
         return [
             'id' => $this->id,
             'slug' => $this->slug,
             'title' => $this->title,
             'description' => $this->description,
             'status' => $this->status,
-            'location_label' => $this->location_label,
+            'location_label' => $this->when($showExactLocation, $this->location_label),
             'country' => $this->country,
-            'state' => $this->state,
+            'state' => $this->when($showExactLocation, $this->state),
             'city' => $this->city,
             'budget' => $this->budget !== null ? (float) $this->budget : null,
-            'latitude' => $this->latitude,
-            'longitude' => $this->longitude,
+            'latitude' => $this->when($showExactLocation, $this->latitude),
+            'longitude' => $this->when($showExactLocation, $this->longitude),
             'category' => $this->whenLoaded('category', fn () => [
                 'id' => $this->category?->id,
                 'name' => $this->category?->name,

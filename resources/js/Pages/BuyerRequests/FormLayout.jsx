@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from '@inertiajs/react';
 import {
     HiOutlineArrowLeft,
@@ -6,7 +6,9 @@ import {
     HiOutlineClipboardList,
     HiOutlineEye,
     HiOutlineLightBulb,
+    HiOutlineQuestionMarkCircle,
     HiOutlineStatusOnline,
+    HiOutlineX,
 } from 'react-icons/hi';
 import useTranslate from '@/hooks/useTranslate';
 
@@ -32,6 +34,108 @@ function formatPostedDate(value) {
     }
 }
 
+function TipsPanel({ t }) {
+    return (
+        <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-3.5 text-sm sm:p-5">
+            <div className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
+                <HiOutlineLightBulb className="h-5 w-5 text-amber-500" />
+                {t('Tips for quick offers')}
+            </div>
+            <ul className="space-y-2 text-slate-600">
+                <li className="flex gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
+                    {t('Describe what you need clearly (specs, quantity, brand)')}
+                </li>
+                <li className="flex gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
+                    {t('Include reference images')}
+                </li>
+                <li className="flex gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
+                    {t('Mention preferred delivery or completion timeline')}
+                </li>
+                <li className="flex gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
+                    {t('Set a realistic target budget')}
+                </li>
+                <li className="flex gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
+                    {t('Add your area so nearby sellers can offer')}
+                </li>
+            </ul>
+        </div>
+    );
+}
+
+function SummaryPanel({ t, buyerRequest }) {
+    return (
+        <div className="rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm sm:p-5">
+            <h2 className="text-sm font-semibold text-gray-900">{t('Request summary')}</h2>
+            <dl className="mt-4 space-y-3 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                    <dt className="inline-flex items-center gap-1.5 text-slate-500">
+                        <HiOutlineStatusOnline className="h-4 w-4" />
+                        {t('Status')}
+                    </dt>
+                    <dd>
+                        <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${statusPill(buyerRequest.status)}`}
+                        >
+                            {buyerRequest.status}
+                        </span>
+                    </dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                    <dt className="inline-flex items-center gap-1.5 text-slate-500">
+                        <HiOutlineClipboardList className="h-4 w-4" />
+                        {t('Offers')}
+                    </dt>
+                    <dd className="font-semibold text-slate-900">
+                        {buyerRequest.offers_count ?? buyerRequest.offers?.length ?? 0}
+                    </dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                    <dt className="inline-flex items-center gap-1.5 text-slate-500">
+                        <HiOutlineCalendar className="h-4 w-4" />
+                        {t('Created')}
+                    </dt>
+                    <dd className="font-medium text-slate-700">
+                        {formatPostedDate(buyerRequest.created_at)}
+                    </dd>
+                </div>
+            </dl>
+        </div>
+    );
+}
+
+function NextStepsPanel({ t }) {
+    return (
+        <div className="rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm sm:p-5">
+            <h2 className="text-sm font-semibold text-gray-900">{t('What happens next?')}</h2>
+            <ol className="mt-3 space-y-2.5 text-sm text-slate-600">
+                <li className="flex gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[10px] font-bold text-white">
+                        1
+                    </span>
+                    {t('Matched sellers get notified')}
+                </li>
+                <li className="flex gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[10px] font-bold text-white">
+                        2
+                    </span>
+                    {t('Compare offers and chat')}
+                </li>
+                <li className="flex gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[10px] font-bold text-white">
+                        3
+                    </span>
+                    {t('Accept the best offer')}
+                </li>
+            </ol>
+        </div>
+    );
+}
+
 export default function FormLayout({
     title,
     isEdit = false,
@@ -43,12 +147,37 @@ export default function FormLayout({
     children,
 }) {
     const { t } = useTranslate();
+    const [helpOpen, setHelpOpen] = useState(false);
+
+    useEffect(() => {
+        if (!helpOpen) return undefined;
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        const onKey = (e) => {
+            if (e.key === 'Escape') setHelpOpen(false);
+        };
+        window.addEventListener('keydown', onKey);
+        return () => {
+            document.body.style.overflow = prev;
+            window.removeEventListener('keydown', onKey);
+        };
+    }, [helpOpen]);
+
+    const helpPanels = (
+        <div className="space-y-4">
+            <TipsPanel t={t} />
+            {isEdit && buyerRequest ? (
+                <SummaryPanel t={t} buyerRequest={buyerRequest} />
+            ) : (
+                <NextStepsPanel t={t} />
+            )}
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-slate-50 pb-24 sm:pb-8">
             <QuillStyles />
             <div className="mx-auto max-w-6xl px-2.5 py-4 sm:px-4 sm:py-6 lg:px-6 lg:py-8">
-                {/* Top bar — title only */}
                 <div className="mb-4 sm:mb-6">
                     <Link
                         href={route('buyer-requests.index')}
@@ -64,105 +193,12 @@ export default function FormLayout({
 
                 <form id="buyer-request-form" onSubmit={onSubmit}>
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
-                        <div className="space-y-4 lg:col-span-2 sm:space-y-5">
-                            {children}
-                        </div>
+                        <div className="space-y-4 lg:col-span-2 sm:space-y-5">{children}</div>
 
-                        <aside className="space-y-4 lg:col-span-1 lg:sticky lg:top-6 lg:self-start sm:space-y-5">
-                            <div className="hidden rounded-2xl border border-blue-100 bg-blue-50/60 p-3.5 text-sm lg:block sm:p-5">
-                                <div className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
-                                    <HiOutlineLightBulb className="h-5 w-5 text-amber-500" />
-                                    {t('Tips for quick offers')}
-                                </div>
-                                <ul className="space-y-2 text-slate-600">
-                                    <li className="flex gap-2">
-                                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
-                                        {t('Describe what you need clearly (specs, quantity, brand)')}
-                                    </li>
-                                    <li className="flex gap-2">
-                                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
-                                        {t('Include reference images')}
-                                    </li>
-                                    <li className="flex gap-2">
-                                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
-                                        {t('Mention preferred delivery or completion timeline')}
-                                    </li>
-                                    <li className="flex gap-2">
-                                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
-                                        {t('Set a realistic target budget')}
-                                    </li>
-                                    <li className="flex gap-2">
-                                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
-                                        {t('Add your area so nearby sellers can offer')}
-                                    </li>
-                                </ul>
-                            </div>
+                        <aside className="hidden space-y-4 lg:col-span-1 lg:block lg:sticky lg:top-6 lg:self-start sm:space-y-5">
+                            {helpPanels}
 
-                            {isEdit && buyerRequest && (
-                                <div className="hidden rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm lg:block sm:p-5">
-                                    <h2 className="text-sm font-semibold text-gray-900">
-                                        {t('Request summary')}
-                                    </h2>
-                                    <dl className="mt-4 space-y-3 text-sm">
-                                        <div className="flex items-center justify-between gap-3">
-                                            <dt className="inline-flex items-center gap-1.5 text-slate-500">
-                                                <HiOutlineStatusOnline className="h-4 w-4" />
-                                                {t('Status')}
-                                            </dt>
-                                            <dd>
-                                                <span
-                                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${statusPill(buyerRequest.status)}`}
-                                                >
-                                                    {buyerRequest.status}
-                                                </span>
-                                            </dd>
-                                        </div>
-                                        <div className="flex items-center justify-between gap-3">
-                                            <dt className="inline-flex items-center gap-1.5 text-slate-500">
-                                                <HiOutlineClipboardList className="h-4 w-4" />
-                                                {t('Offers')}
-                                            </dt>
-                                            <dd className="font-semibold text-slate-900">
-                                                {buyerRequest.offers_count ?? buyerRequest.offers?.length ?? 0}
-                                            </dd>
-                                        </div>
-                                        <div className="flex items-center justify-between gap-3">
-                                            <dt className="inline-flex items-center gap-1.5 text-slate-500">
-                                                <HiOutlineCalendar className="h-4 w-4" />
-                                                {t('Created')}
-                                            </dt>
-                                            <dd className="font-medium text-slate-700">
-                                                {formatPostedDate(buyerRequest.created_at)}
-                                            </dd>
-                                        </div>
-                                    </dl>
-                                </div>
-                            )}
-
-                            {!isEdit && (
-                                <div className="hidden rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm lg:block sm:p-5">
-                                    <h2 className="text-sm font-semibold text-gray-900">
-                                        {t('What happens next?')}
-                                    </h2>
-                                    <ol className="mt-3 space-y-2.5 text-sm text-slate-600">
-                                        <li className="flex gap-2">
-                                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[10px] font-bold text-white">1</span>
-                                            {t('Matched sellers get notified')}
-                                        </li>
-                                        <li className="flex gap-2">
-                                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[10px] font-bold text-white">2</span>
-                                            {t('Compare offers and chat')}
-                                        </li>
-                                        <li className="flex gap-2">
-                                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[10px] font-bold text-white">3</span>
-                                            {t('Accept the best offer')}
-                                        </li>
-                                    </ol>
-                                </div>
-                            )}
-
-                            {/* Desktop side actions */}
-                            <div className="hidden rounded-2xl border border-gray-100 bg-white p-4 shadow-sm lg:block lg:p-5">
+                            <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm lg:p-5">
                                 <div className="flex flex-col gap-2.5">
                                     <button
                                         type="submit"
@@ -179,7 +215,10 @@ export default function FormLayout({
                                     </Link>
                                     {isEdit && buyerRequest && (
                                         <Link
-                                            href={route('buyer-requests.show', buyerRequest.slug || buyerRequest)}
+                                            href={route(
+                                                'buyer-requests.show',
+                                                buyerRequest.slug || buyerRequest
+                                            )}
                                             className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium text-slate-500 no-underline transition hover:text-slate-900"
                                         >
                                             <HiOutlineEye className="h-4 w-4" />
@@ -191,7 +230,6 @@ export default function FormLayout({
                         </aside>
                     </div>
 
-                    {/* Mobile / tablet bottom actions (not fixed) */}
                     <div className="mt-4 flex gap-2 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm sm:mt-5 sm:p-4 lg:hidden">
                         <Link
                             href={route('buyer-requests.index')}
@@ -209,6 +247,54 @@ export default function FormLayout({
                     </div>
                 </form>
             </div>
+
+            {/* Mobile help FAB — sits above WhatsApp */}
+            <button
+                type="button"
+                onClick={() => setHelpOpen(true)}
+                className="fixed z-[10000] inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.18)] transition hover:bg-slate-50 lg:hidden"
+                style={{ right: 23, bottom: 150 }}
+                aria-label={t('Help & summary')}
+            >
+                <HiOutlineQuestionMarkCircle className="h-7 w-7" />
+            </button>
+
+            {helpOpen && (
+                <div className="fixed inset-0 z-[10050] lg:hidden" role="dialog" aria-modal="true">
+                    <button
+                        type="button"
+                        className="absolute inset-0 bg-slate-900/45 animate-[brHelpFade_0.35s_ease-out]"
+                        aria-label={t('Close')}
+                        onClick={() => setHelpOpen(false)}
+                    />
+                    <div className="absolute inset-y-0 right-0 flex w-full max-w-full flex-col bg-slate-50 shadow-2xl animate-[brHelpSlide_0.38s_cubic-bezier(0.22,1,0.36,1)]">
+                        <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3.5">
+                            <h2 className="text-base font-semibold text-slate-900">
+                                {isEdit ? t('Request summary') : t('Tips & next steps')}
+                            </h2>
+                            <button
+                                type="button"
+                                onClick={() => setHelpOpen(false)}
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+                                aria-label={t('Close')}
+                            >
+                                <HiOutlineX className="h-5 w-5" />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto px-4 py-4">{helpPanels}</div>
+                    </div>
+                    <style>{`
+                        @keyframes brHelpSlide {
+                            from { transform: translateX(100%); opacity: 0.96; }
+                            to { transform: translateX(0); opacity: 1; }
+                        }
+                        @keyframes brHelpFade {
+                            from { opacity: 0; }
+                            to { opacity: 1; }
+                        }
+                    `}</style>
+                </div>
+            )}
         </div>
     );
 }

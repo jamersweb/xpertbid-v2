@@ -12,6 +12,7 @@ import {
 import AppLayout from '@/Layouts/AppLayout';
 import Price from '@/Components/Price';
 import useTranslate from '@/hooks/useTranslate';
+import { publicBuyerRequestLocation } from '@/Utils/buyerRequestLocation';
 
 const statusPill = (status) => {
     const map = {
@@ -124,7 +125,8 @@ export default function Index({ requests = [] }) {
             list = list.filter((r) => {
                 const hay = [
                     r.title,
-                    r.location_label,
+                    r.city,
+                    r.country,
                     r.category?.name,
                     r.sub_category?.name || r.subCategory?.name,
                     stripHtml(r.description || ''),
@@ -316,10 +318,10 @@ export default function Index({ requests = [] }) {
                                                     <HiOutlineClipboardList className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500" />
                                                     <span className="line-clamp-1">{categoryLine}</span>
                                                 </div>
-                                                {item.location_label && (
+                                                {publicBuyerRequestLocation(item) && (
                                                     <div className="flex min-w-0 items-start gap-1.5">
                                                         <HiOutlineLocationMarker className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500" />
-                                                        <span className="line-clamp-1">{item.location_label}</span>
+                                                        <span className="line-clamp-1">{publicBuyerRequestLocation(item)}</span>
                                                     </div>
                                                 )}
                                                 {item.budget != null && Number(item.budget) > 0 && (

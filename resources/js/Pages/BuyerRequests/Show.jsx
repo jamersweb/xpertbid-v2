@@ -18,6 +18,7 @@ import useTranslate from '@/hooks/useTranslate';
 import useCurrencyList from '@/Utils/useCurrencyList';
 import { alertAction, confirmAction } from '@/Utils/confirmAction';
 import { convertPKRTo, convertToPKR, getSelectedCurrency } from '@/Utils/formatPrice';
+import { publicBuyerRequestLocation } from '@/Utils/buyerRequestLocation';
 
 const statusClasses = (status) => {
     const map = {
@@ -420,10 +421,10 @@ export default function Show({ buyerRequest, isOwner = false, canOffer = false, 
                                         <HiOutlineClipboardList className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500 sm:h-4 sm:w-4" />
                                         <span className="min-w-0 break-words">{categoryLine}</span>
                                     </div>
-                                    {buyerRequest.location_label && (
+                                    {publicBuyerRequestLocation(buyerRequest) && (
                                         <div className="flex min-w-0 items-start gap-1.5">
                                             <HiOutlineLocationMarker className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500 sm:h-4 sm:w-4" />
-                                            <span className="min-w-0 break-words">{buyerRequest.location_label}</span>
+                                            <span className="min-w-0 break-words">{publicBuyerRequestLocation(buyerRequest)}</span>
                                         </div>
                                     )}
                                     {buyerRequest.budget != null && Number(buyerRequest.budget) > 0 && (

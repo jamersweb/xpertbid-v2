@@ -905,7 +905,7 @@ img.property-header-logo.logo-image {
 
 #qlwapp {
   position: fixed !important;
-  right: 20px !important;
+  right: 23px !important;
   left: auto !important;
   bottom: 24px !important;
   z-index: 9999 !important;
@@ -952,9 +952,9 @@ img.property-header-logo.logo-image {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 991.98px) {
   #qlwapp {
-    right: 14px !important;
+    right: 23px !important;
     left: auto !important;
     bottom: 86px !important;
   }
@@ -968,6 +968,7 @@ img.property-header-logo.logo-image {
 
 @media (min-width: 992px) {
   #qlwapp {
+    right: 23px !important;
     bottom: 24px !important;
   }
 }

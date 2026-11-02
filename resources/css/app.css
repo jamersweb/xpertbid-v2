@@ -1654,3 +1654,74 @@ a.button-style-3:active,
     border-radius: 10px;
   }
 }
+
+/* WhatsApp FAB — same position as renovation / property */
+#qlwapp {
+  position: fixed !important;
+  right: 23px !important;
+  left: auto !important;
+  bottom: 24px !important;
+  z-index: 9999 !important;
+  background: transparent !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  pointer-events: none;
+}
+
+#qlwapp .qlwapp-toggle {
+  pointer-events: auto;
+  position: static !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  color: #fff !important;
+  text-decoration: none !important;
+  line-height: 0 !important;
+}
+
+#qlwapp .gameon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 56px !important;
+  height: 56px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: #25d366 !important;
+  color: #fff !important;
+  font-size: 30px !important;
+  line-height: 1 !important;
+  border-radius: 50% !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+@media (max-width: 991.98px) {
+  #qlwapp {
+    right: 23px !important;
+    left: auto !important;
+    bottom: 86px !important;
+  }
+
+  #qlwapp .gameon {
+    width: 52px !important;
+    height: 52px !important;
+    font-size: 28px !important;
+  }
+}
+
+@media (min-width: 992px) {
+  #qlwapp {
+    right: 23px !important;
+    bottom: 24px !important;
+  }
+}

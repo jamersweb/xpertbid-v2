@@ -131,4 +131,36 @@ class BuyerRequestSiteScope
             $allowed
         ));
     }
+
+    /**
+     * Detect which satellite site a buyer request belongs to (if any).
+     */
+    public static function siteForRequest(BuyerRequest $request): ?string
+    {
+        if (self::requestBelongsToSite($request, self::SITE_PROPERTY)) {
+            return self::SITE_PROPERTY;
+        }
+
+        if (self::requestBelongsToSite($request, self::SITE_RENOVATION)) {
+            return self::SITE_RENOVATION;
+        }
+
+        return null;
+    }
+
+    /**
+     * Absolute frontend origin for a site key, or null for the main Inertia app.
+     */
+    public static function frontendBaseUrl(?string $site): ?string
+    {
+        $base = match ($site) {
+            self::SITE_PROPERTY => (string) config('property.frontend_url', ''),
+            self::SITE_RENOVATION => (string) config('renovation.frontend_url', ''),
+            default => '',
+        };
+
+        $base = rtrim($base, '/');
+
+        return $base !== '' ? $base : null;
+    }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { formatPostedDate, statusPill } from "@/components/buyer-requests/BrUi";
 import type { BuyerRequestItem } from "@/lib/api/buyerRequests";
 
@@ -59,6 +59,88 @@ export function FieldError({ message }: { message?: string }) {
   return <p className="brf-error">{message}</p>;
 }
 
+function TipsBlock() {
+  return (
+    <div className="brf-tips">
+      <div className="brf-tips__title">
+        <i className="fa-solid fa-lightbulb" aria-hidden />
+        Tips for quick offers
+      </div>
+      <ul>
+        <li>Describe scope clearly (rooms, size, materials)</li>
+        <li>Include reference images or mood boards</li>
+        <li>Mention preferred start / completion timeline</li>
+        <li>Set a realistic target budget</li>
+        <li>Add your area so nearby sellers can offer</li>
+      </ul>
+    </div>
+  );
+}
+
+function SummaryBlock({
+  buyerRequest,
+  pill,
+}: {
+  buyerRequest: BuyerRequestItem;
+  pill: { bg: string; color: string; ring: string };
+}) {
+  return (
+    <div className="brf-summary">
+      <h2>Request summary</h2>
+      <dl>
+        <div>
+          <dt>
+            <i className="fa-solid fa-signal" aria-hidden /> Status
+          </dt>
+          <dd>
+            <span
+              className="br-pill"
+              style={{
+                background: pill.bg,
+                color: pill.color,
+                boxShadow: `inset 0 0 0 1px ${pill.ring}`,
+              }}
+            >
+              {buyerRequest.status}
+            </span>
+          </dd>
+        </div>
+        <div>
+          <dt>
+            <i className="fa-solid fa-clipboard-list" aria-hidden /> Offers
+          </dt>
+          <dd>{buyerRequest.offers_count ?? buyerRequest.offers?.length ?? 0}</dd>
+        </div>
+        <div>
+          <dt>
+            <i className="fa-regular fa-calendar" aria-hidden /> Created
+          </dt>
+          <dd>{formatPostedDate(buyerRequest.created_at)}</dd>
+        </div>
+      </dl>
+    </div>
+  );
+}
+
+function NextStepsBlock() {
+  return (
+    <div className="brf-summary">
+      <h2>What happens next?</h2>
+      <ol className="brf-steps">
+        <li>
+          <span>1</span> Matched sellers get notified
+        </li>
+        <li>
+          <span>2</span> Compare offers and chat
+        </li>
+        <li>
+          <span>3</span> Accept the best offer
+        </li>
+      </ol>
+    </div>
+  );
+}
+
 export default function BuyerRequestFormShell({
   title,
   isEdit = false,
@@ -71,6 +153,32 @@ export default function BuyerRequestFormShell({
   cancelHref = "/buyer-requests",
 }: Props) {
   const pill = statusPill(buyerRequest?.status || "closed");
+  const [helpOpen, setHelpOpen] = useState(false);
+
+  useEffect(() => {
+    if (!helpOpen) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setHelpOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [helpOpen]);
+
+  const helpPanels = (
+    <div className="brf-help-stack">
+      <TipsBlock />
+      {isEdit && buyerRequest ? (
+        <SummaryBlock buyerRequest={buyerRequest} pill={pill} />
+      ) : (
+        <NextStepsBlock />
+      )}
+    </div>
+  );
 
   return (
     <div className="brf-page">
@@ -87,76 +195,10 @@ export default function BuyerRequestFormShell({
           <div className="brf-grid">
             <div className="brf-main">{children}</div>
 
-            <aside className="brf-aside">
-              <div className="brf-tips d-none d-lg-block">
-                <div className="brf-tips__title">
-                  <i className="fa-solid fa-lightbulb" aria-hidden />
-                  Tips for quick offers
-                </div>
-                <ul>
-                  <li>Describe scope clearly (rooms, size, materials)</li>
-                  <li>Include reference images or mood boards</li>
-                  <li>Mention preferred start / completion timeline</li>
-                  <li>Set a realistic target budget</li>
-                  <li>Add your area so nearby sellers can offer</li>
-                </ul>
-              </div>
+            <aside className="brf-aside d-none d-lg-flex">
+              {helpPanels}
 
-              {isEdit && buyerRequest ? (
-                <div className="brf-summary d-none d-lg-block">
-                  <h2>Request summary</h2>
-                  <dl>
-                    <div>
-                      <dt>
-                        <i className="fa-solid fa-signal" aria-hidden /> Status
-                      </dt>
-                      <dd>
-                        <span
-                          className="br-pill"
-                          style={{
-                            background: pill.bg,
-                            color: pill.color,
-                            boxShadow: `inset 0 0 0 1px ${pill.ring}`,
-                          }}
-                        >
-                          {buyerRequest.status}
-                        </span>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>
-                        <i className="fa-solid fa-clipboard-list" aria-hidden /> Offers
-                      </dt>
-                      <dd>
-                        {buyerRequest.offers_count ?? buyerRequest.offers?.length ?? 0}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>
-                        <i className="fa-regular fa-calendar" aria-hidden /> Created
-                      </dt>
-                      <dd>{formatPostedDate(buyerRequest.created_at)}</dd>
-                    </div>
-                  </dl>
-                </div>
-              ) : (
-                <div className="brf-summary d-none d-lg-block">
-                  <h2>What happens next?</h2>
-                  <ol className="brf-steps">
-                    <li>
-                      <span>1</span> Matched sellers get notified
-                    </li>
-                    <li>
-                      <span>2</span> Compare offers and chat
-                    </li>
-                    <li>
-                      <span>3</span> Accept the best offer
-                    </li>
-                  </ol>
-                </div>
-              )}
-
-              <div className="brf-actions d-none d-lg-flex">
+              <div className="brf-actions d-flex">
                 <button type="submit" className="br-btn br-btn--dark w-100" disabled={submitting}>
                   {submitting ? submittingLabel : submitLabel}
                 </button>
@@ -188,6 +230,41 @@ export default function BuyerRequestFormShell({
           </div>
         </form>
       </div>
+
+      <button
+        type="button"
+        className="brf-help-fab d-lg-none"
+        onClick={() => setHelpOpen(true)}
+        aria-label="Help and summary"
+      >
+        <i className="fa-regular fa-circle-question" aria-hidden />
+      </button>
+
+      {helpOpen ? (
+        <div className="brf-help-sheet d-lg-none" role="dialog" aria-modal="true">
+          <button
+            type="button"
+            className="brf-help-sheet__backdrop"
+            aria-label="Close"
+            onClick={() => setHelpOpen(false)}
+          />
+          <div className="brf-help-sheet__panel">
+            <div className="brf-help-sheet__head">
+              <h2>{isEdit ? "Request summary" : "Tips & next steps"}</h2>
+              <button
+                type="button"
+                className="brf-help-sheet__close"
+                onClick={() => setHelpOpen(false)}
+                aria-label="Close"
+              >
+                <i className="fa-solid fa-xmark" aria-hidden />
+              </button>
+            </div>
+            <div className="brf-help-sheet__body">{helpPanels}</div>
+          </div>
+        </div>
+      ) : null}
+
       <FormShellStyles />
     </div>
   );
@@ -255,7 +332,6 @@ function FormShellStyles() {
         .brf-main { gap: 1.25rem; }
       }
       .brf-aside {
-        display: flex;
         flex-direction: column;
         gap: 1rem;
       }
@@ -264,6 +340,11 @@ function FormShellStyles() {
           position: sticky;
           top: 1.25rem;
         }
+      }
+      .brf-help-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
       }
       .brf-card {
         border-radius: 1rem;
@@ -569,6 +650,91 @@ function FormShellStyles() {
         background: #fff;
         padding: 0.85rem;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+      }
+      .brf-help-fab {
+        position: fixed;
+        right: 23px;
+        bottom: 150px;
+        z-index: 10000;
+        width: 48px;
+        height: 48px;
+        border: 1px solid #e2e8f0;
+        border-radius: 999px;
+        background: #fff;
+        color: #334155;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        cursor: pointer;
+      }
+      .brf-help-fab:hover {
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      .brf-help-sheet {
+        position: fixed;
+        inset: 0;
+        z-index: 10050;
+      }
+      .brf-help-sheet__backdrop {
+        position: absolute;
+        inset: 0;
+        border: 0;
+        background: rgba(15, 23, 42, 0.45);
+        cursor: pointer;
+        animation: brfHelpFade 0.35s ease-out;
+      }
+      .brf-help-sheet__panel {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        background: #f8fafc;
+        box-shadow: 0 25px 50px rgba(15, 23, 42, 0.25);
+        animation: brfHelpSlide 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+        will-change: transform;
+      }
+      @keyframes brfHelpSlide {
+        from { transform: translateX(100%); opacity: 0.96; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes brfHelpFade {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      .brf-help-sheet__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.9rem 1rem;
+        background: #fff;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .brf-help-sheet__head h2 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #0f172a;
+      }
+      .brf-help-sheet__close {
+        width: 2.25rem;
+        height: 2.25rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 999px;
+        background: #fff;
+        color: #475569;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+      .brf-help-sheet__body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
       }
       .br-pill {
         display: inline-flex;

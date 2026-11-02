@@ -91,7 +91,11 @@ const NotificationDropdown = () => {
                                    position: 'relative',
                                    padding: '8px',
                                    paddingLeft: '0px',
+                                   cursor: 'pointer',
+                                   transition: 'transform 0.2s ease',
                             }}
+                            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
                             onClick={() => setIsOpen(!isOpen)}
                      >
                             <img src="/assets/images/notificationIcon.svg" alt="Notifications" />

@@ -186,7 +186,7 @@ class BuyerRequestAlertTest extends TestCase
         $service->acceptOffer($buyer, $offerA);
 
         $requestUrl = BuyerRequestAlertSender::requestUrl($request);
-        $browseUrl = BuyerRequestAlertSender::browseUrl();
+        $browseUrl = BuyerRequestAlertSender::browseUrl($request);
 
         Mail::assertSent(BuyerRequestAlertMail::class, function (BuyerRequestAlertMail $mail) use ($requestUrl) {
             return $mail->subjectLine === 'Your offer was accepted'
@@ -198,5 +198,88 @@ class BuyerRequestAlertTest extends TestCase
                 && $mail->ctaUrl === $browseUrl
                 && $mail->secondaryUrl === $requestUrl;
         });
+    }
+
+    public function test_alert_urls_use_property_and_renovation_frontends(): void
+    {
+        config([
+            'property.frontend_url' => 'https://property.test',
+            'renovation.frontend_url' => 'https://build.test',
+        ]);
+
+        $propertyCategory = $this->createCategory('Properties');
+        config(['property.root_category_id' => $propertyCategory->id]);
+
+        $renovationCategory = $this->createCategory('Home Renovation');
+        $builderCategory = $this->createCategory('Home Builder');
+        config([
+            'renovation.root_category_id' => $renovationCategory->id,
+            'renovation.builder_root_category_id' => $builderCategory->id,
+        ]);
+
+        $generalCategory = $this->createCategory('Electronics');
+
+        $propertyRequest = BuyerRequest::create([
+            'user_id' => User::factory()->create()->id,
+            'title' => 'Need a flat',
+            'slug' => 'need-a-flat',
+            'category_id' => $propertyCategory->id,
+            'status' => BuyerRequest::STATUS_OPEN,
+        ]);
+
+        $renoRequest = BuyerRequest::create([
+            'user_id' => User::factory()->create()->id,
+            'title' => 'Need kitchen reno',
+            'slug' => 'need-kitchen-reno',
+            'category_id' => $renovationCategory->id,
+            'status' => BuyerRequest::STATUS_OPEN,
+        ]);
+
+        $builderRequest = BuyerRequest::create([
+            'user_id' => User::factory()->create()->id,
+            'title' => 'Need home build',
+            'slug' => 'need-home-build',
+            'category_id' => $builderCategory->id,
+            'status' => BuyerRequest::STATUS_OPEN,
+        ]);
+
+        $generalRequest = BuyerRequest::create([
+            'user_id' => User::factory()->create()->id,
+            'title' => 'Need laptops',
+            'slug' => 'need-laptops',
+            'category_id' => $generalCategory->id,
+            'status' => BuyerRequest::STATUS_OPEN,
+        ]);
+
+        $this->assertSame(
+            'https://property.test/buyer-requests/need-a-flat',
+            BuyerRequestAlertSender::requestUrl($propertyRequest)
+        );
+        $this->assertSame(
+            'https://property.test/seller/buyer-requests',
+            BuyerRequestAlertSender::browseUrl($propertyRequest)
+        );
+
+        $this->assertSame(
+            'https://build.test/buyer-requests/need-kitchen-reno',
+            BuyerRequestAlertSender::requestUrl($renoRequest)
+        );
+        $this->assertSame(
+            'https://build.test/buyer-requests/need-home-build',
+            BuyerRequestAlertSender::requestUrl($builderRequest)
+        );
+        $this->assertSame(
+            'https://build.test/seller/buyer-requests',
+            BuyerRequestAlertSender::browseUrl($builderRequest)
+        );
+
+        $this->assertSame(
+            route('buyer-requests.show', $generalRequest, absolute: true),
+            BuyerRequestAlertSender::requestUrl($generalRequest)
+        );
+        $this->assertSame(
+            route('seller.buyer-requests.browse', absolute: true),
+            BuyerRequestAlertSender::browseUrl($generalRequest)
+        );
     }
 }

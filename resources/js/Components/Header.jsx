@@ -6,6 +6,7 @@ import CartPopup from '@/Components/CartPopup';
 import DesktopCategoriesDropdown from '@/Components/DesktopCategoriesDropdown';
 import CategoriesDropdown from '@/Components/CategoriesDropdown';
 import NotificationDropdown from '@/Components/NotificationDropdown';
+import ChatHeaderIcon from '@/Components/ChatHeaderIcon';
 import Search from '@/Components/Search';
 import { useAuthModal } from '@/Contexts/AuthModalContext';
 import useTranslate from '@/hooks/useTranslate';
@@ -133,15 +134,14 @@ export default function Header() {
 
                      <header className="bg-white " style={{ zIndex: 1050 }}>
                             <nav className="navbar navbar-expand-lg navbar-light bg-white py-2" id="mainNavbar">
-                                   <div className="container-fluid px-lg-5 my-3">
+                                   <div className="container-fluid px-lg-5 header-navbar-row">
                                           <Link className="navbar-brand d-flex align-items-center me-0 me-lg-4" href="/">
                                                  <img
                                                         src="/assets/images/header-logo.png"
                                                         alt="XpertBid Logo"
                                                         width={180}
-                                                        height={50}
+                                                        height={40}
                                                         className="logo-image"
-                                                        style={{ height: 'auto', width: 'auto' }}
                                                  />
                                           </Link>
 
@@ -191,23 +191,8 @@ export default function Header() {
                                                  <span className="navbar-toggler-icon"></span>
                                           </button>
 
-                                          <div ref={mobileMenuRef} className={`navbar-collapse xpert-mobile-menu ${isMenuOpen ? 'show' : ''}`} id="navbarSupportedContent">
+                                          <div ref={mobileMenuRef} className={`navbar-collapse xpert-mobile-menu mt-2 ${isMenuOpen ? 'show' : ''}`} id="navbarSupportedContent">
                                                  <ul className="navbar-nav me-auto mb-2 mb-lg-0 align-items-lg-center">
-                                                        {/* Desktop Search Trigger */}
-                                                        <li className="nav-item d-none d-lg-block me-3">
-                                                               <div
-                                                                      className="search-trigger px-3 py-1  bg-light d-flex align-items-center "
-                                                                      onClick={() => setSearchOpen(true)}
-                                                                      style={{ cursor: 'pointer', minWidth: '200px' }}
-                                                               >
-                                                                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none">
-                                                                             <path d="M9.58317 17.4998C13.9554 17.4998 17.4998 13.9554 17.4998 9.58317C17.4998 5.21092 13.9554 1.6665 9.58317 1.6665C5.21092 1.6665 1.6665 5.21092 1.6665 9.58317C1.6665 13.9554 5.21092 17.4998 9.58317 17.4998Z" stroke="#606060" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                                             <path d="M18.3332 18.3332L16.6665 16.6665" stroke="#606060" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                                      </svg>
-                                                                      <span className="ms-2 text-muted small">{t('Search auctions')}</span>
-                                                               </div>
-                                                        </li>
-
                                                         <li className="nav-item dropdown">
                                                                <div className="d-none d-lg-block">
                                                                       <DesktopCategoriesDropdown />
@@ -215,6 +200,21 @@ export default function Header() {
                                                                <div className="d-block d-lg-none">
                                                                       <CategoriesDropdown />
                                                                </div>
+                                                        </li>
+                                                        <li className="nav-item">
+                                                               <Link
+                                                                      href={route('seller.buyer-requests.browse')}
+                                                                      className="nav-link"
+                                                                      onClick={(e) => {
+                                                                             closeMobileMenu();
+                                                                             if (!user) {
+                                                                                    e.preventDefault();
+                                                                                    openLogin();
+                                                                             }
+                                                                      }}
+                                                               >
+                                                                      {t('Request Leads')}
+                                                               </Link>
                                                         </li>
                                                         <li className="nav-item">
                                                                <Link href={route('malls.index')} className="nav-link" onClick={closeMobileMenu}>{t('Malls')}</Link>
@@ -228,14 +228,32 @@ export default function Header() {
                                                  </ul>
 
                                                  <div className="d-flex align-items-center mt-3 mt-lg-0 header-account-cluster">
-                                                       <div className="d-none d-lg-flex align-items-center mt-2 header-desktop-actions">
+                                                       <div className="d-none d-lg-flex align-items-center header-desktop-actions">
+                                                               <div className="header-action-search">
+                                                                      <button
+                                                                             type="button"
+                                                                             className="header-search-icon-btn"
+                                                                             onClick={() => setSearchOpen(true)}
+                                                                             aria-label={t('Search')}
+                                                                      >
+                                                                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#23262F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                                                                    <circle cx="11" cy="11" r="8" />
+                                                                                    <path d="M21 21l-4.35-4.35" />
+                                                                             </svg>
+                                                                      </button>
+                                                               </div>
                                                                <div className="header-action-cart">
                                                                       <CartPopup />
                                                                </div>
                                                                {user && (
-                                                                      <div className="header-action-notification">
-                                                                             <NotificationDropdown />
-                                                                      </div>
+                                                                      <>
+                                                                             <div className="header-action-chat">
+                                                                                    <ChatHeaderIcon />
+                                                                             </div>
+                                                                             <div className="header-action-notification">
+                                                                                    <NotificationDropdown />
+                                                                             </div>
+                                                                      </>
                                                                )}
                                                         </div>
 
@@ -362,6 +380,35 @@ export default function Header() {
                         .dropdown-item:active {
                             background-color: #0d6efd;
                         }
+
+                        #mainNavbar .header-navbar-row {
+                            display: flex;
+                            flex-wrap: wrap;
+                            align-items: center;
+                            padding-top: 0.35rem;
+                            padding-bottom: 0.35rem;
+                        }
+                        #mainNavbar .navbar-brand {
+                            display: inline-flex;
+                            align-items: center;
+                            margin-bottom: 0;
+                            padding-top: 0;
+                            padding-bottom: 0;
+                        }
+                        #mainNavbar .logo-image {
+                            display: block;
+                            width: auto;
+                            height: 40px;
+                            max-height: 40px;
+                            object-fit: contain;
+                        }
+                        #mainNavbar .navbar-nav .nav-link,
+                        #mainNavbar .navbar-nav .btn.nav-link {
+                            display: inline-flex;
+                            align-items: center;
+                            margin: 0;
+                            line-height: 1.2;
+                        }
                         
                         .user-profile-setting-popup {
                             position: absolute;
@@ -384,12 +431,81 @@ export default function Header() {
                         .header-desktop-actions {
                             gap: 10px;
                             margin-right: 12px;
+                            margin-top: 0 !important;
                         }
+                        .header-action-search,
                         .header-action-cart,
+                        .header-action-chat,
                         .header-action-notification {
                             display: inline-flex;
                             align-items: center;
                             justify-content: center;
+                        }
+                        .header-chat-icon-btn {
+                            width: 38px;
+                            height: 38px;
+                            position: relative;
+                            display: inline-flex;
+                            align-items: center;
+                            justify-content: center;
+                            border: none;
+                            border-radius: 10px;
+                            padding: 0;
+                            background: none;
+                            color: #23262F;
+                            text-decoration: none !important;
+                            line-height: 0;
+                            transition: transform 0.2s ease;
+                        }
+                        .header-chat-icon-btn:hover {
+                            background: none;
+                            transform: scale(1.1);
+                            color: #23262F;
+                        }
+                        .header-chat-icon-btn svg {
+                            display: block;
+                            stroke: #23262F;
+                        }
+                        .header-chat-badge {
+                            position: absolute;
+                            top: 1px;
+                            right: -2px;
+                            min-width: 18px;
+                            height: 18px;
+                            padding: 0 5px;
+                            border-radius: 999px;
+                            background: #43ACE9;
+                            color: #ffffff;
+                            font-size: 10px;
+                            font-weight: 700;
+                            line-height: 18px;
+                            text-align: center;
+                        }
+                        .header-search-icon-btn {
+                            width: 38px;
+                            height: 38px;
+                            display: inline-flex;
+                            align-items: center;
+                            justify-content: center;
+                            border: none;
+                            border-radius: 10px;
+                            padding: 0;
+                            background: none;
+                            color: #23262F;
+                            cursor: pointer;
+                            line-height: 0;
+                            transition: transform 0.2s ease;
+                        }
+                        .header-search-icon-btn svg {
+                            display: block;
+                            stroke: #23262F;
+                        }
+                        .header-search-icon-btn:hover {
+                            background: none;
+                            transform: scale(1.1);
+                        }
+                        .header-search-icon-btn:hover svg {
+                            stroke: #23262F;
                         }
                         .header-action-cart .cart-icon-btn,
                         .header-action-notification .notification {
@@ -400,6 +516,11 @@ export default function Header() {
                             justify-content: center;
                             border-radius: 10px;
                             padding: 0 !important;
+                            transition: transform 0.2s ease;
+                        }
+                        .header-action-notification .notification:hover {
+                            background: none !important;
+                            transform: scale(1.1);
                         }
                         .user-profile-setting {
                             min-height: 38px;
@@ -418,6 +539,26 @@ export default function Header() {
                             .xpert-mobile-menu {
                                 display: flex !important;
                                 flex-basis: auto;
+                                flex-grow: 1;
+                                align-items: center !important;
+                                justify-content: space-between;
+                            }
+                            #mainNavbar .header-account-cluster {
+                                margin-top: 0 !important;
+                                align-items: center;
+                            }
+                            #mainNavbar .registration-btns {
+                                align-items: center;
+                                margin: 0;
+                            }
+                            #mainNavbar .registration-btns .login,
+                            #mainNavbar .registration-btns .signup,
+                            #mainNavbar .registration-btns .sellnow {
+                                display: inline-flex;
+                                align-items: center;
+                                justify-content: center;
+                                margin-top: 0;
+                                margin-bottom: 0;
                             }
                         }
 

@@ -9,6 +9,7 @@ import {
   PublicIdentityRow,
   categoryLine,
   formatPostedDate,
+  publicBuyerRequestLocation,
   stripHtml,
 } from "@/components/buyer-requests/BrUi";
 import SellerLeadsHero from "@/components/buyer-requests/SellerLeadsHero";
@@ -74,7 +75,8 @@ export default function SellerBuyerRequestsPage() {
       list = list.filter((r) => {
         const hay = [
           r.title,
-          r.location_label,
+          r.city,
+          r.country,
           r.category?.name,
           r.sub_category?.name,
           stripHtml(r.description || ""),
@@ -250,10 +252,10 @@ export default function SellerBuyerRequestsPage() {
                         <i className="fa-solid fa-clipboard-list" aria-hidden />
                         <span>{categoryLine(item)}</span>
                       </div>
-                      {item.location_label ? (
+                      {publicBuyerRequestLocation(item) ? (
                         <div className="br-meta__row">
                           <i className="fa-solid fa-location-dot" aria-hidden />
-                          <span>{item.location_label}</span>
+                          <span>{publicBuyerRequestLocation(item)}</span>
                         </div>
                       ) : null}
                       {item.budget != null && Number(item.budget) > 0 ? (

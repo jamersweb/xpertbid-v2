@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Conversation;
 use App\Models\Favorite;
 use App\Support\TranslationManager;
 use Illuminate\Http\Request;
@@ -161,6 +162,23 @@ class HandleInertiaRequests extends Middleware
             'favoriteListingIds' => $request->user()
                 ? Favorite::where('user_id', $request->user()->id)->pluck('listing_id')->all()
                 : [],
+            'chatUnreadPeople' => $authUser
+                ? (int) Conversation::query()
+                    ->where(function ($query) use ($authUser) {
+                        $query->where(function ($q) use ($authUser) {
+                            $q->where('user_one_id', $authUser->id)->where('user_one_deleted', false);
+                        })->orWhere(function ($q) use ($authUser) {
+                            $q->where('user_two_id', $authUser->id)->where('user_two_deleted', false);
+                        });
+                    })
+                    ->whereHas('messages', function ($query) use ($authUser) {
+                        $query->where('sender_id', '!=', $authUser->id)
+                            ->where(function ($q) {
+                                $q->whereNull('is_read')->orWhere('is_read', 0);
+                            });
+                    })
+                    ->count()
+                : 0,
         ];
     }
 }

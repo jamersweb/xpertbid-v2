@@ -66,11 +66,30 @@ class BuyerRequestAlertSender
 
     public static function requestUrl(BuyerRequest $request): string
     {
+        $slug = ltrim((string) ($request->slug ?: $request->getKey()), '/');
+        $base = BuyerRequestSiteScope::frontendBaseUrl(
+            BuyerRequestSiteScope::siteForRequest($request)
+        );
+
+        if ($base !== null) {
+            return $base.'/buyer-requests/'.$slug;
+        }
+
         return route('buyer-requests.show', $request, absolute: true);
     }
 
-    public static function browseUrl(): string
+    public static function browseUrl(?BuyerRequest $request = null): string
     {
+        if ($request) {
+            $base = BuyerRequestSiteScope::frontendBaseUrl(
+                BuyerRequestSiteScope::siteForRequest($request)
+            );
+
+            if ($base !== null) {
+                return $base.'/seller/buyer-requests';
+            }
+        }
+
         return route('seller.buyer-requests.browse', absolute: true);
     }
 
@@ -89,7 +108,7 @@ class BuyerRequestAlertSender
         $firstName = trim((string) explode(' ', $name)[0]) ?: 'there';
         $title = trim((string) ($request->title ?: 'your request'));
         $requestUrl = self::requestUrl($request);
-        $browseUrl = self::browseUrl();
+        $browseUrl = self::browseUrl($request);
         $price = array_key_exists('price', $context)
             ? self::formatPrice($context['price'])
             : null;

@@ -142,6 +142,13 @@ class ChatController extends Controller
                             ? $conversation->user_one_important
                             : $conversation->user_two_important;
                         $conversation->last_message = $conversation->messages()->latest()->first();
+                        $conversation->unread_count = $conversation->messages()
+                            ->where('sender_id', '!=', $userId)
+                            ->where(function ($query) {
+                                $query->whereNull('is_read')
+                                    ->orWhere('is_read', false);
+                            })
+                            ->count();
                         return $conversation;
                     });
             }
@@ -150,6 +157,34 @@ class ChatController extends Controller
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Count of people (conversations) with unread messages for the auth user.
+     */
+    public function unreadPeopleCount()
+    {
+        $userId = Auth::id();
+
+        $count = Conversation::query()
+            ->where(function ($query) use ($userId) {
+                $query->where(function ($q) use ($userId) {
+                    $q->where('user_one_id', $userId)->where('user_one_deleted', false);
+                })->orWhere(function ($q) use ($userId) {
+                    $q->where('user_two_id', $userId)->where('user_two_deleted', false);
+                });
+            })
+            ->whereHas('messages', function ($query) use ($userId) {
+                $query->where('sender_id', '!=', $userId)
+                    ->where(function ($q) {
+                        $q->whereNull('is_read')->orWhere('is_read', 0);
+                    });
+            })
+            ->count();
+
+        return response()->json([
+            'unread_people' => (int) $count,
+        ]);
     }
 
     // Get messages for a specific conversation

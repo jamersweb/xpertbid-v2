@@ -241,6 +241,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::group(['prefix' => 'chat', 'as' => 'chat.'], function () {
         Route::get('/', [\App\Http\Controllers\ChatController::class, 'index'])->name('index');
         Route::get('/open/{conversation}', [\App\Http\Controllers\ChatController::class, 'open'])->name('open');
+        Route::get('/unread-count', [\App\Http\Controllers\Api\ChatController::class, 'unreadPeopleCount'])->name('unread.count');
         Route::get('/conversations', [\App\Http\Controllers\Api\ChatController::class, 'index'])->name('conversations.index');
         Route::get('/conversations/{id}', [\App\Http\Controllers\Api\ChatController::class, 'show'])->name('conversations.show');
         Route::post('/initiate', [\App\Http\Controllers\Api\ChatController::class, 'initiate'])->name('initiate');
