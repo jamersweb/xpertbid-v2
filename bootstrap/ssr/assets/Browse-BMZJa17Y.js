@@ -5,6 +5,7 @@ import { HiOutlineTrendingUp, HiOutlineCog, HiOutlineClipboardList, HiOutlineLoc
 import { A as AppLayout } from "./AppLayout-DaOB_wGA.js";
 import { P as Price } from "./Price-7qyok_Wm.js";
 import { u as useTranslate } from "./useTranslate-AOp3QZfJ.js";
+import { p as publicBuyerRequestLocation } from "./buyerRequestLocation-BvC6EylT.js";
 import "ziggy-js";
 import "./productUrl-D-dT-lp_.js";
 import "react-loader-spinner";
@@ -128,7 +129,8 @@ function Browse({
       list = list.filter((r) => {
         const hay = [
           r.title,
-          r.location_label,
+          r.city,
+          r.country,
           r.category?.name,
           r.sub_category?.name || r.subCategory?.name,
           stripHtml(r.description || "")
@@ -262,9 +264,9 @@ function Browse({
                           /* @__PURE__ */ jsxs("div", { className: "min-w-0 flex-1", children: [
                             /* @__PURE__ */ jsx("div", { className: "truncate text-[13px] font-semibold text-[#1a2b4b] transition group-hover:text-[#43ACE9] sm:text-sm", children: item.title }),
                             /* @__PURE__ */ jsxs("div", { className: "mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px] text-slate-500 sm:gap-2 sm:text-[11px]", children: [
-                              item.location_label && /* @__PURE__ */ jsxs("span", { className: "inline-flex min-w-0 items-center gap-0.5 truncate sm:gap-1", children: [
+                              publicBuyerRequestLocation(item) && /* @__PURE__ */ jsxs("span", { className: "inline-flex min-w-0 items-center gap-0.5 truncate sm:gap-1", children: [
                                 /* @__PURE__ */ jsx(HiOutlineLocationMarker, { className: "h-3 w-3 shrink-0 text-[#43ACE9]" }),
-                                /* @__PURE__ */ jsx("span", { className: "truncate", children: item.location_label })
+                                /* @__PURE__ */ jsx("span", { className: "truncate", children: publicBuyerRequestLocation(item) })
                               ] }),
                               item.budget != null && Number(item.budget) > 0 && /* @__PURE__ */ jsx("span", { className: "inline-flex shrink-0 font-semibold text-[#1a2b4b]", children: /* @__PURE__ */ jsx(Price, { amountPKR: item.budget }) })
                             ] })
@@ -466,9 +468,9 @@ function Browse({
                       /* @__PURE__ */ jsx(HiOutlineClipboardList, { className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500" }),
                       /* @__PURE__ */ jsx("span", { className: "line-clamp-1", children: categoryLine })
                     ] }),
-                    item.location_label && /* @__PURE__ */ jsxs("div", { className: "flex min-w-0 items-start gap-1.5", children: [
+                    publicBuyerRequestLocation(item) && /* @__PURE__ */ jsxs("div", { className: "flex min-w-0 items-start gap-1.5", children: [
                       /* @__PURE__ */ jsx(HiOutlineLocationMarker, { className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500" }),
-                      /* @__PURE__ */ jsx("span", { className: "line-clamp-1", children: item.location_label })
+                      /* @__PURE__ */ jsx("span", { className: "line-clamp-1", children: publicBuyerRequestLocation(item) })
                     ] }),
                     item.budget != null && Number(item.budget) > 0 && /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5 font-semibold text-slate-800", children: [
                       /* @__PURE__ */ jsx(HiOutlineCash, { className: "h-3.5 w-3.5 shrink-0 text-emerald-500" }),

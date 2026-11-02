@@ -491,17 +491,17 @@
     "/build/assets/FormLayout-Cr0aXvz3.js"
   ],
   "resources/js/Pages/BuyerRequests/Index.jsx": [
-    "/build/assets/Index-BC5duCA5.js"
+    "/build/assets/Index-C1SXbjuG.js"
   ],
   "resources/js/Pages/BuyerRequests/Seller/Browse.jsx": [
-    "/build/assets/Browse-DMUm7WGS.js"
+    "/build/assets/Browse-BMZJa17Y.js"
   ],
   "resources/js/Pages/BuyerRequests/Seller/Preferences.jsx": [
     "/build/assets/Preferences-DSfdEjOz.js",
     "/build/assets/sell-D6y7fv-P.css"
   ],
   "resources/js/Pages/BuyerRequests/Show.jsx": [
-    "/build/assets/Show-CkP0PiRb.js"
+    "/build/assets/Show-zhhtNygK.js"
   ],
   "resources/js/Pages/Cart/Index.jsx": [
     "/build/assets/Index-CmanVdIh.js"
@@ -649,6 +649,9 @@
   ],
   "resources/js/Pages/Welcome.jsx": [
     "/build/assets/Welcome-SEhQsnTJ.js"
+  ],
+  "resources/js/Utils/buyerRequestLocation.js": [
+    "/build/assets/buyerRequestLocation-BvC6EylT.js"
   ],
   "resources/js/Utils/categoryBrowseUrl.js": [
     "/build/assets/AppLayout-DaOB_wGA.js"

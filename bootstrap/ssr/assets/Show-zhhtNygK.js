@@ -8,6 +8,7 @@ import { g as getSelectedCurrency, a as convertPKRTo, P as Price, c as convertTo
 import { u as useTranslate } from "./useTranslate-AOp3QZfJ.js";
 import { u as useCurrencyList } from "./useCurrencyList-Ce5tJXO9.js";
 import { c as confirmAction, a as alertAction } from "./confirmAction-Jvw1Icl9.js";
+import { p as publicBuyerRequestLocation } from "./buyerRequestLocation-BvC6EylT.js";
 import "ziggy-js";
 import "./productUrl-D-dT-lp_.js";
 import "react-loader-spinner";
@@ -350,9 +351,9 @@ function Show({ buyerRequest, isOwner = false, canOffer = false, myOffer = null,
                 /* @__PURE__ */ jsx(HiOutlineClipboardList, { className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500 sm:h-4 sm:w-4" }),
                 /* @__PURE__ */ jsx("span", { className: "min-w-0 break-words", children: categoryLine })
               ] }),
-              buyerRequest.location_label && /* @__PURE__ */ jsxs("div", { className: "flex min-w-0 items-start gap-1.5", children: [
+              publicBuyerRequestLocation(buyerRequest) && /* @__PURE__ */ jsxs("div", { className: "flex min-w-0 items-start gap-1.5", children: [
                 /* @__PURE__ */ jsx(HiOutlineLocationMarker, { className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500 sm:h-4 sm:w-4" }),
-                /* @__PURE__ */ jsx("span", { className: "min-w-0 break-words", children: buyerRequest.location_label })
+                /* @__PURE__ */ jsx("span", { className: "min-w-0 break-words", children: publicBuyerRequestLocation(buyerRequest) })
               ] }),
               buyerRequest.budget != null && Number(buyerRequest.budget) > 0 && /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5 font-semibold text-slate-800", children: [
                 /* @__PURE__ */ jsx(HiOutlineCash, { className: "h-3.5 w-3.5 shrink-0 text-emerald-500 sm:h-4 sm:w-4" }),

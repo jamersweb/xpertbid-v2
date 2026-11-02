@@ -5,6 +5,7 @@ import { HiOutlinePlus, HiOutlineSearch, HiOutlineClipboardList, HiOutlineLocati
 import { A as AppLayout } from "./AppLayout-DaOB_wGA.js";
 import { P as Price } from "./Price-7qyok_Wm.js";
 import { u as useTranslate } from "./useTranslate-AOp3QZfJ.js";
+import { p as publicBuyerRequestLocation } from "./buyerRequestLocation-BvC6EylT.js";
 import "ziggy-js";
 import "./productUrl-D-dT-lp_.js";
 import "react-loader-spinner";
@@ -104,7 +105,8 @@ function Index({ requests = [] }) {
       list = list.filter((r) => {
         const hay = [
           r.title,
-          r.location_label,
+          r.city,
+          r.country,
           r.category?.name,
           r.sub_category?.name || r.subCategory?.name,
           stripHtml(r.description || "")
@@ -282,9 +284,9 @@ function Index({ requests = [] }) {
                     /* @__PURE__ */ jsx(HiOutlineClipboardList, { className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500" }),
                     /* @__PURE__ */ jsx("span", { className: "line-clamp-1", children: categoryLine })
                   ] }),
-                  item.location_label && /* @__PURE__ */ jsxs("div", { className: "flex min-w-0 items-start gap-1.5", children: [
+                  publicBuyerRequestLocation(item) && /* @__PURE__ */ jsxs("div", { className: "flex min-w-0 items-start gap-1.5", children: [
                     /* @__PURE__ */ jsx(HiOutlineLocationMarker, { className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500" }),
-                    /* @__PURE__ */ jsx("span", { className: "line-clamp-1", children: item.location_label })
+                    /* @__PURE__ */ jsx("span", { className: "line-clamp-1", children: publicBuyerRequestLocation(item) })
                   ] }),
                   item.budget != null && Number(item.budget) > 0 && /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5 font-semibold text-slate-800", children: [
                     /* @__PURE__ */ jsx(HiOutlineCash, { className: "h-3.5 w-3.5 shrink-0 text-emerald-500" }),
