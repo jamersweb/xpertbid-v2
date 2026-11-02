@@ -270,7 +270,7 @@ export default function Edit({ buyerRequest, categories = [] }) {
                                 required
                             >
                                 <option value="">{t('Select category')}</option>
-                                {categories.map((cat) => (
+                                {(Array.isArray(categories) ? categories : Object.values(categories || {})).map((cat) => (
                                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                                 ))}
                             </select>

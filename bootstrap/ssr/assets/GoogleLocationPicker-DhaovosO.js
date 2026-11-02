@@ -250,6 +250,21 @@ function GoogleLocationPicker({
         marker.setPosition({ lat, lng });
         geocodePosition({ lat, lng });
       });
+      return () => {
+        try {
+          if (markerRef.current) {
+            window.google?.maps?.event?.clearInstanceListeners?.(markerRef.current);
+            markerRef.current.setMap(null);
+            markerRef.current = null;
+          }
+          if (mapRef.current) {
+            window.google?.maps?.event?.clearInstanceListeners?.(mapRef.current);
+            mapRef.current = null;
+          }
+        } catch {
+        }
+        setMapReady(false);
+      };
     } catch (err) {
       console.error("Google Maps initialization error:", err);
     }
@@ -703,11 +718,11 @@ function GoogleLocationPicker({
       )
     ] }),
     error && /* @__PURE__ */ jsx("p", { className: "text-danger small mt-1 mb-2", children: error }),
-    isLoaded && /* @__PURE__ */ jsx(
+    isLoaded && /* @__PURE__ */ jsxs(
       "div",
       {
-        ref: mapContainerRef,
         style: {
+          position: "relative",
           width: "100%",
           height: "280px",
           borderRadius: "8px",
@@ -715,10 +730,34 @@ function GoogleLocationPicker({
           overflow: "hidden",
           backgroundColor: "#f3f4f6"
         },
-        children: !mapReady && /* @__PURE__ */ jsxs("div", { className: "d-flex align-items-center justify-content-center h-100 text-muted", children: [
-          /* @__PURE__ */ jsx("div", { className: "spinner-border spinner-border-sm me-2", role: "status" }),
-          "Loading Map..."
-        ] })
+        children: [
+          !mapReady && /* @__PURE__ */ jsxs(
+            "div",
+            {
+              style: {
+                position: "absolute",
+                inset: 0,
+                zIndex: 2,
+                backgroundColor: "#f3f4f6"
+              },
+              className: "d-flex align-items-center justify-content-center text-muted",
+              children: [
+                /* @__PURE__ */ jsx("div", { className: "spinner-border spinner-border-sm me-2", role: "status" }),
+                "Loading Map..."
+              ]
+            }
+          ),
+          /* @__PURE__ */ jsx(
+            "div",
+            {
+              ref: mapContainerRef,
+              style: {
+                width: "100%",
+                height: "100%"
+              }
+            }
+          )
+        ]
       }
     ),
     /* @__PURE__ */ jsxs("span", { className: "form-text text-muted small mt-1 d-block", children: [

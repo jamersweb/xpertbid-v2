@@ -5,7 +5,7 @@ import { A as AppLayout } from "./AppLayout-DaOB_wGA.js";
 import axios from "axios";
 import ReactQuill from "react-quill";
 /* empty css                    */
-import { G as GoogleLocationPicker } from "./GoogleLocationPicker-Do9HanNl.js";
+import { G as GoogleLocationPicker } from "./GoogleLocationPicker-DhaovosO.js";
 /* empty css              */
 import "ziggy-js";
 import "./productUrl-D-dT-lp_.js";

@@ -3,7 +3,7 @@ import { useState, useMemo } from "react";
 import { usePage, Head, Link, router } from "@inertiajs/react";
 import { HiOutlineArrowLeft, HiOutlineExclamationCircle, HiOutlineInformationCircle, HiOutlineSearch, HiOutlineCheck, HiOutlinePlus, HiOutlineLocationMarker, HiOutlineX } from "react-icons/hi";
 import { A as AppLayout } from "./AppLayout-DaOB_wGA.js";
-import { G as GoogleLocationPicker } from "./GoogleLocationPicker-Do9HanNl.js";
+import { G as GoogleLocationPicker } from "./GoogleLocationPicker-DhaovosO.js";
 import { u as useTranslate } from "./useTranslate-AOp3QZfJ.js";
 import { c as confirmAction } from "./confirmAction-Jvw1Icl9.js";
 /* empty css              */
@@ -91,9 +91,10 @@ function Preferences({ categories = [], preference = null, isCorporateVerified =
     });
   };
   const filteredCategories = useMemo(() => {
+    const cats = Array.isArray(categories) ? categories : Object.values(categories || {});
     const q = categoryQuery.trim().toLowerCase();
-    if (!q) return categories;
-    return categories.filter((c) => String(c.name || "").toLowerCase().includes(q));
+    if (!q) return cats;
+    return cats.filter((c) => String(c.name || "").toLowerCase().includes(q));
   }, [categories, categoryQuery]);
   const filledLocations = locations.filter(isFilledLocation);
   const hasAnyPrefs = categoryIds.length > 0 || filledLocations.length > 0;

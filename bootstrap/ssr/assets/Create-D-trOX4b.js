@@ -5,10 +5,10 @@ import axios from "axios";
 import ReactQuill from "react-quill";
 import { HiOutlineCloudUpload, HiOutlineX } from "react-icons/hi";
 import { A as AppLayout } from "./AppLayout-DaOB_wGA.js";
-import { G as GoogleLocationPicker } from "./GoogleLocationPicker-Do9HanNl.js";
+import { G as GoogleLocationPicker } from "./GoogleLocationPicker-DhaovosO.js";
 import { u as useTranslate } from "./useTranslate-AOp3QZfJ.js";
 import { u as useCurrencyList } from "./useCurrencyList-Ce5tJXO9.js";
-import { g as getSelectedCurrency, a as convertPKRTo, c as convertToPKR } from "./Price-7qyok_Wm.js";
+import { g as getSelectedCurrency, c as convertToPKR, a as convertPKRTo } from "./Price-7qyok_Wm.js";
 import FormLayout, { FormCard, FieldLabel, inputClass, FieldError } from "./FormLayout-Cr0aXvz3.js";
 /* empty css                    */
 import "ziggy-js";
@@ -17,36 +17,33 @@ import "react-loader-spinner";
 import "sweetalert2";
 import "./useSessionKeepAlive-DtJ4OuSi.js";
 const MAX_IMAGES = 8;
-function Edit({ buyerRequest, categories = [] }) {
+function Create({ categories = [] }) {
   const { t } = useTranslate();
   const { errors = {} } = usePage().props;
   const { list } = useCurrencyList();
   const fileInputRef = useRef(null);
   const prevCurrencyRef = useRef(getSelectedCurrency());
   const [currencyTick, setCurrencyTick] = useState(0);
-  const [budgetHydrated, setBudgetHydrated] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState([]);
   const [dragOver, setDragOver] = useState(false);
-  const [existingImages, setExistingImages] = useState(buyerRequest.images || []);
-  const [removeImageIds, setRemoveImageIds] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
   const [childCategories, setChildCategories] = useState([]);
   const [loadingSubs, setLoadingSubs] = useState(false);
   const [loadingChildren, setLoadingChildren] = useState(false);
   const [form, setForm] = useState({
-    title: buyerRequest.title || "",
-    description: buyerRequest.description || "",
-    category_id: buyerRequest.category_id ? String(buyerRequest.category_id) : "",
-    sub_category_id: buyerRequest.sub_category_id ? String(buyerRequest.sub_category_id) : "",
-    child_category_id: buyerRequest.child_category_id ? String(buyerRequest.child_category_id) : "",
+    title: "",
+    description: "",
+    category_id: "",
+    sub_category_id: "",
+    child_category_id: "",
     budget: "",
-    location_label: buyerRequest.location_label || "",
-    country: buyerRequest.country || "",
-    state: buyerRequest.state || "",
-    city: buyerRequest.city || "",
-    latitude: buyerRequest.latitude || "",
-    longitude: buyerRequest.longitude || ""
+    location_label: "",
+    country: "",
+    state: "",
+    city: "",
+    latitude: "",
+    longitude: ""
   });
   const selectedMeta = useMemo(() => {
     const code = getSelectedCurrency();
@@ -71,19 +68,6 @@ function Edit({ buyerRequest, categories = [] }) {
     };
   }, []);
   useEffect(() => {
-    if (budgetHydrated) return;
-    if (buyerRequest.budget == null || buyerRequest.budget === "") {
-      setBudgetHydrated(true);
-      return;
-    }
-    if (!list.length && selectedMeta.code !== "PKR") return;
-    const display = convertPKRTo(buyerRequest.budget, selectedMeta);
-    setForm((prev) => ({ ...prev, budget: String(Math.round(display * 100) / 100) }));
-    prevCurrencyRef.current = selectedMeta.code || "PKR";
-    setBudgetHydrated(true);
-  }, [list, selectedMeta, buyerRequest.budget, budgetHydrated]);
-  useEffect(() => {
-    if (!budgetHydrated) return;
     const nextCode = selectedMeta.code || "PKR";
     const prevCode = prevCurrencyRef.current;
     if (prevCode === nextCode) return;
@@ -98,24 +82,13 @@ function Edit({ buyerRequest, categories = [] }) {
       prevCurrencyRef.current = nextCode;
       return { ...prev, budget: String(Math.round(display * 100) / 100) };
     });
-  }, [selectedMeta, list, budgetHydrated]);
-  useEffect(() => {
-    if (!form.category_id) return;
-    setLoadingSubs(true);
-    axios.get(`/get-subcategories/${form.category_id}`).then((res) => setSubCategories(res.data.subcategories || [])).catch(() => setSubCategories([])).finally(() => setLoadingSubs(false));
-  }, []);
-  useEffect(() => {
-    if (!form.sub_category_id) return;
-    setLoadingChildren(true);
-    axios.get(`/get-children/${form.sub_category_id}`).then((res) => setChildCategories(res.data.subcategories || [])).catch(() => setChildCategories([])).finally(() => setLoadingChildren(false));
-  }, []);
+  }, [selectedMeta, list]);
   const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
-  const totalImages = existingImages.length + files.length;
   const addFiles = (incoming) => {
     const list2 = Array.from(incoming || []);
     if (!list2.length) return;
     setFiles((prev) => {
-      const remaining = MAX_IMAGES - existingImages.length - prev.length;
+      const remaining = MAX_IMAGES - prev.length;
       if (remaining <= 0) return prev;
       return [...prev, ...list2.slice(0, remaining)];
     });
@@ -124,13 +97,9 @@ function Edit({ buyerRequest, categories = [] }) {
   const handleImagesChange = (e) => {
     addFiles(e.target.files);
   };
-  const removeNewImage = (index) => {
+  const removeImage = (index) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
     if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-  const removeExistingImage = (imageId) => {
-    setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
-    setRemoveImageIds((prev) => prev.includes(imageId) ? prev : [...prev, imageId]);
   };
   const handleCategoryChange = (categoryId) => {
     setForm((prev) => ({
@@ -160,15 +129,11 @@ function Edit({ buyerRequest, categories = [] }) {
     e.preventDefault();
     setSubmitting(true);
     const data = new FormData();
-    data.append("_method", "put");
     Object.entries(form).forEach(([key, value]) => {
       if (key === "sub_category_id" && (!value || subCategories.length === 0)) return;
       if (key === "child_category_id" && (!value || childCategories.length === 0)) return;
       if (key === "budget") {
-        if (value === "" || value === null || value === void 0) {
-          data.append("budget", "");
-          return;
-        }
+        if (value === "" || value === null || value === void 0) return;
         data.append("budget", String(convertToPKR(value, selectedMeta)));
         return;
       }
@@ -176,29 +141,26 @@ function Edit({ buyerRequest, categories = [] }) {
         data.append(key, value);
       }
     });
-    removeImageIds.forEach((id) => data.append("remove_image_ids[]", id));
     files.forEach((file) => data.append("images[]", file));
-    router.post(route("buyer-requests.update", buyerRequest.slug || buyerRequest), data, {
+    router.post(route("buyer-requests.store"), data, {
       forceFormData: true,
       onFinish: () => setSubmitting(false)
     });
   };
   const openFilePicker = () => {
-    if (totalImages >= MAX_IMAGES) return;
+    if (files.length >= MAX_IMAGES) return;
     fileInputRef.current?.click();
   };
-  return /* @__PURE__ */ jsxs(AppLayout, { title: t("Edit Buyer Request"), children: [
-    /* @__PURE__ */ jsx(Head, { title: t("Edit Buyer Request") }),
+  return /* @__PURE__ */ jsxs(AppLayout, { title: t("New Buyer Request"), children: [
+    /* @__PURE__ */ jsx(Head, { title: t("New Buyer Request") }),
     /* @__PURE__ */ jsxs(
       FormLayout,
       {
-        title: t("Edit Request"),
-        isEdit: true,
-        buyerRequest,
+        title: t("Create New Request"),
         submitting,
         onSubmit: handleSubmit,
-        submitLabel: t("Save Changes"),
-        submittingLabel: t("Saving..."),
+        submitLabel: t("Publish Request"),
+        submittingLabel: t("Publishing..."),
         children: [
           /* @__PURE__ */ jsx(
             FormCard,
@@ -231,7 +193,7 @@ function Edit({ buyerRequest, categories = [] }) {
                       required: true,
                       children: [
                         /* @__PURE__ */ jsx("option", { value: "", children: t("Select category") }),
-                        categories.map((cat) => /* @__PURE__ */ jsx("option", { value: cat.id, children: cat.name }, cat.id))
+                        (Array.isArray(categories) ? categories : Object.values(categories || {})).map((cat) => /* @__PURE__ */ jsx("option", { value: cat.id, children: cat.name }, cat.id))
                       ]
                     }
                   ),
@@ -307,7 +269,7 @@ function Edit({ buyerRequest, categories = [] }) {
                     hidden: true,
                     accept: "image/png,image/jpeg,image/webp,image/gif",
                     multiple: true,
-                    disabled: totalImages >= MAX_IMAGES,
+                    disabled: files.length >= MAX_IMAGES,
                     onChange: handleImagesChange
                   }
                 ),
@@ -333,13 +295,13 @@ function Edit({ buyerRequest, categories = [] }) {
                       setDragOver(false);
                       addFiles(e.dataTransfer.files);
                     },
-                    className: `flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-10 text-center transition ${totalImages >= MAX_IMAGES ? "cursor-not-allowed border-slate-200 bg-slate-50 opacity-60" : dragOver ? "border-slate-900 bg-slate-50" : "border-slate-200 bg-slate-50/50 hover:border-slate-400 hover:bg-white"}`,
+                    className: `flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-10 text-center transition ${files.length >= MAX_IMAGES ? "cursor-not-allowed border-slate-200 bg-slate-50 opacity-60" : dragOver ? "border-slate-900 bg-slate-50" : "border-slate-200 bg-slate-50/50 hover:border-slate-400 hover:bg-white"}`,
                     children: [
                       /* @__PURE__ */ jsx("div", { className: "mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200", children: /* @__PURE__ */ jsx(HiOutlineCloudUpload, { className: "h-6 w-6 text-slate-600" }) }),
-                      /* @__PURE__ */ jsx("p", { className: "text-sm font-semibold text-slate-900", children: totalImages >= MAX_IMAGES ? t("Maximum images reached") : t("Upload files or drag and drop") }),
+                      /* @__PURE__ */ jsx("p", { className: "text-sm font-semibold text-slate-900", children: files.length >= MAX_IMAGES ? t("Maximum images reached") : t("Upload files or drag and drop") }),
                       /* @__PURE__ */ jsx("p", { className: "mt-1 text-xs text-slate-500", children: t("PNG, JPG, WEBP or GIF · max 10MB each · up to :count images", { count: MAX_IMAGES }) }),
                       /* @__PURE__ */ jsxs("p", { className: "mt-2 text-xs font-medium text-slate-600", children: [
-                        totalImages,
+                        files.length,
                         "/",
                         MAX_IMAGES,
                         " ",
@@ -348,55 +310,29 @@ function Edit({ buyerRequest, categories = [] }) {
                     ]
                   }
                 ),
-                (existingImages.length > 0 || previews.length > 0) && /* @__PURE__ */ jsxs("div", { className: "mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4", children: [
-                  existingImages.map((img) => /* @__PURE__ */ jsxs(
-                    "div",
-                    {
-                      className: "group relative aspect-square overflow-hidden rounded-xl border border-gray-100 bg-slate-100",
-                      children: [
-                        /* @__PURE__ */ jsx(
-                          "img",
-                          {
-                            src: img.url || `/${img.path}`,
-                            alt: "",
-                            className: "h-full w-full object-cover"
-                          }
-                        ),
-                        /* @__PURE__ */ jsx(
-                          "button",
-                          {
-                            type: "button",
-                            "aria-label": t("Remove image"),
-                            onClick: () => removeExistingImage(img.id),
-                            className: "absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-slate-700 opacity-100 shadow-sm ring-1 ring-slate-200 transition hover:bg-rose-50 hover:text-rose-600 sm:opacity-0 sm:group-hover:opacity-100",
-                            children: /* @__PURE__ */ jsx(HiOutlineX, { className: "h-4 w-4" })
-                          }
-                        )
-                      ]
-                    },
-                    `existing-${img.id}`
-                  )),
-                  previews.map((p, idx) => /* @__PURE__ */ jsxs(
-                    "div",
-                    {
-                      className: "group relative aspect-square overflow-hidden rounded-xl border border-gray-100 bg-slate-100",
-                      children: [
-                        /* @__PURE__ */ jsx("img", { src: p.url, alt: p.name, className: "h-full w-full object-cover" }),
-                        /* @__PURE__ */ jsx(
-                          "button",
-                          {
-                            type: "button",
-                            "aria-label": t("Remove image"),
-                            onClick: () => removeNewImage(idx),
-                            className: "absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-slate-700 opacity-100 shadow-sm ring-1 ring-slate-200 transition hover:bg-rose-50 hover:text-rose-600 sm:opacity-0 sm:group-hover:opacity-100",
-                            children: /* @__PURE__ */ jsx(HiOutlineX, { className: "h-4 w-4" })
-                          }
-                        )
-                      ]
-                    },
-                    p.url
-                  ))
-                ] }),
+                previews.length > 0 && /* @__PURE__ */ jsx("div", { className: "mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4", children: previews.map((p, idx) => /* @__PURE__ */ jsxs(
+                  "div",
+                  {
+                    className: "group relative aspect-square overflow-hidden rounded-xl border border-gray-100 bg-slate-100",
+                    children: [
+                      /* @__PURE__ */ jsx("img", { src: p.url, alt: p.name, className: "h-full w-full object-cover" }),
+                      /* @__PURE__ */ jsx(
+                        "button",
+                        {
+                          type: "button",
+                          "aria-label": t("Remove image"),
+                          onClick: (e) => {
+                            e.stopPropagation();
+                            removeImage(idx);
+                          },
+                          className: "absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-slate-700 opacity-100 shadow-sm ring-1 ring-slate-200 transition hover:bg-rose-50 hover:text-rose-600 sm:opacity-0 sm:group-hover:opacity-100",
+                          children: /* @__PURE__ */ jsx(HiOutlineX, { className: "h-4 w-4" })
+                        }
+                      )
+                    ]
+                  },
+                  p.url
+                )) }),
                 /* @__PURE__ */ jsx(FieldError, { message: errors.images })
               ]
             }
@@ -472,5 +408,5 @@ function Edit({ buyerRequest, categories = [] }) {
   ] });
 }
 export {
-  Edit as default
+  Create as default
 };

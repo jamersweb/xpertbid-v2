@@ -106,9 +106,10 @@ export default function Preferences({ categories = [], preference = null, isCorp
     };
 
     const filteredCategories = useMemo(() => {
+        const cats = Array.isArray(categories) ? categories : Object.values(categories || {});
         const q = categoryQuery.trim().toLowerCase();
-        if (!q) return categories;
-        return categories.filter((c) => String(c.name || '').toLowerCase().includes(q));
+        if (!q) return cats;
+        return cats.filter((c) => String(c.name || '').toLowerCase().includes(q));
     }, [categories, categoryQuery]);
 
     const filledLocations = locations.filter(isFilledLocation);
