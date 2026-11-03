@@ -140,7 +140,7 @@ export default function BuyerRequestShowPage() {
 
   const plainDescription = stripHtml(item?.description || "");
   const descriptionLong = plainDescription.length > 280;
-  const offers: BuyerRequestOffer[] = item?.offers || [];
+  const offers: BuyerRequestOffer[] = useMemo(() => item?.offers || [], [item?.offers]);
   const offersCount = item?.offers_count != null ? Number(item.offers_count) : offers.length;
   const images = item?.images || [];
   const myOffer = useMemo(() => {
@@ -471,9 +471,8 @@ export default function BuyerRequestShowPage() {
                     />
                   </label>
                   <div
-                    className={`br-show__form-actions ${
-                      myOffer?.status === "pending" ? "is-split" : ""
-                    }`}
+                    className={`br-show__form-actions ${myOffer?.status === "pending" ? "is-split" : ""
+                      }`}
                   >
                     <button
                       type="submit"
@@ -553,13 +552,11 @@ export default function BuyerRequestShowPage() {
                     return (
                       <div
                         key={offer.id}
-                        className={`br-show__offer ${mine ? "is-mine" : ""} ${
-                          offer.status === "accepted" ? "is-accepted" : ""
-                        } ${
-                          offer.status === "rejected" || offer.status === "withdrawn"
+                        className={`br-show__offer ${mine ? "is-mine" : ""} ${offer.status === "accepted" ? "is-accepted" : ""
+                          } ${offer.status === "rejected" || offer.status === "withdrawn"
                             ? "is-dim"
                             : ""
-                        }`}
+                          }`}
                       >
                         <div className="br-show__offer-row">
                           <div className="min-w-0">

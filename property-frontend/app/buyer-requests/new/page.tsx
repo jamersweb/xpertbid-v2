@@ -56,7 +56,7 @@ export default function NewBuyerRequestPage() {
     () => roots.find((r) => String(r.id) === categoryId) || null,
     [roots, categoryId]
   );
-  const subs = selectedRoot?.children || [];
+  const subs = useMemo(() => selectedRoot?.children || [], [selectedRoot]);
   const selectedSub = useMemo(
     () => subs.find((s) => String(s.id) === subId) || null,
     [subs, subId]
@@ -249,9 +249,8 @@ export default function NewBuyerRequestPage() {
           <div
             role="button"
             tabIndex={0}
-            className={`brf-drop ${dragOver ? "is-over" : ""} ${
-              files.length >= MAX_IMAGES ? "is-full" : ""
-            }`}
+            className={`brf-drop ${dragOver ? "is-over" : ""} ${files.length >= MAX_IMAGES ? "is-full" : ""
+              }`}
             onClick={() => {
               if (files.length >= MAX_IMAGES) return;
               fileInputRef.current?.click();

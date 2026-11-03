@@ -37,7 +37,6 @@ export function Gallery({
   title,
   status,
   listingType,
-  startDate,
   endDate,
   youtubeVideoId,
 }: Props) {

@@ -54,7 +54,6 @@ export function HeroSection() {
                         media="(max-width: 767px)"
                         srcSet={slide.mobileImage || slide.image}
                       />
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={slide.image}
                         alt={`Hero Banner ${index + 1}`}
@@ -69,7 +68,6 @@ export function HeroSection() {
                         media="(max-width: 767px)"
                         srcSet={slide.mobileImage || slide.image}
                       />
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={slide.image}
                         alt={`Hero Banner ${index + 1}`}
