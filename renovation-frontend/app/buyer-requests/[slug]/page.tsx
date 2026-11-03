@@ -140,7 +140,7 @@ export default function BuyerRequestShowPage() {
 
   const plainDescription = stripHtml(item?.description || "");
   const descriptionLong = plainDescription.length > 280;
-  const offers: BuyerRequestOffer[] = item?.offers || [];
+  const offers: BuyerRequestOffer[] = useMemo(() => item?.offers || [], [item?.offers]);
   const offersCount = item?.offers_count != null ? Number(item.offers_count) : offers.length;
   const images = item?.images || [];
   const myOffer = useMemo(() => {

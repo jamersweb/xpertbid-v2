@@ -107,8 +107,8 @@ export default function EditBuyerRequestPage() {
         setStateName(data?.state || "");
         setCountry(data?.country || "Pakistan");
         setLocationLabel(data?.location_label || "");
-        setLatitude((data as any)?.latitude ?? "");
-        setLongitude((data as any)?.longitude ?? "");
+        setLatitude(data?.latitude != null ? String(data.latitude) : "");
+        setLongitude(data?.longitude != null ? String(data.longitude) : "");
         setExistingImages(data?.images || []);
       })
       .catch((e) => {
@@ -126,7 +126,7 @@ export default function EditBuyerRequestPage() {
     () => roots.find((r) => String(r.id) === categoryId) || null,
     [roots, categoryId]
   );
-  const subs = selectedRoot?.children || [];
+  const subs = useMemo(() => selectedRoot?.children || [], [selectedRoot]);
   const selectedSub = useMemo(
     () => subs.find((s) => String(s.id) === subId) || null,
     [subs, subId]

@@ -33,23 +33,27 @@ export function NotificationDropdown() {
     };
   };
 
-  const fetchNotifications = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/notifications`, {
-        headers: authHeaders(),
-      });
-      if (!res.ok) throw new Error("Failed");
-      const json = await res.json();
-      setNotifications(Array.isArray(json.data) ? json.data : []);
-    } catch {
-      setNotifications([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchNotifications();
+    let cancelled = false;
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/notifications`, {
+          headers: authHeaders(),
+        });
+        if (!res.ok) throw new Error("Failed");
+        const json = await res.json();
+        if (!cancelled) setNotifications(Array.isArray(json.data) ? json.data : []);
+      } catch {
+        if (!cancelled) setNotifications([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void fetchNotifications();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {

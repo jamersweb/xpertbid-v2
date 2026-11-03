@@ -56,7 +56,7 @@ export default function NewBuyerRequestPage() {
     () => roots.find((r) => String(r.id) === categoryId) || null,
     [roots, categoryId]
   );
-  const subs = selectedRoot?.children || [];
+  const subs = useMemo(() => selectedRoot?.children || [], [selectedRoot]);
   const selectedSub = useMemo(
     () => subs.find((s) => String(s.id) === subId) || null,
     [subs, subId]
