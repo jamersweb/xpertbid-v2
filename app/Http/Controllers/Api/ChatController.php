@@ -121,6 +121,12 @@ class ChatController extends Controller
                         $conversation->other_user = $conversation->userOne;
                         $conversation->is_important = false;
                         $conversation->last_message = $conversation->messages()->latest()->first();
+                        $conversation->unread_count = $conversation->messages()
+                            ->where(function ($query) {
+                                $query->whereNull('is_read')
+                                    ->orWhere('is_read', false);
+                            })
+                            ->count();
                         return $conversation;
                     });
             } else {
@@ -203,7 +209,7 @@ class ChatController extends Controller
             'userTwo',
         ])->findOrFail($id);
 
-        if (!$adminView && $conversation->user_one_id != $userId && $conversation->user_two_id != $userId) {
+        if (!$adminView && !$this->isAdminUser() && $conversation->user_one_id != $userId && $conversation->user_two_id != $userId) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -293,7 +299,7 @@ class ChatController extends Controller
 
         $conversation = Conversation::findOrFail($request->conversation_id);
 
-        if (!$adminView && $conversation->user_one_id != Auth::id() && $conversation->user_two_id != Auth::id()) {
+        if (!$adminView && !$this->isAdminUser() && $conversation->user_one_id != Auth::id() && $conversation->user_two_id != Auth::id()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -316,6 +322,7 @@ class ChatController extends Controller
         ]);
         
         $conversation->touch();
+        $message->load('sender:id,name,profile_pic,role');
 
         try {
             broadcast(new MessageSent($message))->toOthers();

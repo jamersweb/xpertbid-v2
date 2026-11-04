@@ -171,6 +171,27 @@ const ChatWindow = ({ conversationId, currentUser, onBack, onUnauthorized, isAdm
         return baseProductPrice;
     })();
 
+    // Participants
+    const userOne = conversation?.user_one || conversation?.userOne || null;
+    const userTwo = conversation?.user_two || conversation?.userTwo || null;
+
+    const getUserRole = (userId) => {
+        if (!userId) return '';
+        if (buyerRequestOffer) {
+            const sellerId = buyerRequestOffer.seller_id;
+            const buyerId = (buyerRequestOffer.buyer_request || buyerRequestOffer.buyerRequest)?.user_id;
+            if (userId === sellerId) return 'Seller';
+            if (userId === buyerId) return 'Buyer';
+        }
+        if (product) {
+            if (userId === product.user_id) return 'Seller';
+            return 'Buyer';
+        }
+        if (userId === conversation?.user_one_id) return 'User 1';
+        if (userId === conversation?.user_two_id) return 'User 2';
+        return 'User';
+    };
+
     // Last seen logic
     const getLastSeen = (dateString, userId) => {
         if (!dateString) return 'Offline';
@@ -190,39 +211,121 @@ const ChatWindow = ({ conversationId, currentUser, onBack, onUnauthorized, isAdm
             {/* Header */}
             <div className="border-b border-gray-200 bg-white z-10">
                 <div className="px-4 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={onBack}
-                            className="md:hidden text-gray-500 hover:text-gray-700 p-1"
-                        >
-                            <i className="fa-solid fa-arrow-left"></i>
-                        </button>
+                    {isAdminView ? (
+                        <div className="flex items-center justify-between w-full gap-2">
+                            {/* Left: User One */}
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                <button
+                                    onClick={onBack}
+                                    className="md:hidden text-gray-500 hover:text-gray-700 p-1 mr-1"
+                                >
+                                    <i className="fa-solid fa-arrow-left"></i>
+                                </button>
+                                <div className="relative w-10 h-10 flex-shrink-0">
+                                    <img
+                                        src={getAssetUrl(userOne?.profile_pic)}
+                                        alt={userOne?.name || 'User 1'}
+                                        className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm"
+                                        onError={(e) => { e.target.onerror = null; e.target.src = '/assets/images/user.jpg'; }}
+                                    />
+                                    {userOne?.last_active_at && getLastSeen(userOne.last_active_at) === 'Online' && (
+                                        <span className="absolute right-0.5 bottom-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></span>
+                                    )}
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <h3 className="font-bold text-gray-900 text-sm truncate" title={userOne?.name}>
+                                            {userOne?.name || 'User 1'}
+                                        </h3>
+                                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
+                                            {getUserRole(userOne?.id)}
+                                        </span>
+                                    </div>
+                                    <div className="text-[11px] text-gray-500 truncate">
+                                        {userOne?.last_active_at && getLastSeen(userOne.last_active_at) === 'Online' ? (
+                                            <span className="text-green-600 font-medium">Online</span>
+                                        ) : (
+                                            getLastSeen(userOne?.last_active_at)
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div className="relative w-10 h-10 flex-shrink-0">
-                            <img
-                                src={getAssetUrl(otherUser?.profile_pic)}
-                                alt={otherUser?.name}
-                                className="w-10 h-10 rounded-full object-cover border border-gray-100"
-                                onError={(e) => { e.target.onerror = null; e.target.src = '/assets/images/user.jpg'; }}
-                            />
-                            {otherUser?.last_active_at && getLastSeen(otherUser.last_active_at) === 'Online' && (
-                                <span className="absolute right-0.5 bottom-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></span>
-                            )}
-                        </div>
+                            {/* Center: Exchange Badge */}
+                            <div className="flex flex-col items-center px-2 flex-shrink-0">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider border border-blue-100 shadow-2xs">
+                                    <i className="fa-solid fa-arrows-left-right text-[10px]"></i>
+                                    Chatting
+                                </span>
+                            </div>
 
-                        <div>
-                            <h3 className="font-bold text-gray-800 text-base leading-tight">
-                                {otherUser?.name || 'Loading...'}
-                            </h3>
-                            <div className="flex items-center text-xs text-gray-500">
-                                {otherUser?.last_active_at && getLastSeen(otherUser.last_active_at) === 'Online' ? (
-                                    <span className="text-green-500 font-medium">Online</span>
-                                ) : (
-                                    <span>{getLastSeen(otherUser?.last_active_at)}</span>
-                                )}
+                            {/* Right: User Two */}
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1 justify-end text-right">
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-1.5 justify-end flex-wrap">
+                                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">
+                                            {getUserRole(userTwo?.id)}
+                                        </span>
+                                        <h3 className="font-bold text-gray-900 text-sm truncate" title={userTwo?.name}>
+                                            {userTwo?.name || 'User 2'}
+                                        </h3>
+                                    </div>
+                                    <div className="text-[11px] text-gray-500 truncate">
+                                        {userTwo?.last_active_at && getLastSeen(userTwo.last_active_at) === 'Online' ? (
+                                            <span className="text-green-600 font-medium">Online</span>
+                                        ) : (
+                                            getLastSeen(userTwo?.last_active_at)
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="relative w-10 h-10 flex-shrink-0">
+                                    <img
+                                        src={getAssetUrl(userTwo?.profile_pic)}
+                                        alt={userTwo?.name || 'User 2'}
+                                        className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm"
+                                        onError={(e) => { e.target.onerror = null; e.target.src = '/assets/images/user.jpg'; }}
+                                    />
+                                    {userTwo?.last_active_at && getLastSeen(userTwo.last_active_at) === 'Online' && (
+                                        <span className="absolute right-0.5 bottom-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></span>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={onBack}
+                                className="md:hidden text-gray-500 hover:text-gray-700 p-1"
+                            >
+                                <i className="fa-solid fa-arrow-left"></i>
+                            </button>
+
+                            <div className="relative w-10 h-10 flex-shrink-0">
+                                <img
+                                    src={getAssetUrl(otherUser?.profile_pic)}
+                                    alt={otherUser?.name}
+                                    className="w-10 h-10 rounded-full object-cover border border-gray-100"
+                                    onError={(e) => { e.target.onerror = null; e.target.src = '/assets/images/user.jpg'; }}
+                                />
+                                {otherUser?.last_active_at && getLastSeen(otherUser.last_active_at) === 'Online' && (
+                                    <span className="absolute right-0.5 bottom-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></span>
+                                )}
+                            </div>
+
+                            <div>
+                                <h3 className="font-bold text-gray-800 text-base leading-tight">
+                                    {otherUser?.name || 'Loading...'}
+                                </h3>
+                                <div className="flex items-center text-xs text-gray-500">
+                                    {otherUser?.last_active_at && getLastSeen(otherUser.last_active_at) === 'Online' ? (
+                                        <span className="text-green-500 font-medium">Online</span>
+                                    ) : (
+                                        <span>{getLastSeen(otherUser?.last_active_at)}</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {!isAdminView && <div className="relative">
                         <button
@@ -344,19 +447,92 @@ const ChatWindow = ({ conversationId, currentUser, onBack, onUnauthorized, isAdm
                     </div>
                 ) : (
                     messages.map((msg, index) => {
-                        const isMe = msg.sender_id === currentUser.id;
-                        const isLatestOwnMessage = isMe && index === messages.length - 1;
+                        let isSenderRight = false;
+                        let senderName = msg.sender?.name || 'User';
+                        let senderAvatar = msg.sender?.profile_pic;
+                        let senderRole = '';
+                        let bubbleClasses = '';
+                        let textClasses = '';
+                        let subTextClasses = '';
+                        let isSenderAdmin = false;
+
+                        if (isAdminView) {
+                            if (msg.sender_id === conversation?.user_two_id) {
+                                isSenderRight = true;
+                                senderName = userTwo?.name || msg.sender?.name || 'User 2';
+                                senderAvatar = userTwo?.profile_pic || msg.sender?.profile_pic;
+                                senderRole = getUserRole(userTwo?.id);
+                                bubbleClasses = 'bg-blue-600 text-white rounded-2xl rounded-tr-sm shadow-sm';
+                                textClasses = 'text-white';
+                                subTextClasses = 'text-blue-100 justify-end';
+                            } else if (msg.sender_id === conversation?.user_one_id) {
+                                isSenderRight = false;
+                                senderName = userOne?.name || msg.sender?.name || 'User 1';
+                                senderAvatar = userOne?.profile_pic || msg.sender?.profile_pic;
+                                senderRole = getUserRole(userOne?.id);
+                                bubbleClasses = 'bg-white text-gray-800 border border-slate-200 rounded-2xl rounded-tl-sm shadow-sm';
+                                textClasses = 'text-gray-800';
+                                subTextClasses = 'text-gray-400';
+                            } else {
+                                isSenderAdmin = true;
+                                isSenderRight = true;
+                                senderName = msg.sender?.name ? `${msg.sender.name} (Admin)` : 'Admin';
+                                senderAvatar = msg.sender?.profile_pic;
+                                senderRole = 'Admin';
+                                bubbleClasses = 'bg-slate-900 text-white border border-slate-800 rounded-2xl shadow-sm';
+                                textClasses = 'text-white';
+                                subTextClasses = 'text-slate-300 justify-end';
+                            }
+                        } else {
+                            const isMe = msg.sender_id === currentUser.id;
+                            isSenderRight = isMe;
+                            bubbleClasses = isMe
+                                ? 'bg-blue-600 text-white rounded-2xl rounded-br-none shadow-sm'
+                                : 'bg-white text-gray-800 border border-gray-100 rounded-2xl rounded-bl-none shadow-sm';
+                            textClasses = isMe ? 'text-white' : 'text-gray-800';
+                            subTextClasses = isMe ? 'text-blue-100 justify-end' : 'text-gray-400';
+                        }
+
+                        const isLatestOwnMessage = msg.sender_id === currentUser.id && index === messages.length - 1;
+
                         return (
                             <div
                                 key={msg.id || index}
-                                className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+                                className={`flex items-end gap-2 ${isSenderRight ? 'justify-end' : 'justify-start'}`}
                             >
-                                <div
-                                    className={`max-w-[75%] px-4 py-2.5 rounded-2xl shadow-sm text-sm ${isMe
-                                        ? 'bg-blue-600 text-white rounded-br-none'
-                                        : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
-                                        }`}
-                                >
+                                {/* Left Avatar for User One in Admin View */}
+                                {isAdminView && !isSenderRight && (
+                                    <img
+                                        src={getAssetUrl(senderAvatar)}
+                                        alt={senderName}
+                                        title={`${senderName} (${senderRole})`}
+                                        className="w-7 h-7 rounded-full object-cover border border-gray-200 shadow-2xs mb-1 flex-shrink-0"
+                                        onError={(e) => { e.target.onerror = null; e.target.src = '/assets/images/user.jpg'; }}
+                                    />
+                                )}
+
+                                <div className={`max-w-[82%] sm:max-w-[70%] px-4 py-2.5 text-sm ${bubbleClasses}`}>
+                                    {/* Sender Label in Admin View */}
+                                    {isAdminView && (
+                                        <div className={`flex items-center gap-1.5 mb-1 pb-1 border-b text-[11px] font-semibold ${
+                                            isSenderRight
+                                                ? (isSenderAdmin ? 'border-slate-800 text-amber-400 justify-end' : 'border-blue-500/40 text-blue-100 justify-end')
+                                                : 'border-slate-100 text-slate-800'
+                                        }`}>
+                                            <span>{senderName}</span>
+                                            {senderRole && (
+                                                <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider ${
+                                                    isSenderRight
+                                                        ? (isSenderAdmin ? 'bg-amber-400/20 text-amber-300' : 'bg-blue-700/60 text-white')
+                                                        : 'bg-slate-100 text-slate-700'
+                                                }`}>
+                                                    {senderRole}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Image Attachment */}
                                     {msg.type === 'image' && (
                                         <div className="mb-2">
                                             <img
@@ -367,6 +543,8 @@ const ChatWindow = ({ conversationId, currentUser, onBack, onUnauthorized, isAdm
                                             />
                                         </div>
                                     )}
+
+                                    {/* Document Attachment */}
                                     {msg.type === 'file' && msg.attachment_path && (
                                         <div className="mb-2">
                                             <a
@@ -374,7 +552,7 @@ const ChatWindow = ({ conversationId, currentUser, onBack, onUnauthorized, isAdm
                                                 target="_blank"
                                                 rel="noreferrer"
                                                 className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium ${
-                                                    isMe ? 'bg-blue-500/20 text-white' : 'bg-gray-100 text-gray-700'
+                                                    isSenderRight ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-700'
                                                 }`}
                                             >
                                                 <i className="fa-regular fa-file-lines"></i>
@@ -382,10 +560,12 @@ const ChatWindow = ({ conversationId, currentUser, onBack, onUnauthorized, isAdm
                                             </a>
                                         </div>
                                     )}
-                                    <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.body}</p>
-                                    <div className={`text-[10px] mt-1 flex items-center gap-1 ${isMe ? 'justify-end text-blue-100' : 'text-gray-400'}`}>
+
+                                    <p className={`whitespace-pre-wrap break-words leading-relaxed ${textClasses}`}>{msg.body}</p>
+
+                                    <div className={`text-[10px] mt-1 flex items-center gap-1 ${subTextClasses}`}>
                                         {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        {isMe && (
+                                        {msg.sender_id === currentUser.id && (
                                             msg.is_read ? (
                                                 <>
                                                     <i className="fa-solid fa-check-double text-[10px]"></i>
@@ -397,6 +577,17 @@ const ChatWindow = ({ conversationId, currentUser, onBack, onUnauthorized, isAdm
                                         )}
                                     </div>
                                 </div>
+
+                                {/* Right Avatar for User Two / Admin in Admin View */}
+                                {isAdminView && isSenderRight && (
+                                    <img
+                                        src={getAssetUrl(senderAvatar)}
+                                        alt={senderName}
+                                        title={`${senderName} (${senderRole})`}
+                                        className="w-7 h-7 rounded-full object-cover border border-gray-200 shadow-2xs mb-1 flex-shrink-0"
+                                        onError={(e) => { e.target.onerror = null; e.target.src = '/assets/images/user.jpg'; }}
+                                    />
+                                )}
                             </div>
                         );
                     })
@@ -405,6 +596,13 @@ const ChatWindow = ({ conversationId, currentUser, onBack, onUnauthorized, isAdm
 
             {/* Input Area */}
             <div className="bg-white border-t border-gray-200">
+                {isAdminView && (
+                    <div className="px-4 py-1.5 bg-slate-50 border-b border-slate-200 text-slate-600 text-[11px] flex items-center gap-2 font-medium">
+                        <i className="fa-solid fa-shield-halved text-blue-600"></i>
+                        <span>Admin Observation Mode: Live conversation between <strong>{userOne?.name || 'User 1'}</strong> and <strong>{userTwo?.name || 'User 2'}</strong>. Any message you type will be sent as Admin.</span>
+                    </div>
+                )}
+
                 {/* Quick Actions */}
                 <div className="px-4 py-2 flex gap-2 overflow-x-auto scrollbar-hide border-b border-gray-100">
                     {[
@@ -457,7 +655,7 @@ const ChatWindow = ({ conversationId, currentUser, onBack, onUnauthorized, isAdm
                                 type="text"
                                 value={newMessage}
                                 onChange={(e) => setNewMessage(e.target.value)}
-                                placeholder="Type a message..."
+                                placeholder={isAdminView ? "Type a message as Admin in this chat..." : "Type a message..."}
                                 className="flex-1 bg-transparent border-none focus:ring-0 text-gray-800 placeholder-gray-500 text-sm p-1 leading-6 w-full"
                                 style={{ outline: 'none', boxShadow: 'none' }}
                             />

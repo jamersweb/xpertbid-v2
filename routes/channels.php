@@ -7,6 +7,10 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 });
 
 Broadcast::channel('chat.{conversationId}', function ($user, $conversationId) {
+    if (in_array(strtolower((string) ($user->role ?? '')), ['admin', 'superadmin'], true)) {
+        return true;
+    }
+
     return \App\Models\Conversation::where('id', $conversationId)
         ->where(function($query) use ($user) {
             $query->where('user_one_id', $user->id)

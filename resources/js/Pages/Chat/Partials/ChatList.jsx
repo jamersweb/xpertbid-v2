@@ -6,6 +6,7 @@ import Price from '../../../Components/Price';
 const ChatList = ({ onSelectConversation, selectedConversationId, currentUser, isAdminView = false, participantId = null }) => {
     const [conversations, setConversations] = useState([]);
     const [filter, setFilter] = useState('All'); 
+    const [searchQuery, setSearchQuery] = useState('');
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -66,8 +67,26 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser, i
     };
 
     const filteredConversations = conversations.filter(conv => {
-        if (filter === 'Unread') return conv.unread_count > 0;
-        if (filter === 'Important') return conv.is_important;
+        if (filter === 'Unread') {
+            if (!conv.unread_count || conv.unread_count <= 0) return false;
+        }
+        if (filter === 'Important') {
+            if (!conv.is_important) return false;
+        }
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase();
+            const u1 = (conv.user_one?.name || '').toLowerCase();
+            const u2 = (conv.user_two?.name || '').toLowerCase();
+            const other = (conv.other_user?.name || '').toLowerCase();
+            const product = (conv.product?.title || '').toLowerCase();
+            const lead = (
+                (conv.buyer_request_offer || conv.buyerRequestOffer)?.buyer_request?.title ||
+                (conv.buyer_request_offer || conv.buyerRequestOffer)?.buyerRequest?.title || ''
+            ).toLowerCase();
+            const lastMsg = (conv.last_message?.body || '').toLowerCase();
+
+            return u1.includes(q) || u2.includes(q) || other.includes(q) || product.includes(q) || lead.includes(q) || lastMsg.includes(q);
+        }
         return true;
     });
 
@@ -114,7 +133,29 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser, i
         <div className="flex flex-col h-full bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden font-sans">
             <div className="px-4 py-4 border-b border-gray-100 bg-white">
                 <h2 className="text-xl font-bold text-gray-800 tracking-tight">INBOX</h2>
-                <div className="flex gap-2 mt-4 overflow-x-auto pb-2 scrollbar-hide">
+                
+                {/* Search input */}
+                <div className="relative mt-3">
+                    <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder={isAdminView ? "Search users, listings or leads..." : "Search chats..."}
+                        className="w-full pl-8 pr-7 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-lg outline-none focus:bg-white focus:border-blue-500 transition-colors"
+                    />
+                    {searchQuery && (
+                        <button
+                            type="button"
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+                        >
+                            <i className="fa-solid fa-xmark"></i>
+                        </button>
+                    )}
+                </div>
+
+                <div className="flex gap-2 mt-3 overflow-x-auto pb-1 scrollbar-hide">
                     {['All', 'Unread Chats', 'Important'].map((f) => (
                         <button
                             key={f}
@@ -153,25 +194,54 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser, i
                             )}
 
                             <div className="flex gap-3">
-                                <div className="relative flex-shrink-0 w-12 h-12">
-                                    <img
-                                        src={getAssetUrl(conv.other_user?.profile_pic)}
-                                        alt="User"
-                                        className="w-12 h-12 rounded-full object-cover border border-gray-100"
-                                        onError={(e) => { e.target.onerror = null; e.target.src = '/assets/images/user.jpg'; }}
-                                    />
-                                    {conv.other_user && getLastSeen(conv.other_user.last_active_at) === 'Online' && (
-                                        <span className="absolute right-0.5 bottom-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></span>
-                                    )}
-                                </div>
+                                {isAdminView ? (
+                                    <div className="relative flex-shrink-0 w-12 h-12">
+                                        <img
+                                            src={getAssetUrl(conv.user_one?.profile_pic)}
+                                            alt={conv.user_one?.name || 'User 1'}
+                                            title={`User 1: ${conv.user_one?.name || 'Unknown'}`}
+                                            className="absolute left-0 top-0 w-7 h-7 rounded-full object-cover border-2 border-white shadow-xs z-10"
+                                            onError={(e) => { e.target.onerror = null; e.target.src = '/assets/images/user.jpg'; }}
+                                        />
+                                        <img
+                                            src={getAssetUrl(conv.user_two?.profile_pic)}
+                                            alt={conv.user_two?.name || 'User 2'}
+                                            title={`User 2: ${conv.user_two?.name || 'Unknown'}`}
+                                            className="absolute right-0 bottom-0 w-7 h-7 rounded-full object-cover border-2 border-white shadow-xs bg-gray-100"
+                                            onError={(e) => { e.target.onerror = null; e.target.src = '/assets/images/user.jpg'; }}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="relative flex-shrink-0 w-12 h-12">
+                                        <img
+                                            src={getAssetUrl(conv.other_user?.profile_pic)}
+                                            alt="User"
+                                            className="w-12 h-12 rounded-full object-cover border border-gray-100"
+                                            onError={(e) => { e.target.onerror = null; e.target.src = '/assets/images/user.jpg'; }}
+                                        />
+                                        {conv.other_user && getLastSeen(conv.other_user.last_active_at) === 'Online' && (
+                                            <span className="absolute right-0.5 bottom-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></span>
+                                        )}
+                                    </div>
+                                )}
 
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-baseline mb-0.5">
-                                        <h4 className="text-sm font-bold text-gray-900 truncate">
-                                            {isAdminView
-                                                ? `${conv.user_one?.name || 'Unknown'} -> ${conv.user_two?.name || 'Unknown'}`
-                                                : (conv.other_user?.name || 'Unknown User')}
-                                        </h4>
+                                        {isAdminView ? (
+                                            <div className="flex items-center gap-1.5 truncate text-xs font-bold text-gray-900 max-w-[80%]">
+                                                <span className="truncate text-slate-800" title={conv.user_one?.name}>
+                                                    {conv.user_one?.name || 'User 1'}
+                                                </span>
+                                                <span className="text-gray-400 font-normal shrink-0">↔</span>
+                                                <span className="truncate text-blue-700" title={conv.user_two?.name}>
+                                                    {conv.user_two?.name || 'User 2'}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <h4 className="text-sm font-bold text-gray-900 truncate">
+                                                {conv.other_user?.name || 'Unknown User'}
+                                            </h4>
+                                        )}
                                         <span className="text-[10px] text-gray-500 flex-shrink-0 ml-2">
                                             {new Date(conv.updated_at).toLocaleDateString() === new Date().toLocaleDateString()
                                                 ? new Date(conv.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -181,20 +251,36 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser, i
 
                                     {/* Last Seen Status */}
                                     <div className="text-[10px] text-gray-400 mb-1">
-                                        {getLastSeen((isAdminView ? conv.user_two?.last_active_at : conv.other_user?.last_active_at)) === 'Online' ? (
-                                            <span className="text-green-500 font-medium">Online</span>
+                                        {isAdminView ? (
+                                            <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                                                <span className="inline-flex items-center gap-1 truncate max-w-[90px]">
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${getLastSeen(conv.user_one?.last_active_at) === 'Online' ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                                                    <span className="truncate">{conv.user_one?.name?.split(' ')[0] || 'U1'}</span>
+                                                </span>
+                                                <span className="text-gray-300">|</span>
+                                                <span className="inline-flex items-center gap-1 truncate max-w-[90px]">
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${getLastSeen(conv.user_two?.last_active_at) === 'Online' ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                                                    <span className="truncate">{conv.user_two?.name?.split(' ')[0] || 'U2'}</span>
+                                                </span>
+                                            </div>
                                         ) : (
-                                            <span>{getLastSeen((isAdminView ? conv.user_two?.last_active_at : conv.other_user?.last_active_at))}</span>
+                                            getLastSeen(conv.other_user?.last_active_at) === 'Online' ? (
+                                                <span className="text-green-500 font-medium">Online</span>
+                                            ) : (
+                                                <span>{getLastSeen(conv.other_user?.last_active_at)}</span>
+                                            )
                                         )}
                                     </div>
 
                                     {conv.product && (
                                         <div className="text-xs font-semibold text-gray-700 truncate mb-1">
+                                            <i className="fa-solid fa-box text-gray-400 mr-1 text-[10px]"></i>
                                             {conv.product.title}
                                         </div>
                                     )}
                                     {!conv.product && (conv.buyer_request_offer || conv.buyerRequestOffer) && (
                                         <div className="text-xs font-semibold text-sky-700 truncate mb-1">
+                                            <i className="fa-solid fa-clipboard-list mr-1 text-[10px]"></i>
                                             {(conv.buyer_request_offer || conv.buyerRequestOffer)?.buyer_request?.title
                                                 || (conv.buyer_request_offer || conv.buyerRequestOffer)?.buyerRequest?.title
                                                 || 'Buyer request'}
@@ -211,16 +297,36 @@ const ChatList = ({ onSelectConversation, selectedConversationId, currentUser, i
                                         <p className={`text-xs truncate max-w-[85%] ${selectedConversationId == conv.id ? 'text-gray-700' : 'text-gray-500'}`}>
                                             {conv.last_message ? (
                                                 conv.last_message.type === 'image' ? (
-                                                    <span className="flex items-center gap-1"><i className="fa-regular fa-image"></i> Photo</span>
+                                                    <span className="flex items-center gap-1">
+                                                        {isAdminView && conv.last_message.sender_id && (
+                                                            <strong className="text-gray-800">
+                                                                {conv.last_message.sender_id === conv.user_one_id
+                                                                    ? (conv.user_one?.name?.split(' ')[0] || 'User 1')
+                                                                    : (conv.last_message.sender_id === conv.user_two_id
+                                                                        ? (conv.user_two?.name?.split(' ')[0] || 'User 2')
+                                                                        : 'Admin')}:
+                                                            </strong>
+                                                        )}
+                                                        <i className="fa-regular fa-image"></i> Photo
+                                                    </span>
                                                 ) : (
                                                     renderMessageStatus(conv.last_message) || (
-                                                        <span className="flex items-center gap-1">
-                                                            {conv.last_message.body}
+                                                        <span className="flex items-center gap-1 truncate">
+                                                            {isAdminView && conv.last_message.sender_id && (
+                                                                <strong className="text-gray-800 shrink-0">
+                                                                    {conv.last_message.sender_id === conv.user_one_id
+                                                                        ? (conv.user_one?.name?.split(' ')[0] || 'User 1')
+                                                                        : (conv.last_message.sender_id === conv.user_two_id
+                                                                            ? (conv.user_two?.name?.split(' ')[0] || 'User 2')
+                                                                            : 'Admin')}:
+                                                                </strong>
+                                                            )}
+                                                            <span className="truncate">{conv.last_message.body}</span>
                                                         </span>
                                                     )
                                                 )
                                             ) : (
-                                                <span className="italic">Start the conversation</span>
+                                                <span className="italic">No messages yet</span>
                                             )}
                                         </p>
                                         
