@@ -71,6 +71,11 @@ class BuyerRequestController extends Controller
 
     public function show(Request $request, BuyerRequest $buyerRequest)
     {
+        $user = auth('sanctum')->user() ?: $request->user();
+        if ($user) {
+            $user->loadMissing('corporateVerification');
+        }
+
         $this->authorize('view', $buyerRequest);
 
         $site = BuyerRequestSiteScope::resolve($request);
@@ -91,13 +96,18 @@ class BuyerRequestController extends Controller
             'offers.seller.individualVerification:id,user_id,status',
         ]);
 
-        $authId = (int) $request->user()->id;
-        $myOffer = $buyerRequest->offers->first(
-            fn ($offer) => (int) $offer->seller_id === $authId
-        );
+        $authId = (int) ($user?->id ?? 0);
+        $myOffer = $authId
+            ? $buyerRequest->offers->first(fn ($offer) => (int) $offer->seller_id === $authId)
+            : null;
         $buyerRequest->setAttribute('my_offer', $myOffer);
 
-        return new BuyerRequestResource($buyerRequest);
+        return (new BuyerRequestResource($buyerRequest))->additional([
+            'meta' => [
+                'is_logged_in' => (bool) $user,
+                'is_corporate_verified' => $user ? $user->isCorporateVerified() : false,
+            ],
+        ]);
     }
 
     public function update(Request $request, BuyerRequest $buyerRequest)
@@ -243,35 +253,34 @@ class BuyerRequestController extends Controller
 
     public function matched(Request $request)
     {
-        $user = $request->user();
-        $user->loadMissing('corporateVerification');
+        $user = auth('sanctum')->user() ?: $request->user();
+        if ($user) {
+            $user->loadMissing('corporateVerification');
+        }
         $site = BuyerRequestSiteScope::resolve($request);
 
-        if (! $user->isCorporateVerified()) {
-            return response()->json([
-                'data' => [],
-                'meta' => [
-                    'is_corporate_verified' => false,
-                    'has_preferences' => false,
-                    'site' => $site,
-                ],
-            ]);
+        $hasPreferences = false;
+        $myOffers = collect();
+
+        if ($user) {
+            $preference = SellerBuyerRequestPreference::with(['categories', 'locations'])
+                ->where('user_id', $user->id)
+                ->first();
+
+            $hasPreferences = $preference
+                && ($preference->categories->isNotEmpty() || $preference->locations->isNotEmpty());
         }
 
-        $preference = SellerBuyerRequestPreference::with(['categories', 'locations'])
-            ->where('user_id', $user->id)
-            ->first();
-
-        $hasPreferences = $preference
-            && ($preference->categories->isNotEmpty() || $preference->locations->isNotEmpty());
-
+        // Anyone (guest, unverified, corporate) can browse open leads
         $requests = $this->service->matchedOpenRequestsForSeller($user, $site);
 
-        $myOffers = $user->buyerRequestOffers()
-            ->whereIn('buyer_request_id', $requests->pluck('id'))
-            ->whereNull('deleted_at')
-            ->get()
-            ->keyBy('buyer_request_id');
+        if ($user && $requests->isNotEmpty()) {
+            $myOffers = $user->buyerRequestOffers()
+                ->whereIn('buyer_request_id', $requests->pluck('id'))
+                ->whereNull('deleted_at')
+                ->get()
+                ->keyBy('buyer_request_id');
+        }
 
         $payload = $requests->map(function (BuyerRequest $item) use ($myOffers) {
             $item->setAttribute('my_offer', $myOffers->get($item->id));
@@ -281,7 +290,8 @@ class BuyerRequestController extends Controller
 
         return BuyerRequestResource::collection($payload)->additional([
             'meta' => [
-                'is_corporate_verified' => true,
+                'is_logged_in' => (bool) $user,
+                'is_corporate_verified' => $user ? $user->isCorporateVerified() : false,
                 'has_preferences' => $hasPreferences,
                 'site' => $site,
             ],

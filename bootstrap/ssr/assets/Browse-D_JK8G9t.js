@@ -67,6 +67,7 @@ function VerifiedBadge({ title }) {
 function Browse({
   requests = [],
   isCorporateVerified = false,
+  isLoggedIn = false,
   hasPreferences = false
 }) {
   const { t } = useTranslate();
@@ -195,15 +196,17 @@ function Browse({
               /* @__PURE__ */ jsx("p", { className: "mt-2 max-w-sm text-[13px] leading-relaxed text-slate-300 sm:mt-3 sm:text-[15px]", children: t("Buyers post what they need. You bid. Best offer wins.") })
             ] }),
             /* @__PURE__ */ jsxs("div", { className: "mt-4 flex flex-col gap-3 sm:mt-8 sm:gap-4", children: [
-              isCorporateVerified && /* @__PURE__ */ jsxs("div", { className: "inline-grid max-w-full grid-cols-3 gap-2 sm:inline-flex sm:items-end sm:gap-7", children: [
+              /* @__PURE__ */ jsxs("div", { className: "inline-grid max-w-full grid-cols-3 gap-2 sm:inline-flex sm:items-end sm:gap-7", children: [
                 /* @__PURE__ */ jsxs("div", { className: "min-w-0 text-center sm:text-left", children: [
-                  /* @__PURE__ */ jsx("div", { className: "text-xl font-bold tabular-nums text-white sm:text-3xl", children: counts.available }),
-                  /* @__PURE__ */ jsx("div", { className: "mt-0.5 text-[9px] font-medium uppercase leading-tight tracking-wider text-slate-400 sm:text-[11px]", children: t("Open to you") })
+                  /* @__PURE__ */ jsx("div", { className: "text-xl font-bold tabular-nums text-white sm:text-3xl", children: isCorporateVerified ? counts.available : counts.all }),
+                  /* @__PURE__ */ jsx("div", { className: "mt-0.5 text-[9px] font-medium uppercase leading-tight tracking-wider text-slate-400 sm:text-[11px]", children: isCorporateVerified ? t("Open to you") : t("Open leads") })
                 ] }),
-                /* @__PURE__ */ jsx("div", { className: "hidden h-8 w-px shrink-0 bg-white/15 sm:block" }),
-                /* @__PURE__ */ jsxs("div", { className: "min-w-0 text-center sm:text-left", children: [
-                  /* @__PURE__ */ jsx("div", { className: "text-xl font-bold tabular-nums text-white sm:text-3xl", children: counts.offered }),
-                  /* @__PURE__ */ jsx("div", { className: "mt-0.5 text-[9px] font-medium uppercase leading-tight tracking-wider text-slate-400 sm:text-[11px]", children: t("Your bids") })
+                isCorporateVerified && /* @__PURE__ */ jsxs(Fragment, { children: [
+                  /* @__PURE__ */ jsx("div", { className: "hidden h-8 w-px shrink-0 bg-white/15 sm:block" }),
+                  /* @__PURE__ */ jsxs("div", { className: "min-w-0 text-center sm:text-left", children: [
+                    /* @__PURE__ */ jsx("div", { className: "text-xl font-bold tabular-nums text-white sm:text-3xl", children: counts.offered }),
+                    /* @__PURE__ */ jsx("div", { className: "mt-0.5 text-[9px] font-medium uppercase leading-tight tracking-wider text-slate-400 sm:text-[11px]", children: t("Your bids") })
+                  ] })
                 ] }),
                 /* @__PURE__ */ jsx("div", { className: "hidden h-8 w-px shrink-0 bg-white/15 sm:block" }),
                 /* @__PURE__ */ jsxs("div", { className: "min-w-0 text-center sm:text-left", children: [
@@ -212,11 +215,11 @@ function Browse({
                 ] })
               ] }),
               /* @__PURE__ */ jsxs("div", { className: "relative z-20 flex flex-col gap-2 sm:flex-row sm:flex-wrap", children: [
-                isCorporateVerified && counts.available > 0 && /* @__PURE__ */ jsxs(
+                counts.all > 0 && /* @__PURE__ */ jsxs(
                   "button",
                   {
                     type: "button",
-                    onClick: () => scrollToLeads("available"),
+                    onClick: () => scrollToLeads(isCorporateVerified ? "available" : "all"),
                     className: "inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#43ACE9] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_28px_rgba(67,172,233,0.45)] transition hover:bg-[#35a0df] sm:w-auto",
                     children: [
                       /* @__PURE__ */ jsx(HiOutlineTrendingUp, { className: "h-4 w-4 shrink-0" }),
@@ -333,209 +336,218 @@ function Browse({
                             .br-hero-float { animation: none !important; }
                         }
                     ` }),
-      !isCorporateVerified ? /* @__PURE__ */ jsxs("div", { className: "rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900 shadow-sm", children: [
-        t("Corporate verification is required to view and offer on buyer requests."),
-        " ",
-        /* @__PURE__ */ jsx(Link, { href: route("verification.identity"), className: "font-semibold underline", children: t("Verify now") })
-      ] }) : /* @__PURE__ */ jsxs(Fragment, { children: [
-        !hasPreferences && /* @__PURE__ */ jsxs("div", { className: "mb-5 flex flex-col gap-3 rounded-2xl border border-sky-100 bg-sky-50/80 p-4 sm:mb-6 sm:flex-row sm:items-center sm:justify-between", children: [
-          /* @__PURE__ */ jsxs("div", { className: "min-w-0", children: [
-            /* @__PURE__ */ jsx("div", { className: "text-sm font-semibold text-slate-900", children: t("Preferences are optional") }),
-            /* @__PURE__ */ jsx("p", { className: "mt-0.5 text-sm text-slate-600", children: t("You can offer on any open request right now. Preferences only help with match alerts.") })
-          ] }),
-          /* @__PURE__ */ jsxs(
-            Link,
-            {
-              href: route("seller.buyer-request-preferences.edit"),
-              className: "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white no-underline shadow-sm transition hover:bg-black",
-              children: [
-                /* @__PURE__ */ jsx(HiOutlinePlus, { className: "h-4 w-4" }),
-                t("Optional setup")
-              ]
-            }
-          )
+      !isLoggedIn ? /* @__PURE__ */ jsxs("div", { className: "mb-6 flex flex-col gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-4 text-sm text-sky-950 shadow-sm sm:flex-row sm:items-center sm:justify-between", children: [
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("span", { className: "font-semibold", children: t("Browsing leads as a guest.") }),
+          " ",
+          t("To place bids and submit offers on buyer requests, please log in with a corporate-verified seller account.")
+        ] }),
+        /* @__PURE__ */ jsx(Link, { href: "/login", className: "inline-flex shrink-0 items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white no-underline hover:bg-black", children: t("Log in") })
+      ] }) : !isCorporateVerified ? /* @__PURE__ */ jsxs("div", { className: "mb-6 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900 shadow-sm sm:flex-row sm:items-center sm:justify-between", children: [
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("span", { className: "font-semibold", children: t("Corporate verification required to bid.") }),
+          " ",
+          t("You can browse all requests freely, but only corporate-verified businesses can submit offers.")
+        ] }),
+        /* @__PURE__ */ jsx(Link, { href: route("verification.identity"), className: "inline-flex shrink-0 items-center justify-center rounded-xl bg-amber-800 px-4 py-2 text-xs font-semibold text-white no-underline hover:bg-amber-900", children: t("Verify now") })
+      ] }) : null,
+      isCorporateVerified && !hasPreferences && /* @__PURE__ */ jsxs("div", { className: "mb-5 flex flex-col gap-3 rounded-2xl border border-sky-100 bg-sky-50/80 p-4 sm:mb-6 sm:flex-row sm:items-center sm:justify-between", children: [
+        /* @__PURE__ */ jsxs("div", { className: "min-w-0", children: [
+          /* @__PURE__ */ jsx("div", { className: "text-sm font-semibold text-slate-900", children: t("Preferences are optional") }),
+          /* @__PURE__ */ jsx("p", { className: "mt-0.5 text-sm text-slate-600", children: t("You can offer on any open request right now. Preferences only help with match alerts.") })
         ] }),
         /* @__PURE__ */ jsxs(
-          "div",
+          Link,
           {
-            id: "seller-leads-board",
-            className: "mb-6 scroll-mt-24 rounded-2xl border border-white/70 bg-white/90 p-3 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-sm sm:mb-8 sm:p-4",
+            href: route("seller.buyer-request-preferences.edit"),
+            className: "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white no-underline shadow-sm transition hover:bg-black",
             children: [
-              /* @__PURE__ */ jsx("nav", { className: "grid grid-cols-2 gap-1 rounded-xl bg-slate-100/80 p-1 sm:flex sm:flex-wrap", children: tabs.map((tab) => {
-                const active = navFilter === tab.key;
-                return /* @__PURE__ */ jsxs(
-                  "button",
-                  {
-                    type: "button",
-                    onClick: () => setNavFilter(tab.key),
-                    className: `inline-flex min-w-0 items-center justify-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-medium transition sm:justify-start sm:gap-2 sm:px-3.5 sm:text-sm ${active ? "bg-slate-900 text-white shadow-md shadow-slate-900/25" : "text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm"}`,
-                    children: [
-                      /* @__PURE__ */ jsx("span", { className: "truncate", children: tab.label }),
-                      /* @__PURE__ */ jsx(
-                        "span",
-                        {
-                          className: `inline-flex min-w-[1.25rem] shrink-0 items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${active ? "bg-white/20 text-white" : "bg-white text-slate-600 shadow-sm"}`,
-                          children: tab.count
-                        }
-                      )
-                    ]
-                  },
-                  tab.key
-                );
-              }) }),
-              /* @__PURE__ */ jsxs("div", { className: "mt-3 flex flex-col gap-2.5 border-t border-slate-100 pt-3 sm:flex-row sm:items-center", children: [
-                /* @__PURE__ */ jsxs("div", { className: "relative min-w-0 flex-1", children: [
-                  /* @__PURE__ */ jsx(HiOutlineSearch, { className: "pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" }),
-                  /* @__PURE__ */ jsx(
-                    "input",
-                    {
-                      type: "search",
-                      value: search,
-                      onChange: (e) => setSearch(e.target.value),
-                      placeholder: t("Search leads..."),
-                      className: "w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-900/15"
-                    }
-                  )
-                ] }),
-                /* @__PURE__ */ jsxs("label", { className: "relative block w-full sm:w-48 sm:shrink-0", children: [
-                  /* @__PURE__ */ jsx("span", { className: "sr-only", children: t("Sort By") }),
-                  /* @__PURE__ */ jsxs(
-                    "select",
-                    {
-                      value: sortBy,
-                      onChange: (e) => setSortBy(e.target.value),
-                      className: "w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-3 pr-8 text-sm font-medium text-slate-700 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-900/15",
-                      children: [
-                        /* @__PURE__ */ jsxs("option", { value: "newest", children: [
-                          t("Sort By"),
-                          ": ",
-                          t("Newest")
-                        ] }),
-                        /* @__PURE__ */ jsx("option", { value: "budget", children: t("Highest budget") })
-                      ]
-                    }
-                  ),
-                  /* @__PURE__ */ jsx("span", { className: "pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400", children: "▾" })
-                ] })
-              ] })
+              /* @__PURE__ */ jsx(HiOutlinePlus, { className: "h-4 w-4" }),
+              t("Optional setup")
             ]
           }
-        ),
-        filtered.length === 0 ? /* @__PURE__ */ jsxs("div", { className: "rounded-2xl border border-dashed border-slate-300/80 bg-white/90 px-4 py-14 text-center shadow-[0_8px_30px_rgba(15,23,42,0.06)] sm:px-6 sm:py-16", children: [
-          /* @__PURE__ */ jsx(HiOutlineClipboardList, { className: "mx-auto h-9 w-9 text-slate-300 sm:h-10 sm:w-10" }),
-          /* @__PURE__ */ jsx("h2", { className: "mt-3 text-base font-bold text-gray-900 sm:text-lg", children: requests.length === 0 ? t("No open requests") : t("No matching leads") }),
-          /* @__PURE__ */ jsx("p", { className: "mx-auto mt-1 max-w-md text-sm text-slate-500", children: requests.length === 0 ? t("New buyer requests will appear here when available.") : t("Try another filter or clear your search.") })
-        ] }) : /* @__PURE__ */ jsx("div", { className: "grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3", children: filtered.map((item) => {
-          const categoryLine = [
-            item.category?.name,
-            item.sub_category?.name || item.subCategory?.name,
-            item.child_category?.name || item.childCategory?.name
-          ].filter(Boolean).join(" › ") || t("Uncategorized");
-          const description = stripHtml(item.description || "");
-          const thumbs = (item.images || []).slice(0, 4);
-          const extraImages = Math.max(0, (item.images || []).length - 3);
-          const previewThumbs = extraImages > 0 ? thumbs.slice(0, 3) : thumbs;
-          return /* @__PURE__ */ jsxs(
-            "article",
-            {
-              className: "group flex flex-col justify-between rounded-2xl border border-slate-200/70 bg-white p-3.5 shadow-[0_8px_28px_rgba(15,23,42,0.07)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_40px_rgba(15,23,42,0.11)] sm:p-4",
-              children: [
-                /* @__PURE__ */ jsxs("div", { children: [
-                  /* @__PURE__ */ jsxs("div", { className: "flex items-start justify-between gap-2", children: [
-                    /* @__PURE__ */ jsx("span", { className: "inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200", children: t("Open") }),
-                    item.my_offer ? /* @__PURE__ */ jsx("span", { className: "inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold capitalize text-amber-700 ring-1 ring-amber-200", children: item.my_offer.status }) : /* @__PURE__ */ jsx("span", { className: "inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600", children: t("No offer yet") })
-                  ] }),
-                  /* @__PURE__ */ jsx("h2", { className: "mt-3 line-clamp-1 text-lg font-bold text-gray-900", children: item.title }),
-                  item.user && /* @__PURE__ */ jsxs("div", { className: "mt-2.5 flex items-center gap-2", children: [
+        )
+      ] }),
+      /* @__PURE__ */ jsxs(
+        "div",
+        {
+          id: "seller-leads-board",
+          className: "mb-6 scroll-mt-24 rounded-2xl border border-white/70 bg-white/90 p-3 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-sm sm:mb-8 sm:p-4",
+          children: [
+            /* @__PURE__ */ jsx("nav", { className: "grid grid-cols-2 gap-1 rounded-xl bg-slate-100/80 p-1 sm:flex sm:flex-wrap", children: tabs.map((tab) => {
+              const active = navFilter === tab.key;
+              return /* @__PURE__ */ jsxs(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => setNavFilter(tab.key),
+                  className: `inline-flex min-w-0 items-center justify-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-medium transition sm:justify-start sm:gap-2 sm:px-3.5 sm:text-sm ${active ? "bg-slate-900 text-white shadow-md shadow-slate-900/25" : "text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm"}`,
+                  children: [
+                    /* @__PURE__ */ jsx("span", { className: "truncate", children: tab.label }),
                     /* @__PURE__ */ jsx(
-                      "img",
+                      "span",
                       {
-                        src: userAvatarSrc(item.user),
-                        alt: item.user.name || t("Buyer"),
-                        className: "h-7 w-7 shrink-0 rounded-full border border-slate-200 bg-slate-100 object-cover",
-                        onError: (e) => {
-                          e.currentTarget.src = "/assets/images/user.jpg";
-                        }
+                        className: `inline-flex min-w-[1.25rem] shrink-0 items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${active ? "bg-white/20 text-white" : "bg-white text-slate-600 shadow-sm"}`,
+                        children: tab.count
                       }
-                    ),
-                    /* @__PURE__ */ jsxs("div", { className: "min-w-0 flex items-center gap-1", children: [
-                      /* @__PURE__ */ jsx("span", { className: "truncate text-xs font-semibold text-slate-800", children: item.user.name || t("Buyer") }),
-                      isUserVerified(item.user) && /* @__PURE__ */ jsx(VerifiedBadge, { title: t(verificationLabel(item.user)) })
-                    ] })
-                  ] }),
-                  /* @__PURE__ */ jsxs("div", { className: "mt-2.5 space-y-1.5 text-xs text-slate-500", children: [
-                    /* @__PURE__ */ jsxs("div", { className: "flex min-w-0 items-start gap-1.5", children: [
-                      /* @__PURE__ */ jsx(HiOutlineClipboardList, { className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500" }),
-                      /* @__PURE__ */ jsx("span", { className: "line-clamp-1", children: categoryLine })
-                    ] }),
-                    publicBuyerRequestLocation(item) && /* @__PURE__ */ jsxs("div", { className: "flex min-w-0 items-start gap-1.5", children: [
-                      /* @__PURE__ */ jsx(HiOutlineLocationMarker, { className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500" }),
-                      /* @__PURE__ */ jsx("span", { className: "line-clamp-1", children: publicBuyerRequestLocation(item) })
-                    ] }),
-                    item.budget != null && Number(item.budget) > 0 && /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5 font-semibold text-slate-800", children: [
-                      /* @__PURE__ */ jsx(HiOutlineCash, { className: "h-3.5 w-3.5 shrink-0 text-emerald-500" }),
-                      /* @__PURE__ */ jsxs("span", { className: "font-medium text-slate-500", children: [
-                        t("Target"),
-                        ":"
-                      ] }),
-                      /* @__PURE__ */ jsx(Price, { amountPKR: item.budget })
-                    ] }),
-                    /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5", children: [
-                      /* @__PURE__ */ jsx(HiOutlineCalendar, { className: "h-3.5 w-3.5 shrink-0 text-sky-500" }),
-                      /* @__PURE__ */ jsx("span", { children: formatPostedDate(item.created_at) })
-                    ] }),
-                    Number(item.offers_count || 0) > 0 && /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5 font-medium text-slate-700", children: [
-                      /* @__PURE__ */ jsx(HiOutlineClipboardList, { className: "h-3.5 w-3.5 shrink-0 text-violet-500" }),
-                      /* @__PURE__ */ jsxs("span", { children: [
-                        Number(item.offers_count),
-                        " ",
-                        Number(item.offers_count) === 1 ? t("offer so far") : t("offers so far"),
-                        !item.my_offer ? ` — ${t("you can still bid")}` : ""
-                      ] })
-                    ] })
-                  ] }),
-                  description && /* @__PURE__ */ jsx("p", { className: "mt-3 line-clamp-2 text-sm leading-relaxed text-slate-600", children: description }),
-                  item.my_offer && /* @__PURE__ */ jsxs("div", { className: "mt-2 text-xs font-medium text-slate-600", children: [
-                    t("Your offer"),
-                    ": ",
-                    /* @__PURE__ */ jsx(Price, { amountPKR: item.my_offer.price })
-                  ] }),
-                  previewThumbs.length > 0 && /* @__PURE__ */ jsx("div", { className: "mt-3 flex gap-2", children: previewThumbs.map((img, idx) => /* @__PURE__ */ jsxs(
-                    "div",
-                    {
-                      className: "relative h-14 w-14 overflow-hidden rounded-lg border border-slate-100 bg-slate-100 shadow-sm",
-                      children: [
-                        /* @__PURE__ */ jsx(
-                          "img",
-                          {
-                            src: imageSrc(img),
-                            alt: "",
-                            className: "h-full w-full object-cover"
-                          }
-                        ),
-                        extraImages > 0 && idx === previewThumbs.length - 1 && /* @__PURE__ */ jsxs("span", { className: "absolute inset-0 flex items-center justify-center bg-black/45 text-xs font-bold text-white", children: [
-                          "+",
-                          extraImages
-                        ] })
-                      ]
-                    },
-                    img.id || idx
-                  )) })
-                ] }),
-                /* @__PURE__ */ jsx("div", { className: "mt-4 border-t border-slate-100 pt-4", children: /* @__PURE__ */ jsx(
-                  Link,
+                    )
+                  ]
+                },
+                tab.key
+              );
+            }) }),
+            /* @__PURE__ */ jsxs("div", { className: "mt-3 flex flex-col gap-2.5 border-t border-slate-100 pt-3 sm:flex-row sm:items-center", children: [
+              /* @__PURE__ */ jsxs("div", { className: "relative min-w-0 flex-1", children: [
+                /* @__PURE__ */ jsx(HiOutlineSearch, { className: "pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" }),
+                /* @__PURE__ */ jsx(
+                  "input",
                   {
-                    href: route("buyer-requests.show", item.slug || item),
-                    className: "inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white no-underline shadow-md shadow-slate-900/20 transition hover:bg-black hover:text-white",
-                    children: item.my_offer ? t("View / update offer") : t("View & offer")
+                    type: "search",
+                    value: search,
+                    onChange: (e) => setSearch(e.target.value),
+                    placeholder: t("Search leads..."),
+                    className: "w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-900/15"
                   }
-                ) })
-              ]
-            },
-            item.id
-          );
-        }) })
-      ] })
+                )
+              ] }),
+              /* @__PURE__ */ jsxs("label", { className: "relative block w-full sm:w-48 sm:shrink-0", children: [
+                /* @__PURE__ */ jsx("span", { className: "sr-only", children: t("Sort By") }),
+                /* @__PURE__ */ jsxs(
+                  "select",
+                  {
+                    value: sortBy,
+                    onChange: (e) => setSortBy(e.target.value),
+                    className: "w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-3 pr-8 text-sm font-medium text-slate-700 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-900/15",
+                    children: [
+                      /* @__PURE__ */ jsxs("option", { value: "newest", children: [
+                        t("Sort By"),
+                        ": ",
+                        t("Newest")
+                      ] }),
+                      /* @__PURE__ */ jsx("option", { value: "budget", children: t("Highest budget") })
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsx("span", { className: "pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400", children: "▾" })
+              ] })
+            ] })
+          ]
+        }
+      ),
+      filtered.length === 0 ? /* @__PURE__ */ jsxs("div", { className: "rounded-2xl border border-dashed border-slate-300/80 bg-white/90 px-4 py-14 text-center shadow-[0_8px_30px_rgba(15,23,42,0.06)] sm:px-6 sm:py-16", children: [
+        /* @__PURE__ */ jsx(HiOutlineClipboardList, { className: "mx-auto h-9 w-9 text-slate-300 sm:h-10 sm:w-10" }),
+        /* @__PURE__ */ jsx("h2", { className: "mt-3 text-base font-bold text-gray-900 sm:text-lg", children: requests.length === 0 ? t("No open requests") : t("No matching leads") }),
+        /* @__PURE__ */ jsx("p", { className: "mx-auto mt-1 max-w-md text-sm text-slate-500", children: requests.length === 0 ? t("New buyer requests will appear here when available.") : t("Try another filter or clear your search.") })
+      ] }) : /* @__PURE__ */ jsx("div", { className: "grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3", children: filtered.map((item) => {
+        const categoryLine = [
+          item.category?.name,
+          item.sub_category?.name || item.subCategory?.name,
+          item.child_category?.name || item.childCategory?.name
+        ].filter(Boolean).join(" › ") || t("Uncategorized");
+        const description = stripHtml(item.description || "");
+        const thumbs = (item.images || []).slice(0, 4);
+        const extraImages = Math.max(0, (item.images || []).length - 3);
+        const previewThumbs = extraImages > 0 ? thumbs.slice(0, 3) : thumbs;
+        return /* @__PURE__ */ jsxs(
+          "article",
+          {
+            className: "group flex flex-col justify-between rounded-2xl border border-slate-200/70 bg-white p-3.5 shadow-[0_8px_28px_rgba(15,23,42,0.07)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_40px_rgba(15,23,42,0.11)] sm:p-4",
+            children: [
+              /* @__PURE__ */ jsxs("div", { children: [
+                /* @__PURE__ */ jsxs("div", { className: "flex items-start justify-between gap-2", children: [
+                  /* @__PURE__ */ jsx("span", { className: "inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200", children: t("Open") }),
+                  item.my_offer ? /* @__PURE__ */ jsx("span", { className: "inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold capitalize text-amber-700 ring-1 ring-amber-200", children: item.my_offer.status }) : /* @__PURE__ */ jsx("span", { className: "inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600", children: t("No offer yet") })
+                ] }),
+                /* @__PURE__ */ jsx("h2", { className: "mt-3 line-clamp-1 text-lg font-bold text-gray-900", children: item.title }),
+                item.user && /* @__PURE__ */ jsxs("div", { className: "mt-2.5 flex items-center gap-2", children: [
+                  /* @__PURE__ */ jsx(
+                    "img",
+                    {
+                      src: userAvatarSrc(item.user),
+                      alt: item.user.name || t("Buyer"),
+                      className: "h-7 w-7 shrink-0 rounded-full border border-slate-200 bg-slate-100 object-cover",
+                      onError: (e) => {
+                        e.currentTarget.src = "/assets/images/user.jpg";
+                      }
+                    }
+                  ),
+                  /* @__PURE__ */ jsxs("div", { className: "min-w-0 flex items-center gap-1", children: [
+                    /* @__PURE__ */ jsx("span", { className: "truncate text-xs font-semibold text-slate-800", children: item.user.name || t("Buyer") }),
+                    isUserVerified(item.user) && /* @__PURE__ */ jsx(VerifiedBadge, { title: t(verificationLabel(item.user)) })
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxs("div", { className: "mt-2.5 space-y-1.5 text-xs text-slate-500", children: [
+                  /* @__PURE__ */ jsxs("div", { className: "flex min-w-0 items-start gap-1.5", children: [
+                    /* @__PURE__ */ jsx(HiOutlineClipboardList, { className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500" }),
+                    /* @__PURE__ */ jsx("span", { className: "line-clamp-1", children: categoryLine })
+                  ] }),
+                  publicBuyerRequestLocation(item) && /* @__PURE__ */ jsxs("div", { className: "flex min-w-0 items-start gap-1.5", children: [
+                    /* @__PURE__ */ jsx(HiOutlineLocationMarker, { className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500" }),
+                    /* @__PURE__ */ jsx("span", { className: "line-clamp-1", children: publicBuyerRequestLocation(item) })
+                  ] }),
+                  item.budget != null && Number(item.budget) > 0 && /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5 font-semibold text-slate-800", children: [
+                    /* @__PURE__ */ jsx(HiOutlineCash, { className: "h-3.5 w-3.5 shrink-0 text-emerald-500" }),
+                    /* @__PURE__ */ jsxs("span", { className: "font-medium text-slate-500", children: [
+                      t("Target"),
+                      ":"
+                    ] }),
+                    /* @__PURE__ */ jsx(Price, { amountPKR: item.budget })
+                  ] }),
+                  /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5", children: [
+                    /* @__PURE__ */ jsx(HiOutlineCalendar, { className: "h-3.5 w-3.5 shrink-0 text-sky-500" }),
+                    /* @__PURE__ */ jsx("span", { children: formatPostedDate(item.created_at) })
+                  ] }),
+                  Number(item.offers_count || 0) > 0 && /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5 font-medium text-slate-700", children: [
+                    /* @__PURE__ */ jsx(HiOutlineClipboardList, { className: "h-3.5 w-3.5 shrink-0 text-violet-500" }),
+                    /* @__PURE__ */ jsxs("span", { children: [
+                      Number(item.offers_count),
+                      " ",
+                      Number(item.offers_count) === 1 ? t("offer so far") : t("offers so far"),
+                      !item.my_offer ? ` — ${t("you can still bid")}` : ""
+                    ] })
+                  ] })
+                ] }),
+                description && /* @__PURE__ */ jsx("p", { className: "mt-3 line-clamp-2 text-sm leading-relaxed text-slate-600", children: description }),
+                item.my_offer && /* @__PURE__ */ jsxs("div", { className: "mt-2 text-xs font-medium text-slate-600", children: [
+                  t("Your offer"),
+                  ": ",
+                  /* @__PURE__ */ jsx(Price, { amountPKR: item.my_offer.price })
+                ] }),
+                previewThumbs.length > 0 && /* @__PURE__ */ jsx("div", { className: "mt-3 flex gap-2", children: previewThumbs.map((img, idx) => /* @__PURE__ */ jsxs(
+                  "div",
+                  {
+                    className: "relative h-14 w-14 overflow-hidden rounded-lg border border-slate-100 bg-slate-100 shadow-sm",
+                    children: [
+                      /* @__PURE__ */ jsx(
+                        "img",
+                        {
+                          src: imageSrc(img),
+                          alt: "",
+                          className: "h-full w-full object-cover"
+                        }
+                      ),
+                      extraImages > 0 && idx === previewThumbs.length - 1 && /* @__PURE__ */ jsxs("span", { className: "absolute inset-0 flex items-center justify-center bg-black/45 text-xs font-bold text-white", children: [
+                        "+",
+                        extraImages
+                      ] })
+                    ]
+                  },
+                  img.id || idx
+                )) })
+              ] }),
+              /* @__PURE__ */ jsx("div", { className: "mt-4 border-t border-slate-100 pt-4", children: /* @__PURE__ */ jsx(
+                Link,
+                {
+                  href: route("buyer-requests.show", item.slug || item),
+                  className: "inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white no-underline shadow-md shadow-slate-900/20 transition hover:bg-black hover:text-white",
+                  children: item.my_offer ? t("View / update offer") : t("View & offer")
+                }
+              ) })
+            ]
+          },
+          item.id
+        );
+      }) })
     ] }) })
   ] });
 }

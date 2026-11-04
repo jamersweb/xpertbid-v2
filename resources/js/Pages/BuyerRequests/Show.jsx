@@ -8,11 +8,13 @@ import {
     HiOutlineChatAlt2,
     HiOutlineCheckCircle,
     HiOutlineClipboardList,
+    HiOutlineExclamationCircle,
     HiOutlineLocationMarker,
     HiOutlinePhotograph,
     HiOutlineX,
 } from 'react-icons/hi';
 import AppLayout from '@/Layouts/AppLayout';
+import { useAuthModal } from '@/Contexts/AuthModalContext';
 import Price from '@/Components/Price';
 import useTranslate from '@/hooks/useTranslate';
 import useCurrencyList from '@/Utils/useCurrencyList';
@@ -95,8 +97,9 @@ function userAvatarSrc(person) {
     return `/${String(src).replace(/^\/+/, '')}`;
 }
 
-export default function Show({ buyerRequest, isOwner = false, canOffer = false, myOffer = null, offersCount: offersCountProp = null }) {
+export default function Show({ buyerRequest, isOwner = false, canOffer = false, isCorporateVerified = false, isLoggedIn = false, myOffer = null, offersCount: offersCountProp = null }) {
     const { t } = useTranslate();
+    const { openLogin } = useAuthModal();
     const { auth, flash } = usePage().props;
     const { list } = useCurrencyList();
     const [currencyTick, setCurrencyTick] = useState(0);
@@ -503,97 +506,145 @@ export default function Show({ buyerRequest, isOwner = false, canOffer = false, 
                                 )}
                             </section>
 
-                            {/* Seller offer form */}
-                            {canOffer && (
-                                <section className="rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm sm:p-6">
-                                    <h2 className="text-lg font-bold text-gray-900">
-                                        {myOffer?.status === 'pending'
-                                            ? t('Update your offer')
-                                            : t('Submit an offer')}
-                                    </h2>
-                                    <p className="mt-1 text-sm text-slate-500">
-                                        {t('Send a competitive price and a short message to the buyer.')}
-                                        {' '}
-                                        {t('Multiple sellers can offer on the same request.')}
-                                    </p>
-                                    {offersCount > 0 && !myOffer && (
-                                        <p className="mt-2 text-sm font-medium text-amber-700">
-                                            {offersCount === 1
-                                                ? t('1 other seller has already offered — you can still compete.')
-                                                : t(':count other sellers have already offered — you can still compete.').replace(':count', String(offersCount))}
-                                        </p>
-                                    )}
-
-                                    <form onSubmit={submitOffer} className="mt-5 space-y-4">
-                                        <div>
-                                            <label className="mb-1.5 block text-sm font-semibold text-slate-800">
-                                                {t('Price')}
-                                            </label>
-                                            <div className="flex overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-100">
-                                                <span className="inline-flex items-center border-r border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-600">
-                                                    {selectedMeta.code || 'PKR'}
-                                                </span>
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    step="0.01"
-                                                    className="w-full border-0 bg-transparent px-3 py-2.5 text-sm text-slate-900 outline-none ring-0 focus:ring-0"
-                                                    value={offerPrice}
-                                                    onChange={(e) => setOfferPrice(e.target.value)}
-                                                    placeholder="0"
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="mb-1.5 block text-sm font-semibold text-slate-800">
-                                                {t('Message')} <span className="font-normal text-slate-400">({t('optional')})</span>
-                                            </label>
-                                            <textarea
-                                                rows={3}
-                                                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-                                                value={offerMessage}
-                                                onChange={(e) => setOfferMessage(e.target.value)}
-                                                placeholder={t('Explain your delivery time, condition, or why the buyer should choose you...')}
-                                            />
-                                        </div>
-
-                                        <div
-                                            className={`grid gap-2 pt-1 ${
-                                                myOffer?.status === 'pending' ? 'grid-cols-2' : 'grid-cols-1'
-                                            }`}
-                                        >
-                                            <button
-                                                type="submit"
-                                                disabled={busy}
-                                                className="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-                                            >
-                                                {busy
-                                                    ? t('Saving...')
-                                                    : (myOffer?.status === 'pending' ? t('Update offer') : t('Submit offer'))}
-                                            </button>
-                                            {myOffer?.status === 'pending' && (
+                            {/* Seller offer form / guest login / corporate verification prompt */}
+                            {!isOwner && buyerRequest.status === 'open' && (
+                                <>
+                                    {!isLoggedIn ? (
+                                        <section className="rounded-2xl border border-sky-100 bg-sky-50/60 p-4 shadow-sm sm:p-6">
+                                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                                <div>
+                                                    <h2 className="text-base font-bold text-gray-900 sm:text-lg">
+                                                        {t('Log in to bid on this lead')}
+                                                    </h2>
+                                                    <p className="mt-1 text-sm text-slate-600">
+                                                        {t('Only corporate-verified sellers can submit bids and chat with the buyer.')}
+                                                    </p>
+                                                </div>
                                                 <button
                                                     type="button"
-                                                    onClick={withdrawOffer}
-                                                    className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
+                                                    onClick={openLogin}
+                                                    className="inline-flex shrink-0 items-center justify-center rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-black"
                                                 >
-                                                    {t('Withdraw offer')}
+                                                    {t('Log in')} →
                                                 </button>
+                                            </div>
+                                        </section>
+                                    ) : !isCorporateVerified ? (
+                                        <section className="rounded-2xl border border-sky-100 bg-sky-50/80 p-4 shadow-sm sm:p-6">
+                                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                                <div className="flex items-start gap-3">
+                                                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-[#43ACE9]">
+                                                        <HiOutlineExclamationCircle className="h-5 w-5" />
+                                                    </span>
+                                                    <div>
+                                                        <h2 className="text-base font-bold text-slate-900 sm:text-lg">
+                                                            {t('Corporate verification required to bid')}
+                                                        </h2>
+                                                        <p className="mt-1 text-sm text-slate-600">
+                                                            {t('Complete business verification to submit offers and unlock direct buyer chat.')}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <Link
+                                                    href={route('verification.identity')}
+                                                    className="inline-flex shrink-0 items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-black"
+                                                >
+                                                    {t('Verify business')} →
+                                                </Link>
+                                            </div>
+                                        </section>
+                                    ) : canOffer ? (
+                                        <section className="rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm sm:p-6">
+                                            <h2 className="text-lg font-bold text-gray-900">
+                                                {myOffer?.status === 'pending'
+                                                    ? t('Update your offer')
+                                                    : t('Submit an offer')}
+                                            </h2>
+                                            <p className="mt-1 text-sm text-slate-500">
+                                                {t('Send a competitive price and a short message to the buyer.')}
+                                                {' '}
+                                                {t('Multiple sellers can offer on the same request.')}
+                                            </p>
+                                            {offersCount > 0 && !myOffer && (
+                                                <p className="mt-2 text-sm font-medium text-amber-700">
+                                                    {offersCount === 1
+                                                        ? t('1 other seller has already offered — you can still compete.')
+                                                        : t(':count other sellers have already offered — you can still compete.').replace(':count', String(offersCount))}
+                                                </p>
                                             )}
-                                        </div>
-                                    </form>
 
-                                    {myOffer && myOffer.status !== 'pending' && (
-                                        <div className="mt-4 text-sm text-slate-500">
-                                            {t('Your offer status')}:{' '}
-                                            <span className={`ml-1 inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${statusClasses(myOffer.status)}`}>
-                                                {myOffer.status}
-                                            </span>
-                                        </div>
-                                    )}
-                                </section>
+                                            <form onSubmit={submitOffer} className="mt-5 space-y-4">
+                                                <div>
+                                                    <label className="mb-1.5 block text-sm font-semibold text-slate-800">
+                                                        {t('Price')}
+                                                    </label>
+                                                    <div className="flex overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-100">
+                                                        <span className="inline-flex items-center border-r border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-600">
+                                                            {selectedMeta.code || 'PKR'}
+                                                        </span>
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            step="0.01"
+                                                            className="w-full border-0 bg-transparent px-3 py-2.5 text-sm text-slate-900 outline-none ring-0 focus:ring-0"
+                                                            value={offerPrice}
+                                                            onChange={(e) => setOfferPrice(e.target.value)}
+                                                            placeholder="0"
+                                                            required
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label className="mb-1.5 block text-sm font-semibold text-slate-800">
+                                                        {t('Message')} <span className="font-normal text-slate-400">({t('optional')})</span>
+                                                    </label>
+                                                    <textarea
+                                                        rows={3}
+                                                        className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                                                        value={offerMessage}
+                                                        onChange={(e) => setOfferMessage(e.target.value)}
+                                                        placeholder={t('Explain your delivery time, condition, or why the buyer should choose you...')}
+                                                    />
+                                                </div>
+
+                                                <div
+                                                    className={`grid gap-2 pt-1 ${
+                                                        myOffer?.status === 'pending' ? 'grid-cols-2' : 'grid-cols-1'
+                                                    }`}
+                                                >
+                                                    <button
+                                                        type="submit"
+                                                        disabled={busy}
+                                                        className="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                                                    >
+                                                        {busy
+                                                            ? t('Saving...')
+                                                            : (myOffer?.status === 'pending' ? t('Update offer') : t('Submit offer'))}
+                                                    </button>
+                                                    {myOffer?.status === 'pending' && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={withdrawOffer}
+                                                            className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
+                                                        >
+                                                            {t('Withdraw offer')}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </form>
+
+                                            {myOffer && myOffer.status !== 'pending' && (
+                                                <div className="mt-4 text-sm text-slate-500">
+                                                    {t('Your offer status')}:{' '}
+                                                    <span className={`ml-1 inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${statusClasses(myOffer.status)}`}>
+                                                        {myOffer.status}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </section>
+                                    ) : null}
+                                </>
                             )}
 
                             {/* Offers list — all competing seller bids (buyer + sellers) */}
@@ -904,13 +955,38 @@ export default function Show({ buyerRequest, isOwner = false, canOffer = false, 
                                             </button>
                                         )}
                                     </div>
+                                ) : !isLoggedIn ? (
+                                    <div className="mt-3 text-center sm:mt-4">
+                                        <p className="text-xs text-slate-500">
+                                            {t('Log in to bid and unlock chat with the buyer.')}
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={openLogin}
+                                            className="mt-2 inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-black"
+                                        >
+                                            {t('Log in')}
+                                        </button>
+                                    </div>
+                                ) : !isCorporateVerified ? (
+                                    <div className="mt-3 text-center sm:mt-4">
+                                        <p className="text-xs text-slate-600">
+                                            {t('Corporate verification is required to offer and chat.')}
+                                        </p>
+                                        <Link
+                                            href={route('verification.identity')}
+                                            className="mt-2 inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-black"
+                                        >
+                                            {t('Verify business')}
+                                        </Link>
+                                    </div>
                                 ) : canOffer ? (
                                     <p className="mt-3 text-sm text-slate-500 sm:mt-4">
                                         {t('Submit an offer first to unlock chat with the buyer.')}
                                     </p>
                                 ) : (
                                     <p className="mt-3 text-sm text-slate-500 sm:mt-4">
-                                        {t('Corporate verification is required to offer and chat.')}
+                                        {t('This request is no longer accepting offers.')}
                                     </p>
                                 )}
                             </section>

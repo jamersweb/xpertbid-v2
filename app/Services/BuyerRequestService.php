@@ -418,12 +418,11 @@ class BuyerRequestService
         });
     }
 
-    public function matchedOpenRequestsForSeller(User $seller, ?string $site = null): Collection
+    public function matchedOpenRequestsForSeller(?User $seller = null, ?string $site = null): Collection
     {
-        $this->assertCorporateVerified($seller);
-
         // Preferences are optional and used for notifications only.
-        // Corporate sellers always see open leads (optionally site-scoped) and can offer freely.
+        // Anyone (guests, unverified sellers, corporate sellers) can browse open leads freely.
+        // Submitting an offer / bid strictly requires corporate verification.
         $query = BuyerRequest::query()
             ->with([
                 'images:id,buyer_request_id,path,sort_order',
@@ -434,7 +433,10 @@ class BuyerRequestService
                 'user.corporateVerification:id,user_id,status',
                 'user.individualVerification:id,user_id,status',
             ])
-            ->withCount([
+            ->where('status', BuyerRequest::STATUS_OPEN);
+
+        if ($seller) {
+            $query->withCount([
                 'offers',
                 'offers as my_offer_count' => function ($q) use ($seller) {
                     $q->where('seller_id', $seller->id)
@@ -445,9 +447,10 @@ class BuyerRequestService
                             BuyerRequestOffer::STATUS_REJECTED,
                         ]);
                 },
-            ])
-            ->where('status', BuyerRequest::STATUS_OPEN)
-            ->where('user_id', '!=', $seller->id);
+            ])->where('user_id', '!=', $seller->id);
+        } else {
+            $query->withCount('offers');
+        }
 
         BuyerRequestSiteScope::applyToQuery($query, $site);
 

@@ -18,35 +18,36 @@ class SellerBuyerRequestController extends Controller
     public function browse()
     {
         $user = Auth::user();
-        $user->loadMissing('corporateVerification');
-
-        if (! $user->isCorporateVerified()) {
-            return Inertia::render('BuyerRequests/Seller/Browse', [
-                'requests' => [],
-                'isCorporateVerified' => false,
-                'hasPreferences' => false,
-            ]);
+        if ($user) {
+            $user->loadMissing('corporateVerification');
         }
 
-        $preference = SellerBuyerRequestPreference::with(['categories', 'locations'])
-            ->where('user_id', $user->id)
-            ->first();
+        $isCorporateVerified = $user ? $user->isCorporateVerified() : false;
+        $hasPreferences = false;
+        $myOffers = collect();
 
-        $hasPreferences = $preference
-            && ($preference->categories->isNotEmpty() || $preference->locations->isNotEmpty());
+        if ($user) {
+            $preference = SellerBuyerRequestPreference::with(['categories', 'locations'])
+                ->where('user_id', $user->id)
+                ->first();
 
-        // Preferences optional — corporate sellers always see open leads
+            $hasPreferences = $preference
+                && ($preference->categories->isNotEmpty() || $preference->locations->isNotEmpty());
+        }
+
+        // Anyone (guest, unverified, corporate) can browse open leads
         $requests = $this->service->matchedOpenRequestsForSeller($user);
 
-        // Prefer pending/accepted when a seller has multiple historical offers on one request.
-        $myOffers = $user->buyerRequestOffers()
-            ->whereIn('buyer_request_id', $requests->pluck('id'))
-            ->whereNull('deleted_at')
-            ->orderByRaw("CASE status WHEN 'pending' THEN 0 WHEN 'accepted' THEN 1 WHEN 'rejected' THEN 2 ELSE 3 END")
-            ->orderByDesc('id')
-            ->get()
-            ->unique('buyer_request_id')
-            ->keyBy('buyer_request_id');
+        if ($user && $requests->isNotEmpty()) {
+            $myOffers = $user->buyerRequestOffers()
+                ->whereIn('buyer_request_id', $requests->pluck('id'))
+                ->whereNull('deleted_at')
+                ->orderByRaw("CASE status WHEN 'pending' THEN 0 WHEN 'accepted' THEN 1 WHEN 'rejected' THEN 2 ELSE 3 END")
+                ->orderByDesc('id')
+                ->get()
+                ->unique('buyer_request_id')
+                ->keyBy('buyer_request_id');
+        }
 
         return Inertia::render('BuyerRequests/Seller/Browse', [
             'requests' => $requests->map(function ($request) use ($myOffers) {
@@ -54,7 +55,8 @@ class SellerBuyerRequestController extends Controller
 
                 return $request;
             }),
-            'isCorporateVerified' => true,
+            'isCorporateVerified' => $isCorporateVerified,
+            'isLoggedIn' => (bool) $user,
             'hasPreferences' => $hasPreferences,
         ]);
     }

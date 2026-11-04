@@ -131,12 +131,8 @@ export default function BuyerRequestShowPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) {
-      setLoading(false);
-      return;
-    }
     void load();
-  }, [authLoading, user, load]);
+  }, [authLoading, load]);
 
   const plainDescription = stripHtml(item?.description || "");
   const descriptionLong = plainDescription.length > 280;
@@ -150,6 +146,7 @@ export default function BuyerRequestShowPage() {
       offers.find((o) => o.seller?.id && Number(o.seller.id) === Number(user.id)) || null
     );
   }, [item?.my_offer, offers, user, isOwner]);
+  const isCorporateVerified = Boolean(user?.is_corporate_verified);
   const canOffer = !isOwner && item?.status === "open";
   const actionsLocked = item?.status !== "open";
   const backHref = isOwner ? "/buyer-requests" : "/seller/buyer-requests";
@@ -426,94 +423,122 @@ export default function BuyerRequestShowPage() {
             </section>
 
             {canOffer ? (
-              <section className="br-show__card">
-                <h2 className="br-show__aside-title">
-                  {myOffer?.status === "pending" ? "Update your offer" : "Submit an offer"}
-                </h2>
-                <p className="br-sub">
-                  Send a competitive price and a short message to the buyer. Multiple sellers can
-                  offer on the same request.
-                </p>
-                {/corporate/i.test(error) ? (
+              !user ? (
+                <section className="br-show__card text-center p-4">
+                  <h2 className="br-show__aside-title mb-2">Place an Offer</h2>
+                  <p className="br-sub mb-3">
+                    Sign in with a corporate-verified seller account to submit a bid on this request.
+                  </p>
+                  <button type="button" className="br-btn br-btn--dark" onClick={openLogin}>
+                    <i className="fa-solid fa-right-to-bracket me-2" aria-hidden />
+                    Log in to bid
+                  </button>
+                </section>
+              ) : !isCorporateVerified ? (
+                <section className="br-show__card text-center p-4">
+                  <h2 className="br-show__aside-title mb-2">Corporate Verification Required</h2>
+                  <p className="br-sub mb-3">
+                    Only corporate-verified sellers can submit bids and make offers on buyer requests.
+                  </p>
                   <button
                     type="button"
-                    className="br-link mb-2"
+                    className="br-btn br-btn--dark"
                     onClick={() => void openMainPath("/identity-verification")}
                   >
-                    Complete corporate verification
+                    <i className="fa-solid fa-shield-halved me-2" aria-hidden />
+                    Verify your business
                   </button>
-                ) : null}
-                <form onSubmit={onOffer} className="br-show__form">
-                  <label>
-                    <span>Price</span>
-                    <div className="br-show__price">
-                      <span>PKR</span>
-                      <input
-                        type="number"
-                        min={1}
-                        step="1"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        placeholder="0"
-                        required
-                      />
-                    </div>
-                  </label>
-                  <label>
-                    <span>
-                      Message <em>(optional)</em>
-                    </span>
-                    <textarea
-                      rows={3}
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Explain your delivery time, condition, or why the buyer should choose you..."
-                    />
-                  </label>
-                  <div
-                    className={`br-show__form-actions ${
-                      myOffer?.status === "pending" ? "is-split" : ""
-                    }`}
-                  >
-                    <button
-                      type="submit"
-                      className="br-btn br-btn--dark w-100"
-                      disabled={busy || !price}
-                    >
-                      {busy
-                        ? "Saving…"
-                        : myOffer?.status === "pending"
-                          ? "Update offer"
-                          : "Submit offer"}
-                    </button>
-                    {myOffer?.status === "pending" ? (
-                      <button
-                        type="button"
-                        className="br-btn br-btn--outline w-100"
-                        disabled={busy}
-                        onClick={() => setConfirm({ type: "withdraw", offerId: myOffer.id })}
-                      >
-                        Withdraw offer
-                      </button>
-                    ) : null}
-                  </div>
-                </form>
-                {myOffer && myOffer.status !== "pending" ? (
-                  <p className="br-sub mt-3 mb-0">
-                    Your offer status:{" "}
-                    <span
-                      className="br-pill"
-                      style={{
-                        background: offerPill(myOffer.status).bg,
-                        color: offerPill(myOffer.status).color,
-                        boxShadow: `inset 0 0 0 1px ${offerPill(myOffer.status).ring}`,
-                      }}
-                    >
-                      {myOffer.status}
-                    </span>
+                </section>
+              ) : (
+                <section className="br-show__card">
+                  <h2 className="br-show__aside-title">
+                    {myOffer?.status === "pending" ? "Update your offer" : "Submit an offer"}
+                  </h2>
+                  <p className="br-sub">
+                    Send a competitive price and a short message to the buyer. Multiple sellers can
+                    offer on the same request.
                   </p>
-                ) : null}
-              </section>
+                  {/corporate/i.test(error) ? (
+                    <button
+                      type="button"
+                      className="br-link mb-2"
+                      onClick={() => void openMainPath("/identity-verification")}
+                    >
+                      Complete corporate verification
+                    </button>
+                  ) : null}
+                  <form onSubmit={onOffer} className="br-show__form">
+                    <label>
+                      <span>Price</span>
+                      <div className="br-show__price">
+                        <span>PKR</span>
+                        <input
+                          type="number"
+                          min={1}
+                          step="1"
+                          value={price}
+                          onChange={(e) => setPrice(e.target.value)}
+                          placeholder="0"
+                          required
+                        />
+                      </div>
+                    </label>
+                    <label>
+                      <span>
+                        Message <em>(optional)</em>
+                      </span>
+                      <textarea
+                        rows={3}
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="Explain your delivery time, condition, or why the buyer should choose you..."
+                      />
+                    </label>
+                    <div
+                      className={`br-show__form-actions ${
+                        myOffer?.status === "pending" ? "is-split" : ""
+                      }`}
+                    >
+                      <button
+                        type="submit"
+                        className="br-btn br-btn--dark w-100"
+                        disabled={busy || !price}
+                      >
+                        {busy
+                          ? "Saving…"
+                          : myOffer?.status === "pending"
+                            ? "Update offer"
+                            : "Submit offer"}
+                      </button>
+                      {myOffer?.status === "pending" ? (
+                        <button
+                          type="button"
+                          className="br-btn br-btn--outline w-100"
+                          disabled={busy}
+                          onClick={() => setConfirm({ type: "withdraw", offerId: myOffer.id })}
+                        >
+                          Withdraw offer
+                        </button>
+                      ) : null}
+                    </div>
+                  </form>
+                  {myOffer && myOffer.status !== "pending" ? (
+                    <p className="br-sub mt-3 mb-0">
+                      Your offer status:{" "}
+                      <span
+                        className="br-pill"
+                        style={{
+                          background: offerPill(myOffer.status).bg,
+                          color: offerPill(myOffer.status).color,
+                          boxShadow: `inset 0 0 0 1px ${offerPill(myOffer.status).ring}`,
+                        }}
+                      >
+                        {myOffer.status}
+                      </span>
+                    </p>
+                  ) : null}
+                </section>
+              )
             ) : null}
 
             <section className="br-show__card">
@@ -788,9 +813,14 @@ export default function BuyerRequestShowPage() {
                     </button>
                   ) : null}
                 </div>
-              ) : canOffer ? (
-                <p className="br-sub mb-0">Submit an offer first to unlock chat with the buyer.</p>
-              ) : (
+              ) : !user ? (
+                <p className="br-sub mb-0">
+                  <button type="button" className="br-link font-medium" onClick={openLogin}>
+                    Sign in
+                  </button>{" "}
+                  with a corporate-verified account to submit an offer and chat with the buyer.
+                </p>
+              ) : !isCorporateVerified ? (
                 <p className="br-sub mb-0">
                   Corporate verification is required to offer and chat.{" "}
                   <button
@@ -801,6 +831,8 @@ export default function BuyerRequestShowPage() {
                     Verify now
                   </button>
                 </p>
+              ) : (
+                <p className="br-sub mb-0">Submit an offer first to unlock chat with the buyer.</p>
               )}
             </section>
           </aside>

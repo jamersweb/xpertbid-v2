@@ -5,12 +5,14 @@ import {
     HiOutlineCash,
     HiOutlineClipboardList,
     HiOutlineCog,
+    HiOutlineExclamationCircle,
     HiOutlineLocationMarker,
     HiOutlinePlus,
     HiOutlineSearch,
     HiOutlineTrendingUp,
 } from 'react-icons/hi';
 import AppLayout from '@/Layouts/AppLayout';
+import { useAuthModal } from '@/Contexts/AuthModalContext';
 import Price from '@/Components/Price';
 import useTranslate from '@/hooks/useTranslate';
 import { publicBuyerRequestLocation } from '@/Utils/buyerRequestLocation';
@@ -81,9 +83,11 @@ function VerifiedBadge({ title }) {
 export default function Browse({
     requests = [],
     isCorporateVerified = false,
+    isLoggedIn = false,
     hasPreferences = false,
 }) {
     const { t } = useTranslate();
+    const { openLogin } = useAuthModal();
     const [navFilter, setNavFilter] = useState('all');
     const [sortBy, setSortBy] = useState('newest');
     const [search, setSearch] = useState('');
@@ -243,36 +247,40 @@ export default function Browse({
                                 </div>
 
                                 <div className="mt-4 flex flex-col gap-3 sm:mt-8 sm:gap-4">
-                                    {isCorporateVerified && (
-                                        <div className="inline-grid max-w-full grid-cols-3 gap-2 sm:inline-flex sm:items-end sm:gap-7">
-                                            <div className="min-w-0 text-center sm:text-left">
-                                                <div className="text-xl font-bold tabular-nums text-white sm:text-3xl">{counts.available}</div>
-                                                <div className="mt-0.5 text-[9px] font-medium uppercase leading-tight tracking-wider text-slate-400 sm:text-[11px]">
-                                                    {t('Open to you')}
-                                                </div>
+                                    <div className="inline-grid max-w-full grid-cols-3 gap-2 sm:inline-flex sm:items-end sm:gap-7">
+                                        <div className="min-w-0 text-center sm:text-left">
+                                            <div className="text-xl font-bold tabular-nums text-white sm:text-3xl">
+                                                {isCorporateVerified ? counts.available : counts.all}
                                             </div>
-                                            <div className="hidden h-8 w-px shrink-0 bg-white/15 sm:block" />
-                                            <div className="min-w-0 text-center sm:text-left">
-                                                <div className="text-xl font-bold tabular-nums text-white sm:text-3xl">{counts.offered}</div>
-                                                <div className="mt-0.5 text-[9px] font-medium uppercase leading-tight tracking-wider text-slate-400 sm:text-[11px]">
-                                                    {t('Your bids')}
-                                                </div>
-                                            </div>
-                                            <div className="hidden h-8 w-px shrink-0 bg-white/15 sm:block" />
-                                            <div className="min-w-0 text-center sm:text-left">
-                                                <div className="text-xl font-bold tabular-nums text-white sm:text-3xl">{counts.all}</div>
-                                                <div className="mt-0.5 text-[9px] font-medium uppercase leading-tight tracking-wider text-slate-400 sm:text-[11px]">
-                                                    {t('Total')}
-                                                </div>
+                                            <div className="mt-0.5 text-[9px] font-medium uppercase leading-tight tracking-wider text-slate-400 sm:text-[11px]">
+                                                {isCorporateVerified ? t('Open to you') : t('Open leads')}
                                             </div>
                                         </div>
-                                    )}
+                                        {isCorporateVerified && (
+                                            <>
+                                                <div className="hidden h-8 w-px shrink-0 bg-white/15 sm:block" />
+                                                <div className="min-w-0 text-center sm:text-left">
+                                                    <div className="text-xl font-bold tabular-nums text-white sm:text-3xl">{counts.offered}</div>
+                                                    <div className="mt-0.5 text-[9px] font-medium uppercase leading-tight tracking-wider text-slate-400 sm:text-[11px]">
+                                                        {t('Your bids')}
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+                                        <div className="hidden h-8 w-px shrink-0 bg-white/15 sm:block" />
+                                        <div className="min-w-0 text-center sm:text-left">
+                                            <div className="text-xl font-bold tabular-nums text-white sm:text-3xl">{counts.all}</div>
+                                            <div className="mt-0.5 text-[9px] font-medium uppercase leading-tight tracking-wider text-slate-400 sm:text-[11px]">
+                                                {t('Total')}
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <div className="relative z-20 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                                        {isCorporateVerified && counts.available > 0 && (
+                                        {counts.all > 0 && (
                                             <button
                                                 type="button"
-                                                onClick={() => scrollToLeads('available')}
+                                                onClick={() => scrollToLeads(isCorporateVerified ? 'available' : 'all')}
                                                 className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#43ACE9] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_28px_rgba(67,172,233,0.45)] transition hover:bg-[#35a0df] sm:w-auto"
                                             >
                                                 <HiOutlineTrendingUp className="h-4 w-4 shrink-0" />
@@ -402,16 +410,38 @@ export default function Browse({
                         }
                     `}</style>
 
-                    {!isCorporateVerified ? (
-                        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900 shadow-sm">
-                            {t('Corporate verification is required to view and offer on buyer requests.')}{' '}
-                            <Link href={route('verification.identity')} className="font-semibold underline">
-                                {t('Verify now')}
+                    {!isLoggedIn ? (
+                        <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-4 text-sm text-sky-950 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <span className="font-semibold">{t('Browsing leads as a guest.')}</span>{' '}
+                                {t('To place bids and submit offers on buyer requests, please log in with a corporate-verified seller account.')}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={openLogin}
+                                className="inline-flex shrink-0 items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white no-underline hover:bg-black"
+                            >
+                                {t('Log in')}
+                            </button>
+                        </div>
+                    ) : !isCorporateVerified ? (
+                        <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-sky-100 bg-sky-50/80 p-4 text-sm text-slate-800 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-center gap-3">
+                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-[#43ACE9]">
+                                    <HiOutlineExclamationCircle className="h-5 w-5" />
+                                </span>
+                                <div>
+                                    <span className="font-semibold text-slate-900">{t('Corporate verification required to bid.')}</span>{' '}
+                                    <span className="text-slate-600">{t('You can browse all requests freely, but only corporate-verified businesses can submit offers.')}</span>
+                                </div>
+                            </div>
+                            <Link href={route('verification.identity')} className="inline-flex shrink-0 items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white no-underline shadow-sm transition hover:bg-black">
+                                {t('Verify now')} →
                             </Link>
                         </div>
-                    ) : (
-                        <>
-                            {!hasPreferences && (
+                    ) : null}
+
+                    {isCorporateVerified && !hasPreferences && (
                                 <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-sky-100 bg-sky-50/80 p-4 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
                                     <div className="min-w-0">
                                         <div className="text-sm font-semibold text-slate-900">
@@ -642,8 +672,6 @@ export default function Browse({
                                     })}
                                 </div>
                             )}
-                        </>
-                    )}
                 </div>
             </div>
         </AppLayout>

@@ -7,8 +7,17 @@ use App\Models\User;
 
 class BuyerRequestPolicy
 {
-    public function view(User $user, BuyerRequest $buyerRequest): bool
+    public function view(?User $user, BuyerRequest $buyerRequest): bool
     {
+        // Open buyer requests can be viewed by anyone (guests, unverified, and corporate)
+        if ($buyerRequest->isOpen()) {
+            return true;
+        }
+
+        if (! $user) {
+            return false;
+        }
+
         if ((int) $buyerRequest->user_id === (int) $user->id) {
             return true;
         }

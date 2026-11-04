@@ -2,7 +2,7 @@ import { jsxs, jsx, Fragment } from "react/jsx-runtime";
 import React, { useState, useMemo } from "react";
 import { usePage, Head, Link, router } from "@inertiajs/react";
 import axios from "axios";
-import { HiOutlineArrowLeft, HiOutlineClipboardList, HiOutlineLocationMarker, HiOutlineCash, HiOutlineX, HiOutlinePhotograph, HiOutlineChatAlt2, HiOutlineCalendar, HiOutlineCheckCircle } from "react-icons/hi";
+import { HiOutlineArrowLeft, HiOutlineClipboardList, HiOutlineLocationMarker, HiOutlineCash, HiOutlineX, HiOutlinePhotograph, HiOutlineExclamationCircle, HiOutlineChatAlt2, HiOutlineCalendar, HiOutlineCheckCircle } from "react-icons/hi";
 import { A as AppLayout } from "./AppLayout-DaOB_wGA.js";
 import { g as getSelectedCurrency, a as convertPKRTo, P as Price, c as convertToPKR } from "./Price-7qyok_Wm.js";
 import { u as useTranslate } from "./useTranslate-AOp3QZfJ.js";
@@ -77,7 +77,7 @@ function userAvatarSrc(person) {
   }
   return `/${String(src).replace(/^\/+/, "")}`;
 }
-function Show({ buyerRequest, isOwner = false, canOffer = false, myOffer = null, offersCount: offersCountProp = null }) {
+function Show({ buyerRequest, isOwner = false, canOffer = false, isCorporateVerified = false, isLoggedIn = false, myOffer = null, offersCount: offersCountProp = null }) {
   const { t } = useTranslate();
   const { auth, flash } = usePage().props;
   const { list } = useCurrencyList();
@@ -430,7 +430,42 @@ function Show({ buyerRequest, isOwner = false, canOffer = false, myOffer = null,
               }) })
             ] })
           ] }),
-          canOffer && /* @__PURE__ */ jsxs("section", { className: "rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm sm:p-6", children: [
+          !isOwner && buyerRequest.status === "open" && /* @__PURE__ */ jsx(Fragment, { children: !isLoggedIn ? /* @__PURE__ */ jsx("section", { className: "rounded-2xl border border-sky-100 bg-sky-50/60 p-4 shadow-sm sm:p-6", children: /* @__PURE__ */ jsxs("div", { className: "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between", children: [
+            /* @__PURE__ */ jsxs("div", { children: [
+              /* @__PURE__ */ jsx("h2", { className: "text-base font-bold text-gray-900 sm:text-lg", children: t("Log in to bid on this lead") }),
+              /* @__PURE__ */ jsx("p", { className: "mt-1 text-sm text-slate-600", children: t("Only corporate-verified sellers can submit bids and chat with the buyer.") })
+            ] }),
+            /* @__PURE__ */ jsxs(
+              Link,
+              {
+                href: "/login",
+                className: "inline-flex shrink-0 items-center justify-center rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-black",
+                children: [
+                  t("Log in"),
+                  " →"
+                ]
+              }
+            )
+          ] }) }) : !isCorporateVerified ? /* @__PURE__ */ jsx("section", { className: "rounded-2xl border border-amber-200 bg-amber-50/70 p-4 shadow-sm sm:p-6", children: /* @__PURE__ */ jsxs("div", { className: "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between", children: [
+            /* @__PURE__ */ jsxs("div", { className: "flex items-start gap-3", children: [
+              /* @__PURE__ */ jsx("span", { className: "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700", children: /* @__PURE__ */ jsx(HiOutlineExclamationCircle, { className: "h-5 w-5" }) }),
+              /* @__PURE__ */ jsxs("div", { children: [
+                /* @__PURE__ */ jsx("h2", { className: "text-base font-bold text-amber-950 sm:text-lg", children: t("Corporate verification required to bid") }),
+                /* @__PURE__ */ jsx("p", { className: "mt-1 text-sm text-amber-800/90", children: t("Complete business verification to submit offers and unlock direct buyer chat.") })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxs(
+              Link,
+              {
+                href: route("verification.identity"),
+                className: "inline-flex shrink-0 items-center justify-center rounded-xl bg-amber-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-amber-700",
+                children: [
+                  t("Verify business"),
+                  " →"
+                ]
+              }
+            )
+          ] }) }) : canOffer ? /* @__PURE__ */ jsxs("section", { className: "rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm sm:p-6", children: [
             /* @__PURE__ */ jsx("h2", { className: "text-lg font-bold text-gray-900", children: myOffer?.status === "pending" ? t("Update your offer") : t("Submit an offer") }),
             /* @__PURE__ */ jsxs("p", { className: "mt-1 text-sm text-slate-500", children: [
               t("Send a competitive price and a short message to the buyer."),
@@ -512,7 +547,7 @@ function Show({ buyerRequest, isOwner = false, canOffer = false, myOffer = null,
               " ",
               /* @__PURE__ */ jsx("span", { className: `ml-1 inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${statusClasses(myOffer.status)}`, children: myOffer.status })
             ] })
-          ] }),
+          ] }) : null }),
           /* @__PURE__ */ jsxs("section", { className: "rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm sm:p-6", children: [
             /* @__PURE__ */ jsxs("div", { className: "mb-3 flex flex-wrap items-center justify-between gap-2 sm:mb-4", children: [
               /* @__PURE__ */ jsxs("h2", { className: "text-base font-bold text-gray-900 sm:text-lg", children: [
@@ -723,7 +758,27 @@ function Show({ buyerRequest, isOwner = false, canOffer = false, myOffer = null,
                   ]
                 }
               )
-            ] }) : canOffer ? /* @__PURE__ */ jsx("p", { className: "mt-3 text-sm text-slate-500 sm:mt-4", children: t("Submit an offer first to unlock chat with the buyer.") }) : /* @__PURE__ */ jsx("p", { className: "mt-3 text-sm text-slate-500 sm:mt-4", children: t("Corporate verification is required to offer and chat.") })
+            ] }) : !isLoggedIn ? /* @__PURE__ */ jsxs("div", { className: "mt-3 text-center sm:mt-4", children: [
+              /* @__PURE__ */ jsx("p", { className: "text-xs text-slate-500", children: t("Log in to bid and unlock chat with the buyer.") }),
+              /* @__PURE__ */ jsx(
+                Link,
+                {
+                  href: "/login",
+                  className: "mt-2 inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-black",
+                  children: t("Log in")
+                }
+              )
+            ] }) : !isCorporateVerified ? /* @__PURE__ */ jsxs("div", { className: "mt-3 text-center sm:mt-4", children: [
+              /* @__PURE__ */ jsx("p", { className: "text-xs text-amber-800", children: t("Corporate verification is required to offer and chat.") }),
+              /* @__PURE__ */ jsx(
+                Link,
+                {
+                  href: route("verification.identity"),
+                  className: "mt-2 inline-flex items-center justify-center rounded-xl bg-amber-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-amber-700",
+                  children: t("Verify business")
+                }
+              )
+            ] }) : canOffer ? /* @__PURE__ */ jsx("p", { className: "mt-3 text-sm text-slate-500 sm:mt-4", children: t("Submit an offer first to unlock chat with the buyer.") }) : /* @__PURE__ */ jsx("p", { className: "mt-3 text-sm text-slate-500 sm:mt-4", children: t("This request is no longer accepting offers.") })
           ] })
         ] })
       ] })

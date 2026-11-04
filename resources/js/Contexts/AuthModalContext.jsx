@@ -34,6 +34,20 @@ export const AuthModalProvider = ({ children }) => {
               } else if (authMode === 'register') {
                      setActiveModal('register');
               }
+
+              const handleOpenLogin = () => setActiveModal('login');
+              const handleOpenRegister = () => setActiveModal('register');
+              const handleCloseModals = () => closeModals();
+
+              window.addEventListener('xb:open-login', handleOpenLogin);
+              window.addEventListener('xb:open-register', handleOpenRegister);
+              window.addEventListener('xb:close-modals', handleCloseModals);
+
+              return () => {
+                     window.removeEventListener('xb:open-login', handleOpenLogin);
+                     window.removeEventListener('xb:open-register', handleOpenRegister);
+                     window.removeEventListener('xb:close-modals', handleCloseModals);
+              };
        }, [url]);
 
        return (
@@ -56,7 +70,24 @@ export const AuthModalProvider = ({ children }) => {
 export const useAuthModal = () => {
        const context = useContext(AuthModalContext);
        if (!context) {
-              throw new Error('useAuthModal must be used within an AuthModalProvider');
+              return {
+                     openLogin: () => {
+                            if (typeof window !== 'undefined') {
+                                   window.dispatchEvent(new CustomEvent('xb:open-login'));
+                            }
+                     },
+                     openRegister: () => {
+                            if (typeof window !== 'undefined') {
+                                   window.dispatchEvent(new CustomEvent('xb:open-register'));
+                            }
+                     },
+                     closeModals: () => {
+                            if (typeof window !== 'undefined') {
+                                   window.dispatchEvent(new CustomEvent('xb:close-modals'));
+                            }
+                     },
+                     activeModal: null,
+              };
        }
        return context;
 };

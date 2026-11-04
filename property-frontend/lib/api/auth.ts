@@ -12,6 +12,9 @@ export type AuthUser = {
   phone?: string | null;
   profile_pic?: string | null;
   role?: string | null;
+  is_corporate_verified?: boolean;
+  is_verified?: boolean;
+  verification_type?: string | null;
 };
 
 type AuthJson = {

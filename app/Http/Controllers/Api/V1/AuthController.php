@@ -266,6 +266,8 @@ class AuthController extends Controller
      */
     protected function userPayload(User $user): array
     {
+        $user->loadMissing(['corporateVerification', 'individualVerification']);
+
         return [
             'id' => $user->id,
             'name' => $user->name,
@@ -273,6 +275,9 @@ class AuthController extends Controller
             'phone' => $user->phone,
             'profile_pic' => $user->profile_pic,
             'role' => $user->role,
+            'is_corporate_verified' => $user->isCorporateVerified(),
+            'is_verified' => $user->isCorporateVerified() || $user->isIndividualVerified(),
+            'verification_type' => $user->publicVerificationBadgeType(),
         ];
     }
 }

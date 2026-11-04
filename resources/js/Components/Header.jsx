@@ -205,13 +205,7 @@ export default function Header() {
                                                                <Link
                                                                       href={route('seller.buyer-requests.browse')}
                                                                       className="nav-link"
-                                                                      onClick={(e) => {
-                                                                             closeMobileMenu();
-                                                                             if (!user) {
-                                                                                    e.preventDefault();
-                                                                                    openLogin();
-                                                                             }
-                                                                      }}
+                                                                      onClick={closeMobileMenu}
                                                                >
                                                                       {t('Request Leads')}
                                                                </Link>

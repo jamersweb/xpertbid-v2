@@ -260,13 +260,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('/api/invoices', [InvoiceController::class, 'apiIndex'])->name('invoices.api');
 
-    // Buyer Requests (reverse marketplace)
+    // Buyer Requests (reverse marketplace — authenticated actions)
     Route::get('/buyer-requests', [\App\Http\Controllers\BuyerRequestController::class, 'index'])->name('buyer-requests.index');
     Route::get('/buyer-requests/create', [\App\Http\Controllers\BuyerRequestController::class, 'create'])->name('buyer-requests.create');
     Route::post('/buyer-requests', [\App\Http\Controllers\BuyerRequestController::class, 'store'])->name('buyer-requests.store');
     Route::get('/buyer-requests/{buyerRequest}/edit', [\App\Http\Controllers\BuyerRequestController::class, 'edit'])->name('buyer-requests.edit');
     Route::put('/buyer-requests/{buyerRequest}', [\App\Http\Controllers\BuyerRequestController::class, 'update'])->name('buyer-requests.update');
-    Route::get('/buyer-requests/{buyerRequest}', [\App\Http\Controllers\BuyerRequestController::class, 'show'])->name('buyer-requests.show');
     Route::post('/buyer-requests/{buyerRequest}/close', [\App\Http\Controllers\BuyerRequestController::class, 'close'])->name('buyer-requests.close');
     Route::post('/buyer-requests/{buyerRequest}/offers', [\App\Http\Controllers\BuyerRequestController::class, 'storeOffer'])->name('buyer-requests.offers.store');
     Route::post('/buyer-requests/{buyerRequest}/offers/{offer}/accept', [\App\Http\Controllers\BuyerRequestController::class, 'acceptOffer'])->name('buyer-requests.offers.accept');
@@ -274,11 +273,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/buyer-request-offers/{offer}', [\App\Http\Controllers\BuyerRequestController::class, 'updateOffer'])->name('buyer-request-offers.update');
     Route::delete('/buyer-request-offers/{offer}', [\App\Http\Controllers\BuyerRequestController::class, 'destroyOffer'])->name('buyer-request-offers.destroy');
 
-    Route::get('/seller/buyer-requests', [\App\Http\Controllers\SellerBuyerRequestController::class, 'browse'])->name('seller.buyer-requests.browse');
     Route::get('/seller/buyer-request-preferences', [\App\Http\Controllers\SellerBuyerRequestController::class, 'preferences'])->name('seller.buyer-request-preferences.edit');
     Route::put('/seller/buyer-request-preferences', [\App\Http\Controllers\SellerBuyerRequestController::class, 'savePreferences'])->name('seller.buyer-request-preferences.update');
 
 });
+
+// Buyer Requests (publicly accessible browse and detail views)
+Route::get('/seller/buyer-requests', [\App\Http\Controllers\SellerBuyerRequestController::class, 'browse'])->name('seller.buyer-requests.browse');
+Route::get('/buyer-requests/{buyerRequest}', [\App\Http\Controllers\BuyerRequestController::class, 'show'])->name('buyer-requests.show');
 
 Route::get('/api/currencies', [App\Http\Controllers\CurrencyController::class, 'index']);
 

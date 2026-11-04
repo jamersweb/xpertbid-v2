@@ -126,13 +126,18 @@ class BuyerRequestController extends Controller
             'acceptedOffer.seller.individualVerification:id,user_id,status',
         ])->loadCount('offers');
 
-        $isOwner = (int) $buyerRequest->user_id === (int) Auth::id();
-        $authId = (int) Auth::id();
+        $user = Auth::user();
+        if ($user) {
+            $user->loadMissing('corporateVerification');
+        }
+
+        $isOwner = $user ? ((int) $buyerRequest->user_id === (int) $user->id) : false;
+        $authId = (int) ($user?->id ?? 0);
 
         // Prefer this seller's pending/accepted offer when resolving "my offer".
         // All offers stay visible so buyers and competing sellers can compare bids.
         $myOffer = null;
-        if (! $isOwner) {
+        if (! $isOwner && $user) {
             $myOffer = $buyerRequest->offers
                 ->filter(fn ($offer) => (int) $offer->seller_id === $authId)
                 ->sortBy(function ($offer) {
@@ -146,18 +151,19 @@ class BuyerRequestController extends Controller
                 ->first();
         }
 
-        $user = Auth::user();
-        $user->loadMissing('corporateVerification');
-
         // Sellers / public viewers must not receive exact address or coordinates.
         if (! $isOwner) {
             $buyerRequest->makeHidden(['location_label', 'state', 'latitude', 'longitude']);
         }
 
+        $isCorporateVerified = $user ? $user->isCorporateVerified() : false;
+
         return Inertia::render('BuyerRequests/Show', [
             'buyerRequest' => $buyerRequest,
             'isOwner' => $isOwner,
-            'canOffer' => ! $isOwner && $user->isCorporateVerified() && $buyerRequest->isOpen(),
+            'canOffer' => $user ? (! $isOwner && $isCorporateVerified && $buyerRequest->isOpen()) : false,
+            'isCorporateVerified' => $isCorporateVerified,
+            'isLoggedIn' => (bool) $user,
             'myOffer' => $myOffer,
             'offersCount' => (int) ($buyerRequest->offers_count ?? 0),
         ]);

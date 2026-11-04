@@ -32,11 +32,9 @@ Route::prefix('v1')->group(function () {
         Route::post('/notifications/read/{id}', [AuthController::class, 'markNotificationRead']);
         Route::delete('/notifications/{id}', [AuthController::class, 'deleteNotification']);
 
-        // Buyer Requests (reverse marketplace)
+        // Buyer Requests (reverse marketplace — authenticated actions)
         Route::get('/buyer-requests', [BuyerRequestController::class, 'index']);
         Route::post('/buyer-requests', [BuyerRequestController::class, 'store']);
-        Route::get('/buyer-requests/matched', [BuyerRequestController::class, 'matched']);
-        Route::get('/buyer-requests/{buyerRequest}', [BuyerRequestController::class, 'show']);
         Route::put('/buyer-requests/{buyerRequest}', [BuyerRequestController::class, 'update']);
         Route::post('/buyer-requests/{buyerRequest}/close', [BuyerRequestController::class, 'close']);
         Route::post('/buyer-requests/{buyerRequest}/offers', [BuyerRequestController::class, 'storeOffer']);
@@ -50,6 +48,10 @@ Route::prefix('v1')->group(function () {
         // Chat (Sanctum) — used by property/renovation frontends before bridging to main /chat
         Route::post('/chat/initiate', [ChatController::class, 'initiate']);
     });
+
+    // Buyer Requests (publicly accessible open leads and show route)
+    Route::get('/buyer-requests/matched', [BuyerRequestController::class, 'matched']);
+    Route::get('/buyer-requests/{buyerRequest}', [BuyerRequestController::class, 'show']);
 
     // Property vertical routes
     Route::get('/properties', [PropertyController::class, 'index']);

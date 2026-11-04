@@ -50,28 +50,30 @@ export default function SellerLeadsHero({
           </div>
 
           <div className="br-hero__cta-block">
-            {isCorporateVerified ? (
-              <div className="br-hero__stats">
-                <div>
-                  <strong>{counts.available}</strong>
-                  <span>Open to you</span>
-                </div>
-                <i className="d-none d-sm-block" />
-                <div>
-                  <strong>{counts.offered}</strong>
-                  <span>Your bids</span>
-                </div>
-                <i className="d-none d-sm-block" />
-                <div>
-                  <strong>{counts.all}</strong>
-                  <span>Total</span>
-                </div>
+            <div className="br-hero__stats">
+              <div>
+                <strong>{isCorporateVerified ? counts.available : counts.all}</strong>
+                <span>{isCorporateVerified ? "Open to you" : "Open leads"}</span>
               </div>
-            ) : null}
+              {isCorporateVerified ? (
+                <>
+                  <i className="d-none d-sm-block" />
+                  <div>
+                    <strong>{counts.offered}</strong>
+                    <span>Your bids</span>
+                  </div>
+                </>
+              ) : null}
+              <i className="d-none d-sm-block" />
+              <div>
+                <strong>{counts.all}</strong>
+                <span>Total</span>
+              </div>
+            </div>
 
             <div className="br-hero__btns">
-              {isCorporateVerified && counts.available > 0 ? (
-                <button type="button" className="br-hero__btn br-hero__btn--primary" onClick={onBrowseOpen}>
+              {counts.all > 0 ? (
+                <button type="button" className="br-hero__btn br-hero__btn--primary" onClick={onBrowseOpen || onBrowseAll}>
                   <i className="fa-solid fa-arrow-trend-up" aria-hidden />
                   Browse open leads
                 </button>

@@ -33,7 +33,6 @@ export default function SellerBuyerRequestsPage() {
   const [search, setSearch] = useState("");
 
   const load = useCallback(async () => {
-    if (!user) return;
     setLoading(true);
     setError("");
     try {
@@ -46,16 +45,12 @@ export default function SellerBuyerRequestsPage() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) {
-      setLoading(false);
-      return;
-    }
     void load();
-  }, [authLoading, user, load]);
+  }, [authLoading, load]);
 
   const counts = useMemo(() => {
     const all = items.length;
@@ -124,25 +119,6 @@ export default function SellerBuyerRequestsPage() {
     );
   }
 
-  if (!user) {
-    return (
-      <main className="br-page">
-        <div className="br-page__inner">
-          <div className="br-empty text-center">
-            <h1 className="br-title mb-2">Request leads</h1>
-            <p className="br-sub mb-3">
-              Sign in as a corporate-verified seller to browse renovation buyer requests.
-            </p>
-            <button type="button" className="br-btn br-btn--dark" onClick={openLogin}>
-              Log in
-            </button>
-          </div>
-        </div>
-        <BrStyles />
-      </main>
-    );
-  }
-
   return (
     <main className="br-page">
       <div className="br-page__inner">
@@ -155,12 +131,23 @@ export default function SellerBuyerRequestsPage() {
           onBrowseAll={() => scrollToLeads("all")}
         />
 
-        {!meta.is_corporate_verified ? (
-          <div className="br-alert br-alert--warn">
-            Corporate verification is required to view and offer on leads.{" "}
+        {!user ? (
+          <div className="br-alert br-alert--warn d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span>
+              You are browsing leads as a guest. To submit bids and offers, please sign in with a corporate-verified seller account.
+            </span>
+            <button type="button" className="br-btn br-btn--sm br-btn--dark" onClick={openLogin}>
+              Log in
+            </button>
+          </div>
+        ) : !meta.is_corporate_verified ? (
+          <div className="br-alert br-alert--warn d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span>
+              Corporate verification is required to bid on leads. You can browse all requests freely, but only corporate-verified businesses can submit offers.
+            </span>
             <button
               type="button"
-              className="br-link"
+              className="br-btn br-btn--sm br-btn--dark"
               onClick={() => void openMainPath("/identity-verification")}
             >
               Verify now
