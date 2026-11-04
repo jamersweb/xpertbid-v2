@@ -23,6 +23,12 @@ Homestead.json
 .phpunit.result.cache
 
 /public/build
+/bootstrap/ssr/
+/.next/
+/property-frontend/.next/
+/property-frontend/out/
+/renovation-frontend/.next/
+/renovation-frontend/out/
 /storage/pail
 .env.backup
 .env.production
