@@ -95,6 +95,12 @@ export default function Index({ requests, filters = {} }) {
                                     <td className="px-6 py-4">
                                         <p className="text-sm font-medium text-gray-800">{item.user?.name || '—'}</p>
                                         <p className="text-[10px] text-gray-500">{item.user?.email}</p>
+                                        {(item.user?.phone || item.user?.individual_verification?.contact_number || item.user?.individualVerification?.contact_number) && (
+                                            <p className="text-[10px] text-gray-700 flex items-center gap-1 mt-0.5">
+                                                <i className="fa-solid fa-phone text-[8px] text-emerald-600"></i>
+                                                <span>{item.user?.phone || item.user?.individual_verification?.contact_number || item.user?.individualVerification?.contact_number}</span>
+                                            </p>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-600">
                                         {item.category?.name || '—'}

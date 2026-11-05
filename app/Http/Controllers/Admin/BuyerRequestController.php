@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\BuyerRequest;
 use App\Models\Conversation;
+use App\Models\User;
 use App\Services\BuyerRequestService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,7 +20,8 @@ class BuyerRequestController extends Controller
     {
         $query = BuyerRequest::query()
             ->with([
-                'user:id,name,email,profile_pic',
+                'user:id,name,email,profile_pic,phone',
+                'user.individualVerification:id,user_id,contact_number',
                 'category:id,name',
             ])
             ->withCount([
@@ -59,23 +61,53 @@ class BuyerRequestController extends Controller
     {
         $buyerRequest = BuyerRequest::query()
             ->with([
-                'user:id,name,email,profile_pic,phone',
+                'user' => function ($q) {
+                    $q->select('id', 'name', 'email', 'profile_pic', 'phone', 'address', 'country_id', 'city_id')
+                        ->with([
+                            'individualVerification:id,user_id,contact_number,residential_address,country,status',
+                            'corporateVerification:id,user_id,legal_entity_name,registered_address,country,status',
+                            'country:id,name',
+                            'shippingAddress',
+                        ]);
+                },
                 'category:id,name',
                 'subCategory:id,name',
                 'childCategory:id,name',
                 'images:id,buyer_request_id,path,sort_order',
                 'offers' => function ($q) {
                     $q->with([
-                        'seller:id,name,email,profile_pic',
-                        'seller.corporateVerification:id,user_id,status',
+                        'seller' => function ($sq) {
+                            $sq->select('id', 'name', 'email', 'profile_pic', 'phone', 'address', 'country_id', 'city_id')
+                                ->with([
+                                    'individualVerification:id,user_id,contact_number,residential_address,country,status',
+                                    'corporateVerification:id,user_id,legal_entity_name,registered_address,country,status',
+                                    'country:id,name',
+                                    'shippingAddress',
+                                ]);
+                        },
                     ])
                         ->orderByRaw("CASE status WHEN 'accepted' THEN 0 WHEN 'pending' THEN 1 WHEN 'rejected' THEN 2 ELSE 3 END")
                         ->orderBy('price');
                 },
-                'acceptedOffer.seller:id,name,email,profile_pic',
+                'acceptedOffer.seller' => function ($sq) {
+                    $sq->select('id', 'name', 'email', 'profile_pic', 'phone', 'address', 'country_id', 'city_id')
+                        ->with([
+                            'individualVerification:id,user_id,contact_number,residential_address,country,status',
+                            'corporateVerification:id,user_id,legal_entity_name,registered_address,country,status',
+                            'country:id,name',
+                            'shippingAddress',
+                        ]);
+                },
             ])
             ->withCount('offers')
             ->findOrFail($id);
+
+        $acceptedOffer = $buyerRequest->acceptedOffer ?: $buyerRequest->offers->firstWhere('status', 'accepted');
+        if ($acceptedOffer && ! $buyerRequest->acceptedOffer) {
+            $buyerRequest->setRelation('acceptedOffer', $acceptedOffer);
+        }
+
+        $this->enrichUserData($buyerRequest->user);
 
         $offerIds = $buyerRequest->offers->pluck('id');
         $conversationsByOffer = Conversation::query()
@@ -90,14 +122,79 @@ class BuyerRequestController extends Controller
                     'conversation_id',
                     $conversationsByOffer->get($offer->id)?->id
                 );
+                $this->enrichUserData($offer->seller);
 
                 return $offer;
             })
         );
 
+        if ($buyerRequest->acceptedOffer) {
+            $buyerRequest->acceptedOffer->setAttribute(
+                'conversation_id',
+                $conversationsByOffer->get($buyerRequest->acceptedOffer->id)?->id
+            );
+            $this->enrichUserData($buyerRequest->acceptedOffer->seller);
+        }
+
         return Inertia::render('Admin/BuyerRequests/Show', [
             'buyerRequest' => $buyerRequest,
         ]);
+    }
+
+    private function enrichUserData(?User $user): void
+    {
+        if (! $user) {
+            return;
+        }
+
+        $rawPhone = trim((string) ($user->phone ?? ''));
+        $indPhone = trim((string) ($user->individualVerification?->contact_number ?? ''));
+
+        $phone = !empty($rawPhone) ? $rawPhone : (!empty($indPhone) ? $indPhone : null);
+        $phoneSource = !empty($rawPhone) ? 'user' : (!empty($indPhone) ? 'individual_verification' : null);
+
+        $corpAddress = trim((string) ($user->corporateVerification?->registered_address ?? ''));
+        $corpCountry = trim((string) ($user->corporateVerification?->country ?? ''));
+        if (!empty($corpAddress) && !empty($corpCountry) && stripos($corpAddress, $corpCountry) === false) {
+            $corpAddress .= ', ' . $corpCountry;
+        }
+
+        $indAddress = trim((string) ($user->individualVerification?->residential_address ?? ''));
+        $indCountry = trim((string) ($user->individualVerification?->country ?? ''));
+        if (!empty($indAddress) && !empty($indCountry) && stripos($indAddress, $indCountry) === false) {
+            $indAddress .= ', ' . $indCountry;
+        }
+
+        $userAddress = trim((string) ($user->address ?? ''));
+
+        $shippingAddress = null;
+        if ($user->shippingAddress) {
+            $parts = array_filter([
+                $user->shippingAddress->addressLine1,
+                $user->shippingAddress->city,
+                $user->shippingAddress->state,
+                $user->shippingAddress->country,
+            ]);
+            if (!empty($parts)) {
+                $shippingAddress = implode(', ', $parts);
+            }
+        }
+
+        $cityCountry = implode(', ', array_filter([
+            $user->city,
+            $user->state,
+            $user->country?->name ?? (is_string($user->country) ? $user->country : null),
+        ]));
+
+        $resolvedLocation = $corpAddress
+            ?: ($indAddress
+            ?: ($userAddress
+            ?: ($shippingAddress
+            ?: ($cityCountry ?: null))));
+
+        $user->setAttribute('resolved_phone', $phone);
+        $user->setAttribute('phone_source', $phoneSource);
+        $user->setAttribute('resolved_location', $resolvedLocation);
     }
 
     public function close(int $id)
