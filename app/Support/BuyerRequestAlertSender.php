@@ -365,6 +365,9 @@ class BuyerRequestAlertSender
     protected static function sendWhatsApp(User $user, string $key, BuyerRequest $request, string $message): void
     {
         $phone = trim((string) ($user->phone ?? ''));
+        if ($phone === '' && $user->individualVerification?->contact_number) {
+            $phone = trim((string) $user->individualVerification->contact_number);
+        }
 
         if ($phone === '') {
             BuyerRequestAlertLogRecorder::record(
@@ -383,11 +386,17 @@ class BuyerRequestAlertSender
         }
 
         try {
-            $sent = app(MsgpkService::class)->sendWhatsApp($phone, $message);
-            if (! $sent) {
+            $msgpk = app(MsgpkService::class);
+            $result = method_exists($msgpk, 'sendWhatsAppDetailed')
+                ? $msgpk->sendWhatsAppDetailed($phone, $message)
+                : ['success' => (bool) $msgpk->sendWhatsApp($phone, $message), 'error' => null, 'response' => null];
+
+            if (! $result['success']) {
+                $errorReason = $result['error'] ?? 'Msgpk send returned false';
                 Log::warning('Buyer request alert WhatsApp failed to send', [
                     'user_id' => $user->id,
                     'phone' => $phone,
+                    'reason' => $errorReason,
                 ]);
 
                 BuyerRequestAlertLogRecorder::record(
@@ -399,7 +408,8 @@ class BuyerRequestAlertSender
                     null,
                     $message,
                     BuyerRequestAlertLog::STATUS_FAILED,
-                    'Msgpk send returned false'
+                    $errorReason,
+                    $result['response'] ?? null
                 );
 
                 return;
@@ -413,7 +423,9 @@ class BuyerRequestAlertSender
                 $phone,
                 null,
                 $message,
-                BuyerRequestAlertLog::STATUS_SENT
+                BuyerRequestAlertLog::STATUS_SENT,
+                null,
+                $result['response'] ?? null
             );
         } catch (\Throwable $e) {
             Log::warning('Buyer request alert WhatsApp exception', [

@@ -58,7 +58,7 @@ export default function Show({ log }) {
                     >
                         {log.status}
                     </span>
-                    {log.status === 'failed' && (
+                    {log.status !== 'skipped' && (
                         <button
                             type="button"
                             onClick={resend}
@@ -91,9 +91,12 @@ export default function Show({ log }) {
                             </h3>
                             <p className="text-sm text-rose-700 whitespace-pre-wrap">{log.failure_reason}</p>
                             {log.provider_response && (
-                                <p className="mt-3 text-xs text-gray-500">
-                                    Provider: {log.provider_response}
-                                </p>
+                                <div className="mt-3 pt-3 border-t border-rose-100">
+                                    <span className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Gateway Response</span>
+                                    <pre className="text-xs text-gray-600 bg-rose-50/50 p-2.5 rounded-lg whitespace-pre-wrap break-all">
+                                        {log.provider_response}
+                                    </pre>
+                                </div>
                             )}
                         </div>
                     )}

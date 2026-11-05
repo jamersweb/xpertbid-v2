@@ -208,7 +208,7 @@ export default function Index({ logs, filters = {}, alertKeys = {} }) {
                                             >
                                                 <i className="fa-solid fa-eye"></i>
                                             </button>
-                                            {log.status === 'failed' && (
+                                            {log.status !== 'skipped' && (
                                                 <button
                                                     type="button"
                                                     onClick={() => resend(log.id, log.channel)}

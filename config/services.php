@@ -64,4 +64,9 @@ return [
         'checkout_url' => env('PAYFAST_CHECKOUT_URL'),
     ],
 
+    'msgpk' => [
+        'api_key' => env('MSG_PK_API_KEY'),
+        'base_url' => env('MSG_PK_BASE_URL', 'https://msgpk.com/api/send.php'),
+    ],
+
 ];
