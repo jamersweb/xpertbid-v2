@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -92,6 +93,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const lastRevisitRef = useRef<number>(0);
+
   const refreshUser = useCallback(async () => {
     const token = getStoredToken();
     if (!token) {
@@ -101,9 +104,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const me = await fetchMe();
       setUser(me);
-    } catch {
-      clearStoredToken();
-      setUser(null);
+    } catch (err: unknown) {
+      const status =
+        (err as { status?: number; statusCode?: number })?.status ||
+        (err as { status?: number; statusCode?: number })?.statusCode;
+      // ONLY clear token if the server explicitly returned 401 Unauthorized
+      if (status === 401) {
+        clearStoredToken();
+        setUser(null);
+      }
     }
   }, []);
 
@@ -134,6 +143,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (typeof document !== "undefined" && document.visibilityState && document.visibilityState !== "visible") {
         return;
       }
+      // Throttle revisit checks to once every 10 seconds to prevent rapid focus/visibility loops
+      const now = Date.now();
+      if (now - lastRevisitRef.current < 10000) {
+        return;
+      }
+      lastRevisitRef.current = now;
+
       if (getStoredToken()) {
         void refreshUser();
         return;

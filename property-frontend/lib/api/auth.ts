@@ -68,7 +68,13 @@ async function authFetch(path: string, init?: RequestInit) {
   const json = (await res.json().catch(() => ({}))) as AuthJson;
 
   if (!res.ok) {
-    throw new Error(firstError(json, "Something went wrong. Please try again."));
+    const err = new Error(firstError(json, "Something went wrong. Please try again.")) as Error & {
+      status?: number;
+      statusCode?: number;
+    };
+    err.status = res.status;
+    err.statusCode = res.status;
+    throw err;
   }
 
   return json;
@@ -286,6 +292,22 @@ export async function establishMainSiteSessionSilent(
     }
   }
 
+  // Ensure localhost / 127.0.0.1 and port match MAIN_SITE_URL so cookies land on the exact origin the user visits
+  if (bridgeUrl) {
+    try {
+      const u = new URL(bridgeUrl);
+      const targetMain = new URL(MAIN_SITE_URL);
+      if (
+        (u.hostname === "localhost" || u.hostname === "127.0.0.1") &&
+        (targetMain.hostname === "localhost" || targetMain.hostname === "127.0.0.1")
+      ) {
+        bridgeUrl = `${targetMain.origin}${u.pathname}${u.search}`;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   const silentUrl = withSilentParam(bridgeUrl);
   const expectedOrigin = mainOrigin();
 
@@ -312,7 +334,20 @@ export async function establishMainSiteSessionSilent(
     };
 
     const onMessage = (event: MessageEvent) => {
-      if (event.origin !== expectedOrigin) return;
+      let matches = event.origin === expectedOrigin;
+      if (!matches) {
+        try {
+          const u = new URL(event.origin);
+          const exp = new URL(expectedOrigin);
+          matches =
+            (u.hostname === "localhost" || u.hostname === "127.0.0.1") &&
+            (exp.hostname === "localhost" || exp.hostname === "127.0.0.1") &&
+            u.port === exp.port;
+        } catch {
+          matches = false;
+        }
+      }
+      if (!matches) return;
       const data = event.data as { type?: string; ok?: boolean } | null;
       if (data?.type === "xb-auth-sync") {
         finish(Boolean(data.ok));

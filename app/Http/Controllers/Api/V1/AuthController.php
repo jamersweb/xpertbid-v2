@@ -277,7 +277,7 @@ class AuthController extends Controller
             'role' => $user->role,
             'is_corporate_verified' => $user->isCorporateVerified(),
             'is_verified' => $user->isCorporateVerified() || $user->isIndividualVerified(),
-            'verification_type' => $user->publicVerificationBadgeType(),
+            'verification_type' => $user->publicVerificationType(),
         ];
     }
 }

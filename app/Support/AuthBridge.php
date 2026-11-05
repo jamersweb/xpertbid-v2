@@ -21,7 +21,19 @@ class AuthBridge
             now()->addMinutes(2)
         );
 
-        return url('/auth/bridge/'.$token);
+        $bridge = url('/auth/bridge/'.$token);
+
+        if ($returnTo) {
+            $returnHost = parse_url($returnTo, PHP_URL_HOST);
+            $bridgeHost = parse_url($bridge, PHP_URL_HOST);
+            if ($returnHost === 'localhost' && $bridgeHost === '127.0.0.1') {
+                $bridge = str_replace('//127.0.0.1', '//localhost', $bridge);
+            } elseif ($returnHost === '127.0.0.1' && $bridgeHost === 'localhost') {
+                $bridge = str_replace('//localhost', '//127.0.0.1', $bridge);
+            }
+        }
+
+        return $bridge;
     }
 
     public static function consume(string $token): ?array

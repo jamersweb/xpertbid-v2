@@ -27,8 +27,15 @@ class SatelliteTokenController extends Controller
         }
 
         $user = Auth::user();
-        $user->tokens()->where('name', 'property_web')->delete();
-        $plain = $user->createToken('property_web')->plainTextToken;
+        $origin = (string) $request->header('Origin');
+        $tokenName = str_contains($origin, 'build') || str_contains($origin, ':3000')
+            ? 'renovation_web'
+            : 'property_web';
+
+        // Prune old tokens over 30 days without deleting active tokens of other satellites / tabs
+        $user->tokens()->where('created_at', '<', now()->subDays(30))->delete();
+
+        $plain = $user->createToken($tokenName)->plainTextToken;
 
         return $this->json($request, [
             'authenticated' => true,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
 import {
   fetchCurrencyRates,
   getSelectedCurrency,
@@ -36,6 +37,7 @@ function applyLocale(code: string) {
 }
 
 export function BrandTopBanner() {
+  const { user, openMainPath } = useAuth();
   const [locale, setLocale] = useState("en");
   const [currency, setCurrency] = useState("PKR");
   const [currencyReady, setCurrencyReady] = useState(false);
@@ -87,6 +89,13 @@ export function BrandTopBanner() {
     setSelectedCurrency(code);
   };
 
+  const handleMainLinkClick = (path: string) => (e: React.MouseEvent) => {
+    if (user) {
+      e.preventDefault();
+      void openMainPath(path);
+    }
+  };
+
   return (
     <section className="xp-brand-top-banner" aria-label="XpertBid brand banner">
       <div className="xp-brand-links">
@@ -105,6 +114,7 @@ export function BrandTopBanner() {
         <a
           className="xp-brand-link"
           href={mainUrl("/marketplace/vehicles?type=auction")}
+          onClick={handleMainLinkClick("/marketplace/vehicles?type=auction")}
           aria-label="View vehicle marketplace"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -114,7 +124,12 @@ export function BrandTopBanner() {
             alt="XpertBid Vehicle"
           />
         </a>
-        <a className="xp-brand-link" href={mainUrl("/")} aria-label="View XpertBid">
+        <a
+          className="xp-brand-link"
+          href={mainUrl("/")}
+          onClick={handleMainLinkClick("/")}
+          aria-label="View XpertBid"
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             className="xp-brand-logo xp-brand-logo-main"

@@ -15,6 +15,8 @@ const ALLOWED = new Set([
   "send-otp",
   "verify-otp",
   "session-link",
+  "validate-reset-otp",
+  "reset-password-phone",
 ]);
 
 type Ctx = { params: Promise<{ path: string[] }> };

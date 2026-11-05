@@ -268,6 +268,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return null;
     }
 
+    /** Alias for publicVerificationType() for backward/payload compatibility. */
+    public function publicVerificationBadgeType(): ?string
+    {
+        return $this->publicVerificationType();
+    }
+
     public function isIdentityVerified(): bool
     {
         return $this->publicVerificationType() !== null;

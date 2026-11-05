@@ -23,7 +23,7 @@ return [
 
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
-    'allowed_methods' => ['GET', 'HEAD', 'OPTIONS', 'POST'],
+    'allowed_methods' => ['GET', 'HEAD', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE'],
 
     'allowed_origins' => $propertyOrigins,
 
