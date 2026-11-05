@@ -17,7 +17,7 @@ body {
   background: #fff;
 }
 
-.min-h-screen > main {
+.min-h-screen>main {
   flex: 1 0 auto;
 }
 
@@ -249,6 +249,7 @@ img.property-header-logo.logo-image {
 }
 
 @media (min-width: 992px) {
+
   #mainNavbar .navbar-collapse,
   #mainNavbar .xpert-mobile-menu {
     display: flex !important;
@@ -467,7 +468,7 @@ img.property-header-logo.logo-image {
     position: relative !important;
   }
 
-  #mainNavbar > .container-fluid {
+  #mainNavbar>.container-fluid {
     position: relative !important;
   }
 
@@ -757,37 +758,20 @@ img.property-header-logo.logo-image {
 }
 
 @media (max-width: 991.98px) {
+  .xp-brand-controls {
+    display: none !important;
+  }
+
   .xp-brand-top-banner {
-    flex-direction: column;
-    align-items: stretch;
     justify-content: center;
     gap: 8px;
-    padding: 8px 12px;
+    padding: 8px 10px;
   }
 
   .xp-brand-links {
     justify-content: center;
     gap: 6px;
     width: 100%;
-  }
-
-  .xp-brand-controls {
-    justify-content: center;
-    width: 100%;
-    gap: 8px;
-  }
-
-  .xp-brand-language-select,
-  .xp-brand-currency-select {
-    height: 34px;
-    font-size: 13px;
-    min-width: 84px;
-    flex: 1 1 auto;
-    max-width: 140px;
-  }
-
-  .xp-brand-link {
-    height: 38px;
   }
 
   .xp-brand-logo-prop {
@@ -802,22 +786,16 @@ img.property-header-logo.logo-image {
 
   .xp-brand-logo-home,
   .xp-brand-logo-main {
-    height: 20px;
-    max-width: min(28vw, 110px);
-  }
-
-  .xp-brand-language-select,
-  .xp-brand-top-banner .currency-picker-select {
-    height: 34px;
-    font-size: 13px;
+    height: 24px;
+    max-width: min(28vw, 120px);
   }
 
   .property-header-logo,
   img.property-header-logo.logo-image {
-    width: 128px !important;
-    height: 34px !important;
-    max-width: 128px !important;
-    max-height: 34px !important;
+    width: 150px !important;
+    height: 44px !important;
+    max-width: 150px !important;
+    max-height: 44px !important;
   }
 
   #mainNavbar .navbar-brand {
@@ -1301,6 +1279,7 @@ button.login {
 }
 
 @media (max-width: 991px) {
+
   .home-page .hero-slider,
   .home-page .hero-slider .swiper-wrapper,
   .home-page .hero-slider .swiper-slide {
@@ -1464,7 +1443,7 @@ button.login {
   text-align: center;
 }
 
-.marketplace-topbar > * {
+.marketplace-topbar>* {
   width: 100%;
 }
 
@@ -1608,7 +1587,7 @@ button.login {
   text-align: left;
 }
 
-.marketplace-filter-group > label {
+.marketplace-filter-group>label {
   display: block;
   margin-bottom: 8px;
   font-size: 13px;

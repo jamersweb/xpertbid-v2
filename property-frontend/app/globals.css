@@ -17,7 +17,7 @@ body {
   background: #fff;
 }
 
-.min-h-screen > main {
+.min-h-screen>main {
   flex: 1 0 auto;
 }
 
@@ -243,6 +243,7 @@ img.property-header-logo.logo-image {
 }
 
 @media (min-width: 992px) {
+
   #mainNavbar .navbar-collapse,
   #mainNavbar .xpert-mobile-menu {
     display: flex !important;
@@ -349,9 +350,7 @@ img.property-header-logo.logo-image {
   .xp-brand-controls {
     display: none !important;
   }
-}
 
-@media (max-width: 768px) {
   .xp-brand-top-banner {
     justify-content: center;
     gap: 8px;
@@ -850,6 +849,7 @@ button.login {
 }
 
 @media (max-width: 991px) {
+
   .home-page .hero-slider,
   .home-page .hero-slider .swiper-wrapper,
   .home-page .hero-slider .swiper-slide {
@@ -1004,7 +1004,7 @@ button.login {
   text-align: center;
 }
 
-.marketplace-topbar > * {
+.marketplace-topbar>* {
   width: 100%;
 }
 
@@ -1148,7 +1148,7 @@ button.login {
   text-align: left;
 }
 
-.marketplace-filter-group > label {
+.marketplace-filter-group>label {
   display: block;
   margin-bottom: 8px;
   font-size: 13px;

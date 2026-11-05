@@ -124,36 +124,37 @@ export function BrandTopBanner() {
         </a>
       </div>
 
-      <div className="xp-brand-controls">
-        <select
-          className="xp-brand-language-select"
-          value={locale}
-          onChange={(e) => handleLocale(e.target.value)}
-          aria-label="Select Language"
-        >
-          {LOCALES.map((item) => (
-            <option key={item.code} value={item.code}>
-              {item.label}
-            </option>
-          ))}
-        </select>
-
-        <div className="currency-picker">
+        {/* Hidden on mobile (<992px), visible on desktop */}
+        <div className="xp-brand-controls d-none d-lg-flex">
           <select
-            className="currency-picker-select"
-            value={currency}
-            onChange={(e) => handleCurrency(e.target.value)}
-            aria-label="Select display currency"
-            disabled={!currencyReady}
+            className="xp-brand-language-select"
+            value={locale}
+            onChange={(e) => handleLocale(e.target.value)}
+            aria-label="Select Language"
           >
-            {CURRENCIES.map((code) => (
-              <option key={code} value={code}>
-                {code}
+            {LOCALES.map((item) => (
+              <option key={item.code} value={item.code}>
+                {item.label}
               </option>
             ))}
           </select>
+
+          <div className="currency-picker">
+            <select
+              className="currency-picker-select"
+              value={currency}
+              onChange={(e) => handleCurrency(e.target.value)}
+              aria-label="Select display currency"
+              disabled={!currencyReady}
+            >
+              {CURRENCIES.map((code) => (
+                <option key={code} value={code}>
+                  {code}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
     </section>
   );
 }
