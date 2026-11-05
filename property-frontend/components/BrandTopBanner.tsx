@@ -94,18 +94,6 @@ export function BrandTopBanner() {
       <div className="xp-brand-links">
         <a
           className="xp-brand-link"
-          href={propertyUrl("/")}
-          aria-label="View XpertBid Property"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            className="xp-brand-logo xp-brand-logo-prop"
-            src={assetImage("xp-prop-logo-clean.png")}
-            alt="XpertBid Property"
-          />
-        </a>
-        <a
-          className="xp-brand-link"
           href={mainUrl("/marketplace/vehicles?type=auction")}
           aria-label="View vehicle marketplace"
         >
@@ -114,6 +102,18 @@ export function BrandTopBanner() {
             className="xp-brand-logo xp-brand-logo-vehicle"
             src={assetImage("xp-vehicle-logo-clean.png")}
             alt="XpertBid Vehicle"
+          />
+        </a>
+        <a
+          className="xp-brand-link"
+          href={mainUrl("/")}
+          aria-label="View XpertBid"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="xp-brand-logo xp-brand-logo-main"
+            src={assetImage("xp-bid-logo-clean.png")}
+            alt="XpertBid"
           />
         </a>
         <a
