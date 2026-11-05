@@ -9,6 +9,7 @@ type Props = {
   counts: { all: number; available: number; offered: number };
   isCorporateVerified?: boolean;
   hasPreferences?: boolean;
+  currentUserId?: number;
   onBrowseOpen?: () => void;
   onBrowseAll?: () => void;
   subtitle?: string;
@@ -19,11 +20,14 @@ export default function SellerLeadsHero({
   counts,
   isCorporateVerified = false,
   hasPreferences = false,
+  currentUserId,
   onBrowseOpen,
   onBrowseAll,
   subtitle = "Buyers post what they need. You bid. Best offer wins.",
 }: Props) {
-  const open = items.filter((r) => !r.my_offer);
+  const open = items.filter(
+    (r) => !r.my_offer && (!currentUserId || Number(r.user?.id || (r as any).user_id) !== currentUserId)
+  );
   const spotlight = (open.length ? open : items).slice(0, 3);
 
   return (
@@ -98,6 +102,9 @@ export default function SellerLeadsHero({
                     const thumb = item.images?.[0]?.url;
                     const tilt = idx === 0 ? "tilt-a" : idx === 1 ? "tilt-b" : "tilt-c";
                     const hideMobile = idx === 2 ? "d-none d-sm-block" : "";
+                    const isMine = Boolean(
+                      currentUserId && Number(item.user?.id || (item as any).user_id) === currentUserId
+                    );
                     return (
                       <div key={item.id} className={`${tilt} ${hideMobile}`}>
                         <div
@@ -127,7 +134,7 @@ export default function SellerLeadsHero({
                                 ) : null}
                               </div>
                             </div>
-                            <span className="br-hero__bid">Bid</span>
+                            <span className="br-hero__bid">{isMine ? "View" : "Bid"}</span>
                           </Link>
                         </div>
                       </div>

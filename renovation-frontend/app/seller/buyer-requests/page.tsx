@@ -55,16 +55,23 @@ export default function SellerBuyerRequestsPage() {
   const counts = useMemo(() => {
     const all = items.length;
     const offered = items.filter((r) => !!r.my_offer).length;
-    const available = items.filter((r) => !r.my_offer).length;
+    const available = items.filter(
+      (r) => !r.my_offer && (!user?.id || Number(r.user?.id || (r as any).user_id) !== Number(user.id))
+    ).length;
     return { all, offered, available };
-  }, [items]);
+  }, [items, user?.id]);
 
   const filtered = useMemo(() => {
     let list = [...items];
     const q = search.trim().toLowerCase();
 
-    if (navFilter === "available") list = list.filter((r) => !r.my_offer);
-    else if (navFilter === "offered") list = list.filter((r) => !!r.my_offer);
+    if (navFilter === "available") {
+      list = list.filter(
+        (r) => !r.my_offer && (!user?.id || Number(r.user?.id || (r as any).user_id) !== Number(user.id))
+      );
+    } else if (navFilter === "offered") {
+      list = list.filter((r) => !!r.my_offer);
+    }
 
     if (q) {
       list = list.filter((r) => {
@@ -92,7 +99,7 @@ export default function SellerBuyerRequestsPage() {
     }
 
     return list;
-  }, [items, navFilter, sortBy, search]);
+  }, [items, navFilter, sortBy, search, user?.id]);
 
   const tabs = [
     { key: "all", label: "All Leads", count: counts.all },
@@ -127,6 +134,7 @@ export default function SellerBuyerRequestsPage() {
           counts={counts}
           isCorporateVerified={Boolean(meta.is_corporate_verified)}
           hasPreferences={Boolean(meta.has_preferences)}
+          currentUserId={user?.id ? Number(user.id) : undefined}
           onBrowseOpen={() => scrollToLeads("available")}
           onBrowseAll={() => scrollToLeads("all")}
         />
@@ -213,6 +221,9 @@ export default function SellerBuyerRequestsPage() {
         ) : (
           <div className="br-grid">
             {filtered.map((item) => {
+              const isMyRequest = Boolean(
+                user?.id && Number(item.user?.id || (item as any).user_id) === Number(user.id)
+              );
               const description = stripHtml(item.description || "");
               const thumbs = (item.images || []).slice(0, 4);
               const extraImages = Math.max(0, (item.images || []).length - 3);
@@ -223,7 +234,20 @@ export default function SellerBuyerRequestsPage() {
                   <div>
                     <div className="d-flex justify-content-between align-items-start gap-2">
                       <span className="br-pill br-pill--open">Open</span>
-                      {item.my_offer ? (
+                      {isMyRequest ? (
+                        <span
+                          className="br-pill"
+                          style={{
+                            backgroundColor: "#f0f9ff",
+                            color: "#0369a1",
+                            borderColor: "#bae6fd",
+                            borderWidth: "1px",
+                            borderStyle: "solid",
+                          }}
+                        >
+                          Your request
+                        </span>
+                      ) : item.my_offer ? (
                         <span className="br-pill br-pill--amber">{item.my_offer.status}</span>
                       ) : (
                         <span className="br-pill br-pill--muted">No offer yet</span>
@@ -261,7 +285,7 @@ export default function SellerBuyerRequestsPage() {
                           <span>
                             {Number(item.offers_count)}{" "}
                             {Number(item.offers_count) === 1 ? "offer so far" : "offers so far"}
-                            {!item.my_offer ? " — you can still bid" : ""}
+                            {!item.my_offer && !isMyRequest ? " — you can still bid" : ""}
                           </span>
                         </div>
                       ) : null}
@@ -292,7 +316,7 @@ export default function SellerBuyerRequestsPage() {
 
                   <div className="br-card__footer">
                     <Link href={`/buyer-requests/${item.slug}`} className="br-btn br-btn--dark w-100">
-                      {item.my_offer ? "View / update offer" : "View & offer"}
+                      {isMyRequest ? "View your request" : item.my_offer ? "View / update offer" : "View & offer"}
                     </Link>
                   </div>
                 </article>

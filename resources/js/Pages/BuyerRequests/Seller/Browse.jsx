@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     HiOutlineCalendar,
     HiOutlineCash,
@@ -85,9 +85,14 @@ export default function Browse({
     isCorporateVerified = false,
     isLoggedIn = false,
     hasPreferences = false,
+    auth: authProp,
 }) {
     const { t } = useTranslate();
     const { openLogin } = useAuthModal();
+    const { auth: pageAuth } = usePage().props || {};
+    const auth = authProp || pageAuth;
+    const currentUserId = auth?.user?.id ? Number(auth.user.id) : null;
+
     const [navFilter, setNavFilter] = useState('all');
     const [sortBy, setSortBy] = useState('newest');
     const [search, setSearch] = useState('');
@@ -144,16 +149,20 @@ export default function Browse({
     const counts = useMemo(() => {
         const all = requests.length;
         const offered = requests.filter((r) => !!r.my_offer).length;
-        const available = requests.filter((r) => !r.my_offer).length;
+        const available = requests.filter(
+            (r) => !r.my_offer && (!currentUserId || Number(r.user_id || r.user?.id) !== currentUserId)
+        ).length;
         return { all, offered, available };
-    }, [requests]);
+    }, [requests, currentUserId]);
 
     const filtered = useMemo(() => {
         let list = [...requests];
         const q = search.trim().toLowerCase();
 
         if (navFilter === 'available') {
-            list = list.filter((r) => !r.my_offer);
+            list = list.filter(
+                (r) => !r.my_offer && (!currentUserId || Number(r.user_id || r.user?.id) !== currentUserId)
+            );
         } else if (navFilter === 'offered') {
             list = list.filter((r) => !!r.my_offer);
         }
@@ -182,7 +191,7 @@ export default function Browse({
         }
 
         return list;
-    }, [requests, navFilter, sortBy, search]);
+    }, [requests, navFilter, sortBy, search, currentUserId]);
 
     const tabs = [
         { key: 'all', label: t('All Leads'), count: counts.all },
@@ -191,10 +200,12 @@ export default function Browse({
     ];
 
     const spotlightLeads = useMemo(() => {
-        const open = requests.filter((r) => !r.my_offer);
+        const open = requests.filter(
+            (r) => !r.my_offer && (!currentUserId || Number(r.user_id || r.user?.id) !== currentUserId)
+        );
         const pool = open.length ? open : requests;
         return pool.slice(0, 3);
-    }, [requests]);
+    }, [requests, currentUserId]);
 
     const scrollToLeads = (filter) => {
         if (filter) setNavFilter(filter);
@@ -351,7 +362,7 @@ export default function Browse({
                                                                     </div>
                                                                 </div>
                                                                 <span className="shrink-0 rounded-full bg-[#43ACE9]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#1a7fb8]">
-                                                                    {t('Bid')}
+                                                                    {Boolean(currentUserId && Number(item.user_id || item.user?.id) === currentUserId) ? t('View') : t('Bid')}
                                                                 </span>
                                                             </Link>
                                                             </div>
@@ -534,6 +545,9 @@ export default function Browse({
                             ) : (
                                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
                                     {filtered.map((item) => {
+                                        const isMyRequest = Boolean(
+                                            currentUserId && Number(item.user_id || item.user?.id) === currentUserId
+                                        );
                                         const categoryLine = [
                                             item.category?.name,
                                             item.sub_category?.name || item.subCategory?.name,
@@ -554,7 +568,11 @@ export default function Browse({
                                                         <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
                                                             {t('Open')}
                                                         </span>
-                                                        {item.my_offer ? (
+                                                        {isMyRequest ? (
+                                                            <span className="inline-flex items-center rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-semibold text-sky-700 ring-1 ring-sky-200">
+                                                                {t('Your request')}
+                                                            </span>
+                                                        ) : item.my_offer ? (
                                                             <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold capitalize text-amber-700 ring-1 ring-amber-200">
                                                                 {item.my_offer.status}
                                                             </span>
@@ -618,7 +636,7 @@ export default function Browse({
                                                                 <span>
                                                                     {Number(item.offers_count)}{' '}
                                                                     {Number(item.offers_count) === 1 ? t('offer so far') : t('offers so far')}
-                                                                    {!item.my_offer ? ` — ${t('you can still bid')}` : ''}
+                                                                    {!item.my_offer && !isMyRequest ? ` — ${t('you can still bid')}` : ''}
                                                                 </span>
                                                             </div>
                                                         )}
@@ -664,7 +682,11 @@ export default function Browse({
                                                         href={route('buyer-requests.show', item.slug || item)}
                                                         className="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white no-underline shadow-md shadow-slate-900/20 transition hover:bg-black hover:text-white"
                                                     >
-                                                        {item.my_offer ? t('View / update offer') : t('View & offer')}
+                                                        {isMyRequest
+                                                            ? t('View your request')
+                                                            : item.my_offer
+                                                            ? t('View / update offer')
+                                                            : t('View & offer')}
                                                     </Link>
                                                 </div>
                                             </article>

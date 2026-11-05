@@ -447,7 +447,7 @@ class BuyerRequestService
                             BuyerRequestOffer::STATUS_REJECTED,
                         ]);
                 },
-            ])->where('user_id', '!=', $seller->id);
+            ]);
         } else {
             $query->withCount('offers');
         }
