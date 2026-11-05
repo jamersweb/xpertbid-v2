@@ -3,6 +3,7 @@ import type { PropertyCard } from "@/types/property";
 import { formatPrice } from "@/lib/seo";
 import { mainUrl } from "@/lib/site";
 import { OwnerInfoRow } from "@/components/OwnerInfoRow";
+import { FormattedPrice } from "@/components/FormattedPrice";
 
 type Props = {
   property: PropertyCard;
@@ -125,7 +126,7 @@ export function PropertyCardView({ property, showPropertyMeta = true }: Props) {
           <span>{priceLabel}</span>
           <div className="price">
             <span className="me-1" style={{ color: "#23262F" }}>
-              {formatPrice(property.price?.amount, property.price?.currency)}
+              <FormattedPrice amount={property.price?.amount} />
             </span>
           </div>
         </div>

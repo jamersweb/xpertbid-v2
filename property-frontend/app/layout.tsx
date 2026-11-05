@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { AuthModalProvider } from "@/components/auth/AuthModalProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
-import { SiteFooter, SiteHeader, WhatsAppFab } from "@/components/SiteChrome";
+import { BrandTopBanner, SiteFooter, SiteHeader, WhatsAppFab } from "@/components/SiteChrome";
 import { getPropertyCategories } from "@/lib/api/client";
 import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import type { CategoryNode } from "@/types/property";
@@ -75,6 +75,7 @@ export default async function RootLayout({
         <AuthProvider>
           <AuthModalProvider>
             <div className="min-h-screen bg-white has-mobile-bottom-nav">
+              <BrandTopBanner />
               <SiteHeader purposes={purposes} />
               <main>{children}</main>
               <SiteFooter />

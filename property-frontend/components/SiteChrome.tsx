@@ -479,3 +479,5 @@ export function WhatsAppFab() {
     </div>
   );
 }
+
+export { BrandTopBanner } from "@/components/BrandTopBanner";
