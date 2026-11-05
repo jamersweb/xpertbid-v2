@@ -280,7 +280,18 @@ img.property-header-logo.logo-image {
   }
 
   #mainNavbar .xpert-mobile-menu {
-    display: none !important;
+    display: none;
+    width: 100%;
+    flex-basis: 100%;
+    flex-grow: 1;
+  }
+
+  #mainNavbar .xpert-mobile-menu.show {
+    display: block;
+    background: #fff;
+    padding: 1rem 0.25rem 1.1rem;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   }
 
   #mainNavbar .property-purpose-nav {

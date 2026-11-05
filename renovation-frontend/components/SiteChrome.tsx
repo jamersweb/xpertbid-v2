@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useAuthModal } from "@/components/auth/AuthModalProvider";
 import { resolveProfileImage, useAuth } from "@/components/auth/AuthProvider";
 import { useStartBuilding } from "@/components/start-building/StartBuildingProvider";
@@ -133,6 +133,10 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
   const { user, loading, logout, openMainPath } = useAuth();
   const pathname = usePathname();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const closeMobileMenu = () => setMenuOpen(false);
 
   useEffect(() => {
     const onClick = (event: Event) => {
@@ -140,74 +144,100 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
       if (!target.closest(".header-profile-root")) {
         setProfileOpen(false);
       }
+      if (
+        menuOpen &&
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(target) &&
+        !target.closest(".navbar-toggler")
+      ) {
+        setMenuOpen(false);
+      }
     };
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
-  }, []);
+}, [menuOpen]);
 
-  useEffect(() => {
-    setProfileOpen(false);
-  }, [pathname]);
+useEffect(() => {
+  setProfileOpen(false);
+  setMenuOpen(false);
+}, [pathname]);
 
-  const handleSellClick = (e: ReactMouseEvent) => {
-    e.preventDefault();
-    if (!user) {
-      openLogin();
-      return;
-    }
-    void openMainPath("/sell");
-  };
+const handleSellClick = (e: ReactMouseEvent) => {
+  e.preventDefault();
+  closeMobileMenu();
+  if (!user) {
+    openLogin();
+    return;
+  }
+  void openMainPath("/sell");
+};
 
-  const handleLogout = async () => {
-    setProfileOpen(false);
-    await logout();
-  };
+const handleLogout = async () => {
+  setProfileOpen(false);
+  closeMobileMenu();
+  await logout();
+};
 
-  const profileSrc = resolveProfileImage(user);
+const profileSrc = resolveProfileImage(user);
 
-  return (
-    <header className="bg-white" style={{ zIndex: 1050 }}>
-      <nav className="navbar navbar-expand-lg navbar-light bg-white py-2" id="mainNavbar">
-        <div className="container-fluid px-3 px-lg-5 my-1 my-lg-2">
-          <Link className="navbar-brand d-flex align-items-center me-0 me-lg-4 flex-shrink-1 min-w-0" href="/">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={assetImage("xpertbuildlogo.png")}
-              alt="Xpert Build"
-              width={180}
-              height={40}
-              className="logo-image property-header-logo"
-            />
-          </Link>
+return (
+  <header className="bg-white" style={{ zIndex: 1050 }}>
+    <nav className="navbar navbar-expand-lg navbar-light bg-white py-2" id="mainNavbar">
+      <div className="container-fluid px-3 px-lg-5 my-1 my-lg-2">
+        <Link className="navbar-brand d-flex align-items-center me-0 me-lg-4 flex-shrink-1 min-w-0" href="/">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={assetImage("xpertbuildlogo.png")}
+            alt="Xpert Build"
+            width={180}
+            height={40}
+            className="logo-image property-header-logo"
+          />
+        </Link>
 
-          {/* Mobile: guest = Login + Sign Up; logged-in = notifications + Sell (no profile / no hamburger) */}
-          <div className="mobile-header-actions d-flex d-lg-none align-items-center gap-2 ms-auto">
-            {!user && !loading ? (
-              <>
-                <button type="button" className="mobile-auth-btn mobile-auth-login" onClick={openLogin}>
-                  Login
-                </button>
-                <button type="button" className="mobile-auth-btn mobile-auth-signup" onClick={openRegister}>
-                  Sign Up
-                </button>
-              </>
-            ) : null}
-            {user ? (
-              <>
-                <NotificationDropdown />
-                <button
-                  type="button"
-                  className="mobile-auth-btn mobile-auth-sell"
-                  onClick={handleSellClick}
-                >
-                  Sell Now
-                </button>
-              </>
-            ) : null}
-          </div>
+        {/* Mobile: guest = Login + Sign Up; logged-in = notifications + Sell (no profile / no hamburger) */}
+        <div className="mobile-header-actions d-flex d-lg-none align-items-center gap-2 ms-auto">
+          {!user && !loading ? (
+            <>
+              <button type="button" className="mobile-auth-btn mobile-auth-login" onClick={openLogin}>
+                Login
+              </button>
+              <button type="button" className="mobile-auth-btn mobile-auth-signup" onClick={openRegister}>
+                Sign Up
+              </button>
+            </>
+          ) : null}
+          {user ? (
+            <>
+              <NotificationDropdown />
+              <button
+                type="button"
+                className="mobile-auth-btn mobile-auth-sell"
+                onClick={handleSellClick}
+              >
+                Sell Now
+              </button>
+            </>
+          ) : null}
+        </div>
 
-          <div className="navbar-collapse xpert-mobile-menu d-none d-lg-flex" id="navbarSupportedContent">
-            <PropertyPurposeNav purposes={purposes} />
+          <button
+            className="navbar-toggler d-lg-none"
+            type="button"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-controls="navbarSupportedContent"
+            aria-expanded={menuOpen}
+            aria-label="Toggle navigation"
+          >
+            <i className={`fa-solid ${menuOpen ? "fa-xmark" : "fa-bars"}`} aria-hidden="true" />
+          </button>
+
+          <div
+            ref={mobileMenuRef}
+            className={`navbar-collapse xpert-mobile-menu ${menuOpen ? "show" : ""}`}
+            id="navbarSupportedContent"
+          >
+            <PropertyPurposeNav purposes={purposes} onNavigate={closeMobileMenu} />
 
             <div className="d-flex align-items-center mt-3 mt-lg-0 header-account-cluster">
               {!user && !loading ? (
@@ -268,9 +298,8 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
                         }}
                       />
                       <i
-                        className={`fa-solid fa-chevron-down header-avatar-chevron small text-muted d-none d-lg-inline ${
-                          profileOpen ? "rotate-180" : ""
-                        }`}
+                        className={`fa-solid fa-chevron-down header-avatar-chevron small text-muted d-none d-lg-inline ${profileOpen ? "rotate-180" : ""
+                          }`}
                       />
                     </button>
 
@@ -303,9 +332,9 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
             </div>
           </div>
         </div>
-      </nav>
-    </header>
-  );
+    </nav>
+  </header>
+);
 }
 
 export function SiteFooter() {

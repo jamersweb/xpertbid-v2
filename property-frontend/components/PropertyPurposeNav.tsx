@@ -34,6 +34,16 @@ export function PropertyPurposeNav({ purposes, onNavigate }: Props) {
           </Link>
         </li>
       ))}
+
+      <li className="nav-item">
+        <Link
+          href="/seller/buyer-requests"
+          className="nav-link property-nav-link"
+          onClick={onNavigate}
+        >
+          Request Leads
+        </Link>
+      </li>
     </ul>
   );
 }
