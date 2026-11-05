@@ -172,23 +172,16 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: Props) {
     e.preventDefault();
     setErrorMessage("");
     setProcessing(true);
-    const syncPopup = openAuthSyncPopup();
     try {
       const result = await loginWithPassword({ email, password, remember });
       if (!result.token || !result.user) {
         throw new Error("Login succeeded but session was incomplete.");
       }
-      // Stay on page; silent bridge syncs main session for cross-site SSO.
-      await setSession(result.token, result.user, result.redirect_url, syncPopup);
+      await setSession(result.token, result.user, result.redirect_url);
       setProcessing(false);
       onClose();
       return;
     } catch (err) {
-      try {
-        syncPopup?.close();
-      } catch {
-        // ignore
-      }
       setErrorMessage(err instanceof Error ? err.message : "Invalid credentials.");
       setProcessing(false);
     }
@@ -208,7 +201,6 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: Props) {
     setErrorMessage("");
     setProcessing(true);
     const formattedPhone = `${phoneData.countryCode}${phoneData.phone.replace(/^0+/, "")}`;
-    const syncPopup = openAuthSyncPopup();
 
     try {
       const result = await loginWithPassword({
@@ -219,16 +211,11 @@ export function LoginModal({ isOpen, onClose, onSwitchToRegister }: Props) {
       if (!result.token || !result.user) {
         throw new Error("Login succeeded but session was incomplete.");
       }
-      await setSession(result.token, result.user, result.redirect_url, syncPopup);
+      await setSession(result.token, result.user, result.redirect_url);
       setProcessing(false);
       onClose();
       return;
     } catch (err) {
-      try {
-        syncPopup?.close();
-      } catch {
-        // ignore
-      }
       setErrorMessage(err instanceof Error ? err.message : "Invalid credentials.");
       setProcessing(false);
     }

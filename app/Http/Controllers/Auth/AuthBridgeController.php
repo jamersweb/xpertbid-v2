@@ -50,7 +50,10 @@ class AuthBridgeController extends Controller
 
         // Append one-time Sanctum token for satellite Next frontends (property + home).
         if ($request->boolean('with_token') || $this->isSatelliteFrontendOrigin($returnTo)) {
-            $plain = $user->createToken('property_web')->plainTextToken;
+            $tokenName = str_contains($returnTo, 'build') || str_contains($returnTo, ':3000') || str_contains($returnTo, 'home') || str_contains($returnTo, 'renovation')
+                ? 'renovation_web'
+                : 'property_web';
+            $plain = $user->createToken($tokenName)->plainTextToken;
             $separator = str_contains($returnTo, '?') ? '&' : '?';
             $returnTo .= $separator.'auth_token='.urlencode($plain);
         }

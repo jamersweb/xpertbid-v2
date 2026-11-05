@@ -125,9 +125,9 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $token = $request->user()?->currentAccessToken();
-        if ($token) {
-            $token->delete();
+        $user = $request->user();
+        if ($user) {
+            $user->tokens()->whereIn('name', ['property_web', 'renovation_web'])->delete();
         }
 
         return response()->json(['message' => 'Logged out.']);
@@ -251,7 +251,12 @@ class AuthController extends Controller
      */
     protected function authPayload(User $user, ?string $returnTo = null): array
     {
-        $token = $user->createToken('property_web')->plainTextToken;
+        $origin = (string) request()->header('Origin');
+        $tokenName = str_contains($origin, 'build') || str_contains($origin, ':3000') || request()->input('signup_source') === 'renovation_web'
+            ? 'renovation_web'
+            : 'property_web';
+
+        $token = $user->createToken($tokenName)->plainTextToken;
 
         return [
             'message' => 'Authenticated.',

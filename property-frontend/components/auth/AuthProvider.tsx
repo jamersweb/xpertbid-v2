@@ -42,12 +42,13 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 /** Cooldown for credentialed main→satellite token pulls (no full-page handoff). */
 const LAST_TOKEN_SYNC_KEY = "xb_last_satellite_token_sync";
-const TOKEN_SYNC_COOLDOWN_MS = 15000;
+const TOKEN_SYNC_COOLDOWN_MS = 2500;
 const LOGGED_OUT_KEY = "xb_satellite_logged_out";
 
 function clearSyncFlags() {
   if (typeof window === "undefined") return;
   window.sessionStorage.removeItem(LAST_TOKEN_SYNC_KEY);
+  window.sessionStorage.removeItem(LOGGED_OUT_KEY);
   const keys: string[] = [];
   for (let i = 0; i < window.sessionStorage.length; i += 1) {
     const key = window.sessionStorage.key(i);
@@ -80,12 +81,15 @@ function stripAuthParamsFromUrl() {
 }
 
 function canAttemptTokenSync() {
-  if (window.sessionStorage.getItem(LOGGED_OUT_KEY) === "1") return false;
+  if (typeof window === "undefined") return false;
+  const loggedOutAt = Number(window.sessionStorage.getItem(LOGGED_OUT_KEY) || 0);
+  if (loggedOutAt && Date.now() - loggedOutAt < 4000) return false;
   const last = Number(window.sessionStorage.getItem(LAST_TOKEN_SYNC_KEY) || 0);
   return Date.now() - last >= TOKEN_SYNC_COOLDOWN_MS;
 }
 
 function markTokenSyncAttempt() {
+  if (typeof window === "undefined") return;
   window.sessionStorage.setItem(LAST_TOKEN_SYNC_KEY, String(Date.now()));
 }
 
@@ -94,27 +98,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const lastRevisitRef = useRef<number>(0);
-
-  const refreshUser = useCallback(async () => {
-    const token = getStoredToken();
-    if (!token) {
-      setUser(null);
-      return;
-    }
-    try {
-      const me = await fetchMe();
-      setUser(me);
-    } catch (err: unknown) {
-      const status =
-        (err as { status?: number; statusCode?: number })?.status ||
-        (err as { status?: number; statusCode?: number })?.statusCode;
-      // ONLY clear token if the server explicitly returned 401 Unauthorized
-      if (status === 401) {
-        clearStoredToken();
-        setUser(null);
-      }
-    }
-  }, []);
 
   const tryPullTokenFromMain = useCallback(async (): Promise<boolean> => {
     if (!canAttemptTokenSync()) return false;
@@ -137,15 +120,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return true;
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    const token = getStoredToken();
+    if (!token) {
+      setUser(null);
+      return;
+    }
+    try {
+      const me = await fetchMe();
+      setUser(me);
+    } catch (err: unknown) {
+      const status =
+        (err as { status?: number; statusCode?: number })?.status ||
+        (err as { status?: number; statusCode?: number })?.statusCode;
+      // ONLY clear token if the server explicitly returned 401 Unauthorized
+      if (status === 401) {
+        clearStoredToken();
+        setUser(null);
+        void tryPullTokenFromMain();
+      }
+    }
+  }, [tryPullTokenFromMain]);
+
   // Soft re-sync when returning to the tab (credentialed fetch — no redirect).
   useEffect(() => {
     const handleTabRevisit = () => {
       if (typeof document !== "undefined" && document.visibilityState && document.visibilityState !== "visible") {
         return;
       }
-      // Throttle revisit checks to once every 10 seconds to prevent rapid focus/visibility loops
+      // Throttle revisit checks to once every 2 seconds to prevent rapid focus/visibility loops
       const now = Date.now();
-      if (now - lastRevisitRef.current < 10000) {
+      if (now - lastRevisitRef.current < 2000) {
         return;
       }
       lastRevisitRef.current = now;
@@ -178,8 +183,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (loggedOutParam) {
         clearStoredToken();
-        window.sessionStorage.setItem(LOGGED_OUT_KEY, "1");
         clearSyncFlags();
+        window.sessionStorage.setItem(LOGGED_OUT_KEY, String(Date.now()));
         stripAuthParamsFromUrl();
         if (!cancelled) {
           setUser(null);
@@ -235,15 +240,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     redirectUrl?: string,
     syncPopup?: Window | null
   ) => {
-    // Stay on this page; silently set main web session so other sites can SSO.
     storeToken(token);
     setUser(nextUser);
     window.sessionStorage.removeItem(LOGGED_OUT_KEY);
     clearSyncFlags();
+
+    try {
+      syncPopup?.close();
+    } catch {
+      // ignore
+    }
+
+    if (redirectUrl) {
+      window.location.assign(redirectUrl);
+      return;
+    }
+
     try {
       await establishMainSiteSessionSilent(redirectUrl, syncPopup);
     } catch {
-      // Satellite session still valid; main sync can happen on next openMainPath.
+      // ignore
     }
   }, []);
 
@@ -251,14 +267,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await logoutApi();
     } catch {
-      clearStoredToken();
+      // ignore
     }
+    clearStoredToken();
     clearSyncFlags();
     setUser(null);
-    window.sessionStorage.setItem(LOGGED_OUT_KEY, "1");
-
-    const silentOk = await logoutMainSiteSessionSilent();
-    if (silentOk) return;
+    window.sessionStorage.setItem(LOGGED_OUT_KEY, String(Date.now()));
 
     const returnTo = encodeURIComponent(`${window.location.origin}/`);
     window.location.replace(`${MAIN_SITE_URL}/auth/property-logout?return_to=${returnTo}`);

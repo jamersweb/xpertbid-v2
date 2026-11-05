@@ -47,6 +47,9 @@ class SatelliteTokenController extends Controller
                 'phone' => $user->phone,
                 'profile_pic' => $user->profile_pic,
                 'role' => $user->role,
+                'is_corporate_verified' => $user->isCorporateVerified(),
+                'is_verified' => $user->isCorporateVerified() || $user->isIndividualVerified(),
+                'verification_type' => $user->publicVerificationType(),
             ],
         ]);
     }
@@ -58,6 +61,10 @@ class SatelliteTokenController extends Controller
         }
 
         if (Auth::check()) {
+            $user = Auth::user();
+            if ($user) {
+                $user->tokens()->whereIn('name', ['property_web', 'renovation_web'])->delete();
+            }
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

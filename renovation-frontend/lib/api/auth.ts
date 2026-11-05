@@ -42,15 +42,27 @@ function firstError(json: AuthJson, fallback: string) {
 
 export function getStoredToken() {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(TOKEN_KEY) || window.localStorage.getItem("property_auth_token");
+  const token = window.localStorage.getItem(TOKEN_KEY);
+  if (token) return token;
+  const legacy = window.localStorage.getItem("property_auth_token");
+  if (legacy) {
+    window.localStorage.setItem(TOKEN_KEY, legacy);
+    window.localStorage.removeItem("property_auth_token");
+    return legacy;
+  }
+  return null;
 }
 
 export function storeToken(token: string) {
+  if (typeof window === "undefined") return;
   window.localStorage.setItem(TOKEN_KEY, token);
+  window.localStorage.removeItem("property_auth_token");
 }
 
 export function clearStoredToken() {
+  if (typeof window === "undefined") return;
   window.localStorage.removeItem(TOKEN_KEY);
+  window.localStorage.removeItem("property_auth_token");
 }
 
 async function authFetch(path: string, init?: RequestInit) {

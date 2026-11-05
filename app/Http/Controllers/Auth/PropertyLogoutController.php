@@ -14,6 +14,11 @@ class PropertyLogoutController extends Controller
 {
     public function __invoke(Request $request)
     {
+        $user = Auth::user();
+        if ($user) {
+            $user->tokens()->whereIn('name', ['property_web', 'renovation_web'])->delete();
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

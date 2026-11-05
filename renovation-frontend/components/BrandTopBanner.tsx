@@ -102,6 +102,7 @@ export function BrandTopBanner() {
         <a
           className="xp-brand-link"
           href={propertyUrl("/")}
+          onClick={handleMainLinkClick(propertyUrl("/"))}
           aria-label="View XpertBid Property"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
