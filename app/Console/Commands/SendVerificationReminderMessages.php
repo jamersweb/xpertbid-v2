@@ -2,29 +2,35 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\SendVerificationReminderJob;
 use App\Models\User;
-use App\Services\MsgpkService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
 class SendVerificationReminderMessages extends Command
 {
     protected $signature = 'verification:send-24h-reminders';
 
-    protected $description = 'Send verification reminder message to users who signed up 24+ hours ago and have not submitted individual/corporate verification.';
+    protected $description = 'Send verification reminder message to users who signed up 24 hours ago and have not submitted individual/corporate verification.';
 
-    public function handle(MsgpkService $msgpkService): int
+    public function handle(): int
     {
+        $now = now();
+        Cache::forever('registration_reminder_last_run_at', $now->toDateTimeString());
+
+        // Strict 24h window (created between 24 and 25 hours ago)
+        $windowStart = $now->copy()->subHours(25);
+        $windowEnd = $now->copy()->subHours(24);
+
         $users = User::query()
             ->whereNotNull('phone')
             ->where('phone', '!=', '')
-            ->where('created_at', '<=', now()->subHours(24))
+            ->whereBetween('created_at', [$windowStart, $windowEnd])
             ->whereDoesntHave('individualVerification')
             ->whereDoesntHave('corporateVerification')
             ->get();
 
-        $sentCount = 0;
+        $dispatchedCount = 0;
         $skippedCount = 0;
 
         foreach ($users as $user) {
@@ -48,26 +54,11 @@ class SendVerificationReminderMessages extends Command
                 . "https://xpertbid.com/identity-verification\n\n"
                 . "If you need help, our support team is here for you.";
 
-            try {
-                $sent = $msgpkService->sendMessage($phone, $message);
-                if ($sent) {
-                    Cache::put($cacheKey, now()->toISOString(), now()->addDays(30));
-                    $sentCount++;
-                } else {
-                    $skippedCount++;
-                }
-            } catch (\Throwable $e) {
-                $skippedCount++;
-                Log::warning('24h verification reminder message failed', [
-                    'user_id' => $user->id,
-                    'phone' => $phone,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+            SendVerificationReminderJob::dispatch($user->id, $phone, $message);
+            $dispatchedCount++;
         }
 
-        $this->info("24h verification reminders processed. Sent: {$sentCount}, Skipped: {$skippedCount}");
+        $this->info("24h verification reminders processed. Dispatched: {$dispatchedCount}, Skipped: {$skippedCount}");
         return self::SUCCESS;
     }
 }
-

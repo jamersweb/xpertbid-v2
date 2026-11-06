@@ -52,6 +52,12 @@ export default function Dashboard({ stats }) {
        const lastAuctionStatusCheck = stats.auction_status_last_checked_at
               ? new Date(stats.auction_status_last_checked_at).toLocaleString()
               : 'Not checked yet';
+       const lastRegistrationReminder = stats.registration_reminder_last_run_at
+              ? new Date(stats.registration_reminder_last_run_at).toLocaleString()
+              : 'Not run yet';
+       const lastPostVerifyReminder = stats.post_verify_reminder_last_run_at
+              ? new Date(stats.post_verify_reminder_last_run_at).toLocaleString()
+              : 'Not run yet';
 
        return (
               <AdminLayout title="Dashboard">
@@ -99,19 +105,33 @@ export default function Dashboard({ stats }) {
                             ))}
                      </div>
 
+                     <div className="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 transition-shadow hover:shadow-md">
+                                   <h3 className="text-gray-500 text-sm font-bold uppercase tracking-wide mb-2">Currency Sync</h3>
+                                   <p className="text-xs text-gray-500 mb-2">Last successful currency rates sync</p>
+                                   <p className="text-lg font-black text-gray-900 tracking-tight">{lastCurrencySync}</p>
+                            </div>
+
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 transition-shadow hover:shadow-md">
+                                   <h3 className="text-gray-500 text-sm font-bold uppercase tracking-wide mb-2">Auction Status Check</h3>
+                                   <p className="text-xs text-gray-500 mb-2">Last successful auction status scan</p>
+                                   <p className="text-lg font-black text-gray-900 tracking-tight">{lastAuctionStatusCheck}</p>
+                            </div>
+
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 transition-shadow hover:shadow-md">
+                                   <h3 className="text-gray-500 text-sm font-bold uppercase tracking-wide mb-2">Registration Reminder</h3>
+                                   <p className="text-xs text-gray-500 mb-2">Last 24h unverified user scan</p>
+                                   <p className="text-lg font-black text-gray-900 tracking-tight">{lastRegistrationReminder}</p>
+                            </div>
+
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 transition-shadow hover:shadow-md">
+                                   <h3 className="text-gray-500 text-sm font-bold uppercase tracking-wide mb-2">Post-Verify Inactivity</h3>
+                                   <p className="text-xs text-gray-500 mb-2">Last 24h inactive verified user scan</p>
+                                   <p className="text-lg font-black text-gray-900 tracking-tight">{lastPostVerifyReminder}</p>
+                            </div>
+                     </div>
+
                      <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                                   <h3 className="text-lg font-bold text-gray-800 mb-3">Currency Sync</h3>
-                                   <p className="text-sm text-gray-500 mb-2">Last successful currency rates sync</p>
-                                   <p className="text-xl font-black text-gray-800">{lastCurrencySync}</p>
-                            </div>
-
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                                   <h3 className="text-lg font-bold text-gray-800 mb-3">Auction Status Check</h3>
-                                   <p className="text-sm text-gray-500 mb-2">Last successful auction status scan</p>
-                                   <p className="text-xl font-black text-gray-800">{lastAuctionStatusCheck}</p>
-                            </div>
-
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-h-[400px]">
                                    <h3 className="text-lg font-bold text-gray-800 mb-6">Recent Activity</h3>
                                    <div className="flex flex-col gap-4">

@@ -49,6 +49,8 @@ class AdminDashboardController extends Controller
                     + DB::table('corporate_verifications')->whereIn('status', $pendingStatuses)->count(),
                 'currency_last_synced_at' => Cache::get('currency_rates_last_synced_at'),
                 'auction_status_last_checked_at' => Cache::get('auction_status_last_checked_at'),
+                'registration_reminder_last_run_at' => Cache::get('registration_reminder_last_run_at'),
+                'post_verify_reminder_last_run_at' => Cache::get('post_verify_reminder_last_run_at'),
                 'series' => [
                     'total_users' => $monthlyCounts(User::query()),
                     'total_products' => $monthlyCounts(Listing::query()),
