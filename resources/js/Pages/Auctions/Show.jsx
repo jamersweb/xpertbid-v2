@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { isGoogleMapsUrl } from '@/Utils/mapLocation';
 import JsonLdScripts from '@/Components/JsonLdScripts';
+import ProductSeoHead from '@/Components/ProductDetails/ProductSeoHead';
 
 const AccordionItem = ({ title, children, defaultOpen = false }) => {
        const [open, setOpen] = useState(defaultOpen);
@@ -196,10 +197,7 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
               return (
                      <CartProvider>
                             <AuthModalProvider>
-                           <Head>
-                                   <title>{auction.title}</title>
-                                   <meta name="description" content={auction.description?.substring(0, 160)} />
-                            </Head>
+                           <ProductSeoHead auction={auction} />
                             <JsonLdScripts markup={auction?.category?.schema_markup} idPrefix="auction-schema" />
 
                             <main className="live-product-detail-page">
@@ -957,9 +955,7 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
 
        return (
               <AppLayout title={auction.title}>
-                     <Head>
-                            <meta name="description" content={auction.description?.substring(0, 160)} />
-                     </Head>
+                     <ProductSeoHead auction={auction} />
                      <JsonLdScripts markup={auction?.category?.schema_markup} idPrefix="auction-schema" />
 
                      <ProductHeader

@@ -4,10 +4,13 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ \App\Support\OpenGraphMeta::pageTitle($page ?? []) }}</title>
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="shortcut icon" href="/favicon.ico">
         <link rel="apple-touch-icon" href="/assets/images/expertbid-favicon.png">
+
+        <!-- Open Graph / Twitter / SEO Meta Tags -->
+        {!! \App\Support\OpenGraphMeta::renderHtml($page ?? []) !!}
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
