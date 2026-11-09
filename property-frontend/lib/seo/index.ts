@@ -38,7 +38,37 @@ export function propertyMetadata(property: PropertyDetail): Metadata {
     property.description?.replace(/<[^>]+>/g, " ") ||
       `${property.title} listed on ${SITE_NAME}.`
   );
-  const image = property.image_url || undefined;
+
+  // Select the best available image for OG/twitter, avoiding seller avatars
+  const images: string[] = [];
+
+  // Priority 1: Primary image_url (if it's an absolute URL or path, not seller avatar)
+  if (property.image_url) {
+    // Exclude seller/avatar URLs (typically have avatar, user, profile, avatar_url patterns)
+    if (!property.image_url.match(/avatar|user|profile|avatar_url/i)) {
+      images.push(property.image_url);
+    }
+  }
+
+  // Priority 2: Album URLs (first few valid property gallery images)
+  if (images.length === 0 && property.album_urls?.length) {
+    // Filter out potential seller/avatar URLs from album URLs
+    const validAlbumUrls = property.album_urls.filter(
+      (url) => url && !url.match(/avatar|user|profile|avatar_url/i)
+    );
+    if (validAlbumUrls.length > 0) {
+      // Use up to 2 first valid album URLs for OG/twitter
+      images.push(...validAlbumUrls.slice(0, 2));
+    }
+  }
+
+  // Priority 3: Use an appropriate default property placeholder if no valid images found
+  if (images.length === 0) {
+    // Use a property-specific placeholder image that represents real estate/property
+    images.push(
+      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80"
+    );
+  }
 
   return {
     title,
@@ -52,13 +82,13 @@ export function propertyMetadata(property: PropertyDetail): Metadata {
       url: absoluteUrl(`/properties/${property.slug}`),
       siteName: SITE_NAME,
       type: "website",
-      images: image ? [{ url: image }] : undefined,
+      images: images.map((url) => ({ url: absoluteUrl(url) })),
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: image ? [image] : undefined,
+      images: images.map((url) => absoluteUrl(url)),
     },
   };
 }
