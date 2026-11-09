@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 91" width="540" height="91" fill="none">
+  <!-- Xpert Build Clean Outline Icon (Option 2: Construction Tower Crane + Building Frame) -->
+  <g transform="translate(4, 0)">
+    <!-- Tower Crane Mast -->
+    <line x1="24" y1="18" x2="24" y2="83" stroke="#74c7f4" stroke-width="7" stroke-linecap="round" />
+    <!-- Horizontal Jib Arm -->
+    <line x1="6" y1="18" x2="88" y2="18" stroke="#74c7f4" stroke-width="6.5" stroke-linecap="round" />
+    <!-- Tower Apex -->
+    <polygon points="16,18 24,6 32,18" stroke="#74c7f4" stroke-width="5" fill="none" stroke-linejoin="round" />
+    <!-- Tie Lines -->
+    <line x1="24" y1="6" x2="8" y2="18" stroke="#74c7f4" stroke-width="3.5" />
+    <line x1="24" y1="6" x2="65" y2="18" stroke="#74c7f4" stroke-width="3.5" />
+    <!-- Counterweight -->
+    <rect x="6" y="14" width="8" height="14" fill="#74c7f4" rx="1" />
+    <!-- Hoist Cable & Suspended Block -->
+    <line x1="72" y1="18" x2="72" y2="42" stroke="#74c7f4" stroke-width="3.5" />
+    <rect x="62" y="42" width="20" height="12" fill="#74c7f4" rx="2" />
+    <!-- Building Skeleton Frame -->
+    <line x1="44" y1="68" x2="88" y2="68" stroke="#74c7f4" stroke-width="5.5" />
+    <line x1="44" y1="83" x2="88" y2="83" stroke="#74c7f4" stroke-width="6.5" stroke-linecap="round" />
+    <line x1="46" y1="56" x2="46" y2="83" stroke="#74c7f4" stroke-width="5.5" />
+    <line x1="66" y1="56" x2="66" y2="83" stroke="#74c7f4" stroke-width="5.5" />
+    <line x1="86" y1="56" x2="86" y2="83" stroke="#74c7f4" stroke-width="5.5" />
+  </g>
+
+  <!-- Typography: 100% matching Xpert Property & Xpert Vehicle -->
+  <text x="128" y="72" font-family="Arial, 'Helvetica Neue', Inter, sans-serif" font-size="74" font-weight="bold" letter-spacing="-0.5">
+    <tspan fill="#43ace9">Xpert</tspan>
+    <tspan dx="28" fill="#23262f">Build</tspan>
+  </text>
+</svg>
+
