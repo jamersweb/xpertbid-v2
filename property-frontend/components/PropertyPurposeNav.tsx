@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuthModal } from "@/components/auth/AuthModalProvider";
 import type { CategoryNode } from "@/types/property";
 
 type Props = {
@@ -10,6 +12,16 @@ type Props = {
 
 export function PropertyPurposeNav({ purposes, onNavigate }: Props) {
   const visiblePurposes = (purposes || []).slice(0, 3);
+  const { user } = useAuth();
+  const { openLogin } = useAuthModal();
+
+  const handlePostRequestClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    onNavigate?.();
+    if (!user) {
+      e.preventDefault();
+      openLogin();
+    }
+  };
 
   return (
     <ul className="navbar-nav me-auto mb-2 mb-lg-0 align-items-lg-center property-purpose-nav">
@@ -37,11 +49,11 @@ export function PropertyPurposeNav({ purposes, onNavigate }: Props) {
 
       <li className="nav-item">
         <Link
-          href="/seller/buyer-requests"
+          href="/buyer-requests/new"
           className="nav-link property-nav-link"
-          onClick={onNavigate}
+          onClick={handlePostRequestClick}
         >
-          Request Leads
+          Post Request
         </Link>
       </li>
     </ul>

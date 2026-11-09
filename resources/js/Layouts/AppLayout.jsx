@@ -30,7 +30,7 @@ export default function AppLayout({ children, title }) {
        const appOrigin = String(ziggy?.url || '').replace(/\/$/, '') || '';
        const propertyLogoSrc = brandLogos?.property || `${appOrigin}/assets/images/xp-prop-logo-clean.png`;
        const vehicleLogoSrc = brandLogos?.vehicle || `${appOrigin}/assets/images/xp-vehicle-logo-clean.png`;
-       const homeLogoSrc = brandLogos?.home || `${appOrigin}/assets/images/xpertbuildlogo.png`;
+       const homeLogoSrc = brandLogos?.home || `${appOrigin}/assets/images/xp-build-logo-clean.png`;
 
        const individualVerificationStatus =
               auth?.verification?.individual_status
@@ -141,9 +141,11 @@ export default function AppLayout({ children, title }) {
                                                  >
                                                         <img className="xp-brand-logo xp-brand-logo-prop" src={propertyLogoSrc} alt="XpertBid Property" />
                                                  </a>
+                                                  {/* Vehicle logo hidden for now
                                                  <Link className="xp-brand-link" href="/marketplace/vehicles?type=auction" aria-label="View vehicle marketplace">
                                                         <img className="xp-brand-logo xp-brand-logo-vehicle" src={vehicleLogoSrc} alt="XpertBid Vehicle" />
                                                  </Link>
+                                                  */}
                                                  <a
                                                         className="xp-brand-link"
                                                         href={renovationFrontendUrl}
@@ -280,7 +282,6 @@ export default function AppLayout({ children, title }) {
                                           max-height: 54px;
                                    }
                                    .xp-brand-logo-vehicle {
-                                          width: 180px;
                                           max-height: 46px;
                                    }
                                    .xp-brand-logo-home {
@@ -341,7 +342,6 @@ export default function AppLayout({ children, title }) {
                                                  max-height: 42px;
                                           }
                                           .xp-brand-logo-vehicle {
-                                                 width: min(28vw, 150px);
                                                  max-height: 36px;
                                           }
                                           .xp-brand-logo-home {

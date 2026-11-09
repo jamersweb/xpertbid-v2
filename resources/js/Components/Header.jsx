@@ -90,6 +90,14 @@ export default function Header() {
               }
        };
 
+       const handlePostRequestClick = (e) => {
+              closeMobileMenu();
+              if (!user) {
+                     e.preventDefault();
+                     openLogin();
+              }
+       };
+
        useEffect(() => {
               const handleClickOutside = (event) => {
                      if (
@@ -203,18 +211,15 @@ export default function Header() {
                                                         </li>
                                                         <li className="nav-item">
                                                                <Link
-                                                                      href={route('seller.buyer-requests.browse')}
+                                                                      href={route('buyer-requests.create')}
                                                                       className="nav-link"
-                                                                      onClick={closeMobileMenu}
+                                                                      onClick={handlePostRequestClick}
                                                                >
-                                                                      {t('Request Leads')}
+                                                                      {t('Post Request')}
                                                                </Link>
                                                         </li>
                                                         <li className="nav-item">
                                                                <Link href={route('malls.index')} className="nav-link" onClick={closeMobileMenu}>{t('Malls')}</Link>
-                                                        </li>
-                                                        <li className="nav-item">
-                                                               <Link href={route('about')} className="nav-link" onClick={closeMobileMenu}>{t('About')}</Link>
                                                         </li>
                                                         <li className="nav-item">
                                                                <Link href={route('auctions.one_rupee')} className="nav-link" onClick={closeMobileMenu}>{t('1 Rupee Auctions')}</Link>
@@ -402,6 +407,31 @@ export default function Header() {
                             align-items: center;
                             margin: 0;
                             line-height: 1.2;
+                            color: #606060 !important;
+                            transition: color 0.15s ease;
+                        }
+                        #mainNavbar .navbar-nav .nav-link:hover,
+                        #mainNavbar .navbar-nav .nav-link:focus,
+                        #mainNavbar .navbar-nav .btn.nav-link:hover,
+                        #mainNavbar .navbar-nav .btn.nav-link:focus,
+                        #mainNavbar .navbar-nav a:hover,
+                        #mainNavbar .navbar-nav a:focus {
+                            color: #43ace9 !important;
+                        }
+                        #mainNavbar button.login {
+                            color: #606060 !important;
+                            transition: color 0.15s ease;
+                        }
+                        #mainNavbar button.login:hover,
+                        #mainNavbar button.login:focus {
+                            color: #43ace9 !important;
+                        }
+                        #mainNavbar .header-search-icon-btn:hover svg {
+                            stroke: #43ace9 !important;
+                        }
+                        #mainNavbar .cart-icon-btn:hover svg,
+                        #mainNavbar .header-action-cart a:hover svg {
+                            stroke: #43ace9 !important;
                         }
                         
                         .user-profile-setting-popup {

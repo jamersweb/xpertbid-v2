@@ -375,19 +375,27 @@ export function SiteFooter() {
               <a href={mainUrl("/")} onClick={goMainHome}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={assetImage("footer-logo.png")}
-                  alt="XpertBid Footer Logo"
-                  width={200}
-                  height={60}
-                  className="quality-90"
+                  src={assetImage("xp-prop-logo-clean.png")}
+                  alt="Xpert Property Footer Logo"
+                  width={220}
+                  height={34}
+                  className="quality-90 property-footer-logo"
+                  style={{
+                    height: "34px",
+                    maxHeight: "34px",
+                    maxWidth: "240px",
+                    width: "auto",
+                    objectFit: "contain",
+                    marginBottom: "16px",
+                  }}
                 />
               </a>
             </div>
             <p>
-              First ever UAE based auction platform, providing you a one stop shop,
-              auction marketplace/platform. From real estate, vehicles, bulk goods
-              and much more, XpertBid powers auctions that deliver value, security,
-              and results one auction at a time.
+              XpertProperty is your trusted destination for verified real estate,
+              property listings, and auctions in Pakistan. Discover residential and
+              commercial opportunities with complete transparency, verified documentation,
+              and secure transactions.
             </p>
             <div className="social-icons my-3">
               <a

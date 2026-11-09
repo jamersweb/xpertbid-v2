@@ -27,6 +27,25 @@ body {
   line-height: 1.55;
 }
 
+.footer .footer-child1 .logo img,
+.property-footer-logo {
+  height: 34px !important;
+  max-height: 34px !important;
+  max-width: 240px !important;
+  width: auto !important;
+  object-fit: contain !important;
+  margin-bottom: 16px !important;
+}
+
+@media (max-width: 768px) {
+  .footer .footer-child1 .logo img,
+  .property-footer-logo {
+    height: 30px !important;
+    max-height: 30px !important;
+    max-width: 210px !important;
+  }
+}
+
 .footer .footer-child1 p {
   font-size: 14px !important;
   line-height: 1.6 !important;

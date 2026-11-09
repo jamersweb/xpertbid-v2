@@ -570,6 +570,11 @@ button.login {
   background-color: transparent;
   padding: 0;
   /* Reset padding if needed */
+  transition: color 0.15s ease;
+}
+
+button.login:hover {
+  color: #43ace9 !important;
 }
 
 /* Signup Button */
@@ -630,7 +635,15 @@ button.sellnow {
   list-style: none;
   font-style: normal;
   color: #606060 !important;
+  transition: color 0.15s ease;
   /* Force color to match */
+}
+
+.navbar-nav a:hover,
+.navbar-nav a:focus,
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link:focus {
+  color: #43ace9 !important;
 }
 
 .navbar-brand {

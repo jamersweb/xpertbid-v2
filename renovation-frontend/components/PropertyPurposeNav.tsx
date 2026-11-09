@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuthModal } from "@/components/auth/AuthModalProvider";
 import type { CategoryNode } from "@/types/property";
 
 type Props = {
@@ -10,6 +12,8 @@ type Props = {
 };
 
 export function PropertyPurposeNav({ purposes, onNavigate }: Props) {
+  const { user } = useAuth();
+  const { openLogin } = useAuthModal();
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const [mobileExpandedId, setMobileExpandedId] = useState<number | null>(null);
   const navRef = useRef<HTMLUListElement | null>(null);
@@ -60,6 +64,14 @@ export function PropertyPurposeNav({ purposes, onNavigate }: Props) {
     setOpenDropdownId(null);
     if (onNavigate) {
       onNavigate();
+    }
+  };
+
+  const handlePostRequestClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    handleLinkClick();
+    if (!user) {
+      e.preventDefault();
+      openLogin();
     }
   };
 
@@ -225,11 +237,11 @@ export function PropertyPurposeNav({ purposes, onNavigate }: Props) {
 
         <li className="nav-item">
           <Link
-            href="/seller/buyer-requests"
+            href="/buyer-requests/new"
             className="nav-link property-nav-link d-inline-flex align-items-center gap-1"
-            onClick={handleLinkClick}
+            onClick={handlePostRequestClick}
           >
-            <span>Request Leads</span>
+            <span>Post Request</span>
           </Link>
         </li>
     </ul>

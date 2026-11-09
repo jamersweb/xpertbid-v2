@@ -360,9 +360,17 @@ export function SiteFooter() {
                 <img
                   src={assetImage("xpertbuildlogo.png")}
                   alt="XpertBuild Footer Logo"
-                  width={200}
-                  height={60}
-                  className="quality-90"
+                  width={180}
+                  height={50}
+                  className="quality-90 renovation-footer-logo"
+                  style={{
+                    height: "44px",
+                    maxHeight: "44px",
+                    maxWidth: "180px",
+                    width: "auto",
+                    objectFit: "contain",
+                    marginBottom: "16px",
+                  }}
                 />
               </a>
             </div>

@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { router } from '@inertiajs/react';
 import { buildProductHref } from '@/Utils/productUrl';
+import useTranslate from '@/hooks/useTranslate';
 
 export default function Search({ isOpen, onClose }) {
+       const { t } = useTranslate();
        const [query, setQuery] = useState('');
        const [results, setResults] = useState([]);
        const [loading, setLoading] = useState(false);
@@ -63,7 +65,7 @@ export default function Search({ isOpen, onClose }) {
                                           ref={inputRef}
                                           value={query}
                                           onChange={e => setQuery(e.target.value)}
-                                          placeholder="Search any auction listing..."
+                                          placeholder={t('Search any listing...')}
                                           onKeyDown={e => {
                                                  if (e.key === 'Enter') {
                                                         e.preventDefault();

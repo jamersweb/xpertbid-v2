@@ -48,7 +48,7 @@ export default function Footer() {
                                                         />
                                                  </Link>
                                           </div>
-                                          <p>{t('First ever UAE based auction platform, providing you a one stop shop, auction marketplace/platform. From real estate, vehicles, bulk goods and much more, XpertBid powers auctions that deliver value, security, and results one auction at a time.')}
+                                          <p>{t('XpertBid is your all-in-one smart marketplace ecosystem, bringing together verified properties, home building, vehicles, commercial goods, and buyer requests. We connect buyers and sellers through a transparent, secure, and seamless experience.')}
                                           </p>              <div className="social-icons my-3">
                                                  <a href="https://www.instagram.com/xpert_bid?igsh=NWFqcmh5eTgwOWpq" target="_blank"
                                                         rel="noopener noreferrer"><i className="fa-brands fa-instagram"></i></a>

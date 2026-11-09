@@ -112,19 +112,18 @@ export function BrandTopBanner() {
             alt="XpertBid Property"
           />
         </a>
-        <a
+        {/* <a
           className="xp-brand-link"
           href={mainUrl("/marketplace/vehicles?type=auction")}
           onClick={handleMainLinkClick("/marketplace/vehicles?type=auction")}
           aria-label="View vehicle marketplace"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             className="xp-brand-logo xp-brand-logo-vehicle"
             src={assetImage("xp-vehicle-logo-clean.png")}
             alt="XpertBid Vehicle"
           />
-        </a>
+        </a> */}
         <a
           className="xp-brand-link"
           href={mainUrl("/")}

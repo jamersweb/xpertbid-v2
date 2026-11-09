@@ -151,7 +151,7 @@ class HandleInertiaRequests extends Middleware
             'brandLogos' => [
                 'property' => asset('assets/images/xp-prop-logo-clean.png'),
                 'vehicle' => asset('assets/images/xp-vehicle-logo-clean.png'),
-                'home' => asset('assets/images/xpertbuildlogo.png'),
+                'home' => asset('assets/images/xp-build-logo-clean.png'),
             ],
             'locale' => [
                 'current' => $currentLocale,

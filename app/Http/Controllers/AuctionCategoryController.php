@@ -184,6 +184,12 @@ class AuctionCategoryController extends Controller
             ->whereNull('sub_category_id')
             ->get()
             ->filter(function ($category) use ($activeCategoryIds) {
+                $slug = strtolower((string) ($category->slug ?? ''));
+                $name = strtolower((string) ($category->name ?? ''));
+                if (str_contains($slug, 'vehicle') || str_contains($name, 'vehicle')) {
+                    return true;
+                }
+
                 if ($activeCategoryIds->contains((int) $category->id)) {
                     return true;
                 }
