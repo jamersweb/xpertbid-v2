@@ -5,6 +5,15 @@ export type PropertyPrice = {
   currency: string;
 };
 
+export type PropertyDiscount = {
+  has_discount: boolean;
+  discount_type?: string | null;
+  discount_value?: number | null;
+  original_price: number;
+  final_price: number;
+  badge_text?: string;
+};
+
 export type PropertyLocation = {
   city: string | null;
   state: string | null;
@@ -31,6 +40,7 @@ export type PropertyCard = {
   status: string;
   listing_type: string | null;
   price: PropertyPrice;
+  discount?: PropertyDiscount | null;
   image_url: string | null;
   album_urls: string[];
   location: PropertyLocation;
@@ -88,6 +98,8 @@ export type CategoryNode = {
   image_url?: string | null;
   meta_title?: string | null;
   meta_description?: string | null;
+  seo_short_content?: string | null;
+  seo_content?: string | null;
   schema_markup?: string | null;
   children: CategoryNode[];
   main_categories?: CategoryNode[];

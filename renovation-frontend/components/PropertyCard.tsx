@@ -7,6 +7,9 @@ import { OwnerInfoRow } from "@/components/OwnerInfoRow";
 type Props = {
   property: PropertyCard;
   showPropertyMeta?: boolean;
+  titleMaxLength?: number;
+  singleLineTitle?: boolean;
+  inlineDiscountPrice?: boolean;
 };
 
 function isDirectBuy(listingType?: string | null) {
@@ -14,7 +17,13 @@ function isDirectBuy(listingType?: string | null) {
   return t === "normal" || t === "normal_list" || t === "business" || t === "business_list";
 }
 
-export function PropertyCardView({ property, showPropertyMeta = true }: Props) {
+export function PropertyCardView({
+  property,
+  showPropertyMeta = true,
+  titleMaxLength,
+  singleLineTitle = false,
+  inlineDiscountPrice = false,
+}: Props) {
   const attrs = property.attributes || {};
   const beds = attrs.bedrooms != null ? String(attrs.bedrooms) : "";
   const baths = attrs.bathrooms != null ? String(attrs.bathrooms) : "";
@@ -25,10 +34,18 @@ export function PropertyCardView({ property, showPropertyMeta = true }: Props) {
 
   const soldOut = property.status === "sold_out";
   const directBuy = isDirectBuy(property.listing_type);
+  const discount = property.discount;
+  const hasDiscount = Boolean(directBuy && discount?.has_discount);
   const href = `/properties/${property.slug}`;
   const imageSrc = property.image_url || "/assets/images/user.jpg";
   const ctaLabel = soldOut ? "Sold Out" : directBuy ? "Buy Now" : "Place Bid";
   const priceLabel = directBuy ? "Price" : "Minimum Bid";
+  const fullTitle = String(property.title || "Untitled").trim();
+  const hasTitleLimit = typeof titleMaxLength === "number" && titleMaxLength > 0;
+  const displayTitle =
+    hasTitleLimit && fullTitle.length > titleMaxLength
+      ? `${fullTitle.slice(0, titleMaxLength).trimEnd()}...`
+      : fullTitle;
 
   return (
     <div className="product-card-wrapper h-100">
@@ -66,6 +83,22 @@ export function PropertyCardView({ property, showPropertyMeta = true }: Props) {
           >
             Sold Out
           </span>
+        ) : hasDiscount && discount?.badge_text ? (
+          <span
+            className="badge text-white"
+            style={{
+              position: "absolute",
+              top: 12,
+              left: 12,
+              zIndex: 3,
+              fontSize: 12,
+              padding: "7px 11px",
+              background: "rgba(220, 53, 69, 0.9)",
+              borderRadius: "999px",
+            }}
+          >
+            {discount.badge_text}
+          </span>
         ) : null}
       </div>
 
@@ -76,9 +109,9 @@ export function PropertyCardView({ property, showPropertyMeta = true }: Props) {
       />
 
       <div className="pro-title" style={{ color: "black" }}>
-        <h2>
-          <Link href={href} className="text-color-black">
-            {property.title}
+        <h2 className={singleLineTitle ? "mp-card-title-single" : undefined}>
+          <Link href={href} className="text-color-black" title={fullTitle}>
+            {displayTitle}
           </Link>
         </h2>
       </div>
@@ -124,9 +157,23 @@ export function PropertyCardView({ property, showPropertyMeta = true }: Props) {
         <div className="pro-price">
           <span>{priceLabel}</span>
           <div className="price">
-            <span className="me-1" style={{ color: "#23262F" }}>
-              <FormattedPrice amount={property.price?.amount} />
-            </span>
+            {hasDiscount && discount ? (
+              <div className={inlineDiscountPrice ? "mp-discount-price-row" : "d-flex flex-column"}>
+                <span
+                  className="text-decoration-line-through text-muted mp-original-price"
+                  style={inlineDiscountPrice ? undefined : { fontSize: "0.8em", lineHeight: 1 }}
+                >
+                  <FormattedPrice amount={discount.original_price} />
+                </span>
+                <span className={`price ${inlineDiscountPrice ? "mp-sale-price" : "text-danger"}`}>
+                  <FormattedPrice amount={discount.final_price} />
+                </span>
+              </div>
+            ) : (
+              <span className="price me-1" style={{ color: "#23262F" }}>
+                <FormattedPrice amount={property.price?.amount} />
+              </span>
+            )}
           </div>
         </div>
 

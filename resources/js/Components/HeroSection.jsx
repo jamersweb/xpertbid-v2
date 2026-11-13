@@ -29,11 +29,15 @@ const heroSlides = [
       //  },
 ];
 
-export default function HeroSection() {
+export default function HeroSection({ fluid = false, className = "my-5" } = {}) {
+       const containerClass = fluid
+              ? "container-fluid px-3 px-lg-5 hero-container-target"
+              : "container hero-container-target";
+
        return (
               <>
-                     <section className="final-banner-section my-5">
-                            <div className="container">
+                     <section className={`final-banner-section ${className}`}>
+                            <div className={containerClass}>
                                    <div className="hero-banner-shell">
                                           <Swiper
                                                  modules={[Autoplay, EffectFade]}
@@ -138,7 +142,7 @@ export default function HeroSection() {
             padding-left: 0 !important;
             padding-right: 0 !important;
           }
-          .final-banner-section .container {
+          .final-banner-section .hero-container-target {
             --bs-gutter-x: 0 !important;
             width: 100% !important;
             max-width: 100% !important;

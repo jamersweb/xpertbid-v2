@@ -11,6 +11,9 @@ type Props = {
   gridClassName?: string;
   itemClassName?: string;
   showPropertyMeta?: boolean;
+  titleMaxLength?: number;
+  singleLineTitle?: boolean;
+  inlineDiscountPrice?: boolean;
 };
 
 function buildQuery(filters: PropertyFilters, page: number) {
@@ -48,9 +51,12 @@ export function LoadMoreProperties({
   initialItems,
   initialMeta,
   filters,
-  gridClassName = "row g-4 makt-parent",
-  itemClassName = "col-md-6 col-xl-4 mkt-child",
+  gridClassName = "row g-3 g-md-4 makt-parent",
+  itemClassName = "col-12 col-sm-6 col-xl-4 mkt-child",
   showPropertyMeta = true,
+  titleMaxLength,
+  singleLineTitle = false,
+  inlineDiscountPrice = false,
 }: Props) {
   const [items, setItems] = useState(initialItems);
   const [meta, setMeta] = useState(initialMeta);
@@ -103,7 +109,13 @@ export function LoadMoreProperties({
       <div className={gridClassName}>
         {items.map((property) => (
           <div key={property.id} className={itemClassName}>
-            <PropertyCardView property={property} showPropertyMeta={showPropertyMeta} />
+            <PropertyCardView
+              property={property}
+              showPropertyMeta={showPropertyMeta}
+              titleMaxLength={titleMaxLength}
+              singleLineTitle={singleLineTitle}
+              inlineDiscountPrice={inlineDiscountPrice}
+            />
           </div>
         ))}
       </div>

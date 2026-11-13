@@ -1,39 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import HeroSection from '@/Components/HeroSection';
 import AuctionCard from '@/Components/AuctionCard';
+import MarketplaceSidebar from '@/Components/Marketplace/MarketplaceSidebar';
 import { getCategoryBrowseUrl } from '@/Utils/categoryBrowseUrl';
 import JsonLdScripts from '@/Components/JsonLdScripts';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/navigation';
-
-const parseDynamicOptions = (options) => {
-       if (Array.isArray(options)) {
-              return options.filter((item) => String(item || '').trim() !== '');
-       }
-
-       if (typeof options === 'string') {
-              const trimmed = options.trim();
-              if (trimmed === '') {
-                     return [];
-              }
-
-              try {
-                     const parsed = JSON.parse(trimmed);
-                     if (Array.isArray(parsed)) {
-                            return parsed.filter((item) => String(item || '').trim() !== '');
-                     }
-              } catch (error) {
-                     // Fallback to comma split for non-JSON values.
-              }
-
-              return trimmed.split(',').map((item) => item.trim()).filter(Boolean);
-       }
-
-       return [];
-};
 
 const getInitialDynamicFilters = (filters = {}) => {
        const initial = {};
@@ -69,54 +41,8 @@ const sanitizeSeoHtml = (html) => {
               .replace(/<ol\b([^>]*)>\s*<\/ol>/gi, '<ol$1></ol>');
 };
 
-const CuratedMarketplaceSection = ({ title, items = [], slider = false }) => {
-       if (!items || items.length === 0) {
-              return null;
-       }
-
-       return (
-              <section className="marketplace-curated-section">
-                     <div className="marketplace-curated-header">
-                            <h3>{title}</h3>
-                     </div>
-
-                     {slider ? (
-                            <div className="marketplace-curated-slider">
-                                   <Swiper
-                                          modules={[Navigation]}
-                                          navigation={items.length > 3}
-                                          spaceBetween={20}
-                                          loop={items.length > 4}
-                                          breakpoints={{
-                                                 360: { slidesPerView: 1.05 },
-                                                 550: { slidesPerView: 1.4 },
-                                                 768: { slidesPerView: 2 },
-                                                 1024: { slidesPerView: 2.6 },
-                                                 1280: { slidesPerView: 3 },
-                                          }}
-                                   >
-                                          {items.map((item) => (
-                                                 <SwiperSlide key={`curated-${title}-${item.id}`}>
-                                                        <AuctionCard auction={item} showPropertyMeta />
-                                                 </SwiperSlide>
-                                          ))}
-                                   </Swiper>
-                            </div>
-                     ) : (
-                            <div className="row">
-                                   {items.map((item) => (
-                                          <div className="col-md-6 col-xl-4 mb-4" key={`curated-${title}-${item.id}`}>
-                                                 <AuctionCard auction={item} showPropertyMeta />
-                                          </div>
-                                   ))}
-                            </div>
-                     )}
-              </section>
-       );
-};
-
-const EmptyProductsState = () => (
-       <div className="text-center py-5 bg-white rounded-3 shadow-sm border mt-4">
+const EmptyProductsState = ({ hasActiveFilters, onReset }) => (
+       <div className="text-center py-5 bg-white rounded-4 shadow-sm border mt-3 px-3">
               <div className="mb-3 d-flex justify-content-center">
                      <svg
                             width="64"
@@ -130,36 +56,46 @@ const EmptyProductsState = () => (
                      </svg>
               </div>
               <h3 className="h5 fw-bold text-dark">No Products Found</h3>
-              <p className="text-muted">We couldn't find any products matching your current filters.</p>
+              <p className="text-muted mb-3">We couldn't find any products matching your current selection.</p>
               <button
-                     onClick={() => window.location.href = route('marketplace.index')}
-                     className="btn btn-dark rounded-3 px-4 py-2 mt-2"
+                     type="button"
+                     onClick={onReset}
+                     className="mp-empty-reset-btn"
               >
-                     Clear All Filters
+                     {hasActiveFilters ? 'Clear Active Filters' : 'Browse All Categories'}
               </button>
        </div>
 );
 
-const LatestProductsGrid = ({ title, items = [], hasMore = false, loading = false, onLoadMore }) => (
+const LatestProductsGrid = ({
+       items = [],
+       hasMore = false,
+       loading = false,
+       onLoadMore,
+       hasActiveFilters = false,
+       onResetEmpty,
+}) => (
        <section className="marketplace-latest-grid-section">
-              <div className="marketplace-curated-header">
-                     <h3>{title}</h3>
-              </div>
-
               {items.length === 0 ? (
-                     <EmptyProductsState />
+                     <EmptyProductsState hasActiveFilters={hasActiveFilters} onReset={onResetEmpty} />
               ) : (
                      <>
-                            <div className="row makt-parent w-100 mx-auto">
+                            <div className="row g-3 g-md-4">
                                    {items.map((product) => (
-                                          <div className="col-md-6 col-xl-4 mkt-child mb-4" key={product.id}>
-                                                 <AuctionCard auction={product} showPropertyMeta />
+                                          <div className="col-12 col-sm-6 col-xl-4" key={product.id}>
+                                                 <AuctionCard
+                                                        auction={product}
+                                                        showPropertyMeta
+                                                        titleMaxLength={18}
+                                                        singleLineTitle
+                                                        inlineDiscountPrice
+                                                 />
                                           </div>
                                    ))}
                             </div>
 
                             {hasMore && (
-                                   <div className="d-flex justify-content-center mt-2">
+                                   <div className="d-flex justify-content-center mt-4">
                                           <button
                                                  type="button"
                                                  className="marketplace-load-more-btn"
@@ -185,95 +121,53 @@ export default function Index({
        childCategoryTabs = [],
        countries = [],
        dynamicFields = [],
-       featuredProducts = [],
-       mostViewedProducts = [],
        filters = {},
        currentType: serverCurrentType = 'auction',
        pageSeo = null,
 }) {
-       const { propertyFrontendUrl, propertyRootCategoryId } = usePage().props;
-       const [searchTerm, setSearchTerm] = useState(filters?.search || '');
-       const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-       const [isFilterDrawerMounted, setIsFilterDrawerMounted] = useState(false);
+       const {
+              propertyFrontendUrl,
+              propertyRootCategoryId,
+              renovationFrontendUrl,
+              renovationRootCategoryId,
+              builderRootCategoryId,
+       } = usePage().props;
+
+       const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
        const [selectedCountryId, setSelectedCountryId] = useState(filters?.country_id ? String(filters.country_id) : '');
        const [selectedStateId, setSelectedStateId] = useState(filters?.state_id ? String(filters.state_id) : '');
        const [selectedCityId, setSelectedCityId] = useState(filters?.city_id ? String(filters.city_id) : '');
+       const [priceMin, setPriceMin] = useState(filters?.priceMin ? String(filters.priceMin) : '');
+       const [priceMax, setPriceMax] = useState(filters?.priceMax ? String(filters.priceMax) : '');
        const [states, setStates] = useState([]);
        const [cities, setCities] = useState([]);
        const [dynamicFilterValues, setDynamicFilterValues] = useState(() => getInitialDynamicFilters(filters));
        const [latestGridProducts, setLatestGridProducts] = useState(products?.data || []);
        const [nextProductsPageUrl, setNextProductsPageUrl] = useState(products?.next_page_url || null);
        const [isLoadingMoreProducts, setIsLoadingMoreProducts] = useState(false);
-       const fallbackHeroImage = 'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1600&q=80';
-       const heroImage = currentTopCategory?.image_url || currentCategory?.image_url || fallbackHeroImage;
+
        const currentType = serverCurrentType || filters?.type || 'auction';
-       const showChildTabs = Boolean(currentSubcategory);
-       const showMainCategoryTabs = !currentTopCategory && !currentCategory && categories.length > 0;
-       const sectionEntityName = currentTopCategory?.name || currentCategory?.name || 'Products';
        const sectionMode = String(filters?.section || '').toLowerCase();
        const isSectionOnlyView = ['featured', 'latest_auctions', 'latest_vehicles', 'latest_properties', 'latest_listings'].includes(sectionMode);
-       const sectionTitleMap = {
-              featured: 'Featured Products',
-              latest_auctions: 'Latest Auctions',
-              latest_vehicles: 'Latest Vehicles',
-              latest_properties: 'Latest Properties',
-              latest_listings: 'Latest Listings',
-       };
-       const latestGridTitle = sectionTitleMap[sectionMode] || `Latest ${sectionEntityName}`;
        const seoShortContent = sanitizeSeoHtml(currentCategory?.seo_short_content);
        const seoContent = sanitizeSeoHtml(currentCategory?.seo_content);
        const schemaMarkupSource =
               currentCategory?.schema_markup
               || currentTopCategory?.schema_markup
               || pageSeo?.schema_markup;
-       const filterDrawerCloseTimerRef = useRef(null);
-       const filterDrawerOpenRafRef = useRef(null);
-
-       const openFilterDrawer = () => {
-              if (filterDrawerCloseTimerRef.current) {
-                     clearTimeout(filterDrawerCloseTimerRef.current);
-                     filterDrawerCloseTimerRef.current = null;
-              }
-
-              if (filterDrawerOpenRafRef.current) {
-                     cancelAnimationFrame(filterDrawerOpenRafRef.current);
-                     filterDrawerOpenRafRef.current = null;
-              }
-
-              setIsFilterDrawerMounted(true);
-              setIsFilterDrawerOpen(false);
-
-              filterDrawerOpenRafRef.current = requestAnimationFrame(() => {
-                     filterDrawerOpenRafRef.current = null;
-                     requestAnimationFrame(() => {
-                            setIsFilterDrawerOpen(true);
-                     });
-              });
-       };
-
-       const closeFilterDrawer = () => {
-              setIsFilterDrawerOpen(false);
-       };
 
        useEffect(() => {
-              if (isFilterDrawerOpen) {
-                     setIsFilterDrawerMounted(true);
+              if (typeof window === 'undefined') return undefined;
 
-                     if (filterDrawerCloseTimerRef.current) {
-                            clearTimeout(filterDrawerCloseTimerRef.current);
-                            filterDrawerCloseTimerRef.current = null;
+              const handleResize = () => {
+                     if (window.innerWidth >= 992) {
+                            setIsMobileSidebarOpen(false);
                      }
+              };
 
-                     return;
-              }
-
-              if (isFilterDrawerMounted) {
-                     filterDrawerCloseTimerRef.current = setTimeout(() => {
-                            setIsFilterDrawerMounted(false);
-                            filterDrawerCloseTimerRef.current = null;
-                     }, 350);
-              }
-       }, [isFilterDrawerOpen, isFilterDrawerMounted]);
+              window.addEventListener('resize', handleResize);
+              return () => window.removeEventListener('resize', handleResize);
+       }, []);
 
        useEffect(() => {
               if (typeof document === 'undefined') {
@@ -281,25 +175,14 @@ export default function Index({
               }
 
               const previousOverflow = document.body.style.overflow;
-              if (isFilterDrawerOpen) {
+              if (isMobileSidebarOpen && window.innerWidth < 992) {
                      document.body.style.overflow = 'hidden';
               }
 
               return () => {
                      document.body.style.overflow = previousOverflow;
               };
-       }, [isFilterDrawerOpen]);
-
-       useEffect(() => {
-              return () => {
-                     if (filterDrawerCloseTimerRef.current) {
-                            clearTimeout(filterDrawerCloseTimerRef.current);
-                     }
-                     if (filterDrawerOpenRafRef.current) {
-                            cancelAnimationFrame(filterDrawerOpenRafRef.current);
-                     }
-              };
-       }, []);
+       }, [isMobileSidebarOpen]);
 
        const tabs = [
               { key: 'auction', label: 'Auction', mobileLabel: 'Auction' },
@@ -332,20 +215,28 @@ export default function Index({
               return route('marketplace.index');
        };
 
-       const cleanFilters = (nextFilters = filters) => {
+       const cleanFilters = (nextFilters = filters, { stripDynamic = false } = {}) => {
               const cleaned = { ...nextFilters };
               delete cleaned.type;
               delete cleaned.category;
               delete cleaned.page;
               delete cleaned.section;
 
+              if (stripDynamic) {
+                     Object.keys(cleaned).forEach((key) => {
+                            if (key.startsWith('df_')) {
+                                   delete cleaned[key];
+                            }
+                     });
+              }
+
               return cleaned;
        };
 
        // When no category slug, type lives in the query string (path has no typeSlug).
-       const marketplaceQuery = (type = currentType, extra = {}, baseFilters = filters) => {
-              const cleaned = cleanFilters(baseFilters);
-              if (!currentCategory?.slug) {
+       const marketplaceQuery = (type = currentType, extra = {}, baseFilters = filters, options = {}) => {
+              const cleaned = cleanFilters(baseFilters, options);
+              if (!currentCategory?.slug && !options.hasTargetSlug) {
                      cleaned.type = resolveListingTypeParam(type);
               }
               return { ...cleaned, ...extra };
@@ -353,7 +244,6 @@ export default function Index({
 
        const handleTabChange = (type) => {
               const query = marketplaceQuery(type);
-              // Leaving a featured/home deep-link should open the full catalog for that tab.
               delete query.featured;
 
               router.get(marketplaceUrl(type), query, {
@@ -362,62 +252,57 @@ export default function Index({
               });
        };
 
-       const handleSearchSubmit = (e) => {
-              e.preventDefault();
+       const handleSelectCategory = (matchedCategory) => {
+              const slug = matchedCategory?.slug;
+              const browse = getCategoryBrowseUrl(matchedCategory, {
+                     propertyFrontendUrl,
+                     propertyRootCategoryId,
+                     renovationFrontendUrl,
+                     renovationRootCategoryId,
+                     builderRootCategoryId,
+              });
 
-              router.get(
-                     marketplaceUrl(),
-                     marketplaceQuery(currentType, { search: searchTerm }),
-                     {
-                            preserveState: true,
-                            preserveScroll: true,
-                     }
-              );
-       };
-
-       const handleCategoryTabChange = (slug) => {
-              const matchedCategory =
-                     categories.find((category) => category.slug === slug)
-                     || subcategoryTabs.find((category) => category.slug === slug)
-                     || childCategoryTabs.find((category) => category.slug === slug)
-                     || (currentCategory?.slug === slug ? currentCategory : null)
-                     || (currentTopCategory?.slug === slug ? currentTopCategory : null)
-                     || { slug };
-
-              const browse = getCategoryBrowseUrl(matchedCategory, { propertyFrontendUrl, propertyRootCategoryId });
               if (browse.external) {
                      window.location.assign(browse.href);
                      return;
               }
 
+              const nextQuery = cleanFilters(filters, { stripDynamic: true });
               router.get(
                      marketplaceUrl(currentType, slug),
-                     {
-                            ...cleanFilters(),
-                     },
+                     nextQuery,
                      {
                             preserveState: true,
-                            preserveScroll: true,
+                            preserveScroll: false,
                      }
               );
        };
 
-       const handleMainCategoriesBack = () => {
+       const handleSelectAllCategories = () => {
+              const nextQuery = marketplaceQuery(
+                     currentType,
+                     {},
+                     filters,
+                     { stripDynamic: true, hasTargetSlug: false }
+              );
+              nextQuery.type = resolveListingTypeParam(currentType);
+
               router.get(
                      route('marketplace.index'),
-                     marketplaceQuery(currentType),
+                     nextQuery,
                      {
                             preserveState: true,
-                            preserveScroll: true,
+                            preserveScroll: false,
                      }
               );
        };
 
        useEffect(() => {
-              setSearchTerm(filters?.search || '');
               setSelectedCountryId(filters?.country_id ? String(filters.country_id) : '');
               setSelectedStateId(filters?.state_id ? String(filters.state_id) : '');
               setSelectedCityId(filters?.city_id ? String(filters.city_id) : '');
+              setPriceMin(filters?.priceMin ? String(filters.priceMin) : '');
+              setPriceMax(filters?.priceMax ? String(filters.priceMax) : '');
               setDynamicFilterValues(getInitialDynamicFilters(filters));
        }, [filters]);
 
@@ -522,7 +407,6 @@ export default function Index({
        const applyFilters = () => {
               const nextFilters = {
                      ...filters,
-                     search: searchTerm,
                      page: 1,
               };
 
@@ -534,6 +418,12 @@ export default function Index({
 
               if (selectedCityId) nextFilters.city_id = selectedCityId;
               else delete nextFilters.city_id;
+
+              if (String(priceMin).trim() !== '') nextFilters.priceMin = String(priceMin).trim();
+              else delete nextFilters.priceMin;
+
+              if (String(priceMax).trim() !== '') nextFilters.priceMax = String(priceMax).trim();
+              else delete nextFilters.priceMax;
 
               dynamicFields.forEach((field) => {
                      const key = `df_${field.id}`;
@@ -559,30 +449,50 @@ export default function Index({
                      preserveScroll: true,
               });
 
-              closeFilterDrawer();
+              setIsMobileSidebarOpen(false);
        };
 
-       const clearFilters = () => {
+       const clearFilters = (includeSearch = false) => {
               setSelectedCountryId('');
               setSelectedStateId('');
               setSelectedCityId('');
+              setPriceMin('');
+              setPriceMax('');
               setStates([]);
               setCities([]);
               setDynamicFilterValues({});
 
               const nextFilters = {
                      ...filters,
-                     search: searchTerm,
                      page: 1,
               };
 
               delete nextFilters.country_id;
               delete nextFilters.state_id;
               delete nextFilters.city_id;
+              delete nextFilters.priceMin;
+              delete nextFilters.priceMax;
+              if (includeSearch) {
+                     delete nextFilters.search;
+              }
               Object.keys(nextFilters).forEach((key) => {
                      if (key.startsWith('df_')) {
                             delete nextFilters[key];
                      }
+              });
+
+              router.get(marketplaceUrl(), marketplaceQuery(currentType, {}, nextFilters), {
+                     preserveState: true,
+                     preserveScroll: true,
+              });
+
+              setIsMobileSidebarOpen(false);
+       };
+
+       const removeSingleFilter = (keysToRemove = []) => {
+              const nextFilters = { ...filters, page: 1 };
+              keysToRemove.forEach((k) => {
+                     delete nextFilters[k];
               });
 
               router.get(marketplaceUrl(), marketplaceQuery(currentType, {}, nextFilters), {
@@ -625,6 +535,107 @@ export default function Index({
               });
        };
 
+       const activeFilterChips = useMemo(() => {
+              const chips = [];
+
+              if (filters?.search) {
+                     chips.push({
+                            key: 'search',
+                            label: `Search: "${filters.search}"`,
+                            onRemove: () => removeSingleFilter(['search']),
+                     });
+              }
+
+              if (filters?.priceMin || filters?.priceMax) {
+                     const minLabel = filters?.priceMin ? filters.priceMin : '0';
+                     const maxLabel = filters?.priceMax ? filters.priceMax : 'Any';
+                     chips.push({
+                            key: 'price',
+                            label: `Price: ${minLabel} - ${maxLabel}`,
+                            onRemove: () => removeSingleFilter(['priceMin', 'priceMax']),
+                     });
+              }
+
+              if (filters?.country_id) {
+                     const countryName = countries.find((c) => String(c.id) === String(filters.country_id))?.name;
+                     chips.push({
+                            key: 'country',
+                            label: `Country: ${countryName || filters.country_id}`,
+                            onRemove: () => removeSingleFilter(['country_id', 'state_id', 'city_id']),
+                     });
+              }
+
+              if (filters?.state_id) {
+                     const stateName = states.find((s) => String(s.id) === String(filters.state_id))?.name;
+                     chips.push({
+                            key: 'state',
+                            label: `State: ${stateName || filters.state_id}`,
+                            onRemove: () => removeSingleFilter(['state_id', 'city_id']),
+                     });
+              }
+
+              if (filters?.city_id) {
+                     const cityName = cities.find((c) => String(c.id) === String(filters.city_id))?.name;
+                     chips.push({
+                            key: 'city',
+                            label: `City: ${cityName || filters.city_id}`,
+                            onRemove: () => removeSingleFilter(['city_id']),
+                     });
+              }
+
+              Object.entries(filters || {}).forEach(([key, value]) => {
+                     if (!key.startsWith('df_') || value === null || value === undefined || String(value).trim() === '') {
+                            return;
+                     }
+                     const fieldId = Number(key.replace('df_', ''));
+                     const matchedField = dynamicFields.find((f) => Number(f.id) === fieldId);
+                     const label = matchedField?.label || matchedField?.field_name || 'Filter';
+                     chips.push({
+                            key,
+                            label: `${label}: ${value}`,
+                            onRemove: () => removeSingleFilter([key]),
+                     });
+              });
+
+              return chips;
+       }, [filters, countries, states, cities, dynamicFields]);
+
+       const sidebarFilterCount = useMemo(() => (
+              activeFilterChips.filter((chip) => chip.key !== 'search').length
+       ), [activeFilterChips]);
+
+       const totalProductsCount = products?.total ?? latestGridProducts.length;
+
+       const breadcrumbItems = useMemo(() => {
+              const list = [{ label: 'Marketplace', onClick: handleSelectAllCategories, active: !currentCategory && !currentTopCategory }];
+              if (currentTopCategory) {
+                     list.push({
+                            label: currentTopCategory.name,
+                            onClick: () => handleSelectCategory(currentTopCategory),
+                            active: currentCategory?.slug === currentTopCategory.slug,
+                     });
+              }
+              if (currentSubcategory && currentSubcategory.slug !== currentTopCategory?.slug) {
+                     list.push({
+                            label: currentSubcategory.name,
+                            onClick: () => handleSelectCategory(currentSubcategory),
+                            active: currentCategory?.slug === currentSubcategory.slug,
+                     });
+              }
+              if (
+                     currentCategory
+                     && currentCategory.slug !== currentTopCategory?.slug
+                     && currentCategory.slug !== currentSubcategory?.slug
+              ) {
+                     list.push({
+                            label: currentCategory.name,
+                            onClick: () => handleSelectCategory(currentCategory),
+                            active: true,
+                     });
+              }
+              return list;
+       }, [currentCategory, currentTopCategory, currentSubcategory]);
+
        return (
               <AppLayout title={currentCategory?.meta_title || pageSeo?.meta_title || 'Marketplace'}>
                      <Head>
@@ -636,383 +647,636 @@ export default function Index({
                      </Head>
                      <JsonLdScripts markup={schemaMarkupSource} idPrefix="marketplace-schema" />
 
-                     <div className="pb-5 bg-light min-vh-100">
-                            <div
-                                   className="marketplace-topbar-wrap"
-                                   style={
-                                          heroImage
-                                                 ? {
-                                                          backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.38)), url("${heroImage}")`,
-                                                   }
-                                                 : undefined
-                                   }
-                            >
-                                   <div className="container-fluid px-lg-5">
-                                          <div className="marketplace-topbar p-3 p-lg-4">
-                                                 <div className="marketplace-selected-category mb-3">
-                                                        {currentCategory?.name || currentTopCategory?.name || 'Marketplace'}
-                                                 </div>
+                     <div className="marketplace-page-shell pb-5 min-vh-100">
+                            {/* Home Page Slide-Based Hero Banners */}
+                            <HeroSection fluid className="my-4" />
 
-                                                 {showMainCategoryTabs && (
-                                                        <div className="marketplace-subcategory-tabs mb-3">
-                                                               {categories.map((mainCategory) => (
-                                                                      <button
-                                                                             key={mainCategory.id}
-                                                                             type="button"
-                                                                             onClick={() => handleCategoryTabChange(mainCategory.slug)}
-                                                                             className="marketplace-subcategory-tab"
-                                                                      >
-                                                                             {mainCategory.name}
-                                                                      </button>
-                                                               ))}
-                                                        </div>
-                                                 )}
-
-                                                 {currentTopCategory && !showChildTabs && (
-                                                        <div className="marketplace-subcategory-tabs mb-3">
-                                                               <button
-                                                                      type="button"
-                                                                      onClick={handleMainCategoriesBack}
-                                                                      className="marketplace-subcategory-back"
-                                                                      aria-label="Back to main categories"
-                                                               >
-                                                                      <span aria-hidden="true">&larr;</span>
-                                                               </button>
-
-                                                               <button
-                                                                      type="button"
-                                                                      onClick={() => handleCategoryTabChange(currentTopCategory.slug)}
-                                                                      className={`marketplace-subcategory-tab ${currentCategory?.slug === currentTopCategory.slug ? 'is-active' : ''}`}
-                                                               >
-                                                                      All {currentTopCategory.name}
-                                                               </button>
-
-                                                               {subcategoryTabs.map((subcategory) => (
-                                                                      <button
-                                                                             key={subcategory.id}
-                                                                             type="button"
-                                                                             onClick={() => handleCategoryTabChange(subcategory.slug)}
-                                                                             className={`marketplace-subcategory-tab ${currentCategory?.slug === subcategory.slug ? 'is-active' : ''}`}
-                                                                      >
-                                                                             {subcategory.name}
-                                                                      </button>
-                                                               ))}
-                                                        </div>
-                                                 )}
-
-                                                 {currentTopCategory && showChildTabs && (
-                                                        <div className="marketplace-subcategory-tabs mb-3">
-                                                               <button
-                                                                      type="button"
-                                                                      onClick={() => handleCategoryTabChange(currentTopCategory.slug)}
-                                                                      className="marketplace-subcategory-back"
-                                                                      aria-label="Back to subcategories"
-                                                               >
-                                                                      <span aria-hidden="true">&larr;</span>
-                                                               </button>
-
-                                                               {childCategoryTabs.map((childCategory) => (
-                                                                      <button
-                                                                             key={childCategory.id}
-                                                                             type="button"
-                                                                             onClick={() => handleCategoryTabChange(childCategory.slug)}
-                                                                             className={`marketplace-subcategory-tab ${currentCategory?.slug === childCategory.slug ? 'is-active' : ''}`}
-                                                                      >
-                                                                             {childCategory.name}
-                                                                      </button>
-                                                               ))}
-                                                        </div>
-                                                 )}
-
-                                                 <form onSubmit={handleSearchSubmit} className="marketplace-searchbar mb-3">
-                                                        <div className="marketplace-searchbar-row">
-                                                               <input
-                                                                      type="text"
-                                                                      value={searchTerm}
-                                                                      onChange={(e) => setSearchTerm(e.target.value)}
-                                                                      placeholder="Search products..."
-                                                               />
-                            <button
-                                 type="button"
-                                 className="marketplace-filter-btn"
-                                 onClick={openFilterDrawer}
-                                 aria-label="Open filters"
-                            >
-                                                                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                                             <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-                                                                      </svg>
-                                                               </button>
-                                                        </div>
-                                                 </form>
-
-                                                 <div className="marketplace-top-tabs">
-                                                       {tabs.map((tab) => {
-                                                              const isActive =
-                                                                      (tab.key === 'auction' && currentType === 'auction') ||
-                                                                      (tab.key === 'normal' && ['normal', 'normal_list'].includes(currentType)) ||
-                                                                      (tab.key === 'business' && ['business', 'business_list'].includes(currentType));
-
-                                                               const tabType =
-                                                                      tab.key === 'normal'
-                                                                             ? 'normal'
-                                                                             : tab.key === 'business'
-                                                                                   ? 'business'
-                                                                                   : tab.key;
-
-                                                               return (
-                                                                      <button
-                                                                             key={tab.key}
-                                                                             type="button"
-                                                                             onClick={() => handleTabChange(tabType)}
-                                                                             className={`marketplace-top-tab ${isActive ? 'is-active' : ''}`}
-                                                                      >
-                                                                             <span className="d-none d-md-inline">{tab.label}</span>
-                                                                             <span className="d-inline d-md-none">{tab.mobileLabel || tab.label}</span>
-                                                                      </button>
-                                                               );
-                                                        })}
-                                                 </div>
-                                          </div>
-                                   </div>
-                            </div>
-
-                            <div className="container-fluid px-3 px-lg-5 pt-4">
-                                   {!isSectionOnlyView && seoShortContent && (
-                                          <div className="content-wrapper content-wrapper-short mb-4 text-dark">
-                                                 <div dangerouslySetInnerHTML={{ __html: seoShortContent }} />
-                                          </div>
-                                   )}
-
-                                   <div className="mkt-right">
-                                          {!isSectionOnlyView && (
-                                                 <CuratedMarketplaceSection
-                                                        title={`Featured ${sectionEntityName}`}
-                                                        items={featuredProducts}
-                                                        slider
-                                                 />
-                                          )}
-
-                                          {!isSectionOnlyView && (
-                                                 <CuratedMarketplaceSection
-                                                        title={`Most Viewed ${sectionEntityName}`}
-                                                        items={mostViewedProducts}
-                                                        slider
-                                                 />
-                                          )}
-
-                                          <LatestProductsGrid
-                                                 title={latestGridTitle}
-                                                 items={latestGridProducts}
-                                                 hasMore={Boolean(nextProductsPageUrl)}
-                                                 loading={isLoadingMoreProducts}
-                                                 onLoadMore={loadMoreProducts}
+                            {/* Daraz-style Sidebar + Main Product Workspace */}
+                            <div className="container-fluid px-3 px-lg-5">
+                                   <div className="marketplace-workspace">
+                                          <MarketplaceSidebar
+                                                 isOpen={isMobileSidebarOpen}
+                                                 onClose={() => setIsMobileSidebarOpen(false)}
+                                                 categories={categories}
+                                                 currentCategory={currentCategory}
+                                                 currentTopCategory={currentTopCategory}
+                                                 currentSubcategory={currentSubcategory}
+                                                 subcategoryTabs={subcategoryTabs}
+                                                 childCategoryTabs={childCategoryTabs}
+                                                 onSelectAllCategories={handleSelectAllCategories}
+                                                 onSelectCategory={handleSelectCategory}
+                                                 countries={countries}
+                                                 states={states}
+                                                 cities={cities}
+                                                 selectedCountryId={selectedCountryId}
+                                                 onChangeCountry={(val) => {
+                                                        setSelectedCountryId(val);
+                                                        setSelectedStateId('');
+                                                        setSelectedCityId('');
+                                                 }}
+                                                 selectedStateId={selectedStateId}
+                                                 onChangeState={(val) => {
+                                                        setSelectedStateId(val);
+                                                        setSelectedCityId('');
+                                                 }}
+                                                 selectedCityId={selectedCityId}
+                                                 onChangeCity={setSelectedCityId}
+                                                 priceMin={priceMin}
+                                                 onChangePriceMin={setPriceMin}
+                                                 priceMax={priceMax}
+                                                 onChangePriceMax={setPriceMax}
+                                                 dynamicFields={dynamicFields}
+                                                 dynamicFilterValues={dynamicFilterValues}
+                                                 onChangeDynamicValue={(key, val) =>
+                                                        setDynamicFilterValues((prev) => ({
+                                                               ...prev,
+                                                               [key]: val,
+                                                        }))
+                                                 }
+                                                 onChangeCheckboxDynamic={handleCheckboxDynamicChange}
+                                                 onApplyFilters={applyFilters}
+                                                 onClearFilters={() => clearFilters(false)}
+                                                 activeFilterCount={sidebarFilterCount}
                                           />
 
-                                          {!isSectionOnlyView && seoContent && (
-                                                 <div className="content-wrapper content-wrapper-long mt-5 text-dark">
-                                                        <div dangerouslySetInnerHTML={{ __html: seoContent }} />
-                                                 </div>
-                                          )}
-                                   </div>
-                            </div>
+                                          <div className="mkt-right marketplace-main-content">
+                                                 {/* Marketplace Control Header: Breadcrumb, Heading, Type Switcher & Mobile Sidebar Trigger */}
+                                                 <div className="mp-workspace-toolbar">
+                                                        <div className="mp-toolbar-top-row">
+                                                               <div className="mp-title-block">
+                                                                      <nav className="mp-breadcrumbs" aria-label="Breadcrumb">
+                                                                             {breadcrumbItems.map((crumb, idx) => (
+                                                                                    <React.Fragment key={`${crumb.label}-${idx}`}>
+                                                                                           {idx > 0 && <span className="mp-breadcrumb-sep">/</span>}
+                                                                                           {crumb.active ? (
+                                                                                                  <span className="mp-breadcrumb-current">{crumb.label}</span>
+                                                                                           ) : (
+                                                                                                  <button
+                                                                                                         type="button"
+                                                                                                         className="mp-breadcrumb-link"
+                                                                                                         onClick={crumb.onClick}
+                                                                                                  >
+                                                                                                         {crumb.label}
+                                                                                                  </button>
+                                                                                           )}
+                                                                                    </React.Fragment>
+                                                                             ))}
+                                                                      </nav>
 
-                            {isFilterDrawerMounted && (
-                                   <>
-                                          <div
-                                                 className={`marketplace-filter-backdrop ${isFilterDrawerOpen ? 'is-open' : ''}`}
-                                                 onClick={closeFilterDrawer}
-                                          />
-                                          <aside className={`marketplace-filter-drawer ${isFilterDrawerOpen ? 'is-open' : ''}`}>
-                                                 <div className="marketplace-filter-header">
-                                                        <h3>Filters</h3>
-                                                        <button type="button" onClick={closeFilterDrawer} aria-label="Close filters">
-                                                               &times;
-                                                        </button>
-                                                 </div>
-
-                                                 <div className="marketplace-filter-body">
-                                                        <div className="marketplace-filter-group">
-                                                               <label>Country</label>
-                                                               <select
-                                                                      value={selectedCountryId}
-                                                                      onChange={(e) => {
-                                                                             const value = e.target.value;
-                                                                             setSelectedCountryId(value);
-                                                                             setSelectedStateId('');
-                                                                             setSelectedCityId('');
-                                                                      }}
-                                                               >
-                                                                      <option value="">All Countries</option>
-                                                                      {countries.map((country) => (
-                                                                             <option key={country.id} value={country.id}>
-                                                                                    {country.name}
-                                                                             </option>
-                                                                      ))}
-                                                               </select>
-                                                        </div>
-
-                                                        <div className="marketplace-filter-group">
-                                                               <label>State</label>
-                                                               <select
-                                                                      value={selectedStateId}
-                                                                      onChange={(e) => {
-                                                                             setSelectedStateId(e.target.value);
-                                                                             setSelectedCityId('');
-                                                                      }}
-                                                                      disabled={!selectedCountryId}
-                                                               >
-                                                                      <option value="">All States</option>
-                                                                      {states.map((state) => (
-                                                                             <option key={state.id} value={state.id}>
-                                                                                    {state.name}
-                                                                             </option>
-                                                                      ))}
-                                                               </select>
-                                                        </div>
-
-                                                        <div className="marketplace-filter-group">
-                                                               <label>City</label>
-                                                               <select
-                                                                      value={selectedCityId}
-                                                                      onChange={(e) => setSelectedCityId(e.target.value)}
-                                                                      disabled={!selectedStateId}
-                                                               >
-                                                                      <option value="">All Cities</option>
-                                                                      {cities.map((city) => (
-                                                                             <option key={city.id} value={city.id}>
-                                                                                    {city.name}
-                                                                             </option>
-                                                                      ))}
-                                                               </select>
-                                                        </div>
-
-                                                        {dynamicFields.map((field) => {
-                                                               const key = `df_${field.id}`;
-                                                               const inputType = String(field.input_type || '').toLowerCase();
-                                                               const options = parseDynamicOptions(field.options);
-
-                                                               if (options.length === 0) {
-                                                                      return null;
-                                                               }
-
-                                                               const fieldLabel = field.label || field.field_name || `Field ${field.id}`;
-                                                               const selectedValue = dynamicFilterValues[key];
-
-                                                               return (
-                                                                      <div className="marketplace-filter-group" key={field.id}>
-                                                                             <label>{fieldLabel}</label>
-
-                                                                             {inputType === 'select' && (
-                                                                                    <select
-                                                                                           value={Array.isArray(selectedValue) ? '' : selectedValue || ''}
-                                                                                           onChange={(e) =>
-                                                                                                  setDynamicFilterValues((prev) => ({
-                                                                                                         ...prev,
-                                                                                                         [key]: e.target.value,
-                                                                                                  }))
-                                                                                           }
-                                                                                    >
-                                                                                           <option value="">All</option>
-                                                                                           {options.map((option) => (
-                                                                                                  <option key={`${field.id}-${option}`} value={option}>
-                                                                                                         {option}
-                                                                                                  </option>
-                                                                                           ))}
-                                                                                    </select>
-                                                                             )}
-
-                                                                             {inputType === 'radio' && (
-                                                                                    <div className="marketplace-filter-options">
-                                                                                           {options.map((option) => (
-                                                                                                  <label key={`${field.id}-${option}`} className="marketplace-filter-option-row">
-                                                                                                         <input
-                                                                                                                type="radio"
-                                                                                                                name={`dynamic-radio-${field.id}`}
-                                                                                                                value={option}
-                                                                                                                checked={String(selectedValue || '') === option}
-                                                                                                                onChange={() =>
-                                                                                                                       setDynamicFilterValues((prev) => ({
-                                                                                                                              ...prev,
-                                                                                                                              [key]: option,
-                                                                                                                       }))
-                                                                                                                }
-                                                                                                         />
-                                                                                                         <span>{option}</span>
-                                                                                                  </label>
-                                                                                           ))}
-                                                                                    </div>
-                                                                             )}
-
-                                                                             {inputType === 'checkbox' && (
-                                                                                    <div className="marketplace-filter-options">
-                                                                                           {options.map((option) => {
-                                                                                                  const values = Array.isArray(selectedValue)
-                                                                                                         ? selectedValue
-                                                                                                         : selectedValue
-                                                                                                                ? [String(selectedValue)]
-                                                                                                                : [];
-
-                                                                                                  return (
-                                                                                                         <label key={`${field.id}-${option}`} className="marketplace-filter-option-row">
-                                                                                                                <input
-                                                                                                                       type="checkbox"
-                                                                                                                       checked={values.includes(option)}
-                                                                                                                       onChange={(e) =>
-                                                                                                                              handleCheckboxDynamicChange(field.id, option, e.target.checked)
-                                                                                                                       }
-                                                                                                                />
-                                                                                                                <span>{option}</span>
-                                                                                                         </label>
-                                                                                                  );
-                                                                                           })}
-                                                                                    </div>
-                                                                             )}
-
-                                                                             {!['select', 'radio', 'checkbox'].includes(inputType) && (
-                                                                                    <select
-                                                                                           value={Array.isArray(selectedValue) ? '' : selectedValue || ''}
-                                                                                           onChange={(e) =>
-                                                                                                  setDynamicFilterValues((prev) => ({
-                                                                                                         ...prev,
-                                                                                                         [key]: e.target.value,
-                                                                                                  }))
-                                                                                           }
-                                                                                    >
-                                                                                           <option value="">All</option>
-                                                                                           {options.map((option) => (
-                                                                                                  <option key={`${field.id}-${option}`} value={option}>
-                                                                                                         {option}
-                                                                                                  </option>
-                                                                                           ))}
-                                                                                    </select>
-                                                                             )}
+                                                                      <div className="mp-heading-wrap">
+                                                                             <h1>{currentCategory?.name || currentTopCategory?.name || 'All Marketplace'}</h1>
+                                                                             <span className="mp-result-badge">
+                                                                                    {totalProductsCount} {totalProductsCount === 1 ? 'listing' : 'listings'}
+                                                                             </span>
                                                                       </div>
-                                                               );
-                                                        })}
+                                                               </div>
+
+                                                               <div className="mp-toolbar-actions">
+                                                                      <button
+                                                                             type="button"
+                                                                             className="mp-mobile-drawer-trigger d-lg-none"
+                                                                             onClick={() => setIsMobileSidebarOpen(true)}
+                                                                      >
+                                                                             <i className="fa-solid fa-sliders" aria-hidden="true" />
+                                                                             <span>Categories &amp; Filters</span>
+                                                                             {sidebarFilterCount > 0 && (
+                                                                                    <span className="mp-filter-count-pill">{sidebarFilterCount}</span>
+                                                                             )}
+                                                                      </button>
+
+                                                                      <div className="marketplace-top-tabs" role="tablist" aria-label="Listing types">
+                                                                             {tabs.map((tab) => {
+                                                                                    const isActive =
+                                                                                           (tab.key === 'auction' && currentType === 'auction') ||
+                                                                                           (tab.key === 'normal' && ['normal', 'normal_list'].includes(currentType)) ||
+                                                                                           (tab.key === 'business' && ['business', 'business_list'].includes(currentType));
+
+                                                                                    return (
+                                                                                           <button
+                                                                                                  key={tab.key}
+                                                                                                  type="button"
+                                                                                                  role="tab"
+                                                                                                  aria-selected={isActive}
+                                                                                                  onClick={() => handleTabChange(tab.key)}
+                                                                                                  className={`marketplace-top-tab ${isActive ? 'is-active' : ''}`}
+                                                                                           >
+                                                                                                  <span className="d-none d-sm-inline">{tab.label}</span>
+                                                                                                  <span className="d-inline d-sm-none">{tab.mobileLabel || tab.label}</span>
+                                                                                           </button>
+                                                                                    );
+                                                                             })}
+                                                                      </div>
+                                                               </div>
+                                                        </div>
+
+                                                        {activeFilterChips.length > 0 && (
+                                                               <div className="mp-active-chips-row">
+                                                                      {activeFilterChips.map((chip) => (
+                                                                             <button
+                                                                                    key={chip.key}
+                                                                                    type="button"
+                                                                                    className="mp-active-chip"
+                                                                                    onClick={chip.onRemove}
+                                                                                    title="Remove filter"
+                                                                             >
+                                                                                    <span>{chip.label}</span>
+                                                                                    <i className="fa-solid fa-xmark" aria-hidden="true" />
+                                                                             </button>
+                                                                      ))}
+                                                                      <button
+                                                                             type="button"
+                                                                             className="mp-clear-all-chips-btn"
+                                                                             onClick={() => clearFilters(true)}
+                                                                      >
+                                                                             Clear All
+                                                                      </button>
+                                                               </div>
+                                                        )}
                                                  </div>
 
-                                                 <div className="marketplace-filter-footer">
-                                                        <button type="button" className="filter-clear-btn" onClick={clearFilters}>
-                                                               Clear
-                                                        </button>
-                                                        <button type="button" className="filter-apply-btn" onClick={applyFilters}>
-                                                               Apply Filters
-                                                        </button>
-                                                 </div>
-                                          </aside>
-                                   </>
-                            )}
+                                                 {!isSectionOnlyView && seoShortContent && (
+                                                        <div className="content-wrapper content-wrapper-short mb-4 text-dark">
+                                                               <div dangerouslySetInnerHTML={{ __html: seoShortContent }} />
+                                                        </div>
+                                                 )}
+
+                                                 <LatestProductsGrid
+                                                        items={latestGridProducts}
+                                                        hasMore={Boolean(nextProductsPageUrl)}
+                                                        loading={isLoadingMoreProducts}
+                                                        onLoadMore={loadMoreProducts}
+                                                        hasActiveFilters={activeFilterChips.length > 0}
+                                                        onResetEmpty={() => (
+                                                               activeFilterChips.length > 0
+                                                                      ? clearFilters(true)
+                                                                      : handleSelectAllCategories()
+                                                        )}
+                                                 />
+
+                                                 {!isSectionOnlyView && seoContent && (
+                                                        <div className="content-wrapper content-wrapper-long mt-5 text-dark">
+                                                               <div dangerouslySetInnerHTML={{ __html: seoContent }} />
+                                                        </div>
+                                                 )}
+                                          </div>
+                                   </div>
+                            </div>
                      </div>
 
                      <style>{`
+                            .marketplace-page-shell {
+                                   background-color: #F7F8F9;
+                                   padding-top: 1px;
+                            }
+
+                            /* Two-column Sidebar + Main Workspace */
+                            .marketplace-workspace {
+                                   display: grid;
+                                   grid-template-columns: 296px minmax(0, 1fr);
+                                   gap: 24px;
+                                   align-items: start;
+                            }
+                            .marketplace-main-content {
+                                   min-width: 0;
+                            }
+
+                            /* Daraz-style Sidebar (Desktop inline + Mobile drawer) */
+                            .mp-sidebar {
+                                   position: sticky;
+                                   top: 8px;
+                                   background: #ffffff;
+                                   border: 1px solid #ECEFF2;
+                                   border-radius: 20px;
+                                   box-shadow: 0 8px 28px rgba(15, 23, 42, 0.05);
+                                   display: flex;
+                                   flex-direction: column;
+                                   height: calc(100vh - 16px);
+                                   height: calc(100dvh - 16px);
+                                   max-height: calc(100vh - 16px);
+                                   max-height: calc(100dvh - 16px);
+                                   overflow: hidden;
+                            }
+                            .mp-sidebar-scroll-body {
+                                   flex: 1;
+                                   overflow-y: auto;
+                                   padding: 18px 16px;
+                                   scrollbar-width: thin;
+                                   scrollbar-color: #CBD5E1 transparent;
+                            }
+                            .mp-sidebar-scroll-body::-webkit-scrollbar,
+                            .mp-cat-scroll-list::-webkit-scrollbar {
+                                   width: 5px;
+                            }
+                            .mp-sidebar-scroll-body::-webkit-scrollbar-thumb,
+                            .mp-cat-scroll-list::-webkit-scrollbar-thumb {
+                                   background: #CBD5E1;
+                                   border-radius: 999px;
+                            }
+                            .mp-sidebar-section + .mp-sidebar-section {
+                                   margin-top: 18px;
+                                   padding-top: 18px;
+                                   border-top: 1px solid #EEF2F6;
+                            }
+                            .mp-sidebar-section-head {
+                                   display: flex;
+                                   align-items: center;
+                                   justify-content: space-between;
+                                   margin-bottom: 12px;
+                            }
+                            .mp-sidebar-section-head h4 {
+                                   margin: 0;
+                                   font-size: 15px;
+                                   font-weight: 800;
+                                   color: #23262F;
+                                   letter-spacing: -0.01em;
+                            }
+                            .mp-sidebar-reset-link {
+                                   border: none;
+                                   background: transparent;
+                                   padding: 0;
+                                   font-size: 12.5px;
+                                   font-weight: 600;
+                                   color: #43ACE9;
+                                   cursor: pointer;
+                            }
+                            .mp-sidebar-reset-link:hover {
+                                   text-decoration: underline;
+                            }
+
+                            /* Scrollable Daraz-style Categories List */
+                            .mp-cat-scroll-list {
+                                   max-height: 36vh;
+                                   min-height: 180px;
+                                   overflow-y: auto;
+                                   padding-right: 4px;
+                                   display: flex;
+                                   flex-direction: column;
+                                   gap: 2px;
+                                   scrollbar-width: thin;
+                                   scrollbar-color: #CBD5E1 transparent;
+                            }
+                            .mp-cat-group {
+                                   display: flex;
+                                   flex-direction: column;
+                            }
+                            .mp-cat-item,
+                            .mp-cat-row {
+                                   display: flex;
+                                   align-items: center;
+                                   justify-content: space-between;
+                                   gap: 6px;
+                                   width: 100%;
+                                   border-radius: 10px;
+                                   transition: background-color 0.16s ease, color 0.16s ease;
+                            }
+                            .mp-cat-root-btn {
+                                   border: none;
+                                   background: transparent;
+                                   padding: 8px 10px;
+                                   font-size: 13.5px;
+                                   font-weight: 600;
+                                   color: #475569;
+                                   text-align: left;
+                            }
+                            .mp-cat-name-btn {
+                                   flex: 1;
+                                   min-width: 0;
+                                   border: none;
+                                   background: transparent;
+                                   padding: 7px 10px;
+                                   text-align: left;
+                                   font-size: 13.5px;
+                                   font-weight: 500;
+                                   color: #475569;
+                                   display: flex;
+                                   align-items: center;
+                                   border-radius: 10px;
+                            }
+                            .mp-cat-label {
+                                   overflow: hidden;
+                                   text-overflow: ellipsis;
+                                   white-space: nowrap;
+                            }
+                            .mp-cat-back-btn {
+                                   display: flex;
+                                   align-items: center;
+                                   gap: 8px;
+                                   width: 100%;
+                                   border: none;
+                                   background: #F8FAFC;
+                                   color: #23262F;
+                                   font-size: 13px;
+                                   font-weight: 700;
+                                   padding: 8px 10px;
+                                   border-radius: 10px;
+                                   margin-bottom: 6px;
+                                   text-align: left;
+                                   transition: background-color 0.16s ease, color 0.16s ease;
+                            }
+                            .mp-cat-back-btn:hover {
+                                   background: rgba(67, 172, 233, 0.10);
+                                   color: #0D8FD9;
+                            }
+                            .mp-cat-chevron {
+                                   flex-shrink: 0;
+                                   font-size: 11px;
+                                   color: #94A3B8;
+                            }
+                            .mp-cat-row.is-active .mp-cat-chevron {
+                                   color: #0D8FD9;
+                            }
+                            .mp-cat-empty-hint {
+                                   padding: 8px 10px;
+                                   font-size: 12.5px;
+                                   color: #94A3B8;
+                            }
+                            .mp-cat-row:hover,
+                            .mp-cat-root-btn:hover {
+                                   background: #F8FAFC;
+                                   color: #43ACE9;
+                            }
+                            .mp-cat-row.is-active,
+                            .mp-cat-root-btn.is-active {
+                                   background: rgba(67, 172, 233, 0.12);
+                                   box-shadow: inset 3px 0 0 #43ACE9;
+                                   color: #0D8FD9;
+                                   font-weight: 700;
+                            }
+
+                            /* Sidebar Filters */
+                            .mp-filter-count-pill {
+                                   display: inline-flex;
+                                   align-items: center;
+                                   justify-content: center;
+                                   min-width: 20px;
+                                   height: 20px;
+                                   padding: 0 6px;
+                                   border-radius: 999px;
+                                   background: #43ACE9;
+                                   color: #fff;
+                                   font-size: 11px;
+                                   font-weight: 700;
+                            }
+                            .mp-filter-group {
+                                   margin-bottom: 14px;
+                            }
+                            .mp-filter-group:last-child {
+                                   margin-bottom: 0;
+                            }
+                            .mp-filter-group > label {
+                                   display: block;
+                                   margin-bottom: 6px;
+                                   font-size: 12.5px;
+                                   font-weight: 700;
+                                   color: #23262F;
+                            }
+                            .mp-filter-group select,
+                            .mp-price-range-row input {
+                                   width: 100%;
+                                   height: 40px;
+                                   border-radius: 10px;
+                                   border: 1px solid #D9E1EC;
+                                   background: #F8FAFC;
+                                   color: #23262F;
+                                   font-size: 13px;
+                                   padding: 0 10px;
+                                   transition: border-color 0.18s ease, background-color 0.18s ease;
+                            }
+                            .mp-filter-group select:focus,
+                            .mp-price-range-row input:focus {
+                                   outline: none;
+                                   border-color: #43ACE9;
+                                   background: #fff;
+                            }
+                            .mp-filter-group select:disabled {
+                                   opacity: 0.55;
+                                   cursor: not-allowed;
+                            }
+                            .mp-price-range-row {
+                                   display: grid;
+                                   grid-template-columns: 1fr auto 1fr;
+                                   gap: 8px;
+                                   align-items: center;
+                            }
+                            .mp-price-sep {
+                                   color: #94A3B8;
+                                   font-weight: 600;
+                            }
+                            .mp-filter-options {
+                                   display: flex;
+                                   flex-direction: column;
+                                   gap: 7px;
+                            }
+                            .mp-filter-option-row {
+                                   display: flex;
+                                   align-items: center;
+                                   gap: 8px;
+                                   font-size: 13px;
+                                   color: #475569;
+                                   cursor: pointer;
+                            }
+                            .mp-filter-option-row input {
+                                   accent-color: #43ACE9;
+                            }
+                            .mp-sidebar-footer {
+                                   display: flex;
+                                   gap: 10px;
+                                   padding: 12px 16px 14px;
+                                   border-top: 1px solid #EEF2F6;
+                                   background: #fff;
+                            }
+                            .mp-filter-clear-btn,
+                            .mp-filter-apply-btn {
+                                   flex: 1;
+                                   min-height: 40px;
+                                   border-radius: 10px;
+                                   font-size: 13px;
+                                   font-weight: 700;
+                                   transition: all 0.18s ease;
+                            }
+                            .mp-filter-clear-btn {
+                                   border: 1px solid #CBD5E1;
+                                   background: #fff;
+                                   color: #475569;
+                            }
+                            .mp-filter-clear-btn:hover {
+                                   border-color: #94A3B8;
+                                   color: #23262F;
+                            }
+                            .mp-filter-apply-btn {
+                                   border: none;
+                                   background: #23262F;
+                                   color: #fff;
+                            }
+                            .mp-filter-apply-btn:hover {
+                                   background: #43ACE9;
+                            }
+
+                            /* Right Workspace Header Toolbar */
+                            .mp-workspace-toolbar {
+                                   background: #ffffff;
+                                   border: 1px solid #ECEFF2;
+                                   border-radius: 20px;
+                                   padding: 18px 20px;
+                                   margin-bottom: 24px;
+                                   box-shadow: 0 6px 22px rgba(15, 23, 42, 0.04);
+                            }
+                            .mp-toolbar-top-row {
+                                   display: flex;
+                                   flex-wrap: wrap;
+                                   align-items: center;
+                                   justify-content: space-between;
+                                   gap: 16px;
+                            }
+                            .mp-breadcrumbs {
+                                   display: flex;
+                                   flex-wrap: wrap;
+                                   align-items: center;
+                                   gap: 6px;
+                                   margin-bottom: 6px;
+                                   font-size: 12.5px;
+                            }
+                            .mp-breadcrumb-link {
+                                   border: none;
+                                   background: transparent;
+                                   padding: 0;
+                                   color: #606060;
+                                   font-weight: 500;
+                            }
+                            .mp-breadcrumb-link:hover {
+                                   color: #43ACE9;
+                            }
+                            .mp-breadcrumb-sep {
+                                   color: #CBD5E1;
+                            }
+                            .mp-breadcrumb-current {
+                                   color: #43ACE9;
+                                   font-weight: 600;
+                            }
+                            .mp-heading-wrap {
+                                   display: flex;
+                                   flex-wrap: wrap;
+                                   align-items: baseline;
+                                   gap: 10px;
+                            }
+                            .mp-heading-wrap h1 {
+                                   margin: 0;
+                                   font-size: 24px;
+                                   font-weight: 800;
+                                   color: #23262F;
+                                   letter-spacing: -0.02em;
+                                   line-height: 1.2;
+                            }
+                            .mp-result-badge {
+                                   font-size: 13px;
+                                   font-weight: 600;
+                                   color: #64748B;
+                            }
+                            .mp-toolbar-actions {
+                                   display: flex;
+                                   flex-wrap: wrap;
+                                   align-items: center;
+                                   gap: 10px;
+                            }
+                            .marketplace-top-tabs {
+                                   display: inline-grid;
+                                   grid-template-columns: repeat(3, minmax(0, auto));
+                                   gap: 4px;
+                                   padding: 4px;
+                                   border-radius: 14px;
+                                   background: #F1F5F9;
+                                   border: 1px solid #E2E8F0;
+                            }
+                            .marketplace-top-tab {
+                                   min-height: 40px;
+                                   padding: 0 16px;
+                                   border-radius: 10px;
+                                   border: none;
+                                   background: transparent;
+                                   color: #606060;
+                                   font-size: 13.5px;
+                                   font-weight: 600;
+                                   transition: all 0.18s ease;
+                                   white-space: nowrap;
+                            }
+                            .marketplace-top-tab:hover {
+                                   color: #43ACE9;
+                            }
+                            .marketplace-top-tab.is-active {
+                                   background: #23262F;
+                                   color: #ffffff;
+                                   box-shadow: 0 4px 12px rgba(35, 38, 47, 0.18);
+                            }
+                            .mp-mobile-drawer-trigger {
+                                   display: inline-flex;
+                                   align-items: center;
+                                   justify-content: center;
+                                   gap: 8px;
+                                   min-height: 42px;
+                                   padding: 0 14px;
+                                   border-radius: 12px;
+                                   border: 1px solid #43ACE9;
+                                   background: rgba(67, 172, 233, 0.08);
+                                   color: #23262F;
+                                   font-size: 13.5px;
+                                   font-weight: 700;
+                            }
+                            .mp-active-chips-row {
+                                   display: flex;
+                                   flex-wrap: wrap;
+                                   align-items: center;
+                                   gap: 8px;
+                                   margin-top: 14px;
+                                   padding-top: 14px;
+                                   border-top: 1px solid #EEF2F6;
+                            }
+                            .mp-active-chip {
+                                   display: inline-flex;
+                                   align-items: center;
+                                   gap: 7px;
+                                   padding: 5px 11px;
+                                   border-radius: 999px;
+                                   border: 1px solid rgba(67, 172, 233, 0.35);
+                                   background: rgba(67, 172, 233, 0.10);
+                                   color: #23262F;
+                                   font-size: 12.5px;
+                                   font-weight: 600;
+                            }
+                            .mp-active-chip i {
+                                   font-size: 11px;
+                                   color: #43ACE9;
+                            }
+                            .mp-clear-all-chips-btn {
+                                   border: none;
+                                   background: transparent;
+                                   color: #64748B;
+                                   font-size: 12.5px;
+                                   font-weight: 600;
+                                   text-decoration: underline;
+                                   padding: 4px 6px;
+                            }
+                            .mp-empty-reset-btn {
+                                   border: none;
+                                   background: #23262F;
+                                   color: #fff;
+                                   border-radius: 12px;
+                                   padding: 10px 22px;
+                                   font-size: 14px;
+                                   font-weight: 700;
+                            }
+                            .mp-empty-reset-btn:hover {
+                                   background: #43ACE9;
+                            }
+
+                            /* SEO Content Blocks */
                             .content-wrapper {
                                    position: relative;
                                    overflow: hidden;
                                    color: #212529 !important;
-                                   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.96) 100%);
-                                   border: 1px solid rgba(226, 232, 240, 0.95);
-                                   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
-                                   border-radius: 28px;
+                                   background: #ffffff;
+                                   border: 1px solid #ECEFF2;
+                                   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+                                   border-radius: 22px;
                             }
                             .content-wrapper * {
                                    color: #212529 !important;
@@ -1022,15 +1286,15 @@ export default function Index({
                                    position: absolute;
                                    inset: 0 auto auto 0;
                                    width: 100%;
-                                   height: 5px;
-                                   background: linear-gradient(90deg, #020617 0%, #0f172a 32%, #1d4ed8 68%, #0ea5e9 100%);
+                                   height: 4px;
+                                   background: linear-gradient(90deg, #23262F 0%, #43ACE9 100%);
                             }
                             .content-wrapper-short {
-                                   padding: 28px 36px;
+                                   padding: 24px 30px;
                                    text-align: center;
                             }
                             .content-wrapper-long {
-                                   padding: 38px 42px;
+                                   padding: 32px 36px;
                             }
                             .content-wrapper > div {
                                    position: relative;
@@ -1039,68 +1303,48 @@ export default function Index({
                             .content-wrapper p {
                                    margin-bottom: 0;
                                    color: #475569 !important;
-                                   line-height: 1.9;
-                                   font-size: 1.05rem;
+                                   line-height: 1.85;
+                                   font-size: 1rem;
                             }
                             .content-wrapper p + p {
-                                   margin-top: 16px;
-                            }
-                            .content-wrapper-short p {
-                                   max-width: 1100px;
-                                   margin-left: auto;
-                                   margin-right: auto;
-                                   font-size: 1.08rem;
+                                   margin-top: 14px;
                             }
                             .content-wrapper-short strong,
                             .content-wrapper-short b {
                                    display: block;
-                                   margin-bottom: 10px;
-                                   color: #0f172a !important;
-                                   font-size: clamp(1.45rem, 2vw, 2rem);
+                                   margin-bottom: 8px;
+                                   color: #23262F !important;
+                                   font-size: clamp(1.3rem, 1.8vw, 1.75rem);
                                    line-height: 1.25;
                                    font-weight: 800;
-                                   letter-spacing: -0.02em;
                             }
                             .content-wrapper-long h1,
                             .content-wrapper-long h2,
                             .content-wrapper-long h3,
                             .content-wrapper-long h4 {
-                                   color: #0f172a !important;
+                                   color: #23262F !important;
                                    font-weight: 800;
-                                   line-height: 1.2;
-                                   letter-spacing: -0.03em;
-                                   margin-bottom: 16px;
-                            }
-                            .content-wrapper-long h1 {
-                                   font-size: clamp(2rem, 3vw, 3rem);
-                            }
-                            .content-wrapper-long h2 {
-                                   font-size: clamp(1.7rem, 2.4vw, 2.35rem);
-                            }
-                            .content-wrapper-long h3 {
-                                   font-size: clamp(1.35rem, 1.8vw, 1.7rem);
+                                   line-height: 1.25;
+                                   margin-bottom: 14px;
                             }
                             .content-wrapper-long ul,
                             .content-wrapper-long ol {
-                                   margin: 20px 0;
+                                   margin: 18px 0;
                                    padding-left: 0;
                                    list-style: none;
                                    display: grid;
-                                   gap: 12px;
+                                   gap: 10px;
                             }
                             .content-wrapper-long li {
                                    position: relative;
                                    display: flex;
                                    align-items: center;
-                                   padding-left: 34px;
+                                   padding-left: 28px;
                                    color: #475569 !important;
-                                   line-height: 1.8;
-                                   min-height: 24px;
+                                   line-height: 1.75;
                             }
                             .content-wrapper-long li:empty,
-                            .content-wrapper-long p:empty {
-                                   display: none !important;
-                            }
+                            .content-wrapper-long p:empty,
                             .content-wrapper-long li:has(> br:only-child),
                             .content-wrapper-long p:has(> br:only-child) {
                                    display: none !important;
@@ -1111,16 +1355,15 @@ export default function Index({
                                    left: 0;
                                    top: 50%;
                                    transform: translateY(-50%);
-                                   width: 18px;
-                                   height: 18px;
+                                   width: 16px;
+                                   height: 16px;
                                    border-radius: 50%;
-                                   background: linear-gradient(135deg, #0f172a, #334155);
-                                   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.15);
+                                   background: #43ACE9;
                             }
                             .content-wrapper-long li::after {
                                    content: "";
                                    position: absolute;
-                                   left: 7px;
+                                   left: 6px;
                                    top: 50%;
                                    transform: translateY(-50%);
                                    width: 4px;
@@ -1128,454 +1371,248 @@ export default function Index({
                                    border-radius: 50%;
                                    background: #fff;
                             }
-                            .marketplace-topbar-wrap {
-                                   width: 100%;
-                                   background-color: #fff;
-                                   background-position: center;
-                                   background-repeat: no-repeat;
-                                   background-size: cover;
-                                   border-bottom: none;
-                                   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
-                                   padding-top: 22px;
-                                   padding-bottom: 22px;
+
+                            /* Product Cards & Grid */
+                            .marketplace-main-content .product-card-wrapper {
+                                   padding: 14px;
                             }
-                            .marketplace-topbar {
-                                   width: 100%;
-                                   border-radius: 28px;
-                                   background: rgba(255, 255, 255, 0.12);
-                                   backdrop-filter: blur(5px);
-                                   -webkit-backdrop-filter: blur(5px);
-                                   min-height: 340px;
-                                   display: flex;
-                                   flex-direction: column;
-                                   justify-content: center;
-                                   align-items: center;
-                                   text-align: center;
+                            .marketplace-main-content .product-card-wrapper .pro-image {
+                                   height: auto !important;
+                                   margin-bottom: 0 !important;
                             }
-                            .marketplace-topbar > * {
-                                   width: 100%;
+                            .marketplace-main-content .product-card-wrapper .owner-info-row {
+                                   margin: 12px 0 8px !important;
                             }
-                            .marketplace-selected-category {
-                                   color: #fff;
-                                   font-size: 36px;
-                                   font-weight: 800;
-                                   line-height: 1.1;
-                                   text-shadow: 0 8px 24px rgba(15, 23, 42, 0.35);
+                            .marketplace-main-content .product-card-wrapper .pro-title {
+                                   margin-bottom: 6px;
                             }
-                            .marketplace-searchbar input {
-                                   width: 100%;
-                                   height: 62px;
-                                   border: none;
-                                   border-radius: 16px;
-                                   background: rgba(255, 255, 255, 0.92);
-                                   padding: 0 20px;
-                                   font-size: 15px;
-                                   color: #111827;
-                                   box-shadow: none;
-                            }
-                            .marketplace-searchbar input:focus {
-                                   outline: none;
-                                   background: rgba(255, 255, 255, 0.96);
-                            }
-                            .marketplace-searchbar-row {
-                                   display: grid;
-                                   grid-template-columns: 1fr 58px;
-                                   gap: 10px;
-                                   align-items: center;
-                            }
-                            .marketplace-filter-btn {
-                                   width: 58px;
-                                   height: 58px;
-                                   border: none;
-                                   border-radius: 16px;
-                                   background: #0f172a;
-                                   color: #fff;
-                                   display: inline-flex;
-                                   align-items: center;
-                                   justify-content: center;
-                                   transition: all 0.2s ease;
-                            }
-                            .marketplace-filter-btn:hover {
-                                   background: #111827;
-                            }
-                            .marketplace-filter-btn svg {
-                                   width: 22px;
-                                   height: 22px;
-                            }
-                            .marketplace-filter-backdrop {
-                                   position: fixed;
-                                   inset: 0;
-                                   z-index: 100002;
-                                   background: rgba(15, 23, 42, 0.42);
-                                   opacity: 0;
-                                   pointer-events: none;
-                                   transition: opacity 0.4s ease;
-                            }
-                            .marketplace-filter-backdrop.is-open {
-                                   opacity: 1;
-                                   pointer-events: auto;
-                            }
-                            .marketplace-filter-drawer {
-                                   position: fixed;
-                                   top: 0;
-                                   left: 0;
-                                   width: 360px;
-                                   max-width: 94vw;
-                                   height: 100vh;
-                                   z-index: 100003;
-                                   background: #fff;
-                                   box-shadow: 12px 0 28px rgba(15, 23, 42, 0.2);
-                                   display: flex;
-                                   flex-direction: column;
-                                   transform: translateX(-100%);
-                                   transition: transform 0.35s ease;
-                                   will-change: transform;
-                            }
-                            .marketplace-filter-drawer.is-open {
-                                   transform: translateX(0);
-                            }
-                            .marketplace-filter-header {
-                                   display: flex;
-                                   align-items: center;
-                                   justify-content: space-between;
-                                   padding: 20px 18px 14px;
-                                   border-bottom: 1px solid #e5e7eb;
-                            }
-                            .marketplace-filter-header h3 {
-                                   margin: 0;
-                                   font-size: 20px;
-                                   font-weight: 800;
-                                   color: #0f172a;
-                            }
-                            .marketplace-filter-header button {
-                                   width: 36px;
-                                   height: 36px;
-                                   border: none;
-                                   border-radius: 10px;
-                                   background: #f3f4f6;
-                                   font-size: 24px;
-                                   line-height: 1;
-                                   color: #0f172a;
-                            }
-                            .marketplace-filter-body {
-                                   flex: 1;
-                                   overflow-y: auto;
-                                   padding: 16px 18px;
-                            }
-                            .marketplace-filter-group {
-                                   margin-bottom: 14px;
-                            }
-                            .marketplace-filter-group > label {
+                            .marketplace-main-content .product-card-wrapper .pro-title h2,
+                            .marketplace-main-content .product-card-wrapper .pro-title h2.mp-card-title-single {
                                    display: block;
-                                   margin-bottom: 8px;
-                                   font-size: 13px;
-                                   font-weight: 700;
-                                   color: #0f172a;
+                                   height: auto !important;
+                                   font-size: 15.5px;
+                                   line-height: 1.35;
+                                   margin-bottom: 0;
+                                   word-break: normal;
+                                   white-space: nowrap;
+                                   overflow: hidden;
+                                   text-overflow: ellipsis;
                             }
-                            .marketplace-filter-group select {
-                                   width: 100%;
-                                   height: 46px;
-                                   border-radius: 12px;
-                                   border: 1px solid #d1d5db;
-                                   background: #fff;
-                                   color: #111827;
-                                   padding: 0 12px;
+                            .marketplace-main-content .product-card-wrapper .pro-title h2 a {
+                                   display: block;
+                                   white-space: nowrap;
+                                   overflow: hidden;
+                                   text-overflow: ellipsis;
                             }
-                            .marketplace-filter-options {
-                                   display: flex;
-                                   flex-direction: column;
+                            .marketplace-main-content .product-card-wrapper .pro-meta {
+                                   margin-top: auto;
+                                   padding-top: 4px;
                                    gap: 8px;
+                                   align-items: flex-end !important;
                             }
-                            .marketplace-filter-option-row {
-                                   display: flex;
-                                   align-items: center;
-                                   gap: 8px;
-                                   font-size: 14px;
-                                   color: #111827;
+                            .marketplace-main-content .product-card-wrapper .pro-price {
+                                   min-width: 0;
+                                   line-height: 1.2 !important;
                             }
-                            .marketplace-filter-footer {
-                                   display: flex;
-                                   gap: 10px;
-                                   border-top: 1px solid #e5e7eb;
-                                   padding: 14px 18px 16px;
+                            .marketplace-main-content .product-card-wrapper .pro-price > span {
+                                   display: block;
+                                   font-size: 12px;
+                                   line-height: 1.2;
+                                   margin-bottom: 3px;
                             }
-                            .filter-clear-btn,
-                            .filter-apply-btn {
-                                   flex: 1;
-                                   min-height: 44px;
-                                   border-radius: 12px;
-                                   font-size: 14px;
+                            .marketplace-main-content .product-card-wrapper .pro-meta .price {
+                                   font-size: 15.5px;
                                    font-weight: 700;
-                                   transition: all 0.2s ease;
+                                   line-height: 1.2 !important;
+                                   margin: 0 !important;
                             }
-                            .filter-clear-btn {
-                                   border: 1px solid #cbd5e1;
-                                   background: #fff;
-                                   color: #334155;
+                            .marketplace-main-content .product-card-wrapper .pro-price .price span {
+                                   font-size: inherit;
+                                   font-weight: inherit;
+                                   line-height: inherit;
+                                   color: inherit;
                             }
-                            .filter-apply-btn {
-                                   border: none;
-                                   background: #111827;
-                                   color: #fff;
-                            }
-                            .marketplace-top-tabs {
-                                   display: grid;
-                                   grid-template-columns: repeat(3, minmax(0, 1fr));
-                                   gap: 12px;
-                            }
-                            .marketplace-top-tab {
-                                   min-height: 58px;
-                                   border-radius: 16px;
-                                   border: none;
-                                   background: rgba(255, 255, 255, 0.88);
-                                   color: #5f6c80;
-                                   font-size: 14px;
-                                   font-weight: 700;
-                                   transition: all 0.2s ease;
-                                   box-shadow: none;
-                            }
-                            .marketplace-top-tab:hover {
-                                   background: rgba(255, 255, 255, 0.96);
-                                   color: #435168;
-                            }
-                            .marketplace-top-tab.is-active {
-                                   background: #111827;
-                                   color: #fff;
-                            }
-                            .marketplace-subcategory-tabs {
+                            .marketplace-main-content .product-card-wrapper .mp-discount-price-row {
                                    display: flex;
                                    flex-wrap: wrap;
-                                   gap: 12px;
-                                   justify-content: center;
+                                   align-items: baseline;
+                                   column-gap: 6px;
+                                   row-gap: 2px;
+                                   line-height: 1.2;
                             }
-                            .marketplace-subcategory-tab {
-                                   min-height: 50px;
-                                   padding: 0 20px;
-                                   border-radius: 14px;
-                                   border: none;
-                                   background: rgba(255, 255, 255, 0.88);
-                                   color: #435168;
-                                   font-size: 14px;
+                            .marketplace-main-content .product-card-wrapper .pro-meta .price .mp-sale-price {
+                                   order: 1;
+                                   font-size: 15.5px;
                                    font-weight: 700;
-                                   transition: all 0.2s ease;
+                                   color: #23262F !important;
+                                   white-space: nowrap;
                             }
-                            .marketplace-subcategory-tab:hover {
-                                   background: rgba(255, 255, 255, 0.96);
+                            .marketplace-main-content .product-card-wrapper .pro-meta .price .mp-original-price {
+                                   order: 2;
+                                   font-size: 12px;
+                                   font-weight: 500;
+                                   color: #94A3B8 !important;
+                                   white-space: nowrap;
                             }
-                            .marketplace-subcategory-tab.is-active {
-                                   background: #111827;
-                                   color: #fff;
+                            .marketplace-main-content .product-card-wrapper .pro-buy-btn {
+                                   flex-shrink: 0;
                             }
-                            .marketplace-subcategory-back {
-                                   width: 50px;
-                                   min-width: 50px;
-                                   height: 50px;
-                                   border-radius: 14px;
-                                   border: none;
-                                   background: #111827;
-                                   color: #fff;
+                            .marketplace-main-content .product-card-wrapper .pro-bid-btn a {
                                    display: inline-flex;
                                    align-items: center;
                                    justify-content: center;
-                                   font-size: 20px;
-                                   font-weight: 700;
-                                   transition: all 0.2s ease;
+                                   font-size: 14px;
+                                   line-height: 1.2;
+                                   padding: 10px 16px;
+                                   white-space: nowrap;
                             }
-                            .marketplace-subcategory-back:hover {
-                                   background: #0b1220;
-                            }
-                            .marketplace-curated-section {
-                                   margin-bottom: 38px;
-                                   overflow: hidden;
+                            .marketplace-main-content .product-card-wrapper .pro-buy-btn > button,
+                            .marketplace-main-content .product-card-wrapper .pro-bid-btn > span {
+                                   font-size: 14px !important;
+                                   line-height: 1.2 !important;
+                                   padding: 10px 16px !important;
+                                   border-radius: 8px !important;
+                                   white-space: nowrap;
                             }
                             .marketplace-latest-grid-section {
-                                   margin-top: 6px;
-                                   margin-bottom: 42px;
-                            }
-                            .marketplace-curated-header {
-                                   display: flex;
-                                   align-items: center;
-                                   justify-content: space-between;
-                                   margin-bottom: 14px;
-                            }
-                            .marketplace-curated-header h3 {
-                                   margin: 0;
-                                   font-size: 28px;
-                                   font-weight: 800;
-                                   color: #0f172a;
-                            }
-                            .marketplace-curated-slider {
-                                   position: relative;
-                            }
-                            .marketplace-curated-slider .swiper {
-                                   overflow: hidden;
-                                   padding: 4px 2px 78px;
-                            }
-                            .marketplace-curated-slider .swiper-slide {
-                                   height: auto;
-                            }
-                            .marketplace-curated-slider .swiper-button-prev,
-                            .marketplace-curated-slider .swiper-button-next {
-                                   top: auto !important;
-                                   bottom: 14px !important;
-                                   left: auto !important;
-                                   right: auto !important;
-                                   transform: none !important;
-                                   width: 44px;
-                                   height: 40px;
-                                   border-radius: 0;
-                                   background: #ffffff;
-                                   color: #111827;
-                                   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
-                                   border: 1px solid #e5e7eb;
-                                   z-index: 5;
-                            }
-                            .marketplace-curated-slider .swiper-button-prev {
-                                   left: calc(50% - 43px) !important;
-                                   border-top-left-radius: 12px;
-                                   border-bottom-left-radius: 12px;
-                                   margin-right: 0 !important;
-                            }
-                            .marketplace-curated-slider .swiper-button-next {
-                                   left: calc(50% + 3px) !important;
-                                   border-top-right-radius: 12px;
-                                   border-bottom-right-radius: 12px;
-                                   border-left: none;
-                            }
-                            .marketplace-curated-slider .swiper-button-prev::after,
-                            .marketplace-curated-slider .swiper-button-next::after {
-                                   font-size: 16px;
-                                   font-weight: 700;
-                            }
-                            .marketplace-curated-slider .swiper-button-disabled {
-                                   opacity: 1 !important;
-                                   color: #cbd5e1 !important;
-                                   background: #ffffff !important;
+                                   margin-top: 4px;
+                                   margin-bottom: 36px;
                             }
                             .marketplace-load-more-btn {
-                                   min-width: 168px;
-                                   min-height: 48px;
+                                   min-width: 176px;
+                                   min-height: 46px;
                                    border: none;
                                    border-radius: 12px;
-                                   background: #111827;
+                                   background: #23262F;
                                    color: #ffffff;
                                    font-size: 14px;
-                                   font-weight: 800;
+                                   font-weight: 700;
                                    padding: 0 28px;
-                                   box-shadow: 0 12px 26px rgba(15, 23, 42, 0.16);
-                                   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+                                   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+                                   transition: transform 0.2s ease, background 0.2s ease;
                             }
                             .marketplace-load-more-btn:hover:not(:disabled) {
                                    transform: translateY(-2px);
-                                   background: #020617;
-                                   box-shadow: 0 16px 34px rgba(15, 23, 42, 0.2);
+                                   background: #43ACE9;
                             }
                             .marketplace-load-more-btn:disabled {
                                    cursor: wait;
                                    opacity: 0.7;
                             }
-                            @media (max-width: 767px) {
-                                   .mkt-right {
-                                          padding-inline: 4px;
+
+                            @media (max-width: 991px) {
+                                   .marketplace-workspace {
+                                          display: block;
                                    }
-                                   .content-wrapper-short {
-                                          padding: 22px 18px;
-                                          border-radius: 22px;
+                                   .mp-sidebar-backdrop {
+                                          position: fixed;
+                                          inset: 0;
+                                          z-index: 100002;
+                                          background: rgba(15, 23, 42, 0.48);
+                                          opacity: 0;
+                                          pointer-events: none;
+                                          transition: opacity 0.3s ease;
                                    }
-                                   .content-wrapper-long {
-                                          padding: 26px 18px;
-                                          border-radius: 22px;
+                                   .mp-sidebar-backdrop.is-open {
+                                          opacity: 1;
+                                          pointer-events: auto;
                                    }
-                                   .content-wrapper p,
-                                   .content-wrapper-short p {
-                                          font-size: 0.98rem;
-                                          line-height: 1.8;
-                                   }
-                                   .content-wrapper-short strong,
-                                   .content-wrapper-short b {
-                                          margin-bottom: 8px;
-                                          font-size: 1.25rem;
-                                   }
-                                   .marketplace-topbar {
-                                          padding-inline: 0;
-                                          min-height: 380px;
-                                   }
-                                   .marketplace-selected-category {
-                                          font-size: 28px;
-                                   }
-                                   .marketplace-top-tabs {
-                                          grid-template-columns: repeat(3, minmax(0, 1fr));
-                                          gap: 8px;
-                                   }
-                                   .marketplace-top-tab {
-                                          min-height: 46px;
-                                          padding: 0 10px;
-                                          font-size: 12px;
-                                          border-radius: 12px;
-                                   }
-                                   .marketplace-searchbar-row {
-                                          grid-template-columns: 1fr 52px;
-                                          gap: 8px;
-                                   }
-                                   .marketplace-filter-btn {
-                                          width: 52px;
-                                          height: 52px;
-                                          border-radius: 12px;
-                                   }
-                                   .marketplace-filter-drawer {
-                                          width: 100%;
-                                          max-width: 100%;
+                                   .mp-sidebar {
+                                          position: fixed;
                                           top: 0;
-                                          right: 0;
+                                          left: 0;
                                           bottom: 0;
+                                          width: 340px;
+                                          max-width: 92vw;
                                           height: 100dvh;
                                           max-height: 100dvh;
-                                          border-radius: 0;
+                                          z-index: 100003;
+                                          border-radius: 0 20px 20px 0;
+                                          border: none;
+                                          box-shadow: 12px 0 32px rgba(15, 23, 42, 0.22);
+                                          transform: translateX(-105%);
+                                          transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+                                          will-change: transform;
                                    }
-                                   .marketplace-filter-body {
-                                          padding-bottom: 12px;
+                                   .mp-sidebar.is-open {
+                                          transform: translateX(0);
                                    }
-                                   .marketplace-filter-footer {
+                                   .mp-sidebar-mobile-head {
+                                          align-items: center;
+                                          justify-content: space-between;
+                                          padding: 16px;
+                                          border-bottom: 1px solid #EEF2F6;
+                                          background: #fff;
+                                   }
+                                   .mp-sidebar-mobile-head h3 {
+                                          margin: 0;
+                                          font-size: 17px;
+                                          font-weight: 800;
+                                          color: #23262F;
+                                   }
+                                   .mp-accent-icon {
+                                          color: #43ACE9;
+                                   }
+                                   .mp-sidebar-close-btn {
+                                          width: 36px;
+                                          height: 36px;
+                                          border: none;
+                                          border-radius: 10px;
+                                          background: #F1F5F9;
+                                          color: #23262F;
+                                          display: inline-flex;
+                                          align-items: center;
+                                          justify-content: center;
+                                          font-size: 17px;
+                                   }
+                                   .mp-cat-scroll-list {
+                                          max-height: none;
+                                   }
+                                   .mp-sidebar-footer {
                                           padding-bottom: calc(14px + env(safe-area-inset-bottom));
                                    }
-                                   .marketplace-subcategory-tabs {
-                                          display: flex;
-                                          flex-wrap: nowrap;
-                                          justify-content: flex-start;
-                                          align-items: center;
-                                          gap: 10px;
-                                          overflow-x: auto;
-                                          padding-inline: 8px;
-                                          padding-bottom: 4px;
-                                          scrollbar-width: none;
+                            }
+
+                            /* Mobile Layout */
+                            @media (max-width: 767px) {
+                                   .mp-workspace-toolbar {
+                                          padding: 14px;
+                                          border-radius: 16px;
+                                          margin-bottom: 18px;
                                    }
-                                   .marketplace-subcategory-tabs::-webkit-scrollbar {
-                                          display: none;
+                                   .mp-heading-wrap h1 {
+                                          font-size: 20px;
                                    }
-                                   .marketplace-subcategory-tab {
-                                          min-height: 44px;
-                                          white-space: nowrap;
-                                          flex: 0 0 auto;
-                                          font-size: 13px;
+                                   .mp-toolbar-actions {
+                                          width: 100%;
+                                          flex-direction: column;
+                                          align-items: stretch;
                                    }
-                                   .marketplace-subcategory-back {
-                                          width: 44px;
-                                          min-width: 44px;
-                                          height: 44px;
-                                          flex: 0 0 auto;
+                                   .mp-mobile-drawer-trigger {
+                                          width: 100%;
                                    }
-                                   .marketplace-curated-header h3 {
-                                          font-size: 22px;
+                                   .marketplace-top-tabs {
+                                          width: 100%;
+                                          display: grid;
+                                          grid-template-columns: repeat(3, minmax(0, 1fr));
                                    }
-                                   .marketplace-curated-slider {
-                                          padding-bottom: 2px;
+                                   .marketplace-top-tab {
+                                          padding: 0 8px;
+                                          font-size: 12.5px;
+                                          min-height: 38px;
                                    }
-                                   .marketplace-curated-slider .swiper {
-                                          padding-bottom: 8px;
+                                   .mp-sidebar {
+                                          width: 100%;
+                                          max-width: 100%;
+                                          border-radius: 0;
                                    }
-                                   .marketplace-curated-slider .swiper-button-prev,
-                                   .marketplace-curated-slider .swiper-button-next {
-                                          display: none !important;
+                                   .content-wrapper-short {
+                                          padding: 20px 16px;
+                                          border-radius: 18px;
+                                   }
+                                   .content-wrapper-long {
+                                          padding: 24px 16px;
+                                          border-radius: 18px;
                                    }
                             }
                      `}</style>

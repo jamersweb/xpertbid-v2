@@ -5,6 +5,7 @@ import axios from 'axios';
 import CartPopup from '@/Components/CartPopup';
 import DesktopCategoriesDropdown from '@/Components/DesktopCategoriesDropdown';
 import CategoriesDropdown from '@/Components/CategoriesDropdown';
+import RequestNavDropdown from '@/Components/RequestNavDropdown';
 import NotificationDropdown from '@/Components/NotificationDropdown';
 import ChatHeaderIcon from '@/Components/ChatHeaderIcon';
 import Search from '@/Components/Search';
@@ -209,15 +210,12 @@ export default function Header() {
                                                                       <CategoriesDropdown />
                                                                </div>
                                                         </li>
-                                                        <li className="nav-item">
-                                                               <Link
-                                                                      href={route('buyer-requests.create')}
-                                                                      className="nav-link"
-                                                                      onClick={handlePostRequestClick}
-                                                               >
-                                                                      {t('Post Request')}
-                                                               </Link>
-                                                        </li>
+                                                        <RequestNavDropdown
+                                                               isRtl={isRtl}
+                                                               currentUrl={url}
+                                                               onPostRequestClick={handlePostRequestClick}
+                                                               onNavigate={closeMobileMenu}
+                                                        />
                                                         <li className="nav-item">
                                                                <Link href={route('malls.index')} className="nav-link" onClick={closeMobileMenu}>{t('Malls')}</Link>
                                                         </li>
@@ -278,9 +276,9 @@ export default function Header() {
                                                                                     <img
                                                                                            src={profileImageSrc}
                                                                                            alt="Profile"
-                                                                                           className="rounded-circle border"
-                                                                                           width="35"
-                                                                                           height="35"
+                                                                                           className="header-avatar-img rounded-circle"
+                                                                                           width="36"
+                                                                                           height="36"
                                                                                            referrerPolicy="no-referrer"
                                                                                            onError={(e) => {
                                                                                                   e.currentTarget.onerror = null;
@@ -549,14 +547,127 @@ export default function Header() {
                         .user-profile-setting {
                             min-height: 38px;
                             gap: 8px !important;
+                            border-radius: 9999px !important;
                         }
-                        .user-profile-setting img {
-                            width: 35px;
-                            height: 35px;
-                            object-fit: cover;
+                        #mainNavbar .user-profile-setting img,
+                        .user-profile-setting img.header-avatar-img {
+                            width: 36px !important;
+                            height: 36px !important;
+                            min-width: 36px !important;
+                            min-height: 36px !important;
+                            max-width: 36px !important;
+                            max-height: 36px !important;
+                            padding: 0 !important;
+                            aspect-ratio: 1 / 1 !important;
+                            border-radius: 50% !important;
+                            object-fit: cover !important;
+                            overflow: hidden !important;
+                            border: 1px solid #E5E7EB !important;
+                            display: block !important;
                         }
                         .header-sell-btn {
                             margin-left: 12px;
+                        }
+                        #mainNavbar .nav-item.request-nav-item {
+                            position: relative !important;
+                        }
+                        #mainNavbar .navbar-nav .request-nav-trigger {
+                            border: none !important;
+                            background: transparent !important;
+                            gap: 6px;
+                            padding: 8px 12px;
+                            font-family: "Inter", sans-serif;
+                            font-size: 14px;
+                            font-weight: 600 !important;
+                            box-shadow: none !important;
+                        }
+                        #mainNavbar .navbar-nav .request-nav-trigger.is-active {
+                            color: #43ace9 !important;
+                        }
+                        #mainNavbar .request-nav-chevron {
+                            font-size: 11px;
+                            transition: transform 0.2s ease, color 0.15s ease;
+                        }
+                        #mainNavbar .request-nav-chevron.is-open {
+                            transform: rotate(180deg);
+                            color: #43ace9;
+                        }
+                        #mainNavbar .request-dropdown-menu {
+                            position: absolute;
+                            top: calc(100% + 6px);
+                            left: 0;
+                            min-width: 210px;
+                            padding: 8px;
+                            margin-top: 0;
+                            background: #ffffff;
+                            border: 1px solid #e5e7eb;
+                            border-radius: 14px;
+                            box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.14);
+                            z-index: 1200;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 2px;
+                        }
+                        #mainNavbar .request-dropdown-menu::before {
+                            content: "";
+                            position: absolute;
+                            top: -8px;
+                            left: 0;
+                            right: 0;
+                            height: 8px;
+                        }
+                        #mainNavbar .request-dropdown-menu.is-rtl {
+                            left: auto;
+                            right: 0;
+                            text-align: right;
+                        }
+                        #mainNavbar .request-dropdown-item {
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            padding: 10px 12px;
+                            border-radius: 10px;
+                            font-family: "Inter", sans-serif;
+                            font-size: 14px;
+                            font-weight: 600;
+                            color: #23262F !important;
+                            text-decoration: none !important;
+                            transition: background-color 0.15s ease, color 0.15s ease;
+                        }
+                        #mainNavbar .request-dropdown-item:hover,
+                        #mainNavbar .request-dropdown-item.is-active {
+                            background-color: #f0f8ff;
+                            color: #43ace9 !important;
+                        }
+                        #mainNavbar .request-dropdown-icon {
+                            width: 16px;
+                            text-align: center;
+                            font-size: 14px;
+                            color: #43ace9;
+                            flex-shrink: 0;
+                        }
+                        @media (max-width: 991.98px) {
+                            #mainNavbar .request-nav-item {
+                                width: 100%;
+                            }
+                            #mainNavbar .navbar-nav .request-nav-trigger {
+                                width: 100%;
+                                justify-content: space-between;
+                                padding: 8px 0;
+                            }
+                            #mainNavbar .request-dropdown-menu {
+                                position: static;
+                                min-width: 0;
+                                width: 100%;
+                                margin-top: 4px;
+                                padding: 6px;
+                                background: #f8fafc;
+                                border-radius: 10px;
+                                box-shadow: none;
+                            }
+                            #mainNavbar .request-dropdown-menu::before {
+                                display: none;
+                            }
                         }
                         
                         @media (min-width: 992px) {

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 
 import { useAuthModal } from "@/components/auth/AuthModalProvider";
 import { resolveProfileImage, useAuth } from "@/components/auth/AuthProvider";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
+import { HeaderSearch } from "@/components/HeaderSearch";
 import { PropertyPurposeNav } from "@/components/PropertyPurposeNav";
 import { assetImage, mainUrl } from "@/lib/site";
 import type { CategoryNode } from "@/types/property";
@@ -132,6 +133,7 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
   const pathname = usePathname();
   const [profileOpen, setProfileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
 
   const closeMobileMenu = () => setMenuOpen(false);
@@ -179,22 +181,35 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
   const profileSrc = resolveProfileImage(user);
 
   return (
-    <header className="bg-white" style={{ zIndex: 1050 }}>
-      <nav className="navbar navbar-expand-lg navbar-light bg-white py-2" id="mainNavbar">
-        <div className="container-fluid px-lg-5 my-2">
-          <Link className="navbar-brand d-flex align-items-center me-0 me-lg-4" href="/">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={assetImage("xp-prop-logo-clean.png")}
-              alt="XpertBid Property"
-              width={180}
-              height={52}
-              className="logo-image property-header-logo"
-            />
-          </Link>
+    <>
+      <HeaderSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      <header className="bg-white" style={{ zIndex: 1050 }}>
+        <nav className="navbar navbar-expand-lg navbar-light bg-white py-2" id="mainNavbar">
+          <div className="container-fluid px-lg-5 my-2">
+            <Link className="navbar-brand d-flex align-items-center me-0 me-lg-4" href="/">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={assetImage("xp-prop-logo-clean.png")}
+                alt="XpertBid Property"
+                width={180}
+                height={52}
+                className="logo-image property-header-logo"
+              />
+            </Link>
 
-          <div className="mobile-header-actions d-flex d-lg-none align-items-center gap-2 ms-auto me-2">
-            {user ? <NotificationDropdown /> : null}
+            <div className="mobile-header-actions d-flex d-lg-none align-items-center gap-2 ms-auto me-2">
+              <button
+                type="button"
+                className="mobile-header-search-btn"
+                onClick={() => setSearchOpen(true)}
+                aria-label="Search"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                </svg>
+              </button>
+              {user ? <NotificationDropdown /> : null}
             {!user && !loading ? (
               <>
                 <button type="button" className="mobile-auth-btn mobile-auth-login" onClick={openLogin}>
@@ -221,9 +236,9 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
                   <img
                     src={profileSrc}
                     alt="Profile"
-                    className="rounded-circle border"
-                    width={28}
-                    height={28}
+                    className="header-avatar-img-mobile rounded-circle"
+                    width={32}
+                    height={32}
                     referrerPolicy="no-referrer"
                     onError={(e) => {
                       e.currentTarget.onerror = null;
@@ -261,6 +276,19 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
             <PropertyPurposeNav purposes={purposes} onNavigate={closeMobileMenu} />
 
             <div className="d-flex align-items-center mt-3 mt-lg-0 header-account-cluster">
+              <div className="d-none d-lg-flex align-items-center header-action-search me-2">
+                <button
+                  type="button"
+                  className="header-search-icon-btn"
+                  onClick={() => setSearchOpen(true)}
+                  aria-label="Search"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#23262F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="M21 21l-4.35-4.35" />
+                  </svg>
+                </button>
+              </div>
               {!user && !loading ? (
                 <div className="registration-btns d-none d-lg-flex align-items-center">
                   <button
@@ -317,16 +345,16 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
                     <img
                       src={profileSrc}
                       alt="Profile"
-                      className="rounded-circle border"
-                      width={35}
-                      height={35}
+                      className="header-avatar-img rounded-circle"
+                      width={36}
+                      height={36}
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src = assetImage("user.jpg");
                       }}
                     />
-                    <i className="fa-solid fa-chevron-down small text-muted d-none d-lg-inline" />
+                    <i className={`fa-solid fa-chevron-down header-avatar-chevron small text-muted d-none d-lg-inline ${profileOpen ? "rotate-180" : ""}`} />
                   </button>
 
                   {profileOpen ? (
@@ -351,6 +379,7 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
         </div>
       </nav>
     </header>
+    </>
   );
 }
 

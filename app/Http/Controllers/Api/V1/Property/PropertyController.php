@@ -285,7 +285,12 @@ class PropertyController extends Controller
             'featured' => $query
                 ->orderByRaw('CASE WHEN featured_name = ? THEN 0 ELSE 1 END', [config('property.featured_name')])
                 ->latest('id'),
-            default => $query->latest('id'),
+            default => $query
+                ->orderByRaw(
+                    "CASE WHEN featured_name = ? THEN 0 WHEN featured_name IS NOT NULL AND TRIM(featured_name) != '' THEN 1 ELSE 2 END ASC",
+                    [config('property.featured_name')]
+                )
+                ->latest('id'),
         };
     }
 }

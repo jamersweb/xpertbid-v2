@@ -331,13 +331,15 @@ class MarketplaceController extends Controller
 
         if ($currentCategory) {
             if (is_null($currentCategory->parent_id) && is_null($currentCategory->sub_category_id)) {
-                $currentTopCategory = $categories->firstWhere('id', $currentCategory->id);
+                $currentTopCategory = $categories->firstWhere('id', $currentCategory->id) ?: $currentCategory;
             } elseif (!is_null($currentCategory->parent_id)) {
-                $currentTopCategory = $categories->firstWhere('id', $currentCategory->parent_id);
+                $currentTopCategory = $categories->firstWhere('id', $currentCategory->parent_id)
+                    ?: AuctionCategory::find($currentCategory->parent_id);
             } elseif (!is_null($currentCategory->sub_category_id)) {
                 $subParent = AuctionCategory::find($currentCategory->sub_category_id);
                 if ($subParent && !is_null($subParent->parent_id)) {
-                    $currentTopCategory = $categories->firstWhere('id', $subParent->parent_id);
+                    $currentTopCategory = $categories->firstWhere('id', $subParent->parent_id)
+                        ?: AuctionCategory::find($subParent->parent_id);
                 }
             }
 
@@ -346,11 +348,18 @@ class MarketplaceController extends Controller
             }
 
             if ($currentTopCategory) {
-                $subcategoryTabs = AuctionCategory::where('parent_id', $currentTopCategory->id)
+                $subcategoryTabs = AuctionCategory::with('childCategories')
+                    ->where('parent_id', $currentTopCategory->id)
                     ->whereNull('sub_category_id')
                     ->orderBy('name')
                     ->get()
-                    ->filter(fn ($category) => $categoryHasListings($category->id))
+                    ->filter(function ($category) use ($categoryHasListings) {
+                        if ($categoryHasListings($category->id)) {
+                            return true;
+                        }
+
+                        return $category->childCategories->contains(fn ($child) => $categoryHasListings($child->id));
+                    })
                     ->values();
 
                 if (!is_null($currentCategory->parent_id) && is_null($currentCategory->sub_category_id)) {
@@ -538,41 +547,8 @@ class MarketplaceController extends Controller
             $query->where('featured_name', 'home_featured');
         }
 
-        $curatedBaseQuery = Listing::whereIn('status', $this->browseStatuses())
-            ->excludeProperties()
-            ->with([
-            'user.individualVerification:id,user_id,status',
-            'user.corporateVerification:id,user_id,status',
-            'category',
-            'bids',
-        ])->withMax('bids', 'bid_amount');
-
-        if ($categoryScopeIds) {
-            $categoryIds = $categoryScopeIds['category'];
-            $subCategoryIds = $categoryScopeIds['subcategory'];
-            $childCategoryIds = $categoryScopeIds['child'];
-
-            $curatedBaseQuery->where(function($q) use ($categoryIds, $subCategoryIds, $childCategoryIds) {
-                $q->whereIn('category_id', $categoryIds)
-                  ->orWhereIn('sub_category_id', $subCategoryIds)
-                  ->orWhereIn('child_category_id', $childCategoryIds);
-            });
-        }
-
-        $applyTypeFilter($curatedBaseQuery);
-
-        $featuredProducts = (clone $curatedBaseQuery)
-            ->whereNotNull('featured_name')
-            ->where('featured_name', '!=', '')
-            ->latest('id')
-            ->limit(12)
-            ->get();
-
-        $mostViewedProducts = (clone $curatedBaseQuery)
-            ->orderByDesc('views')
-            ->latest('id')
-            ->limit(12)
-            ->get();
+        $featuredProducts = collect();
+        $mostViewedProducts = collect();
 
         $listingTypeForFields = $type;
         if ($listingTypeForFields === 'live_auction') {
@@ -608,9 +584,11 @@ class MarketplaceController extends Controller
 
         $countries = Country::query()->select('id', 'name')->orderBy('name')->get();
 
+        // Show featured items first inside the Latest marketplace grid, followed by latest items.
         $products = $query
+            ->orderByRaw("CASE WHEN featured_name IS NOT NULL AND TRIM(featured_name) != '' THEN 0 ELSE 1 END ASC")
             ->latest('id')
-            ->paginate(6)
+            ->paginate(12)
             ->withQueryString();
 
         $pagePath = '/' . ltrim((string) $request->path(), '/');

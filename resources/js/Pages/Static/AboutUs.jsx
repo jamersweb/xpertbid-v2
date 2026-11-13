@@ -1,53 +1,450 @@
 import { Head } from '@inertiajs/react';
+import {
+    LuArrowLeftRight,
+    LuBriefcase,
+    LuBuilding2,
+    LuCar,
+    LuGlobe,
+    LuHammer,
+    LuHandshake,
+    LuLayers,
+    LuPackage,
+    LuShoppingBag,
+    LuSparkles,
+    LuTrendingUp,
+} from 'react-icons/lu';
 import AppLayout from '@/Layouts/AppLayout';
 import useTranslate from '@/hooks/useTranslate';
 
-function AboutIcon({ type }) {
-       if (type === 'vehicle') return <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none" className="mx-auto"><path d="M38.5 14.6667L34.8333 18.3334M34.8333 18.3334L32.0833 11.5501C31.824 10.8559 31.3604 10.2565 30.7536 9.83105C30.1468 9.40559 29.4254 9.17398 28.6843 9.16674H15.4C14.6529 9.14958 13.9184 9.3611 13.2949 9.77296C12.6714 10.1848 12.1886 10.7774 11.9112 11.4712L9.16667 18.3334M34.8333 18.3334H9.16667M34.8333 18.3334C36.8584 18.3334 38.5 19.975 38.5 22.0001V29.3334C38.5 31.3584 36.8584 33.0001 34.8333 33.0001M9.16667 18.3334L5.5 14.6667M9.16667 18.3334C7.14162 18.3334 5.5 19.975 5.5 22.0001V29.3334C5.5 31.3584 7.14162 33.0001 9.16667 33.0001M12.8333 25.6667H12.8517M31.1667 25.6667H31.185M34.8333 33.0001H9.16667M34.8333 33.0001V36.6667M9.16667 33.0001V36.6667" stroke="#43ACE9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
-       if (type === 'stock') return <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none" className="mx-auto"><path d="M31.1665 33.0001H32.9998M21.9998 33.0001H23.8332M12.8332 33.0001H14.6665M3.6665 36.6667C3.6665 37.6392 4.05281 38.5718 4.74045 39.2595C5.42808 39.9471 6.36071 40.3334 7.33317 40.3334H36.6665C37.639 40.3334 38.5716 39.9471 39.2592 39.2595C39.9469 38.5718 40.3332 37.6392 40.3332 36.6667V14.6667L27.4998 23.8334V14.6667L14.6665 23.8334V7.33341C14.6665 6.36095 14.2802 5.42832 13.5926 4.74069C12.9049 4.05306 11.9723 3.66675 10.9998 3.66675H7.33317C6.36071 3.66675 5.42808 4.05306 4.74045 4.74069C4.05281 5.42832 3.6665 6.36095 3.6665 7.33341V36.6667Z" stroke="#43ACE9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
-       return <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none" className="mx-auto"><path d="M21.9998 36.6667C25.8897 36.6667 29.6202 35.1215 32.3707 32.371C35.1213 29.6204 36.6665 25.8899 36.6665 22.0001C36.6665 18.1102 35.1213 14.3797 32.3707 11.6292C29.6202 8.87865 25.8897 7.33341 21.9998 7.33341M21.9998 36.6667C18.11 36.6667 14.3795 35.1215 11.6289 32.371C8.8784 29.6204 7.33317 25.8899 7.33317 22.0001M21.9998 36.6667V40.3334M21.9998 7.33341C18.11 7.33341 14.3795 8.87865 11.6289 11.6292C8.8784 14.3797 7.33317 18.1102 7.33317 22.0001M21.9998 7.33341V3.66675M7.33317 22.0001H3.6665M25.6665 22.0001C25.6665 22.9725 25.2802 23.9052 24.5926 24.5928C23.9049 25.2804 22.9723 25.6667 21.9998 25.6667C21.0274 25.6667 20.0947 25.2804 19.4071 24.5928C18.7195 23.9052 18.3332 22.9725 18.3332 22.0001C18.3332 21.0276 18.7195 20.095 19.4071 19.4074C20.0947 18.7197 21.0274 18.3334 21.9998 18.3334C22.9723 18.3334 23.9049 18.7197 24.5926 19.4074C25.2802 20.095 25.6665 21.0276 25.6665 22.0001ZM25.6665 22.0001H40.3332M31.1665 37.8767L29.3332 34.7051M20.1665 18.8284L12.8332 6.12341M37.8765 31.1667L34.7048 29.3334M6.12317 12.8334L9.29484 14.6667M37.8765 12.8334L34.7048 14.6667M6.12317 31.1667L9.29484 29.3334M31.1665 6.12341L29.3332 9.29508M20.1665 25.1717L12.8332 37.8767" stroke="#43ACE9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
-}
+const MARKETPLACE_CATEGORIES = [
+    {
+        key: 'property',
+        title: 'Property',
+        description: 'Explore properties for sale, rent, and lease.',
+        Icon: LuBuilding2,
+    },
+    {
+        key: 'xpertbuild',
+        title: 'XpertBuild',
+        description: 'Discover construction materials, home improvement products, and related services.',
+        Icon: LuHammer,
+    },
+    {
+        key: 'vehicles',
+        title: 'Vehicles',
+        description: 'Buy, sell, and explore personal and commercial vehicles.',
+        Icon: LuCar,
+    },
+    {
+        key: 'wholesale',
+        title: 'Wholesale & Bulk',
+        description: 'Connect with suppliers and discover products across different industries.',
+        Icon: LuPackage,
+    },
+    {
+        key: 'services',
+        title: 'Business & Professional Services',
+        description: 'Find service providers and explore business opportunities.',
+        Icon: LuBriefcase,
+    },
+    {
+        key: 'ecommerce',
+        title: 'E-commerce & More',
+        description: 'Discover products across a growing range of categories.',
+        Icon: LuShoppingBag,
+    },
+];
+
+const DIFFERENTIATORS = [
+    {
+        key: 'categories',
+        title: 'Multiple Categories',
+        description: 'Explore different products, properties, and services through one platform.',
+        Icon: LuLayers,
+    },
+    {
+        key: 'opportunities',
+        title: 'More Opportunities',
+        description: 'Help businesses showcase their offerings and reach potential customers.',
+        Icon: LuTrendingUp,
+    },
+    {
+        key: 'transactions',
+        title: 'Flexible Transactions',
+        description: 'Explore direct listings, buyer requests, and auction-based opportunities.',
+        Icon: LuArrowLeftRight,
+    },
+    {
+        key: 'connections',
+        title: 'Convenient Connections',
+        description: 'Bring buyers and sellers closer through a digital marketplace.',
+        Icon: LuHandshake,
+    },
+    {
+        key: 'ecosystem',
+        title: 'Growing Ecosystem',
+        description: 'Supporting individuals and businesses across Pakistan, with an expanding presence in international markets.',
+        Icon: LuGlobe,
+    },
+];
 
 export default function AboutUs() {
-       const { t } = useTranslate();
+    const { t } = useTranslate();
 
-       const valueCards = [
-              { title: t('about.value_cards.transparent.title'), text: t('about.value_cards.transparent.text'), image: '/assets/images/message-circle-heart.png', alt: t('about.value_cards.transparent.title') },
-              { title: t('about.value_cards.flexible.title'), text: t('about.value_cards.flexible.text'), image: '/assets/images/send-to-back.png', alt: t('about.value_cards.flexible.title') },
-              { title: t('about.value_cards.accessible.title'), text: t('about.value_cards.accessible.text'), image: '/assets/images/scan-face.png', alt: t('about.value_cards.accessible.title') },
-       ];
+    // Fall back to verified copy when cached or older translation maps omit the new about_page keys.
+    const tr = (key, fallback) => {
+        const value = t(key);
+        return !value || value === key ? fallback : value;
+    };
 
-       const beyondCards = [
-              { title: t('about.beyond_cards.vehicles.title'), text: t('about.beyond_cards.vehicles.text'), icon: 'vehicle' },
-              { title: t('about.beyond_cards.stock.title'), text: t('about.beyond_cards.stock.text'), icon: 'stock' },
-              { title: t('about.beyond_cards.services.title'), text: t('about.beyond_cards.services.text'), icon: 'services' },
-       ];
+    const metaTitle = tr('about_page.meta_title', 'About XpertBid — One Platform. Endless Possibilities.');
 
-       const whyChooseItems = [
-              { title: t('about.why_choose.item_1.title'), text: t('about.why_choose.item_1.text') },
-              { title: t('about.why_choose.item_2.title'), text: t('about.why_choose.item_2.text') },
-              { title: t('about.why_choose.item_3.title'), text: t('about.why_choose.item_3.text') },
-       ];
+    return (
+        <AppLayout>
+            <Head title={metaTitle} />
 
-       const howItWorksItems = [
-              { title: t('about.how_it_works.item_1.title'), text: t('about.how_it_works.item_1.text') },
-              { title: t('about.how_it_works.item_2.title'), text: t('about.how_it_works.item_2.text') },
-              { title: t('about.how_it_works.item_3.title'), text: t('about.how_it_works.item_3.text') },
-              { title: t('about.how_it_works.item_4.title'), text: t('about.how_it_works.item_4.text') },
-       ];
+            <style>{`
+                .xb-about-page {
+                    color: #23262F;
+                }
+                .xb-about-h1 {
+                    font-family: Inter, sans-serif;
+                    color: #23262F !important;
+                    font-size: clamp(28px, 3vw, 38px);
+                    font-weight: 800;
+                    line-height: 1.18;
+                    letter-spacing: -0.02em;
+                }
+                .xb-about-h2 {
+                    font-family: Inter, sans-serif;
+                    color: #23262F !important;
+                    font-size: clamp(24px, 2.2vw, 30px);
+                    font-weight: 800;
+                    line-height: 1.2;
+                    letter-spacing: -0.02em;
+                }
+                .xb-about-vision-heading {
+                    color: #FFFFFF !important;
+                    line-height: 1.2 !important;
+                }
+                .xb-about-hero {
+                    background: linear-gradient(135deg, #f8fbff 0%, #ffffff 55%, #eef7fd 100%);
+                    border-bottom: 1px solid #eef2f6;
+                }
+                .xb-about-tagline {
+                    display: inline-block;
+                    color: #43ACE9;
+                    font-size: 18px;
+                    font-weight: 700;
+                    letter-spacing: -0.01em;
+                }
+                .xb-about-lead {
+                    color: #353945;
+                    font-size: 15.5px;
+                    line-height: 1.65;
+                }
+                .xb-about-media-card {
+                    background: #ffffff;
+                    border: 1px solid #e6edf5;
+                    border-radius: 22px;
+                    padding: 10px;
+                    box-shadow: 0 16px 40px rgba(35, 38, 47, 0.06);
+                    width: 100%;
+                    display: flex;
+                }
+                .xb-about-media-inner {
+                    position: relative;
+                    width: 100%;
+                    border-radius: 16px;
+                    overflow: hidden;
+                    aspect-ratio: 4 / 3;
+                }
+                .xb-about-media-inner img {
+                    display: block;
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+                @media (min-width: 992px) {
+                    .xb-about-media-card.xb-about-stretch {
+                        flex: 1 1 auto;
+                        height: 100%;
+                    }
+                    .xb-about-media-card.xb-about-stretch .xb-about-media-inner {
+                        aspect-ratio: auto;
+                        min-height: 260px;
+                        height: 100%;
+                    }
+                    .xb-about-media-card.xb-about-stretch .xb-about-media-inner img {
+                        position: absolute;
+                        inset: 0;
+                    }
+                }
+                .xb-about-category-card {
+                    background: #ffffff;
+                    border: 1px solid #eceff4;
+                    border-radius: 18px;
+                    padding: 22px;
+                    height: 100%;
+                    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+                    box-shadow: 0 8px 24px rgba(35, 38, 47, 0.04);
+                }
+                .xb-about-category-card:hover {
+                    transform: translateY(-4px);
+                    border-color: rgba(67, 172, 233, 0.45);
+                    box-shadow: 0 16px 36px rgba(35, 38, 47, 0.08);
+                }
+                .xb-about-icon-badge {
+                    width: 46px;
+                    height: 46px;
+                    border-radius: 12px;
+                    background: rgba(67, 172, 233, 0.12);
+                    color: #43ACE9;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                }
+                .xb-about-diff-item {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 14px;
+                    background: #f9fafb;
+                    border: 1px solid #edf0f5;
+                    border-radius: 16px;
+                    padding: 14px 18px;
+                    transition: border-color 0.2s ease, background-color 0.2s ease;
+                }
+                .xb-about-diff-item:hover {
+                    background: #ffffff;
+                    border-color: rgba(67, 172, 233, 0.4);
+                }
+                .xb-about-diff-icon {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 11px;
+                    background: #23262F;
+                    color: #ffffff;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                }
+                .xb-about-vision-card {
+                    background: #23262F;
+                    border-radius: 28px;
+                    position: relative;
+                    overflow: hidden;
+                }
+                .xb-about-cta-card {
+                    background: linear-gradient(135deg, #f8fbff 0%, #eef7fd 100%);
+                    border: 1px solid rgba(67, 172, 233, 0.28);
+                    border-radius: 24px;
+                }
+                @media (max-width: 767px) {
+                    .xb-about-tagline {
+                        font-size: 16px;
+                    }
+                    .xb-about-lead {
+                        font-size: 14.5px;
+                    }
+                    .xb-about-vision-card {
+                        border-radius: 22px;
+                    }
+                }
+            `}</style>
 
-       return (
-              <AppLayout>
-                     <Head title={t('about.meta_title')} />
-                     <section className="py-5 bg-light about-bg-image about-bg-image-top"><div className="container"><div className="row align-items-center"><div className="col-md-6 mb-4 mb-md-0"><h2 className="h1 mb-4 text-gray-900">{t('about.intro_title')}</h2><p className="mb-3 text-secondary">{t('about.intro_paragraph_one')}</p><p className="text-secondary">{t('about.intro_paragraph_two')}</p></div><div className="col-md-6 text-md-end"><img src="/assets/images/about_main.png" alt="About XpertBid" className="img-fluid rounded-3" /></div></div></div></section>
-                     <section className="py-5 about-bg-image" style={{ backgroundColor: '#f3f4f6' }}><div className="container"><div className="row justify-content-center text-center"><div className="col-lg-12 py-5"><svg xmlns="http://www.w3.org/2000/svg" width="95" height="88" viewBox="0 0 95 88" fill="none" className="mx-auto d-block"><path d="M80.6235 87.2321H63.0009L43.616 67.8472L52.8679 59.4764L80.6235 87.2321Z" fill="#141416" /><path d="M0 24.2312H18.0632L36.1264 42.4216L27.3151 51.9868L0 24.2312Z" fill="#141416" /><path d="M74.0144 12.3358L0.439941 87.232H17.622L84.1474 20.266L89.4342 30.399L94.2804 0L63.0002 6.16792L74.0144 12.3358Z" fill="#43ACE9" /></svg><h2 className="h1 fw-bold my-3 text-gray-900">{t('about.mission_title')}</h2><p className="text-secondary mb-0">{t('about.mission_text')}</p></div></div></div></section>
-                     <section className="py-5 sbs" style={{ backgroundColor: '#F9F9F9' }}><div className="container sbs"><div className="text-center mb-5"><h2 className="main-heading-about text-gray-900">{t('about.what_we_do_title')}</h2><p className="text-secondary about-title">{t('about.what_we_do_text')}</p></div><div className="row g-4">{valueCards.map((card) => <div className="col-md-6 col-lg-4" key={card.title}><div className="card border-0 h-100 text-center p-5 about-box"><img src={card.image} alt={card.alt} className="mb-3 mx-auto" style={{ width: '40px', height: 'auto' }} /><h5 className="about-box-title text-gray-900">{card.title}</h5><p className="text-secondary mb-0">{card.text}</p></div></div>)}</div></div></section>
-                     <section className="py-5 sbs" style={{ backgroundColor: '#23262F' }}><div className="container sbs"><div className="text-center mb-5"><h2 className="main-heading-about-uniqe" style={{ color: '#fff' }}>{t('about.beyond_title')}</h2></div><div className="row g-4">{beyondCards.map((card) => <div className="col-md-6 col-lg-4" key={card.title}><div className="card border-0 h-100 text-center p-5 about-box"><AboutIcon type={card.icon} /><h5 className="about-box-title text-gray-900">{card.title}</h5><p className="text-secondary mb-0">{card.text}</p></div></div>)}</div></div></section>
-                     <section className="py-5 sbs" style={{ backgroundColor: '#fff' }}><div className="container py-4"><h2 className="text-center main-heading-about mb-5 text-gray-900">{t('about.why_choose_title')}</h2><div className="row align-items-center"><div className="col-md-6">{whyChooseItems.map((item) => <div className="mb-4" key={item.title}><h5 className="asksub text-gray-900">{item.title}</h5><p className="text-secondary mb-0">{item.text}</p></div>)}</div><div className="col-md-6 text-md-end"><img src="/assets/images/sky.png" alt="Why choose XpertBid" className="img-fluid rounded-3" /></div></div></div></section>
-                     <section className="py-5 sbs about-bg-image" style={{ backgroundColor: '#23262F' }}><div className="container sbs py-5"><div className="row justify-content-center text-center"><div className="col-lg-12"><h2 className="h1 fw-bold my-3" style={{ color: '#fff' }}>{t('about.story_title')}</h2><p className="mb-0" style={{ color: '#fff' }}>{t('about.story_text')}</p></div></div></div></section>
-                     <section className="py-5 sbs" style={{ backgroundColor: '#F9F9F9' }}><div className="container"><div className="text-center mb-5"><h2 className="main-heading-about text-gray-900">{t('about.how_it_works_title')}</h2><p className="text-secondary mb-0">{t('about.how_it_works_text')}</p></div><div className="row g-4">{howItWorksItems.map((item) => <div className="col-md-6" key={item.title}><div className="card border-0 shadow-sm h-100 p-4 about-box"><h5 className="asksub text-gray-900">{item.title}</h5><p className="text-secondary mb-0">{item.text}</p></div></div>)}</div></div></section>
-                     <section className="py-5 sbs about-bg-image" style={{ backgroundColor: '#F9F9F9' }}><div className="container py-5"><div className="row justify-content-center text-center"><div className="col-lg-12 p-5" style={{ backgroundColor: '#23262F', borderRadius: '40px' }}><h2 className="h1 fw-bold my-3" style={{ color: '#fff' }}>{t('about.vision_title')}</h2><p className="my-4" style={{ color: '#fff' }}>{t('about.vision_paragraph_one')}</p><p className="my-4" style={{ color: '#fff' }}>{t('about.vision_paragraph_two')}</p></div></div></div></section>
-                     <section className="py-5" style={{ backgroundColor: '#F9F9F9' }}><div className="container"><div className="row g-4"><div className="col-md-6"><div className="card border-0 shadow-sm h-100 p-4 about-box"><h5 className="asksub text-gray-900">{t('about.join_movement_title')}</h5><p className="about-last mb-0">{t('about.join_movement_text')}</p></div></div><div className="col-md-6"><div className="card border-0 shadow-sm h-100 p-4 about-box"><h5 className="asksub text-gray-900">{t('about.join_us_title')}</h5><p className="about-last mb-0">{t('about.join_us_text')}</p></div></div></div></div></section>
-              </AppLayout>
-       );
+            <div className="xb-about-page">
+            {/* 1. Hero — About XpertBid */}
+            <section className="py-4 py-lg-5 xb-about-hero">
+                <div className="container py-lg-2">
+                    <div className="row align-items-stretch g-4">
+                        <div className="col-lg-7 d-flex flex-column justify-content-center">
+                            <h1 className="xb-about-h1 mb-1">
+                                {tr('about_page.hero_title', 'About XpertBid')}
+                            </h1>
+                            <p className="xb-about-tagline mb-3">
+                                {tr('about_page.hero_tagline', 'One Platform. Endless Possibilities.')}
+                            </p>
+
+                            <div className="d-flex flex-column gap-2">
+                                <p className="xb-about-lead mb-0">
+                                    {tr(
+                                        'about_page.hero_p1',
+                                        'XpertBid is a growing digital marketplace in Pakistan, designed to bring buyers, sellers, businesses, and service providers together on one platform.'
+                                    )}
+                                </p>
+                                <p className="xb-about-lead mb-0">
+                                    {tr(
+                                        'about_page.hero_p2',
+                                        'From properties and construction materials to vehicles, wholesale products, business supplies, and professional services, XpertBid makes it easier to discover opportunities, showcase offerings, and connect with the right people.'
+                                    )}
+                                </p>
+                                <p className="xb-about-lead mb-0">
+                                    {tr(
+                                        'about_page.hero_p3',
+                                        "Whether you're a business looking to expand your reach, a property owner looking to sell or rent, or a customer searching for the right product or service, XpertBid brings multiple marketplace solutions together in one place."
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="col-lg-5 d-flex">
+                            <div className="xb-about-media-card xb-about-stretch">
+                                <div className="xb-about-media-inner">
+                                    <img
+                                        src="/assets/images/about_main.png"
+                                        alt={tr('about_page.hero_image_alt', 'XpertBid digital marketplace')}
+                                        width={713}
+                                        height={561}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 2. More Than a Marketplace */}
+            <section className="py-4 py-lg-5" style={{ backgroundColor: '#F9F9F9' }}>
+                <div className="container py-lg-2">
+                    <div className="text-center mx-auto mb-4" style={{ maxWidth: '720px' }}>
+                        <h2 className="xb-about-h2 mb-2">
+                            {tr('about_page.marketplace_title', 'More Than a Marketplace')}
+                        </h2>
+                        <p className="xb-about-lead mb-1">
+                            {tr(
+                                'about_page.marketplace_subtitle_1',
+                                'We believe buying and selling should be simpler, more accessible, and more flexible.'
+                            )}
+                        </p>
+                        <p className="about-last mb-0" style={{ fontSize: '15.5px' }}>
+                            {tr(
+                                'about_page.marketplace_subtitle_2',
+                                "That's why XpertBid brings together multiple marketplace categories and services, including:"
+                            )}
+                        </p>
+                    </div>
+
+                    <div className="row g-3 g-lg-4">
+                        {MARKETPLACE_CATEGORIES.map(({ key, title, description, Icon }) => (
+                            <div key={key} className="col-12 col-md-6 col-lg-4">
+                                <div className="xb-about-category-card">
+                                    <div className="xb-about-icon-badge mb-2">
+                                        <Icon size={22} />
+                                    </div>
+                                    <h3 className="fw-bold mb-1" style={{ color: '#23262F', fontSize: '18px' }}>
+                                        {tr(`about_page.categories.${key}.title`, title)}
+                                    </h3>
+                                    <p className="about-last mb-0" style={{ fontSize: '14.5px', lineHeight: 1.6 }}>
+                                        {tr(`about_page.categories.${key}.text`, description)}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* 3. What Makes XpertBid Different? */}
+            <section className="py-4 py-lg-5" style={{ backgroundColor: '#FFFFFF' }}>
+                <div className="container py-lg-2">
+                    <div className="row align-items-stretch g-4">
+                        <div className="col-lg-5 d-flex flex-column">
+                            <h2 className="xb-about-h2 mb-3">
+                                {tr('about_page.different_title', 'What Makes XpertBid Different?')}
+                            </h2>
+                            <div className="xb-about-media-card xb-about-stretch">
+                                <div className="xb-about-media-inner">
+                                    <img
+                                        src="/assets/images/sky.png"
+                                        alt={tr('about_page.different_image_alt', 'What makes XpertBid different')}
+                                        width={758}
+                                        height={681}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-lg-7 d-flex flex-column justify-content-between gap-2">
+                            {DIFFERENTIATORS.map(({ key, title, description, Icon }) => (
+                                <div key={key} className="xb-about-diff-item">
+                                    <div className="xb-about-diff-icon">
+                                        <Icon size={18} />
+                                    </div>
+                                    <div>
+                                        <h3 className="mb-1 fw-bold" style={{ color: '#23262F', fontSize: '16.5px' }}>
+                                            {tr(`about_page.different.${key}.title`, title)}
+                                        </h3>
+                                        <p className="about-last mb-0" style={{ fontSize: '14px', lineHeight: 1.55 }}>
+                                            {tr(`about_page.different.${key}.text`, description)}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 4. Our Vision */}
+            <section className="py-4 py-lg-5" style={{ backgroundColor: '#F9F9F9' }}>
+                <div className="container py-lg-2">
+                    <div className="xb-about-vision-card p-4 p-md-5 text-center">
+                        <div className="mx-auto" style={{ maxWidth: '800px' }}>
+                            <div
+                                className="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                                style={{
+                                    width: '48px',
+                                    height: '48px',
+                                    backgroundColor: 'rgba(67, 172, 233, 0.16)',
+                                    color: '#43ACE9',
+                                }}
+                            >
+                                <LuSparkles size={22} />
+                            </div>
+                            <h2 className="xb-about-h2 xb-about-vision-heading text-white mb-3">
+                                {tr('about_page.vision_title', 'Our Vision')}
+                            </h2>
+                            <p className="mb-2" style={{ color: '#E6E8EC', fontSize: '16.5px', lineHeight: 1.65 }}>
+                                {tr(
+                                    'about_page.vision_p1',
+                                    'Our vision is to build a connected digital marketplace that makes buying, selling, and business discovery easier for everyone.'
+                                )}
+                            </p>
+                            <p className="mb-0" style={{ color: '#B1B5C3', fontSize: '16px', lineHeight: 1.65 }}>
+                                {tr(
+                                    'about_page.vision_p2',
+                                    'We aim to create more opportunities for individuals, entrepreneurs, suppliers, and businesses by bringing different industries together through one accessible platform.'
+                                )}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 5. Be Part of XpertBid */}
+            <section className="py-4 py-lg-5" style={{ backgroundColor: '#FFFFFF' }}>
+                <div className="container py-lg-2">
+                    <div className="xb-about-cta-card p-4 p-md-5 text-center">
+                        <div className="mx-auto" style={{ maxWidth: '720px' }}>
+                            <h2 className="xb-about-h2 mb-2">
+                                {tr('about_page.join_title', 'Be Part of XpertBid')}
+                            </h2>
+                            <p className="xb-about-lead mb-3">
+                                {tr(
+                                    'about_page.join_p1',
+                                    "Whether you're looking to buy, sell, rent, lease, promote your business, or discover new opportunities, XpertBid gives you a place to get started."
+                                )}
+                            </p>
+                            <p className="fw-bold mb-0" style={{ color: '#43ACE9', fontSize: '22px', letterSpacing: '0.01em' }}>
+                                {tr('about_page.join_motto', 'Explore. Connect. Grow.')}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            </div>
+        </AppLayout>
+    );
 }

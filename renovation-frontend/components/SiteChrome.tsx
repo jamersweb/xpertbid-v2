@@ -7,6 +7,7 @@ import { useAuthModal } from "@/components/auth/AuthModalProvider";
 import { resolveProfileImage, useAuth } from "@/components/auth/AuthProvider";
 import { useStartBuilding } from "@/components/start-building/StartBuildingProvider";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
+import { HeaderSearch } from "@/components/HeaderSearch";
 import { PropertyPurposeNav } from "@/components/PropertyPurposeNav";
 import { assetImage, mainUrl } from "@/lib/site";
 import type { CategoryNode } from "@/types/property";
@@ -134,6 +135,7 @@ export function SiteHeader({ purposes = [] }: HeaderProps) {
   const pathname = usePathname();
   const [profileOpen, setProfileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
 
   const closeMobileMenu = () => setMenuOpen(false);
@@ -181,23 +183,36 @@ const handleLogout = async () => {
 const profileSrc = resolveProfileImage(user);
 
 return (
-  <header className="bg-white" style={{ zIndex: 1050 }}>
-    <nav className="navbar navbar-expand-lg navbar-light bg-white py-2" id="mainNavbar">
-      <div className="container-fluid px-3 px-lg-5 my-1 my-lg-2">
-        <Link className="navbar-brand d-flex align-items-center me-0 me-lg-4 flex-shrink-1 min-w-0" href="/">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={assetImage("xpertbuildlogo.png")}
-            alt="Xpert Build"
-            width={180}
-            height={40}
-            className="logo-image property-header-logo"
-          />
-        </Link>
+  <>
+    <HeaderSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+    <header className="bg-white" style={{ zIndex: 1050 }}>
+      <nav className="navbar navbar-expand-lg navbar-light bg-white py-2" id="mainNavbar">
+        <div className="container-fluid px-3 px-lg-5 my-1 my-lg-2">
+          <Link className="navbar-brand d-flex align-items-center me-0 me-lg-4 flex-shrink-1 min-w-0" href="/">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={assetImage("xpertbuildlogo.png")}
+              alt="Xpert Build"
+              width={180}
+              height={40}
+              className="logo-image property-header-logo"
+            />
+          </Link>
 
-        {/* Mobile: guest = Login + Sign Up; logged-in = notifications + Sell (no profile / no hamburger) */}
-        <div className="mobile-header-actions d-flex d-lg-none align-items-center gap-2 ms-auto">
-          {!user && !loading ? (
+          {/* Mobile: Search + auth / notifications + Sell */}
+          <div className="mobile-header-actions d-flex d-lg-none align-items-center gap-2 ms-auto">
+            <button
+              type="button"
+              className="mobile-header-search-btn"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+              </svg>
+            </button>
+            {!user && !loading ? (
             <>
               <button type="button" className="mobile-auth-btn mobile-auth-login" onClick={openLogin}>
                 Login
@@ -240,6 +255,19 @@ return (
             <PropertyPurposeNav purposes={purposes} onNavigate={closeMobileMenu} />
 
             <div className="d-flex align-items-center mt-3 mt-lg-0 header-account-cluster">
+              <div className="d-none d-lg-flex align-items-center header-action-search me-2">
+                <button
+                  type="button"
+                  className="header-search-icon-btn"
+                  onClick={() => setSearchOpen(true)}
+                  aria-label="Search"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#23262F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="M21 21l-4.35-4.35" />
+                  </svg>
+                </button>
+              </div>
               {!user && !loading ? (
                 <div className="registration-btns d-none d-lg-flex align-items-center">
                   <button
@@ -334,6 +362,7 @@ return (
         </div>
     </nav>
   </header>
+  </>
 );
 }
 

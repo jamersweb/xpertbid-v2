@@ -29,10 +29,22 @@ const heroSlides = [
   },
 ];
 
-export function HeroSection() {
+type HeroSectionProps = {
+  fluid?: boolean;
+  className?: string;
+};
+
+export function HeroSection({
+  fluid = true,
+  className = "my-5",
+}: HeroSectionProps = {}) {
+  const containerClass = fluid
+    ? "container-fluid px-3 px-lg-5 property-hero-container"
+    : "container property-hero-container";
+
   return (
-    <section className="final-banner-section my-5">
-      <div className="container-fluid px-3 px-lg-5 property-hero-container">
+    <section className={`final-banner-section ${className}`}>
+      <div className={containerClass}>
         <div className="hero-banner-shell">
           <Swiper
             modules={[Autoplay, EffectFade]}

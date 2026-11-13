@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { LoadMoreProperties } from "@/components/LoadMoreProperties";
-import { MarketplaceBrowseChrome } from "@/components/MarketplaceBrowseChrome";
+import { HeroSection } from "@/components/HeroSection";
+import { MarketplaceWorkspace } from "@/components/MarketplaceWorkspace";
 import { JsonLdScripts } from "@/components/JsonLdScripts";
 import { getProperties, getPropertyCategories, getCountries } from "@/lib/api/client";
 import type { CategoryNode, PropertyFilters } from "@/types/property";
 
 export const revalidate = 120;
-
-const FALLBACK_HERO =
-  "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1600&q=80";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -125,6 +121,22 @@ function findChild(purpose: CategoryNode | null, slug?: string) {
   return (purpose.children || []).find((c) => slugMatches(c.slug, slug)) || null;
 }
 
+function findByChildSlug(tree: CategoryNode | null, childSlug?: string) {
+  if (!tree || !childSlug) return null;
+  const mains = tree.main_categories?.length
+    ? tree.main_categories
+    : tree.slug
+      ? [tree]
+      : [];
+  for (const main of mains) {
+    for (const sub of main.children || []) {
+      const child = (sub.children || []).find((c) => slugMatches(c.slug, childSlug));
+      if (child) return { main, sub, child };
+    }
+  }
+  return null;
+}
+
 /** Fallback title when API slug lookup fails but `type` is in the URL. */
 function titleFromTypeParam(type?: string | null) {
   if (!type) return null;
@@ -137,36 +149,6 @@ function titleFromTypeParam(type?: string | null) {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
-}
-
-function hrefWith(
-  filters: PropertyFilters,
-  patch: Partial<PropertyFilters> & Record<string, string | number | undefined | null>
-) {
-  const merged = { ...filters, ...patch };
-  const qs = new URLSearchParams();
-  const keys: (keyof PropertyFilters)[] = [
-    "q",
-    "city",
-    "city_id",
-    "state_id",
-    "country_id",
-    "type",
-    "sub_category",
-    "child_category",
-    "listing_type",
-    "price_min",
-    "price_max",
-    "sort",
-    "featured",
-  ];
-  keys.forEach((key) => {
-    const value = merged[key];
-    if (value === undefined || value === null || value === "") return;
-    qs.set(String(key), String(value));
-  });
-  const s = qs.toString();
-  return s ? `/properties?${s}` : "/properties";
 }
 
 export async function generateMetadata({
@@ -228,12 +210,21 @@ export default async function PropertiesPage({
     countries = [];
   }
 
-  const purpose = findPurpose(tree, filters.sub_category, filters.type);
+  const childMatch =
+    !filters.sub_category && filters.child_category
+      ? findByChildSlug(tree, filters.child_category)
+      : null;
+  const purpose =
+    findPurpose(tree, filters.sub_category, filters.type) ||
+    childMatch?.sub ||
+    null;
   const mainCategory =
     findMainCategory(tree, filters.type) ||
-    findMainForSubcategory(tree, filters.sub_category);
-  const selectedChild = findChild(purpose, filters.child_category);
-  const childOptions = purpose?.children || [];
+    findMainForSubcategory(tree, filters.sub_category) ||
+    childMatch?.main ||
+    null;
+  const selectedChild =
+    findChild(purpose, filters.child_category) || childMatch?.child || null;
   const mainVerticals = (tree?.main_categories || []).filter((category) => {
     const slug = category.slug?.toLowerCase() || "";
     const name = category.name?.toLowerCase() || "";
@@ -245,11 +236,9 @@ export default async function PropertiesPage({
     );
   });
 
-  const purposeTabs = mainCategory
-    ? mainCategory.children || []
-    : mainVerticals.length > 0
-      ? mainVerticals
-      : tree?.children || [];
+  const rootCategories =
+    mainVerticals.length > 0 ? mainVerticals : tree?.main_categories || [];
+  const fallbackCategories = tree?.children || [];
 
   let result: Awaited<ReturnType<typeof getProperties>> = {
     data: [],
@@ -262,30 +251,16 @@ export default async function PropertiesPage({
     // empty
   }
 
+  const activeCategoryNode = selectedChild || purpose || mainCategory || null;
   const title =
     selectedChild?.name ||
     purpose?.name ||
     mainCategory?.name ||
     titleFromTypeParam(filters.type) ||
     "Home Renovation & Builder";
-  const heroImage =
-    selectedChild?.image_url ||
-    purpose?.image_url ||
-    mainCategory?.image_url ||
-    tree?.image_url ||
-    FALLBACK_HERO;
   const schemaMarkup =
-    selectedChild?.schema_markup ||
-    purpose?.schema_markup ||
-    mainCategory?.schema_markup ||
-    tree?.schema_markup;
+    activeCategoryNode?.schema_markup || tree?.schema_markup;
 
-  const listingTabs = [
-    { key: "auction", label: "Auctions", mobileLabel: "Auction" },
-    { key: "normal", label: "Normal Products", mobileLabel: "Normal" },
-  ] as const;
-
-  const currentListing = filters.listing_type || "normal";
   const loadMoreKey = [
     filters.q,
     filters.city,
@@ -303,176 +278,24 @@ export default async function PropertiesPage({
   ].join("|");
 
   return (
-    <div className="pb-5 bg-light min-vh-100">
+    <div className="marketplace-page-shell pb-5">
       <JsonLdScripts markup={schemaMarkup} idPrefix="properties-schema" />
-      <div
-        className="marketplace-topbar-wrap"
-        style={{
-          backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.38)), url("${heroImage}")`,
-        }}
-      >
-        <div className="container-fluid px-lg-5">
-          <div className="marketplace-topbar p-3 p-lg-4">
-            <div className="marketplace-selected-category mb-3">{title}</div>
-
-            {!purpose ? (
-              <div className="marketplace-subcategory-tabs mb-3">
-                {purposeTabs.map((tab) => {
-                  const selectingMain = !mainCategory;
-                  const href = selectingMain
-                    ? hrefWith(filters, {
-                        type: tab.slug,
-                        sub_category: undefined,
-                        child_category: undefined,
-                        page: undefined,
-                      })
-                    : hrefWith(filters, {
-                        type: mainCategory.slug,
-                        sub_category: tab.slug,
-                        child_category: undefined,
-                        page: undefined,
-                      });
-                  const isActive = selectingMain
-                    ? slugMatches(filters.type, tab.slug)
-                    : slugMatches(filters.sub_category, tab.slug);
-
-                  return (
-                    <Link
-                      key={tab.id}
-                      href={href}
-                      className={`marketplace-subcategory-tab${isActive ? " is-active" : ""}`}
-                    >
-                      {tab.name}
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="marketplace-subcategory-tabs mb-3">
-                <Link
-                  href={
-                    mainCategory
-                      ? hrefWith(filters, {
-                          type: mainCategory.slug,
-                          sub_category: undefined,
-                          child_category: undefined,
-                          page: undefined,
-                        })
-                      : "/properties"
-                  }
-                  className="marketplace-subcategory-back"
-                  aria-label="Back to categories"
-                >
-                  <span aria-hidden="true">&larr;</span>
-                </Link>
-
-                <Link
-                  href={hrefWith(filters, {
-                    type: filters.type || mainCategory?.slug,
-                    sub_category: purpose.slug,
-                    child_category: undefined,
-                    page: undefined,
-                  })}
-                  className={`marketplace-subcategory-tab${!filters.child_category ? " is-active" : ""}`}
-                >
-                  All {purpose.name}
-                </Link>
-
-                {childOptions.map((child) => (
-                  <Link
-                    key={child.id}
-                    href={hrefWith(filters, {
-                      type: filters.type || mainCategory?.slug,
-                      sub_category: purpose.slug,
-                      child_category: child.slug,
-                      page: undefined,
-                    })}
-                    className={`marketplace-subcategory-tab${
-                      filters.child_category === child.slug ? " is-active" : ""
-                    }`}
-                  >
-                    {child.name}
-                  </Link>
-                ))}
-              </div>
-            )}
-
-            <MarketplaceBrowseChrome
-              countries={countries}
-              defaults={{
-                q: filters.q,
-                country_id: filters.country_id,
-                state_id: filters.state_id,
-                city_id: filters.city_id,
-                price_min: filters.price_min,
-                price_max: filters.price_max,
-                sort: filters.sort,
-                type: filters.type,
-                sub_category: filters.sub_category,
-                child_category: filters.child_category,
-                listing_type: filters.listing_type || "normal",
-              }}
-            />
-
-            <div className="marketplace-top-tabs">
-              {listingTabs.map((tab) => {
-                const active = currentListing === tab.key;
-                return (
-                  <Link
-                    key={tab.key}
-                    href={hrefWith(filters, {
-                      listing_type: tab.key,
-                      page: undefined,
-                    })}
-                    className={`marketplace-top-tab${active ? " is-active" : ""}`}
-                  >
-                    <span className="d-none d-md-inline">{tab.label}</span>
-                    <span className="d-inline d-md-none">{tab.mobileLabel}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="container-fluid px-3 px-lg-5 pt-4">
-        <section className="marketplace-latest-grid-section">
-          <div className="marketplace-curated-header">
-            <h3>
-              Latest{" "}
-              {selectedChild?.name ||
-                purpose?.name ||
-                mainCategory?.name ||
-                "Products"}
-            </h3>
-          </div>
-
-          {result.data.length ? (
-            <>
-              <p className="text-muted mb-3">
-                {result.meta.total} result{result.meta.total === 1 ? "" : "s"}
-              </p>
-              <LoadMoreProperties
-                key={loadMoreKey}
-                initialItems={result.data}
-                initialMeta={result.meta}
-                filters={filters}
-              />
-            </>
-          ) : (
-            <div className="text-center py-5 bg-white rounded-3 shadow-sm border mt-2">
-              <h3 className="h5 fw-bold text-dark">No Products Found</h3>
-              <p className="text-muted mb-3">
-                We couldn&apos;t find any products matching your current filters.
-              </p>
-              <Link href="/properties" className="btn btn-dark rounded-3 px-4 py-2">
-                Clear All Filters
-              </Link>
-            </div>
-          )}
-        </section>
-      </div>
+      <HeroSection fluid className="my-4" />
+      <MarketplaceWorkspace
+        rootCategories={rootCategories}
+        fallbackCategories={fallbackCategories}
+        currentMainCategory={mainCategory}
+        currentSubcategory={purpose}
+        currentChildCategory={selectedChild}
+        headingTitle={title}
+        seoShortContent={activeCategoryNode?.seo_short_content}
+        seoContent={activeCategoryNode?.seo_content}
+        countries={countries}
+        filters={filters}
+        initialItems={result.data}
+        initialMeta={result.meta}
+        loadMoreKey={loadMoreKey}
+      />
     </div>
   );
 }

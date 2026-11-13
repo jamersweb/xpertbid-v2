@@ -90,6 +90,8 @@ class RenovationCategoryController extends Controller
                 'image',
                 'meta_title',
                 'meta_description',
+                'seo_short_content',
+                'seo_content',
                 'schema_markup',
             ])
             ->where('parent_id', $root->id)
@@ -110,6 +112,8 @@ class RenovationCategoryController extends Controller
                 'image',
                 'meta_title',
                 'meta_description',
+                'seo_short_content',
+                'seo_content',
                 'schema_markup',
             ])
                 ->whereIn('sub_category_id', $subIds)
@@ -125,6 +129,8 @@ class RenovationCategoryController extends Controller
                 'image_url' => $cat->image_url,
                 'meta_title' => $cat->meta_title,
                 'meta_description' => $cat->meta_description,
+                'seo_short_content' => $cat->seo_short_content,
+                'seo_content' => $cat->seo_content,
                 'schema_markup' => $cat->schema_markup,
                 'children' => $kids,
             ];
@@ -149,6 +155,8 @@ class RenovationCategoryController extends Controller
             'image_url' => $root->image_url,
             'meta_title' => $root->meta_title,
             'meta_description' => $root->meta_description,
+            'seo_short_content' => $root->seo_short_content,
+            'seo_content' => $root->seo_content,
             'schema_markup' => $root->schema_markup,
             'children' => $tree,
         ];

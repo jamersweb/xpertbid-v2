@@ -169,6 +169,8 @@ class RenovationController extends Controller
         if ($listingType = $request->input('listing_type')) {
             if ($listingType === 'normal') {
                 $query->whereIn('listing_type', ['normal', 'normal_list']);
+            } elseif ($listingType === 'business') {
+                $query->whereIn('listing_type', ['business', 'business_list']);
             } elseif ($listingType === 'auction') {
                 $query->whereIn('listing_type', ['auction', 'live_auction']);
             } else {
@@ -342,7 +344,12 @@ class RenovationController extends Controller
                 break;
             case 'latest':
             default:
-                $query->latest('id');
+                $query
+                    ->orderByRaw(
+                        "CASE WHEN featured_name = ? THEN 0 WHEN featured_name IS NOT NULL AND TRIM(featured_name) != '' THEN 1 ELSE 2 END ASC",
+                        [config('renovation.featured_name')]
+                    )
+                    ->latest('id');
                 break;
         }
     }

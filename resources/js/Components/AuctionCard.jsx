@@ -8,7 +8,14 @@ import { useCart } from "@/Contexts/CartContext";
 import { getBaseListingPrice, getDiscountMeta, isDirectBuyListing, isSoldOutListing } from "@/Utils/listingPricing";
 import { buildProductHref } from "@/Utils/productUrl";
 
-const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }) => {
+const AuctionCard = ({
+       auction,
+       activeTab = "active",
+       showPropertyMeta = false,
+       titleMaxLength = null,
+       singleLineTitle = false,
+       inlineDiscountPrice = false,
+}) => {
        const { addToCart } = useCart();
        const isWonAuction = activeTab === "won";
        const listingKind = auction?.list_type || auction?.listing_type;
@@ -70,6 +77,11 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
        const displayLabel = isWonAuction
               ? "Winning Bid"
               : (directBuyListing ? "Price" : (isLiveAuction ? (hasMaxBid ? "Live Bid" : "Start Price") : (hasMaxBid ? "Current Bid" : "Minimum Bid")));
+       const fullTitle = String(auction?.title || auction?.name || "Untitled").trim();
+       const hasTitleLimit = Number.isFinite(titleMaxLength) && titleMaxLength > 0;
+       const displayTitle = hasTitleLimit && fullTitle.length > titleMaxLength
+              ? `${fullTitle.slice(0, titleMaxLength).trimEnd()}...`
+              : fullTitle;
 
        return (
               <div className="product-card-wrapper h-100">
@@ -128,9 +140,13 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
                      />
 
                      <div className="pro-title" style={{ color: "black" }}>
-                            <h2>
-                                   <Link href={buildProductHref(auction.slug)} className="text-color-black">
-                                          {auction.title || auction.name || "Untitled"}
+                            <h2 className={singleLineTitle ? "mp-card-title-single" : undefined}>
+                                   <Link
+                                          href={buildProductHref(auction.slug)}
+                                          className="text-color-black"
+                                          title={fullTitle}
+                                   >
+                                          {displayTitle}
                                    </Link>
                             </h2>
                      </div>
@@ -172,11 +188,14 @@ const AuctionCard = ({ auction, activeTab = "active", showPropertyMeta = false }
                                    <span>{displayLabel}</span>
                                    <div className="price">
                                           {directBuyListing && discountMeta.hasDiscount ? (
-                                                 <div className="d-flex flex-column">
-                                                        <span className="text-decoration-line-through text-muted" style={{ fontSize: "0.8em", lineHeight: 1 }}>
+                                                 <div className={inlineDiscountPrice ? "mp-discount-price-row" : "d-flex flex-column"}>
+                                                        <span
+                                                               className="text-decoration-line-through text-muted mp-original-price"
+                                                               style={inlineDiscountPrice ? undefined : { fontSize: "0.8em", lineHeight: 1 }}
+                                                        >
                                                                <Price amountAED={discountMeta.originalPrice} />
                                                         </span>
-                                                        <span className="price text-danger">
+                                                        <span className={`price ${inlineDiscountPrice ? "mp-sale-price" : "text-danger"}`}>
                                                                <Price amountAED={discountMeta.finalPrice} />
                                                         </span>
                                                  </div>

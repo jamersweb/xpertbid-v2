@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1\Renovation;
 
+use App\Support\ListingDiscount;
 use App\Support\RenovationAttributes;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -15,6 +16,7 @@ class RenovationCardResource extends JsonResource
     {
         $album = is_array($this->album_urls) ? array_values($this->album_urls) : [];
         $albumPreview = array_slice($album, 0, 3);
+        $priceAmount = RenovationAttributes::numericPrice($this->resource);
 
         return [
             'id' => $this->id,
@@ -23,9 +25,10 @@ class RenovationCardResource extends JsonResource
             'status' => $this->status,
             'listing_type' => $this->listing_type,
             'price' => [
-                'amount' => RenovationAttributes::numericPrice($this->resource),
+                'amount' => $priceAmount,
                 'currency' => 'PKR',
             ],
+            'discount' => ListingDiscount::forListing($this->resource, $priceAmount),
             'image_url' => $this->image_url,
             'album_urls' => $albumPreview,
             'location' => [
