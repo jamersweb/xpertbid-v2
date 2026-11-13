@@ -94,6 +94,7 @@ export default function Show({ listing }) {
               { label: 'Title', value: listing.title || 'N/A' },
               { label: 'Status', value: listing.status || 'N/A' },
               { label: 'Listing Type', value: listing.listing_type || 'N/A' },
+              { label: 'Featured', value: listing.featured_name ? `Yes (${listing.featured_name})` : (listing.is_featured ? 'Yes' : 'No') },
               { label: 'Category', value: listing.category?.name || 'N/A' },
               { label: 'Sub Category', value: listing.sub_category?.name || listing.subCategory?.name || 'N/A' },
               { label: 'Child Category', value: listing.child_category?.name || listing.childCategory?.name || 'N/A' },

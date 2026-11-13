@@ -73,6 +73,7 @@ class Listing extends Model
         'variations',
         'is_property',
         'property_url',
+        'is_featured',
     ];
 
     /**
@@ -419,6 +420,11 @@ class Listing extends Model
     public function getIsPropertyAttribute(): bool
     {
         return $this->isPropertyListing();
+    }
+
+    public function getIsFeaturedAttribute(): bool
+    {
+        return !empty($this->featured_name);
     }
 
     public function getPropertyUrlAttribute(): ?string

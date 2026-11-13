@@ -206,7 +206,17 @@ export default function Index({
                                                                                      <img src={listing.image_url || '/assets/images/placeholder.png'} className="w-10 h-10 rounded-lg object-cover shrink-0" alt="" />
                                                                               )}
                                                                               <div>
-                                                                                     <p className="text-sm font-bold text-gray-800 line-clamp-1">{listing.title}</p>
+                                                                                     <div className="flex items-center gap-1.5 flex-wrap">
+                                                                                      <p className="text-sm font-bold text-gray-800 line-clamp-1 mb-0">{listing.title}</p>
+                                                                                      {Boolean(listing.featured_name || listing.is_featured) && (
+                                                                                             <span
+                                                                                                    className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200 shrink-0"
+                                                                                                    title={`Featured: ${listing.featured_name || 'home_featured'}`}
+                                                                                             >
+                                                                                                    Featured
+                                                                                             </span>
+                                                                                      )}
+                                                                               </div>
                                                                                      <p className="text-[10px] text-gray-400 mt-1 mb-0">
                                                                                             ID: {listing.id} | Type: <span className="uppercase">{formatListingType(listing.listing_type)}</span>
                                                                                      </p>

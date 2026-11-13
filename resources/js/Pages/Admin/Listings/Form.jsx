@@ -154,6 +154,8 @@ export default function Form({
               return_to: returnTo,
               is_1_rupee: Boolean(listing?.is_1_rupee),
               is_autobidder_on: Boolean(listing?.is_autobidder_on),
+              is_featured: Boolean(listing?.featured_name),
+              featured_name: listing?.featured_name || 'home_featured',
        });
 
        const [imagePreview, setImagePreview] = useState(listing?.image_url || '');
@@ -301,6 +303,8 @@ export default function Form({
 
               const payload = {
                      ...data,
+                     is_featured: Boolean(data.is_featured),
+                     featured_name: data.is_featured ? (data.featured_name || 'home_featured') : '',
                      album: Array.from(data.album || []),
                      variations: Array.isArray(data.variations) ? data.variations : [],
               };
@@ -369,9 +373,23 @@ export default function Form({
                                                                options={categoryOptions}
                                                                placeholder="Search category..."
                                                                onChange={(selectedValue) => {
-                                                                      setData('category_id', selectedValue);
-                                                                      setData('sub_category_id', '');
-                                                                      setData('child_category_id', '');
+                                                                      const catId = Number(selectedValue);
+                                                                      let nextFeaturedName = data.featured_name;
+                                                                      if (catId === 222) {
+                                                                             nextFeaturedName = 'realstate_featured';
+                                                                      } else if (catId === 1176 || catId === 1307) {
+                                                                             nextFeaturedName = 'renovation_featured';
+                                                                      } else if (nextFeaturedName === 'realstate_featured' || nextFeaturedName === 'renovation_featured') {
+                                                                             nextFeaturedName = 'home_featured';
+                                                                      }
+
+                                                                      setData((prev) => ({
+                                                                             ...prev,
+                                                                             category_id: selectedValue,
+                                                                             sub_category_id: '',
+                                                                             child_category_id: '',
+                                                                             featured_name: nextFeaturedName,
+                                                                      }));
                                                                }}
                                                         />
                                                  </Field>
@@ -404,6 +422,52 @@ export default function Form({
                                                         {errors.is_autobidder_on && <p className="text-xs text-rose-600 mt-2">{errors.is_autobidder_on}</p>}
                                                  </div>
                                           )}
+
+                                          <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 space-y-3">
+                                                 <label className="inline-flex items-center gap-3 cursor-pointer">
+                                                        <input
+                                                               type="checkbox"
+                                                               className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                                                               checked={Boolean(data.is_featured)}
+                                                               onChange={(e) => {
+                                                                      const checked = e.target.checked;
+                                                                      setData((prev) => ({
+                                                                             ...prev,
+                                                                             is_featured: checked,
+                                                                             featured_name: checked ? (prev.featured_name || 'home_featured') : '',
+                                                                      }));
+                                                               }}
+                                                        />
+                                                        <div>
+                                                               <span className="text-sm font-semibold text-gray-800">Featured Listing</span>
+                                                               <p className="text-xs text-gray-500 mt-0.5 mb-0">
+                                                                      Highlight this listing across the marketplace, homepage, and category sections.
+                                                               </p>
+                                                        </div>
+                                                 </label>
+
+                                                 {data.is_featured && (
+                                                        <div className="pt-3 border-t border-gray-200">
+                                                               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                                                      Featured Placement / Type
+                                                               </label>
+                                                               <select
+                                                                      className={inputClass}
+                                                                      value={data.featured_name || 'home_featured'}
+                                                                      onChange={(e) => setData('featured_name', e.target.value)}
+                                                               >
+                                                                      <option value="home_featured">General Marketplace (home_featured - All Portals)</option>
+                                                                      <option value="realstate_featured">Xpert Property (realstate_featured - Property Portal)</option>
+                                                                      <option value="renovation_featured">Xpert Build (renovation_featured - Build &amp; Renovation Portal)</option>
+                                                               </select>
+                                                               <p className="text-[11px] text-gray-500 mt-1 mb-0">
+                                                                      Select which portal or section will feature this item.
+                                                               </p>
+                                                        </div>
+                                                 )}
+                                                 {errors.is_featured && <p className="text-xs text-rose-600 mt-1 mb-0">{errors.is_featured}</p>}
+                                                 {errors.featured_name && <p className="text-xs text-rose-600 mt-1 mb-0">{errors.featured_name}</p>}
+                                          </div>
 
                                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                  <Field label="Sub Category" error={errors.sub_category_id}>

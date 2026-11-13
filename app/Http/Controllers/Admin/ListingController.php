@@ -739,6 +739,8 @@ class ListingController extends Controller
             'status' => 'required|string',
             'is_1_rupee' => 'nullable|boolean',
             'is_autobidder_on' => 'nullable|boolean',
+            'is_featured' => 'nullable|boolean',
+            'featured_name' => 'nullable|string|max:255',
             'category_id' => 'required|exists:auction_categories,id',
             'sub_category_id' => 'nullable|exists:auction_categories,id',
             'child_category_id' => 'nullable|exists:auction_categories,id',
@@ -792,6 +794,9 @@ class ListingController extends Controller
 
         $listingData = $this->buildListingData($request, null, $albumPaths, $imagePath);
 
+        $isFeatured = $request->boolean('is_featured') || $request->filled('featured_name');
+        $featuredName = $isFeatured ? ($request->input('featured_name') ?: 'home_featured') : null;
+
         Listing::create([
             'user_id' => $userId,
             'category_id' => $categoryId,
@@ -802,6 +807,7 @@ class ListingController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'status' => $request->status,
+            'featured_name' => $featuredName,
             'is_1_rupee' => $request->boolean('is_1_rupee'),
             'is_autobidder_on' => $request->listing_type === 'auction'
                 ? $request->boolean('is_autobidder_on')
@@ -831,6 +837,8 @@ class ListingController extends Controller
             'status' => 'required|string',
             'is_1_rupee' => 'nullable|boolean',
             'is_autobidder_on' => 'nullable|boolean',
+            'is_featured' => 'nullable|boolean',
+            'featured_name' => 'nullable|string|max:255',
             'category_id' => 'required|exists:auction_categories,id',
             'sub_category_id' => 'nullable|exists:auction_categories,id',
             'child_category_id' => 'nullable|exists:auction_categories,id',
@@ -915,6 +923,13 @@ class ListingController extends Controller
 
         $listingData = $this->buildListingData($request, $listing, $albumPaths, $imagePath);
 
+        $isFeatured = $request->has('is_featured')
+            ? $request->boolean('is_featured')
+            : ($request->filled('featured_name') || !empty($listing->featured_name));
+        $featuredName = $isFeatured
+            ? ($request->input('featured_name') ?: ($listing->featured_name ?: 'home_featured'))
+            : null;
+
         $listing->update([
             'user_id' => $userId,
             'category_id' => $categoryId,
@@ -925,6 +940,7 @@ class ListingController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'status' => $request->status,
+            'featured_name' => $featuredName,
             'is_1_rupee' => $request->boolean('is_1_rupee'),
             'is_autobidder_on' => $request->listing_type === 'auction'
                 ? $request->boolean('is_autobidder_on')
