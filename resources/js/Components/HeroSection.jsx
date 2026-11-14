@@ -1,4 +1,4 @@
-import { Link } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, EffectFade } from "swiper/modules";
 
@@ -8,25 +8,20 @@ import "swiper/css/autoplay";
 
 const heroSlides = [
        {
-              image: "/assets/images/newwban1.png",
-              mobileImage: "/assets/images/mob1.png",
+              image: "/assets/images/newwban1.webp",
+              mobileImage: "/assets/images/mob1.webp",
               href: "/1-rupee-auctions",
        },
        {
-              image: "/assets/images/newwban2.png",
-              mobileImage: "/assets/images/mob2.png",
+              image: "/assets/images/newwban2.webp",
+              mobileImage: "/assets/images/mob2.webp",
               href: "/marketplace",
        },
        {
-              image: "/assets/images/newwban3.png",
-              mobileImage: "/assets/images/mob3.png",
+              image: "/assets/images/newwban3.webp",
+              mobileImage: "/assets/images/mob3.webp",
               href: "/marketplace?type=auction",
        },
-      //  {
-      //         image: "/assets/images/WebsiteBanner3.png",
-      //         mobileImage: "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=900&q=80",
-      //         href: "/marketplace",
-      //  },
 ];
 
 export default function HeroSection({ fluid = false, className = "my-5" } = {}) {
@@ -36,6 +31,25 @@ export default function HeroSection({ fluid = false, className = "my-5" } = {}) 
 
        return (
               <>
+                     <Head>
+                            <link
+                                   rel="preload"
+                                   as="image"
+                                   href={heroSlides[0].image}
+                                   media="(min-width: 768px)"
+                                   type="image/webp"
+                                   fetchPriority="high"
+                            />
+                            <link
+                                   rel="preload"
+                                   as="image"
+                                   href={heroSlides[0].mobileImage}
+                                   media="(max-width: 767px)"
+                                   type="image/webp"
+                                   fetchPriority="high"
+                            />
+                     </Head>
+
                      <section className={`final-banner-section ${className}`}>
                             <div className={containerClass}>
                                    <div className="hero-banner-shell">
@@ -50,16 +64,34 @@ export default function HeroSection({ fluid = false, className = "my-5" } = {}) 
                                                  speed={1000}
                                                  className="hero-slider"
                                           >
-                                                 {heroSlides.map((slide, index) => (
-                                                        <SwiperSlide key={slide.image}>
-                                                               <Link href={slide.href} className="hero-banner-link">
-                                                                      <picture>
-                                                                             <source media="(max-width: 767px)" srcSet={slide.mobileImage || slide.image} />
-                                                                             <img src={slide.image} alt={`Hero Banner ${index + 1}`} className="hero-banner-image" />
-                                                                      </picture>
-                                                               </Link>
-                                                        </SwiperSlide>
-                                                 ))}
+                                                 {heroSlides.map((slide, index) => {
+                                                        const isFirst = index === 0;
+                                                        return (
+                                                               <SwiperSlide key={slide.image}>
+                                                                      <Link href={slide.href} className="hero-banner-link">
+                                                                             <picture>
+                                                                                    <source
+                                                                                           media="(max-width: 767px)"
+                                                                                           srcSet={slide.mobileImage || slide.image}
+                                                                                           type="image/webp"
+                                                                                           width="768"
+                                                                                           height="480"
+                                                                                    />
+                                                                                    <img
+                                                                                           src={slide.image}
+                                                                                           alt={`Hero Banner ${index + 1}`}
+                                                                                           width={1440}
+                                                                                           height={465}
+                                                                                           loading={isFirst ? "eager" : "lazy"}
+                                                                                           fetchPriority={isFirst ? "high" : "low"}
+                                                                                           decoding={isFirst ? "sync" : "async"}
+                                                                                           className="hero-banner-image"
+                                                                                    />
+                                                                             </picture>
+                                                                      </Link>
+                                                               </SwiperSlide>
+                                                        );
+                                                 })}
                                           </Swiper>
                                    </div>
                             </div>
@@ -104,6 +136,7 @@ export default function HeroSection({ fluid = false, className = "my-5" } = {}) 
           height: 100%;
           object-fit: cover;
           display: block;
+          aspect-ratio: 1440 / 465;
         }
 
         .hero-slider .swiper-button-prev,
@@ -182,6 +215,7 @@ export default function HeroSection({ fluid = false, className = "my-5" } = {}) 
             height: 100%;
             width: 100%;
             max-width: 100%;
+            aspect-ratio: 768 / 480;
           }
 
           .hero-slider,

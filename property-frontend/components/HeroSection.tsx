@@ -10,20 +10,20 @@ import { assetImage, mainUrl } from "@/lib/site";
 
 const heroSlides = [
   {
-    image: assetImage("newwban1.png"),
-    mobileImage: assetImage("mob1.png"),
+    image: assetImage("newwban1.webp"),
+    mobileImage: assetImage("mob1.webp"),
     href: mainUrl("/1-rupee-auctions"),
     external: true,
   },
   {
-    image: assetImage("newwban2.png"),
-    mobileImage: assetImage("mob2.png"),
+    image: assetImage("newwban2.webp"),
+    mobileImage: assetImage("mob2.webp"),
     href: "/properties?listing_type=normal",
     external: false,
   },
   {
-    image: assetImage("newwban3.png"),
-    mobileImage: assetImage("mob3.png"),
+    image: assetImage("newwban3.webp"),
+    mobileImage: assetImage("mob3.webp"),
     href: "/properties?sub_category=for-sale&listing_type=normal",
     external: false,
   },
@@ -57,39 +57,44 @@ export function HeroSection({
             speed={1000}
             className="hero-slider"
           >
-            {heroSlides.map((slide, index) => (
-              <SwiperSlide key={slide.image}>
-                {slide.external ? (
-                  <a href={slide.href} className="hero-banner-link">
-                    <picture>
-                      <source
-                        media="(max-width: 767px)"
-                        srcSet={slide.mobileImage || slide.image}
-                      />
-                      <img
-                        src={slide.image}
-                        alt={`Hero Banner ${index + 1}`}
-                        className="hero-banner-image"
-                      />
-                    </picture>
-                  </a>
-                ) : (
-                  <Link href={slide.href} className="hero-banner-link">
-                    <picture>
-                      <source
-                        media="(max-width: 767px)"
-                        srcSet={slide.mobileImage || slide.image}
-                      />
-                      <img
-                        src={slide.image}
-                        alt={`Hero Banner ${index + 1}`}
-                        className="hero-banner-image"
-                      />
-                    </picture>
-                  </Link>
-                )}
-              </SwiperSlide>
-            ))}
+            {heroSlides.map((slide, index) => {
+              const isFirst = index === 0;
+              const content = (
+                <picture>
+                  <source
+                    media="(max-width: 767px)"
+                    srcSet={slide.mobileImage || slide.image}
+                    type="image/webp"
+                    width={768}
+                    height={480}
+                  />
+                  <img
+                    src={slide.image}
+                    alt={`Hero Banner ${index + 1}`}
+                    width={1440}
+                    height={465}
+                    loading={isFirst ? "eager" : "lazy"}
+                    fetchPriority={isFirst ? "high" : "low"}
+                    decoding={isFirst ? "sync" : "async"}
+                    className="hero-banner-image"
+                  />
+                </picture>
+              );
+
+              return (
+                <SwiperSlide key={slide.image}>
+                  {slide.external ? (
+                    <a href={slide.href} className="hero-banner-link">
+                      {content}
+                    </a>
+                  ) : (
+                    <Link href={slide.href} className="hero-banner-link">
+                      {content}
+                    </Link>
+                  )}
+                </SwiperSlide>
+              );
+            })}
           </Swiper>
         </div>
       </div>
