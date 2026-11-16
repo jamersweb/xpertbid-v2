@@ -38,3 +38,5 @@ auth.json
 
 /xp_property
 /shipping
+/public/assets/images/auction/*
+/public/assets/images/listing_images/*

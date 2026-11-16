@@ -7,6 +7,7 @@ use App\Models\AuctionCategory;
 use App\Models\Listing;
 use App\Models\User;
 use App\Services\OlxScraperService;
+use App\Jobs\OptimizeUploadedImageJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
@@ -248,7 +249,9 @@ class OlxScraperController extends Controller
             $extension = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true) ? $extension : 'jpg';
             $filename = time() . '_olx_upload_' . Str::random(12) . '_' . $index . '.' . $extension;
             $file->move($directory, $filename);
-            $savedImages[] = '/assets/images/auction/' . $filename;
+            $relPath = 'assets/images/auction/' . $filename;
+            $savedImages[] = '/' . $relPath;
+            OptimizeUploadedImageJob::dispatch($relPath, 'auction');
         }
 
         return $savedImages;
@@ -291,7 +294,9 @@ class OlxScraperController extends Controller
 
                 $filename = time() . '_olx_' . Str::random(12) . '_' . $index . '.' . $extension;
                 file_put_contents($directory . DIRECTORY_SEPARATOR . $filename, $response->body());
-                $savedImages[] = '/assets/images/auction/' . $filename;
+                $relPath = 'assets/images/auction/' . $filename;
+                $savedImages[] = '/' . $relPath;
+                OptimizeUploadedImageJob::dispatch($relPath, 'auction');
             } catch (\Throwable $e) {
                 Log::warning('OLX image download failed', [
                     'url' => $imageUrl,

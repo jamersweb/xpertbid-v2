@@ -7,6 +7,7 @@ use App\Models\AuctionCategory;
 use App\Models\Listing;
 use App\Models\User;
 use App\Services\DarazScraperService;
+use App\Jobs\OptimizeUploadedImageJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
@@ -269,7 +270,9 @@ class DarazScraperController extends Controller
             $extension = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true) ? $extension : 'jpg';
             $filename = time() . '_daraz_upload_' . Str::random(12) . '_' . $index . '.' . $extension;
             $file->move($directory, $filename);
-            $savedImages[] = '/assets/images/auction/' . $filename;
+            $relPath = 'assets/images/auction/' . $filename;
+            $savedImages[] = '/' . $relPath;
+            OptimizeUploadedImageJob::dispatch($relPath, 'auction');
         }
 
         return $savedImages;
@@ -312,7 +315,9 @@ class DarazScraperController extends Controller
 
                 $filename = time() . '_daraz_' . Str::random(12) . '_' . $index . '.' . $extension;
                 file_put_contents($directory . DIRECTORY_SEPARATOR . $filename, $response->body());
-                $savedImages[] = '/assets/images/auction/' . $filename;
+                $relPath = 'assets/images/auction/' . $filename;
+                $savedImages[] = '/' . $relPath;
+                OptimizeUploadedImageJob::dispatch($relPath, 'auction');
             } catch (\Throwable $e) {
                 Log::warning('Daraz image download failed', [
                     'url' => $imageUrl,

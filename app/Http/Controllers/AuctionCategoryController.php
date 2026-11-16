@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuctionCategory;
+use App\Jobs\OptimizeUploadedImageJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -46,9 +47,14 @@ class AuctionCategoryController extends Controller
         $imagePath = null;
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            $albumName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $extension = strtolower($file->getClientOriginalExtension());
+            $albumName = time() . '_' . uniqid() . '.' . $extension;
             $file->move(public_path('/assets/images/category_images/'), $albumName);
-            $imagePath = '/assets/images/category_images/' . $albumName;
+            $relPath = 'assets/images/category_images/' . $albumName;
+            $imagePath = '/' . $relPath;
+            if ($extension !== 'svg') {
+                OptimizeUploadedImageJob::dispatch($relPath, 'category');
+            }
         }
 
         AuctionCategory::create([
@@ -113,9 +119,14 @@ class AuctionCategoryController extends Controller
                 unlink(public_path($category->image));
             }
 
-            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $extension = strtolower($file->getClientOriginalExtension());
+            $filename = time() . '_' . uniqid() . '.' . $extension;
             $file->move(public_path('assets/images/category_images'), $filename);
-            $category->image = 'assets/images/category_images/' . $filename;
+            $relPath = 'assets/images/category_images/' . $filename;
+            $category->image = $relPath;
+            if ($extension !== 'svg') {
+                OptimizeUploadedImageJob::dispatch($relPath, 'category');
+            }
         }
 
         $category->name = $request->input('name');

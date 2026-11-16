@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use App\Jobs\OptimizeUploadedImageJob;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\ImageManager;
@@ -28,20 +29,24 @@ class ListingController extends Controller
 {
     use StreamsCsvExports;
 
-    protected function storeOptimizedListingImage($file): string
+    protected function storeUploadedListingImage($file): string
     {
         $directory = public_path('assets/images/listing_images');
         File::ensureDirectoryExists($directory);
 
-        $manager = new ImageManager(new GdDriver());
-        $image = $manager->read($file->getRealPath());
-        $image->scaleDown(width: 1800, height: 1800);
+        $extension = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        $filename = time() . '_' . Str::random(12) . '.' . $extension;
+        $file->move($directory, $filename);
 
-        $filename = time() . '_' . Str::random(12) . '.webp';
-        $encoded = $image->encode(new WebpEncoder(82));
-        $encoded->save($directory . DIRECTORY_SEPARATOR . $filename);
+        $storedPath = 'assets/images/listing_images/' . $filename;
+        OptimizeUploadedImageJob::dispatch($storedPath, 'listing');
 
-        return 'assets/images/listing_images/' . $filename;
+        return $storedPath;
+    }
+
+    protected function storeOptimizedListingImage($file): string
+    {
+        return $this->storeUploadedListingImage($file);
     }
 
     protected function storeListingVideo($file): string
@@ -59,7 +64,7 @@ class ListingController extends Controller
     {
         return str_starts_with((string) $file->getMimeType(), 'video/')
             ? $this->storeListingVideo($file)
-            : $this->storeOptimizedListingImage($file);
+            : $this->storeUploadedListingImage($file);
     }
 
     protected function listingMediaRules(): array

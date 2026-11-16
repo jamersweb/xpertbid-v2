@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuctionCategory;
+use App\Jobs\OptimizeUploadedImageJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -37,7 +38,12 @@ class AuctionCategoryController extends Controller
 
         $file->move(public_path($directory), $filename);
 
-        return '/' . trim($directory, '/') . '/' . $filename;
+        $storedPath = trim($directory, '/') . '/' . $filename;
+        if ($extension !== 'svg') {
+            OptimizeUploadedImageJob::dispatch($storedPath, 'category');
+        }
+
+        return '/' . $storedPath;
     }
 
     protected function validateUploadExtension(Request $request, string $field, array $allowedExtensions): void

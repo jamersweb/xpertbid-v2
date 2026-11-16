@@ -35,6 +35,7 @@ use App\Models\VehicleVerification;
 use App\Models\DynamicField;
 use App\Models\LiveAuctionSession;
 use App\Mail\FeaturedListingNotification;
+use App\Jobs\OptimizeUploadedImageJob;
 use Inertia\Inertia;
 
 class AuctionController extends Controller
@@ -609,7 +610,9 @@ class AuctionController extends Controller
             foreach ($request->file('album') as $file) {
                 $albumName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
                 $file->move(public_path('/assets/images/auction/'), $albumName);
-                $albumsArray[] = '/assets/images/auction/' . $albumName;
+                $relPath = 'assets/images/auction/' . $albumName;
+                $albumsArray[] = '/' . $relPath;
+                OptimizeUploadedImageJob::dispatch($relPath, 'auction');
             }
         }
 
@@ -910,7 +913,9 @@ class AuctionController extends Controller
             foreach ($request->file('album') as $file) {
                 $albumName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
                 $file->move(public_path('/assets/images/auction/'), $albumName);
-                $albumsArray[] = '/assets/images/auction/' . $albumName;
+                $relPath = 'assets/images/auction/' . $albumName;
+                $albumsArray[] = '/' . $relPath;
+                OptimizeUploadedImageJob::dispatch($relPath, 'auction');
             }
         }
 
@@ -1688,7 +1693,9 @@ class AuctionController extends Controller
             foreach ($request->file('album') as $file) {
                 $albumName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
                 $file->move(public_path('/assets/images/auction/'), $albumName);
-                $albumsArray[] = '/assets/images/auction/' . $albumName;
+                $relPath = 'assets/images/auction/' . $albumName;
+                $albumsArray[] = '/' . $relPath;
+                OptimizeUploadedImageJob::dispatch($relPath, 'auction');
             }
         }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Jobs\OptimizeUploadedImageJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -39,9 +40,13 @@ class CategoryController extends Controller
         $imagePath = null;
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $extension = strtolower($file->getClientOriginalExtension());
+            $filename = time() . '_' . uniqid() . '.' . $extension;
             $file->move(public_path('assets/images/category_images'), $filename);
             $imagePath = 'assets/images/category_images/' . $filename;
+            if ($extension !== 'svg') {
+                OptimizeUploadedImageJob::dispatch($imagePath, 'category');
+            }
         }
 
         Category::create([
@@ -70,9 +75,13 @@ class CategoryController extends Controller
 
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $extension = strtolower($file->getClientOriginalExtension());
+            $filename = time() . '_' . uniqid() . '.' . $extension;
             $file->move(public_path('assets/images/category_images'), $filename);
             $category->image = 'assets/images/category_images/' . $filename;
+            if ($extension !== 'svg') {
+                OptimizeUploadedImageJob::dispatch($category->image, 'category');
+            }
         }
 
         $category->update([

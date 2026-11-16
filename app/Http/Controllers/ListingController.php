@@ -20,6 +20,7 @@ use App\Support\LoggedMail as Mail;
 use Illuminate\Support\Facades\Log;
 use App\Mail\ListingSubmittedSellerMail;
 use App\Mail\ListingSubmittedAdminMail;
+use App\Jobs\OptimizeUploadedImageJob;
 
 class ListingController extends Controller
 {
@@ -259,20 +260,24 @@ class ListingController extends Controller
         return $listingData;
     }
 
-    protected function storeOptimizedListingImage($file): string
+    protected function storeUploadedListingImage($file): string
     {
         $directory = public_path('assets/images/listing_images');
         File::ensureDirectoryExists($directory);
 
-        $manager = new ImageManager(new GdDriver());
-        $image = $manager->read($file->getRealPath());
-        $image->scaleDown(width: 1800, height: 1800);
+        $extension = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        $filename = time() . '_' . Str::random(12) . '.' . $extension;
+        $file->move($directory, $filename);
 
-        $filename = time() . '_' . Str::random(12) . '.webp';
-        $encoded = $image->encode(new WebpEncoder(82));
-        $encoded->save($directory . DIRECTORY_SEPARATOR . $filename);
+        $storedPath = 'assets/images/listing_images/' . $filename;
+        OptimizeUploadedImageJob::dispatch($storedPath, 'listing');
 
-        return 'assets/images/listing_images/' . $filename;
+        return $storedPath;
+    }
+
+    protected function storeOptimizedListingImage($file): string
+    {
+        return $this->storeUploadedListingImage($file);
     }
 
     protected function storeListingVideo($file): string
@@ -290,7 +295,7 @@ class ListingController extends Controller
     {
         return str_starts_with((string) $file->getMimeType(), 'video/')
             ? $this->storeListingVideo($file)
-            : $this->storeOptimizedListingImage($file);
+            : $this->storeUploadedListingImage($file);
     }
 
     protected function listingMediaRules(): array
