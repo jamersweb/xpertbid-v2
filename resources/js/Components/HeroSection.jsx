@@ -1,4 +1,4 @@
-import { Head, Link } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, EffectFade } from "swiper/modules";
 
@@ -31,25 +31,6 @@ export default function HeroSection({ fluid = false, className = "my-5" } = {}) 
 
        return (
               <>
-                     <Head>
-                            <link
-                                   rel="preload"
-                                   as="image"
-                                   href={heroSlides[0].image}
-                                   media="(min-width: 768px)"
-                                   type="image/webp"
-                                   fetchPriority="high"
-                            />
-                            <link
-                                   rel="preload"
-                                   as="image"
-                                   href={heroSlides[0].mobileImage}
-                                   media="(max-width: 767px)"
-                                   type="image/webp"
-                                   fetchPriority="high"
-                            />
-                     </Head>
-
                      <section className={`final-banner-section ${className}`}>
                             <div className={containerClass}>
                                    <div className="hero-banner-shell">

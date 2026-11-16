@@ -28,6 +28,12 @@
         <meta name="google-site-verification" content="zGSFYzf1ujXjinXH0Zc3omSpyfqzxY8LhA1luOXlbaY">
         <meta name="facebook-domain-verification" content="kg7z4wzekhjupblgcueaip41jpd6a5">
 
+        @if(request()->is('/', 'marketplace') || request()->routeIs('home', 'marketplace'))
+        <!-- Homepage Hero Banner LCP Preload (Immediate Discovery before React Hydration) -->
+        <link rel="preload" as="image" href="/assets/images/mob1.webp" type="image/webp" media="(max-width: 767px)" fetchpriority="high">
+        <link rel="preload" as="image" href="/assets/images/newwban1.webp" type="image/webp" media="(min-width: 768px)" fetchpriority="high">
+        @endif
+
         <!-- Critical Core Stylesheets (Prevent FOUC) -->
         <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
         <link rel="stylesheet" href="/assets/css/style.css">
