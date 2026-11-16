@@ -1,3 +1,4 @@
+import React from "react";
 import { Link } from "@inertiajs/react";
 import CountdownTimer from "@/Components/CountdownTimer";
 import Price from "@/Components/Price";
@@ -26,7 +27,7 @@ const getProductImageSrc = (product) => {
        return `/${String(rawPath).replace(/^\/+/, "")}`;
 };
 
-export default function HomeCategorySection({ title, products, viewAllHref, viewAllExternal = false }) {
+function HomeCategorySection({ title, products, viewAllHref, viewAllExternal = false }) {
        const { t } = useTranslate();
        const displayProducts = (products || []).slice(0, 3);
 
@@ -148,3 +149,5 @@ export default function HomeCategorySection({ title, products, viewAllHref, view
               </section>
        );
 }
+
+export default React.memo(HomeCategorySection);

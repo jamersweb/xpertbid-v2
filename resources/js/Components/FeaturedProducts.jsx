@@ -1,3 +1,4 @@
+import React from "react";
 import { Link } from "@inertiajs/react";
 import CountdownTimer from "@/Components/CountdownTimer";
 import Price from "@/Components/Price";
@@ -26,7 +27,7 @@ const getProductImageSrc = (product) => {
        return `/${String(rawPath).replace(/^\/+/, "")}`;
 };
 
-export default function FeaturedProducts({ products }) {
+function FeaturedProducts({ products }) {
        const { t } = useTranslate();
        const displayProducts = (products || []).slice(0, 3);
 
@@ -149,3 +150,5 @@ export default function FeaturedProducts({ products }) {
               </section>
        );
 }
+
+export default React.memo(FeaturedProducts);

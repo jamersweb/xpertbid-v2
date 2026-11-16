@@ -25,7 +25,10 @@ export default function Home({
                      <div className="home-page overflow-x-hidden">
                             <HeroSection sliders={sliders} />
                             <SliderBrowseCategories categories={categories} />
-                            <FeaturedProducts products={featuredAuctions} />
+                            
+                            <div className="content-visibility-auto">
+                                   <FeaturedProducts products={featuredAuctions} />
+                            </div>
 
                             {(categorySections || []).map((section) => {
                                    const category = section?.category || {};
@@ -37,18 +40,23 @@ export default function Home({
                                           : '/marketplace');
 
                                    return (
-                                          <HomeCategorySection
-                                                 key={category.id || slug || name}
-                                                 title={name}
-                                                 products={section.products || []}
-                                                 viewAllHref={viewAllHref}
-                                                 viewAllExternal={Boolean(browse.external)}
-                                          />
+                                          <div key={category.id || slug || name} className="content-visibility-auto">
+                                                 <HomeCategorySection
+                                                        title={name}
+                                                        products={section.products || []}
+                                                        viewAllHref={viewAllHref}
+                                                        viewAllExternal={Boolean(browse.external)}
+                                                 />
+                                          </div>
                                    );
                             })}
 
-                            <WhyChooseXpertBid />
-                            <SeoContentSection />
+                            <div className="content-visibility-auto">
+                                   <WhyChooseXpertBid />
+                            </div>
+                            <div className="content-visibility-auto">
+                                   <SeoContentSection />
+                            </div>
                      </div>
               </AppLayout>
        );

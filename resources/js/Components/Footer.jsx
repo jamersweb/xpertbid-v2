@@ -26,7 +26,7 @@ export default function Footer() {
        }, []);
 
        return (
-              <footer className="footer">
+              <footer className="footer content-visibility-auto">
                      <div className="container-fluid">
                             <div id="qlwapp" className="qlwapp qlwapp-free qlwapp-button qlwapp-bottom-left qlwapp-all qlwapp-rounded qlwapp-js-ready desktop" >
                                    <div className="qlwapp-container" >

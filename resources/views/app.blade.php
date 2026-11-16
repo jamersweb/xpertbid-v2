@@ -97,6 +97,15 @@
                 font-display: swap;
                 src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2") format("woff2");
             }
+            /* Off-screen content rendering optimization (Skips off-screen layout & paint) */
+            .content-visibility-auto {
+                content-visibility: auto;
+                contain-intrinsic-size: auto 420px;
+            }
+            .footer.content-visibility-auto {
+                content-visibility: auto;
+                contain-intrinsic-size: auto 320px;
+            }
         </style>
 
         <!-- Secondary Custom Styles (Non-blocking async load) -->
@@ -112,19 +121,51 @@
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         </noscript>
 
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-X80DHQXSJD"></script>
+        <!-- Delayed 3rd-Party Analytics & Tracking Scripts (Prevents Main-Thread Contention during Initial Hydration) -->
         <script>
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-X80DHQXSJD');
-        </script>
-        <script>
-            (function(c,l,a,r,i,t,y){
-                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-            })(window, document, "clarity", "script", "u9z69ioedc");
+
+            (function() {
+                var loaded = false;
+                function loadTracking() {
+                    if (loaded) return;
+                    loaded = true;
+
+                    var events = ['scroll', 'touchstart', 'mousemove', 'keydown', 'click'];
+                    events.forEach(function(evt) {
+                        window.removeEventListener(evt, loadTracking, { passive: true });
+                    });
+
+                    // 1. Google Analytics
+                    var gtagScript = document.createElement('script');
+                    gtagScript.async = true;
+                    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-X80DHQXSJD';
+                    document.head.appendChild(gtagScript);
+                    gtag('config', 'G-X80DHQXSJD');
+
+                    // 2. Microsoft Clarity
+                    (function(c,l,a,r,i,t,y){
+                        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+                    })(window, document, "clarity", "script", "u9z69ioedc");
+                }
+
+                var events = ['scroll', 'touchstart', 'mousemove', 'keydown', 'click'];
+                events.forEach(function(evt) {
+                    window.addEventListener(evt, loadTracking, { passive: true, once: true });
+                });
+
+                if (document.readyState === 'complete') {
+                    setTimeout(loadTracking, 2500);
+                } else {
+                    window.addEventListener('load', function() {
+                        setTimeout(loadTracking, 2500);
+                    });
+                }
+            })();
         </script>
         
         @routes
@@ -137,9 +178,5 @@
     </head>
     <body class="font-sans antialiased" style="background: #fff !important;">
         @inertia
-        
-        <!-- Defer Non-critical JavaScript (Do not block HTML parsing) -->
-        <script src="/assets/js/bootstrap.bundle.js" defer></script>
-        <script src="/assets/js/script.js" defer></script>
     </body>
 </html>

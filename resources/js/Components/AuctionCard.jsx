@@ -261,4 +261,4 @@ const AuctionCard = ({
        );
 };
 
-export default AuctionCard;
+export default React.memo(AuctionCard);

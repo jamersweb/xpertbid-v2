@@ -1,5 +1,3 @@
-import Swal from 'sweetalert2';
-
 /**
  * Styled confirm dialog (replaces window.confirm).
  * @returns {Promise<boolean>}
@@ -12,6 +10,7 @@ export async function confirmAction({
     icon = 'warning',
     danger = false,
 } = {}) {
+    const { default: Swal } = await import('sweetalert2');
     const result = await Swal.fire({
         title,
         text,
@@ -48,6 +47,7 @@ export async function alertAction({
     icon = 'info',
     confirmText = 'OK',
 } = {}) {
+    const { default: Swal } = await import('sweetalert2');
     await Swal.fire({
         title,
         text,

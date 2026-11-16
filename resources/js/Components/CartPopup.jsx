@@ -4,7 +4,6 @@ import { route } from 'ziggy-js';
 import { useCart } from '@/Contexts/CartContext';
 import Price from '@/Components/Price';
 import { Oval } from 'react-loader-spinner';
-import Swal from 'sweetalert2';
 
 export default function CartPopup() {
        const { cartItems, loading, getTotalPrice, removeFromCart } = useCart();
@@ -34,6 +33,7 @@ export default function CartPopup() {
               setUpdating((prev) => ({ ...prev, [cartItemId]: false }));
 
               if (!response.success) {
+                     const { default: Swal } = await import('sweetalert2');
                      Swal.fire({
                             icon: "error",
                             title: "Error",

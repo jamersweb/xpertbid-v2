@@ -3,7 +3,6 @@ import { Link } from "@inertiajs/react";
 import ListPackeg from "@/Components/ListPackeg";
 import Price from "@/Components/Price";
 import axios from "axios";
-import Swal from "sweetalert2";
 import { getBaseListingPrice, getDiscountMeta } from "@/Utils/listingPricing";
 import { buildProductHref } from "@/Utils/productUrl";
 
@@ -45,6 +44,7 @@ const ListingCard = ({ listing, onDeleted }) => {
        };
 
        const handleDelete = async () => {
+              const { default: Swal } = await import("sweetalert2");
               const result = await Swal.fire({
                      title: "Are you sure?",
                      text: "This listing will be cancelled and removed from your active list.",
@@ -329,4 +329,4 @@ const ListingCard = ({ listing, onDeleted }) => {
        );
 };
 
-export default ListingCard;
+export default React.memo(ListingCard);
