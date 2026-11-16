@@ -35,8 +35,76 @@
         @endif
 
         <!-- Critical Core Stylesheets (Prevent FOUC) -->
+        <link rel="preload" href="/assets/css/bootstrap.min.css" as="style">
         <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
-        <link rel="stylesheet" href="/assets/css/style.css">
+
+        <!-- Critical Above-The-Fold Styles & Font-Display Swap Override -->
+        <style>
+            body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important; background: #fff !important; }
+            *, ::after, ::before { box-sizing: border-box; }
+            a { text-decoration: none !important; }
+            .sellnow {
+                padding: 10px 20px;
+                border: 1px solid #23262F;
+                border-radius: 8px;
+                color: #fff !important;
+                background-color: #23262F;
+                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .registration-btns button.signup {
+                padding: 8px 16px;
+                border: 1px solid #43ACE9;
+                border-radius: 6px;
+                color: #43ACE9;
+                background-color: transparent;
+                font-weight: 600;
+            }
+            .registration-btns button.login {
+                color: #606060;
+                font-weight: 600;
+                border: 0;
+                background-color: transparent;
+            }
+            /* FontAwesome font-display: swap override to eliminate FOIT (Flash of Invisible Text) */
+            @font-face {
+                font-family: 'Font Awesome 6 Free';
+                font-style: normal;
+                font-weight: 400;
+                font-display: swap;
+                src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-regular-400.woff2") format("woff2");
+            }
+            @font-face {
+                font-family: 'Font Awesome 6 Free';
+                font-style: normal;
+                font-weight: 900;
+                font-display: swap;
+                src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2") format("woff2");
+            }
+            @font-face {
+                font-family: 'Font Awesome 6 Brands';
+                font-style: normal;
+                font-weight: 400;
+                font-display: swap;
+                src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-brands-400.woff2") format("woff2");
+            }
+            @font-face {
+                font-family: 'FontAwesome';
+                font-style: normal;
+                font-weight: normal;
+                font-display: swap;
+                src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2") format("woff2");
+            }
+        </style>
+
+        <!-- Secondary Custom Styles (Non-blocking async load) -->
+        <link rel="preload" href="/assets/css/style.css" as="style">
+        <link rel="stylesheet" href="/assets/css/style.css" media="print" onload="this.media='all'">
+        <noscript>
+            <link rel="stylesheet" href="/assets/css/style.css">
+        </noscript>
 
         <!-- FontAwesome (Asynchronous / Non-blocking) -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
