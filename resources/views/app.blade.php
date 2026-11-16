@@ -12,19 +12,31 @@
         <!-- Open Graph / Twitter / SEO Meta Tags -->
         {!! \App\Support\OpenGraphMeta::renderHtml($page ?? []) !!}
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <!-- Preconnect to External Font & CDN Domains -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
         <link rel="dns-prefetch" href="https://www.googletagmanager.com">
         <link rel="dns-prefetch" href="https://connect.facebook.net">
+
+        <!-- Google Fonts (Non-blocking with display=swap) -->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" media="print" onload="this.media='all'">
+        <noscript>
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap">
+        </noscript>
 
         <meta name="google-site-verification" content="zGSFYzf1ujXjinXH0Zc3omSpyfqzxY8LhA1luOXlbaY">
         <meta name="facebook-domain-verification" content="kg7z4wzekhjupblgcueaip41jpd6a5">
 
-        <!-- Scripts -->
+        <!-- Critical Core Stylesheets (Prevent FOUC) -->
         <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
         <link rel="stylesheet" href="/assets/css/style.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+        <!-- FontAwesome (Asynchronous / Non-blocking) -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+        <noscript>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        </noscript>
 
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-X80DHQXSJD"></script>
         <script>
@@ -52,7 +64,8 @@
     <body class="font-sans antialiased" style="background: #fff !important;">
         @inertia
         
-        <script src="/assets/js/bootstrap.bundle.js"></script>
-        <script src="/assets/js/script.js"></script>
+        <!-- Defer Non-critical JavaScript (Do not block HTML parsing) -->
+        <script src="/assets/js/bootstrap.bundle.js" defer></script>
+        <script src="/assets/js/script.js" defer></script>
     </body>
 </html>
