@@ -34,9 +34,9 @@
         <link rel="preload" as="image" href="/assets/images/newwban1.webp" type="image/webp" media="(min-width: 768px)" fetchpriority="high">
         @endif
 
-        <!-- Critical Core Stylesheets (Prevent FOUC) -->
-        <link rel="preload" href="/assets/css/bootstrap.min.css" as="style">
-        <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+        <!-- Critical Core Stylesheets (Purged + Minified to Prevent FOUC & Reduce Unused CSS) -->
+        <link rel="preload" href="/assets/css/bootstrap.purged.min.css" as="style">
+        <link rel="stylesheet" href="/assets/css/bootstrap.purged.min.css">
 
         <!-- Critical Above-The-Fold Styles & Font-Display Swap Override -->
         <style>

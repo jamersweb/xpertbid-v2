@@ -257,125 +257,8 @@ body.locale-rtl .admin-layout aside {
   text-align: right;
 }
 
-/* Quill Editor Styles - Matching verify_input theme */
-.quill-editor.verify_input {
-  background: #F8F8F8 !important;
-  border-radius: 12px !important;
-  border: none !important;
-  overflow: hidden;
-  padding: 0 !important;
-  box-shadow: none !important;
-}
-
 .ql-container.ql-snow {
   border: none !important;
-}
-
-.quill-editor.verify_input .ql-editor {
-  min-height: 150px;
-  background: #F8F8F8 !important;
-  font-family: "Inter", sans-serif !important;
-  font-size: 14px;
-  color: #333 !important;
-  padding: 15px !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-.quill-editor.verify_input .ql-toolbar {
-  background: #F8F8F8 !important;
-  border: none !important;
-  border-bottom: none !important;
-  padding: 10px !important;
-  border-radius: 12px 12px 0 0 !important;
-  box-shadow: none !important;
-}
-
-.quill-editor.verify_input .ql-container {
-  background: #F8F8F8 !important;
-  border: none !important;
-  font-family: "Inter", sans-serif !important;
-  border-radius: 0 0 12px 12px !important;
-  box-shadow: none !important;
-}
-
-.quill-editor.verify_input .ql-toolbar .ql-formats {
-  margin-right: 15px;
-}
-
-.quill-editor.verify_input .ql-toolbar button {
-  border-radius: 6px;
-  margin: 2px;
-  padding: 5px;
-  background: transparent;
-  border: 1px solid transparent;
-}
-
-.quill-editor.verify_input .ql-toolbar button:hover {
-  background: #e0e0e0 !important;
-  border-color: #ccc;
-}
-
-.quill-editor.verify_input .ql-toolbar button.ql-active {
-  background: #007bff !important;
-  color: white !important;
-  border-color: #007bff;
-}
-
-.quill-editor.verify_input .ql-editor.ql-blank::before {
-  color: #999 !important;
-  font-style: italic;
-  font-family: "Inter", sans-serif !important;
-}
-
-/* Override Quill's default styles to match theme */
-.quill-editor.verify_input .ql-stroke {
-  stroke: #666 !important;
-}
-
-.quill-editor.verify_input .ql-fill {
-  fill: #666 !important;
-}
-
-.quill-editor.verify_input .ql-toolbar button.ql-active .ql-stroke {
-  stroke: white !important;
-}
-
-.quill-editor.verify_input .ql-toolbar button.ql-active .ql-fill {
-  fill: white !important;
-}
-
-/* Remove all possible borders and outlines */
-.quill-editor.verify_input .ql-editor:focus {
-  outline: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  width: 100%;
-}
-
-.quill-editor.verify_input .ql-toolbar button:focus {
-  outline: none !important;
-  border: none !important;
-}
-
-.quill-editor.verify_input .ql-toolbar .ql-picker:focus {
-  outline: none !important;
-  border: none !important;
-}
-
-.quill-editor.verify_input .ql-toolbar .ql-picker-options {
-  border: none !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Remove any default Quill borders */
-.quill-editor.verify_input * {
-  border-color: transparent !important;
-}
-
-.quill-editor.verify_input .ql-toolbar button:hover {
-  border-color: transparent !important;
 }
 
 .verify_input {
@@ -390,81 +273,6 @@ body.locale-rtl .admin-layout aside {
 .verify_input:disabled {
   color: #6b7280 !important;
   opacity: 1 !important;
-}
-
-.sell-page-stage {
-  position: relative;
-  min-height: 520px;
-}
-
-.sell-list-type-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1.5rem;
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.85), rgba(35, 38, 47, 0.9));
-  z-index: 5;
-}
-
-.sell-list-type-card {
-  max-width: 520px;
-  width: 100%;
-  border-radius: 24px;
-  background: #ffffff;
-  padding: 2.8rem 2.4rem;
-  text-align: center;
-}
-
-.sell-list-type-label {
-  display: inline-block;
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #8c8f99;
-  margin-bottom: 0.75rem;
-}
-
-.sell-list-type-title {
-  font-size: 26px;
-  margin-bottom: 0.75rem;
-  color: #23262f;
-  font-weight: 600;
-}
-
-.sell-list-type-subtitle {
-  margin-bottom: 1.75rem;
-  color: #6f7380;
-  font-size: 14px;
-}
-
-.sell-list-type-option {
-  padding: 0.9rem 1rem;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.sell-list-type-option:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-}
-
-
-@media (max-width: 575px) {
-  .sell-list-type-card {
-    padding: 2rem 1.4rem;
-  }
-
-  .sell-list-type-title {
-    font-size: 22px;
-  }
-
-  .sell-list-type-option {
-    font-size: 15px;
-  }
 }
 
 /* Auth Styles */
@@ -572,9 +380,9 @@ button.login:hover {
 /* Signup Button */
 button.signup {
   padding: 12px 16px;
-  border: 1px solid #43ACE9;
+  border: 1px solid #1557B0;
   border-radius: 6px;
-  color: #43ACE9;
+  color: #1557B0;
   background-color: transparent;
   text-decoration: none;
   font-family: "Inter", sans-serif;
@@ -587,7 +395,7 @@ button.signup {
 }
 
 button.signup:hover {
-  background-color: #43ACE9;
+  background-color: #1557B0;
   color: #fff;
 }
 
@@ -1371,22 +1179,6 @@ a.button-style-3:active,
 
 .button-shine:hover {
   filter: brightness(1.08);
-}
-
-@keyframes button-shine-sweep {
-  0% {
-    left: -120%;
-    opacity: 0;
-  }
-
-  20% {
-    opacity: 0.7;
-  }
-
-  100% {
-    left: 160%;
-    opacity: 0;
-  }
 }
 
 .nav-sellnow {
