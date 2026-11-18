@@ -48,8 +48,10 @@ export default function CartPopup() {
               <div className="position-relative" ref={popupRef}>
                      {/* Cart Icon Button */}
                      <button
+                            type="button"
                             onClick={() => setIsOpen(!isOpen)}
                             className="cart-icon-btn position-relative d-flex align-items-center justify-content-center p-2"
+                            aria-label="Shopping cart"
                             style={{
                                    background: 'none',
                                    border: 'none',
@@ -59,7 +61,7 @@ export default function CartPopup() {
                             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
                             onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                      >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#23262F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#23262F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                    <circle cx="9" cy="21" r="1"></circle>
                                    <circle cx="20" cy="21" r="1"></circle>
                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
@@ -89,7 +91,7 @@ export default function CartPopup() {
                                                  <h5 className="mb-0 fw-bold" style={{ color: '#23262F', fontFamily: '"Inter", sans-serif' }}>
                                                         Shopping Cart
                                                  </h5>
-                                                 <button onClick={() => setIsOpen(false)} className="btn-close btn-sm shadow-none"></button>
+                                                 <button type="button" onClick={() => setIsOpen(false)} className="btn-close btn-sm shadow-none" aria-label="Close shopping cart"></button>
                                           </div>
 
                                           {loading ? (
@@ -131,11 +133,13 @@ export default function CartPopup() {
                                                                                     <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
                                                                                            <h6 className="mb-0 fw-bold cart-popup-item-title">{item.title}</h6>
                                                                                            <button 
+                                                                                                  type="button"
                                                                                                   onClick={() => handleRemoveItem(item.id)} 
                                                                                                   disabled={updating[item.id]}
                                                                                                   className="btn btn-link text-danger p-0 border-0 shadow-none cart-popup-remove-btn"
+                                                                                                  aria-label="Remove item from cart"
                                                                                            >
-                                                                                                  {updating[item.id] ? <Oval height={14} width={14} color="#dc3545" /> : <i className="fa-solid fa-trash-can small"></i>}
+                                                                                                  {updating[item.id] ? <Oval height={14} width={14} color="#dc3545" /> : <i className="fa-solid fa-trash-can small" aria-hidden="true"></i>}
                                                                                            </button>
                                                                                     </div>
                                                                                     <div className={`cart-popup-item-meta ${item.variation_name ? '' : 'is-compact'}`}>

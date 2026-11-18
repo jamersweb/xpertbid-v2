@@ -231,6 +231,7 @@ export default function AppLayout({ children, title }) {
                                    }
                                    .xp-brand-top-banner {
                                           width: 100%;
+                                          min-height: 70px;
                                           background: #ffffff;
                                           display: flex;
                                           align-items: center;
@@ -249,6 +250,7 @@ export default function AppLayout({ children, title }) {
                                           align-items: center;
                                           gap: 10px;
                                           flex: 0 0 auto;
+                                          min-height: 38px;
                                    }
                                    .xp-brand-language-select {
                                           height: 38px;
@@ -328,6 +330,7 @@ export default function AppLayout({ children, title }) {
                                    }
                                    @media (max-width: 768px) {
                                           .xp-brand-top-banner {
+                                                 min-height: 52px;
                                                  justify-content: center;
                                                  gap: 8px;
                                                  padding: 8px 10px;

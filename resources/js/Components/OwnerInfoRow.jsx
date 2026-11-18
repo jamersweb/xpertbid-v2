@@ -52,7 +52,7 @@ const OwnerInfoRow = ({
                             <span className="owner-info-row__identity">
                                    <span className="owner-info-row__name-text">{displayName}</span>
                                    {isVerified && (
-                                          <span className="owner-info-row__verified" title="Verified seller" aria-label="Verified seller">
+                                          <span className="owner-info-row__verified" role="img" aria-label="Verified seller" title="Verified seller">
                                                  <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                                         <circle cx="10" cy="10" r="8" fill="#2F80ED" />
                                                         <path d="M6.8 10.2L8.9 12.3L13.3 7.9" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />

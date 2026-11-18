@@ -31,8 +31,8 @@ export default function Footer() {
                             <div id="qlwapp" className="qlwapp qlwapp-free qlwapp-button qlwapp-bottom-left qlwapp-all qlwapp-rounded qlwapp-js-ready desktop" >
                                    <div className="qlwapp-container" >
 
-                                          <a className="qlwapp-toggle" data-action="open" data-phone="923022113202" data-message="" role="button" tabIndex="0" target="_blank" href="https://wa.me/923022113202" >
-                                                 <span className="fa-brands fa-whatsapp gameon"></span>
+                                          <a className="qlwapp-toggle" data-action="open" data-phone="923022113202" data-message="" target="_blank" rel="noopener noreferrer" href="https://wa.me/923022113202" aria-label="Contact us on WhatsApp">
+                                                 <span className="fa-brands fa-whatsapp gameon" aria-hidden="true"></span>
                                           </a>
                                    </div>
                             </div>          <div className="row ">
@@ -51,15 +51,16 @@ export default function Footer() {
                                           <p>{t('XpertBid is your all-in-one smart marketplace ecosystem, bringing together verified properties, home building, vehicles, commercial goods, and buyer requests. We connect buyers and sellers through a transparent, secure, and seamless experience.')}
                                           </p>              <div className="social-icons my-3">
                                                  <a href="https://www.instagram.com/xpert_bid?igsh=NWFqcmh5eTgwOWpq" target="_blank"
-                                                        rel="noopener noreferrer"><i className="fa-brands fa-instagram"></i></a>
+                                                        rel="noopener noreferrer" aria-label="Follow XpertBid on Instagram"><i className="fa-brands fa-instagram" aria-hidden="true"></i></a>
                                                  <a
                                                         href="https://www.linkedin.com/company/xpertbid/"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
+                                                        aria-label="Follow XpertBid on LinkedIn"
                                                  >
-                                                        <i className="fa-brands fa-linkedin"></i>
+                                                        <i className="fa-brands fa-linkedin" aria-hidden="true"></i>
                                                  </a>
-                                                 <a href="https://www.facebook.com/share/18qvrpo3uW/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-facebook"></i></a>
+                                                 <a href="https://www.facebook.com/share/18qvrpo3uW/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" aria-label="Follow XpertBid on Facebook"><i className="fa-brands fa-facebook" aria-hidden="true"></i></a>
                                           </div>
                                    </div>
                                    <div className="col-xl-4   col-sm-6 footer-child3">

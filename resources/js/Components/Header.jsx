@@ -269,8 +269,10 @@ export default function Header() {
                                                                <div className="d-flex align-items-center header-user-actions">
                                                                       <div className="user-profile-setting-container d-none d-lg-block" ref={userProfileRefDesktop}>
                                                                              <button
+                                                                                    type="button"
                                                                                     className="user-profile-setting btn btn-link p-0 text-decoration-none d-flex align-items-center gap-2"
                                                                                     id="header-profile-dropdown"
+                                                                                    aria-label="Account menu"
                                                                                     onClick={toggleUserSettingPopupDesktop}
                                                                              >
                                                                                     <img
@@ -394,9 +396,9 @@ export default function Header() {
                         }
                         #mainNavbar .logo-image {
                             display: block;
-                            width: auto;
-                            height: 40px;
-                            max-height: 40px;
+                            width: auto !important;
+                            height: 40px !important;
+                            max-height: 40px !important;
                             object-fit: contain;
                         }
                         #mainNavbar .navbar-nav .nav-link,

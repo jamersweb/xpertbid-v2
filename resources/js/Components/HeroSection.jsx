@@ -83,6 +83,10 @@ export default function HeroSection({ fluid = false, className = "my-5" } = {}) 
           box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
           border-radius: 32px;
           overflow: hidden;
+          height: 420px;
+          min-height: 420px;
+          position: relative;
+          background-color: #f1f5f9;
         }
 
         .hero-slider,
@@ -90,6 +94,11 @@ export default function HeroSection({ fluid = false, className = "my-5" } = {}) 
         .hero-slider .swiper-slide {
           border-radius: 32px;
           height: 420px;
+          min-height: 420px;
+        }
+
+        .hero-slider {
+          overflow: hidden;
         }
 
         /* Override global swiper flex-centering so slide content can stretch full width */
@@ -136,10 +145,12 @@ export default function HeroSection({ fluid = false, className = "my-5" } = {}) 
             height: 100%;
           }
 
+          .hero-banner-shell,
           .hero-slider,
           .hero-slider .swiper-wrapper,
           .hero-slider .swiper-slide {
             height: 360px;
+            min-height: 360px;
           }
 
           .hero-banner-content {
@@ -199,10 +210,12 @@ export default function HeroSection({ fluid = false, className = "my-5" } = {}) 
             aspect-ratio: 768 / 480;
           }
 
+          .hero-banner-shell,
           .hero-slider,
           .hero-slider .swiper-wrapper,
           .hero-slider .swiper-slide {
             height: 210px;
+            min-height: 210px;
           }
         }
       `}</style>

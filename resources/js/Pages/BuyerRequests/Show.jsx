@@ -78,7 +78,7 @@ function verificationLabel(person, role = 'seller') {
 
 function VerifiedBadge({ title }) {
     return (
-        <span className="inline-flex shrink-0 items-center" title={title} aria-label={title}>
+        <span className="inline-flex shrink-0 items-center" role="img" title={title} aria-label={title}>
             <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" aria-hidden="true">
                 <circle cx="10" cy="10" r="8" fill="#2F80ED" />
                 <path d="M6.8 10.2L8.9 12.3L13.3 7.9" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />

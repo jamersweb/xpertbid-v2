@@ -91,6 +91,8 @@ export default function SliderBrowseCategories({ categories }) {
 
         .categories-slider {
           padding: 0 6px 4px;
+          min-height: 140px;
+          overflow: hidden;
         }
 
         .categories-slider .swiper-wrapper {
@@ -186,7 +188,7 @@ export default function SliderBrowseCategories({ categories }) {
         }
 
         @media (min-width: 768px) {
-          .categories-slider { padding: 0; }
+          .categories-slider { padding: 0; min-height: 164px; }
           .category-link {
             height: 160px;
           }

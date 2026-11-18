@@ -84,7 +84,9 @@ const NotificationDropdown = () => {
        return (
               <div className="notification-container">
                      <button
+                            type="button"
                             className="notification nav-notification rounded"
+                            aria-label="Notifications"
                             style={{
                                    border: "none",
                                    backgroundColor: "transparent",
@@ -151,12 +153,12 @@ const NotificationDropdown = () => {
                                                                       </div>
                                                                       <div className="d-flex flex-column gap-1">
                                                                              {!notification.read_at && (
-                                                                                    <button className="btn btn-sm btn-link p-0" onClick={() => markAsRead(notification.id)}>
-                                                                                           <i className="fa-solid fa-check text-success"></i>
+                                                                                    <button type="button" className="btn btn-sm btn-link p-0" onClick={() => markAsRead(notification.id)} aria-label="Mark notification as read">
+                                                                                           <i className="fa-solid fa-check text-success" aria-hidden="true"></i>
                                                                                     </button>
                                                                              )}
-                                                                             <button className="btn btn-sm btn-link p-0" onClick={() => setNotificationToDelete(notification)}>
-                                                                                    <i className="fa-solid fa-xmark text-danger"></i>
+                                                                             <button type="button" className="btn btn-sm btn-link p-0" onClick={() => setNotificationToDelete(notification)} aria-label="Delete notification">
+                                                                                    <i className="fa-solid fa-xmark text-danger" aria-hidden="true"></i>
                                                                              </button>
                                                                       </div>
                                                                </div>

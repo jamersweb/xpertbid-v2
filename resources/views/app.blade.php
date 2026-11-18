@@ -97,6 +97,120 @@
                 font-display: swap;
                 src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2") format("woff2");
             }
+            /* Above-the-fold layout stability (Prevents Desktop & Mobile CLS before Swiper & async CSS load) */
+            .xp-brand-top-banner {
+                min-height: 70px;
+                padding: 8px 48px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            #mainNavbar {
+                min-height: 68px;
+            }
+            #mainNavbar .logo-image {
+                height: 40px !important;
+                max-height: 40px !important;
+                width: auto !important;
+            }
+            .hero-banner-shell,
+            .hero-slider,
+            .hero-slider .swiper-wrapper,
+            .hero-slider .swiper-slide {
+                height: 420px;
+                min-height: 420px;
+                border-radius: 32px;
+                overflow: hidden;
+            }
+            @media (min-width: 1500px) {
+                .final-banner-section .container {
+                    max-width: 1380px;
+                }
+            }
+            .browsecategories {
+                padding: 50px 70px;
+            }
+            .categories-slider {
+                min-height: 164px;
+                overflow: hidden;
+            }
+            .home-section-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+                margin-bottom: 24px;
+            }
+            .featured-heading h2 {
+                font-size: 35px;
+                font-weight: 800;
+                line-height: 48px;
+                margin: 0;
+                color: #23262F;
+            }
+            .section-view-all-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 44px;
+                padding: 10px 18px;
+                border-radius: 10px;
+                background: #fff;
+                color: #101828;
+                font-size: 14px;
+                font-weight: 600;
+            }
+            @media (max-width: 992px) {
+                .browsecategories {
+                    padding: 20px;
+                }
+            }
+            @media (max-width: 991px) {
+                .hero-banner-shell,
+                .hero-slider,
+                .hero-slider .swiper-wrapper,
+                .hero-slider .swiper-slide {
+                    height: 360px;
+                    min-height: 360px;
+                }
+            }
+            @media (max-width: 768px) {
+                .xp-brand-top-banner {
+                    min-height: 52px;
+                    padding: 8px 10px;
+                }
+                .browsecategories {
+                    padding: 20px 5px;
+                }
+            }
+            @media (max-width: 767px) {
+                .hero-banner-shell,
+                .hero-slider,
+                .hero-slider .swiper-wrapper,
+                .hero-slider .swiper-slide {
+                    height: 210px;
+                    min-height: 210px;
+                    border-radius: 24px;
+                }
+                .categories-slider {
+                    min-height: 140px;
+                }
+                .home-section-header {
+                    padding-left: 16px;
+                    padding-right: 16px;
+                    margin-bottom: 18px;
+                }
+                .home-section-header .featured-heading h2 {
+                    font-size: 20px;
+                    line-height: 1.2;
+                }
+                .section-view-all-btn {
+                    min-height: 40px;
+                    padding: 8px 14px;
+                    font-size: 13px;
+                    white-space: nowrap;
+                }
+            }
             /* Off-screen content rendering optimization (Skips off-screen layout & paint) */
             .content-visibility-auto {
                 content-visibility: auto;
