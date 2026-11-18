@@ -3,7 +3,6 @@ import { usePage, Link } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import { useCart } from '@/Contexts/CartContext';
 import Price from '@/Components/Price';
-import { Oval } from 'react-loader-spinner';
 
 export default function CartPopup() {
        const { cartItems, loading, getTotalPrice, removeFromCart } = useCart();
@@ -96,7 +95,7 @@ export default function CartPopup() {
 
                                           {loading ? (
                                                  <div className="text-center py-5">
-                                                        <Oval height={40} width={40} color="#43ACE9" />
+                                                        <span className="spinner-border" role="status" aria-label="Loading cart" style={{ color: '#43ACE9' }}></span>
                                                  </div>
                                           ) : displayItems.length === 0 ? (
                                                  <div className="text-center py-5">
@@ -142,7 +141,7 @@ export default function CartPopup() {
                                                                                                   className="btn btn-link text-danger p-0 border-0 shadow-none cart-popup-remove-btn"
                                                                                                   aria-label="Remove item from cart"
                                                                                            >
-                                                                                                  {updating[item.id] ? <Oval height={14} width={14} color="#dc3545" /> : <i className="fa-solid fa-trash-can small" aria-hidden="true"></i>}
+                                                                                                  {updating[item.id] ? <span className="spinner-border spinner-border-sm text-danger" role="status" aria-hidden="true"></span> : <i className="fa-solid fa-trash-can small" aria-hidden="true"></i>}
                                                                                            </button>
                                                                                     </div>
                                                                                     <div className={`cart-popup-item-meta ${item.variation_name ? '' : 'is-compact'}`}>

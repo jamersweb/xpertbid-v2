@@ -239,24 +239,25 @@
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
+            gtag('config', 'G-X80DHQXSJD');
 
             (function() {
                 var loaded = false;
+                var events = ['scroll', 'mousemove', 'touchstart', 'keydown', 'click'];
+
                 function loadTracking() {
                     if (loaded) return;
                     loaded = true;
 
-                    var events = ['scroll', 'touchstart', 'mousemove', 'keydown', 'click'];
                     events.forEach(function(evt) {
                         window.removeEventListener(evt, loadTracking, { passive: true });
                     });
 
-                    // 1. Google Analytics
+                    // 1. Google Analytics (gtag.js)
                     var gtagScript = document.createElement('script');
                     gtagScript.async = true;
                     gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-X80DHQXSJD';
                     document.head.appendChild(gtagScript);
-                    gtag('config', 'G-X80DHQXSJD');
 
                     // 2. Microsoft Clarity
                     (function(c,l,a,r,i,t,y){
@@ -266,17 +267,24 @@
                     })(window, document, "clarity", "script", "u9z69ioedc");
                 }
 
-                var events = ['scroll', 'touchstart', 'mousemove', 'keydown', 'click'];
                 events.forEach(function(evt) {
                     window.addEventListener(evt, loadTracking, { passive: true, once: true });
                 });
 
+                function scheduleDeferredLoad() {
+                    setTimeout(function() {
+                        if ('requestIdleCallback' in window) {
+                            requestIdleCallback(loadTracking, { timeout: 1500 });
+                        } else {
+                            loadTracking();
+                        }
+                    }, 3000);
+                }
+
                 if (document.readyState === 'complete') {
-                    setTimeout(loadTracking, 2500);
+                    scheduleDeferredLoad();
                 } else {
-                    window.addEventListener('load', function() {
-                        setTimeout(loadTracking, 2500);
-                    });
+                    window.addEventListener('load', scheduleDeferredLoad, { once: true });
                 }
             })();
         </script>

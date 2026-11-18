@@ -1,3 +1,4 @@
+import '../../../css/auth-modals.css';
 import { useEffect } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, useForm } from '@inertiajs/react';

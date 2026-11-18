@@ -1,29 +1,9 @@
 import { Link } from '@inertiajs/react';
 import { route } from 'ziggy-js';
-import { Oval } from "react-loader-spinner";
-import axios from 'axios';
-import { useState, useEffect } from "react";
 import useTranslate from '@/hooks/useTranslate';
 
 export default function Footer() {
-       const [cats, setCats] = useState([]);
-       const [loading, setLoading] = useState(true);
-       const [error, setError] = useState(null);
        const { t } = useTranslate();
-
-       useEffect(() => {
-              // In Inertia, we might pass categories as props from HandleInertiaRequests middleware
-              // But for now, keeping the API call valid or mocking it if route exists
-              // The route /api/get-category was ported to web.php as /get-category.
-              axios
-                     .get("/get-category")
-                     .then(res => setCats(res.data.categories || []))
-                     .catch(err => {
-                            console.error(err);
-                            setError(t("Could not load categories."));
-                     })
-                     .finally(() => setLoading(false));
-       }, []);
 
        return (
               <footer className="footer content-visibility-auto">
@@ -85,16 +65,6 @@ export default function Footer() {
                                                         <li><Link href={route('privacy.policy')}>{t('Privacy Policy')}</Link></li>
                                                         <li><Link href={route('terms')}>{t('Terms & Conditions')}</Link></li>
                                                  </ul>
-                                          </div>
-                                   </div>
-                                   <div className="col-xl-3 col-sm-6 footer-child3 mt-0 mt-sm-5">
-                                          <div className="footer-menu ps-0 ps-sm-4 mt-0 mt-lg-3" >
-                                                 {loading && (
-                                                        <div className="d-flex justify-content-center">
-                                                               <Oval height={30} width={30} ariaLabel={t('Loading categories')} />
-                                                        </div>
-                                                 )}
-                                                 {error && <p className="text-danger">{error}</p>}
                                           </div>
                                    </div>
 

@@ -1,3 +1,4 @@
+import '../../css/auth-modals.css';
 import { useRef, useState, useEffect } from "react";
 import { Link, useForm, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';

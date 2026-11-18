@@ -1,17 +1,18 @@
 import '../../css/header.css';
 import { Link, usePage, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import axios from 'axios';
 import CartPopup from '@/Components/CartPopup';
 import DesktopCategoriesDropdown from '@/Components/DesktopCategoriesDropdown';
-import CategoriesDropdown from '@/Components/CategoriesDropdown';
 import RequestNavDropdown from '@/Components/RequestNavDropdown';
-import NotificationDropdown from '@/Components/NotificationDropdown';
-import ChatHeaderIcon from '@/Components/ChatHeaderIcon';
-import Search from '@/Components/Search';
 import { useAuthModal } from '@/Contexts/AuthModalContext';
 import useTranslate from '@/hooks/useTranslate';
+
+const CategoriesDropdown = lazy(() => import('@/Components/CategoriesDropdown'));
+const NotificationDropdown = lazy(() => import('@/Components/NotificationDropdown'));
+const ChatHeaderIcon = lazy(() => import('@/Components/ChatHeaderIcon'));
+const Search = lazy(() => import('@/Components/Search'));
 
 
 export default function Header() {
@@ -137,10 +138,14 @@ export default function Header() {
 
        return (
               <>
-                     <Search
-                            isOpen={isSearchOpen}
-                            onClose={() => setSearchOpen(false)}
-                     />
+                     {isSearchOpen && (
+                            <Suspense fallback={null}>
+                                   <Search
+                                          isOpen={isSearchOpen}
+                                          onClose={() => setSearchOpen(false)}
+                                   />
+                            </Suspense>
+                     )}
 
                      <header className="bg-white " style={{ zIndex: 1050 }}>
                             <nav className="navbar navbar-expand-lg navbar-light bg-white py-2" id="mainNavbar">
@@ -169,7 +174,11 @@ export default function Header() {
                                                         </svg>
                                                  </button>
                                                  <CartPopup />
-                                                 {user && <NotificationDropdown />}
+                                                 {user && (
+                                                        <Suspense fallback={null}>
+                                                               <NotificationDropdown />
+                                                        </Suspense>
+                                                 )}
                                                  {!user && (
                                                         <div className="mobile-auth-buttons d-flex align-items-center gap-2">
                                                                <button
@@ -208,7 +217,11 @@ export default function Header() {
                                                                       <DesktopCategoriesDropdown />
                                                                </div>
                                                                <div className="d-block d-lg-none">
-                                                                      <CategoriesDropdown />
+                                                                      {isMenuOpen && (
+                                                                             <Suspense fallback={null}>
+                                                                                    <CategoriesDropdown />
+                                                                             </Suspense>
+                                                                      )}
                                                                </div>
                                                         </li>
                                                         <RequestNavDropdown
@@ -244,14 +257,14 @@ export default function Header() {
                                                                       <CartPopup />
                                                                </div>
                                                                {user && (
-                                                                      <>
+                                                                      <Suspense fallback={null}>
                                                                              <div className="header-action-chat">
                                                                                     <ChatHeaderIcon />
                                                                              </div>
                                                                              <div className="header-action-notification">
                                                                                     <NotificationDropdown />
                                                                              </div>
-                                                                      </>
+                                                                      </Suspense>
                                                                )}
                                                         </div>
 

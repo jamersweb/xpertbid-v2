@@ -1,0 +1,517 @@
+/* Auth Styles */
+.loginContinueIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: white;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  transition: all 0.2s;
+}
+
+.loginContinueIcon:hover {
+  background-color: #f8f9fa;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.loginContinueIcon img {
+  margin-right: 12px;
+}
+
+
+
+.form-button-1 {
+  width: 100%;
+  padding: 14px;
+  background-color: #000;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 20px;
+  transition: opacity 0.2s;
+}
+
+.form-button-1:hover {
+  opacity: 0.9;
+}
+
+.form-button-1:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.step-heading-and-back {
+  border-bottom: 1px solid #EDEDED;
+  padding-bottom: 20px;
+  margin-bottom: 40px;
+  position: relative;
+  text-align: center;
+}
+
+.step-heading-and-back h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+}
+
+
+
+.auth-input-group input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 15px;
+  margin-bottom: 15px;
+}
+
+.auth-input-group input:focus {
+  outline: none;
+}
+
+
+/* Auth Modal Styles Copied from xpertbid-frontend */
+
+.loginModal {
+  display: block;
+  /* Overridden by Next.js state usually, but needed for layout */
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000000a8;
+  z-index: 100001;
+  overflow-y: auto;
+}
+
+.loginModal-content {
+  background-color: #ffffff !important;
+  margin: 50px auto;
+  padding: 20px;
+  width: 600px;
+  /* text-align: center; - Removed for flex alignment */
+  border-radius: 10px;
+  position: relative;
+}
+
+.loginModal #closeLoginModal {
+  position: absolute;
+  cursor: pointer;
+  right: 20px;
+  top: 20px;
+  z-index: 10;
+}
+
+.loginModal #closeLoginModal i {
+  background-color: #EDEDED;
+  color: #23262F;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 100%;
+}
+
+.loginModal h3 {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 32px;
+  font-family: "Inter", sans-serif;
+  color: #23262F;
+  margin-bottom: 2rem;
+}
+
+.loginModal #loginStep button.loginContinueIcon,
+.loginModal #loginStep2 select,
+.loginModal #loginStep2 input,
+.loginModal #loginEmail input:not([type="checkbox"]),
+.loginModal #forgetEmailPasswordLogin input {
+  margin-bottom: 20px;
+  width: 100%;
+  border-radius: 12px;
+  height: 68px;
+  border: 1px solid #FAFAFA;
+  background-color: #FAFAFA;
+  font-size: 18px;
+  color: #23262F;
+  box-shadow: 15px 19px 50px 0 #0000001c;
+  font-weight: 600;
+  line-height: 24px;
+  padding: 0 20px;
+}
+
+.loginModal .form-check-input {
+  width: 1em !important;
+  height: 1em !important;
+  margin-top: 0.25em;
+  vertical-align: top;
+  background-color: #fff;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  border: 1px solid rgba(0, 0, 0, .25);
+  appearance: none;
+  print-color-adjust: exact;
+  padding: 0 !important;
+  box-shadow: none !important;
+  margin-bottom: 0 !important;
+  border-radius: 0.25em !important;
+  /* Standard Bootstrap checkbox radius */
+}
+
+.loginModal #loginStep button.loginContinueIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Specific for button with icon */
+.loginContinueIcon {
+  position: relative;
+  cursor: pointer;
+}
+
+.loginContinueIcon img {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.step-heading-and-back {
+  border-bottom: 1px solid #EDEDED;
+  padding-bottom: 20px;
+  margin-bottom: 40px;
+  position: relative;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.step-heading-and-back h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.loginModal #backPhoneLogin,
+.loginModal #backValidationLogin,
+.loginModal #backOtpLogin {
+  background-color: transparent;
+  border: 0;
+  height: auto;
+  position: absolute;
+  left: 0;
+  top: 0;
+  /* transform: translateY(-50%); */
+  font-size: 18px;
+  color: #666;
+}
+
+.loginModal #backPhoneLogin i,
+.loginModal #backValidationLogin i,
+.loginModal #backOtpLogin i {
+  background-color: #EDEDED;
+  color: #23262F;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 100%;
+}
+
+/* Signup Styles */
+.signupModal {
+  padding: 0;
+}
+
+.signupmodal-content {
+  background-color: #F9F9F9;
+  padding: 20px;
+  border-radius: 10px;
+  width: 600px;
+  position: relative;
+  margin: 50px auto;
+}
+
+#SignupModal h2 {
+  color: #23262F;
+  font-weight: 600;
+  font-family: "Inter", sans-serif;
+  text-align: left;
+  font-size: 28px;
+  line-height: 36px;
+}
+
+#SignupModal .signUpContinueIcon,
+#SignupModal #stepEmail input,
+#SignupModal .steps-input-select input,
+#SignupModal .steps-input-select select {
+  margin-bottom: 20px;
+  width: 100%;
+  border-radius: 12px;
+  height: 68px;
+  border: 1px solid #FAFAFA;
+  background-color: #FAFAFA;
+  font-size: 18px;
+  color: #23262F;
+  box-shadow: 15px 19px 50px 0 #0000001c;
+  font-weight: 600;
+  line-height: 24px;
+  padding: 0 20px;
+}
+
+/* Button overrides for signUpContinueIcon */
+button.signUpContinueIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.signUpContinueIcon {
+  position: relative;
+}
+
+.signUpContinueIcon img {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#SignupModal .alert-message {
+  color: #F66666;
+  margin-bottom: 20px;
+}
+
+#SignupModal #backEmail,
+#SignupModal .backbuttonSignup {
+  background-color: transparent;
+  border: 0;
+  height: auto;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#SignupModal #backEmail i,
+#SignupModal .backbuttonSignup i {
+  background-color: #EDEDED;
+  color: #23262F;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 100%;
+}
+
+#SignupModal h3 {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+  font-family: "Inter", sans-serif;
+  color: #23262F;
+  text-align: center;
+}
+
+#SignupModal .step-heading-and-back {
+  position: relative;
+  display: flex;
+  /* Ensure centering works */
+  justify-content: center;
+  align-items: center;
+}
+
+#SignupModal .signupmodal-content--otp {
+  width: min(92vw, 520px) !important;
+  max-width: 520px !important;
+  padding: 30px 28px 28px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+}
+
+#SignupModal .signup-otp-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 2px;
+}
+
+#SignupModal .signup-otp-header {
+  padding: 0 34px 16px;
+  border-bottom: 1px solid #ededed;
+}
+
+#SignupModal .signup-otp-back {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  height: auto;
+  margin: 0;
+}
+
+#SignupModal .signup-otp-copy {
+  margin: -8px 0 8px;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+}
+
+#SignupModal .signup-otp-copy span {
+  color: #23262F;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+#SignupModal .signup-otp-input-wrap {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+#SignupModal .signup-otp-input {
+  width: 100%;
+  height: 50px;
+  border: 1px solid #FAFAFA;
+  border-radius: 10px;
+  background: #fff;
+  color: #23262F;
+  font-size: 18px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0;
+  box-shadow: 12px 19px 50px 0 #00000014;
+  padding: 0;
+}
+
+#SignupModal .signup-otp-input:focus {
+  border-color: #43ACE9;
+  box-shadow: 0 0 0 4px rgba(67, 172, 233, 0.14);
+  outline: none;
+}
+
+#SignupModal .signup-otp-submit {
+  height: 50px;
+  margin-top: 12px;
+  white-space: normal;
+}
+
+#SignupModal .signup-otp-resend {
+  display: flex;
+  justify-content: center;
+  margin-top: 0;
+}
+
+#SignupModal .signup-otp-resend button {
+  color: #23262F;
+}
+
+#SignupModal .signup-otp-resend button:disabled {
+  color: #717680;
+  opacity: 1;
+}
+
+/* Form Buttons */
+.form-button-1 {
+  width: 100%;
+  height: 66px;
+  border: 1px solid #23262F;
+  background-color: #23262F;
+  color: #fff;
+  border-radius: 12px;
+  font-size: 18px;
+  line-height: 24px;
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.form-button-1:hover {
+  opacity: 0.9;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+
+  .loginModal-content,
+  .signupmodal-content {
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    padding: 24px;
+    height: 100% !important;
+    overflow-y: auto;
+    max-width: 100%;
+  }
+
+  .loginModal {
+    align-items: flex-end !important;
+    display: flex;
+    /* For alignment */
+  }
+
+  #SignupModal .signUpContinueIcon,
+  #SignupModal #stepEmail input,
+  #SignupModal .steps-input-select input,
+  #SignupModal .steps-input-select select,
+  .loginModal #loginStep button.loginContinueIcon,
+  .loginModal #loginStep2 input {
+    height: 50px;
+    font-size: 16px;
+  }
+
+  .signUpContinueIcon img,
+  .loginContinueIcon img {
+    height: 20px;
+    width: 20px;
+  }
+
+  #SignupModal .signupmodal-content--otp {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-height: 100dvh !important;
+    margin: 0 !important;
+    padding: 24px 16px !important;
+    border-radius: 0 !important;
+    display: block;
+  }
+
+  #SignupModal .signup-otp-header {
+    padding: 0 34px 16px;
+  }
+
+  #SignupModal .signup-otp-header h3 {
+    font-size: 20px;
+    line-height: 28px;
+  }
+
+  #SignupModal .signup-otp-copy {
+    font-size: 13px;
+    margin-top: -6px;
+  }
+
+  #SignupModal .signup-otp-input {
+    height: 50px;
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 390px) {
+  #SignupModal .signup-otp-input-wrap {
+    gap: 7px;
+  }
+
+  #SignupModal .signup-otp-input {
+    height: 44px;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+}

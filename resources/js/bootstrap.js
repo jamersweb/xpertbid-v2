@@ -19,4 +19,23 @@ window.axios.interceptors.response.use(
     }
 );
 
-import './echo';
+window.Echo = null;
+
+if (typeof window !== 'undefined' && import.meta.env.VITE_REVERB_APP_KEY) {
+    const loadEcho = () => import('./echo');
+    const path = window.location.pathname || '/';
+    const needsImmediateRealtime = /^\/(chat|buyer-requests|seller\/buyer-requests|product|auctions|live)/i.test(path);
+
+    if (needsImmediateRealtime) {
+        loadEcho();
+    } else {
+        const triggerLazyEcho = () => {
+            setTimeout(loadEcho, 3000);
+        };
+        if (document.readyState === 'complete') {
+            triggerLazyEcho();
+        } else {
+            window.addEventListener('load', triggerLazyEcho, { once: true });
+        }
+    }
+}
