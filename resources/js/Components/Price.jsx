@@ -9,17 +9,17 @@ export default function Price({
        className = "",
        fallbackCurrency = "PKR",
 }) {
-       const { list, loading } = useCurrencyList();
+       const { list } = useCurrencyList();
        const [selected, setSelected] = useState("PKR");
 
        useEffect(() => {
-              // Initialize state on client side only to match hydration
+              // Sync user's saved currency preference strictly after hydration completes
               setSelected(getSelectedCurrency());
        }, []);
 
        useEffect(() => {
               const onChange = () => setSelected(getSelectedCurrency());
-              window.addEventListener("xb-currency-change", onChange); // Correction: Event name match utils
+              window.addEventListener("xb-currency-change", onChange);
               return () => window.removeEventListener("xb-currency-change", onChange);
        }, []);
 
@@ -27,8 +27,6 @@ export default function Price({
               if (amountAEDMinor != null) return Number(amountAEDMinor) / 100;
               return Number(amountPKR || amountAED || 0);
        }, [amountPKR, amountAED, amountAEDMinor]);
-
-       if (loading) return <span className={className}>…</span>;
 
        const meta =
               list.find((c) => c.code === selected) ||

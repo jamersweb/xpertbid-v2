@@ -1,8 +1,37 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-// ✅ AED-based fallback rates (1 AED = 1 Base). 
+// ✅ AED-based fallback rates (1 AED = 1 Base).
 const DEFAULT_RATES = { AED: 1, PKR: 0.0133, USD: 0.272 };
+
+// Deterministic SSR + initial-hydration currency defaults so <Price> renders real PKR
+// values in SSR HTML and matches the client's first hydration pass identically.
+const DEFAULT_CURRENCIES = [
+       {
+              code: "PKR",
+              symbol: "₨",
+              name: "Pakistani Rupee",
+              decimals: 0,
+              position: "left",
+              manual_rate_to_aed: 1,
+       },
+       {
+              code: "AED",
+              symbol: "AED",
+              name: "UAE Dirham",
+              decimals: 0,
+              position: "left",
+              manual_rate_to_aed: 75,
+       },
+       {
+              code: "USD",
+              symbol: "$",
+              name: "US Dollar",
+              decimals: 0,
+              position: "left",
+              manual_rate_to_aed: 278,
+       },
+];
 
 function sanitizeRates(input = {}) {
        const out = { PKR: 1 };
@@ -49,8 +78,10 @@ let globalCache = null;
 let globalPromise = null;
 
 export default function useCurrencyList(apiBase = "") {
-       const [loading, setLoading] = useState(!globalCache);
-       const [list, setList] = useState(globalCache || []);
+       // Always start with deterministic SSR-safe defaults so server HTML and initial
+       // client hydration pass match identically (live rates + saved preference sync in useEffect).
+       const [loading, setLoading] = useState(false);
+       const [list, setList] = useState(DEFAULT_CURRENCIES);
 
        function readCookie(name) {
               if (typeof document === "undefined") return null;
@@ -70,7 +101,9 @@ export default function useCurrencyList(apiBase = "") {
               setSelected(raw);
 
               if (typeof window !== "undefined") {
-                     localStorage.setItem("xb_currency", raw);
+                     try {
+                            localStorage.setItem("xb_currency", raw);
+                     } catch {}
               }
        }, []);
 
@@ -79,16 +112,18 @@ export default function useCurrencyList(apiBase = "") {
               let mounted = true;
 
               (async () => {
-                     if (!localStorage.getItem("xb_rates")) {
-                            saveRatesSafe(DEFAULT_RATES);
-                     } else {
-                            const current = readRatesSafe();
-                            const fixed = sanitizeRates(current);
-                            localStorage.setItem("xb_rates", JSON.stringify(fixed));
-                     }
-                     if (!localStorage.getItem("xb_currency")) {
-                            localStorage.setItem("xb_currency", "PKR");
-                     }
+                     try {
+                            if (!localStorage.getItem("xb_rates")) {
+                                   saveRatesSafe(DEFAULT_RATES);
+                            } else {
+                                   const current = readRatesSafe();
+                                   const fixed = sanitizeRates(current);
+                                   localStorage.setItem("xb_rates", JSON.stringify(fixed));
+                            }
+                            if (!localStorage.getItem("xb_currency")) {
+                                   localStorage.setItem("xb_currency", "PKR");
+                            }
+                     } catch {}
 
                      if (globalCache) {
                             if (mounted) {
@@ -150,21 +185,27 @@ export default function useCurrencyList(apiBase = "") {
        const choose = (code) => {
               const up = String(code).toUpperCase();
               setSelected(up);
-              localStorage.setItem("xb_currency", up);
+              if (typeof window !== "undefined") {
+                     try {
+                            localStorage.setItem("xb_currency", up);
+                     } catch {}
+              }
 
               const current = readRatesSafe();
               if (!(Number(current[up]) > 0)) {
                      current[up] = DEFAULT_RATES[up] || 1;
                      saveRatesSafe(current);
               } else {
-                     document.dispatchEvent(new Event("xb-currency-change"));
+                     if (typeof document !== "undefined") {
+                            document.dispatchEvent(new Event("xb-currency-change"));
+                     }
                      if (typeof window !== "undefined") {
                             window.dispatchEvent(new Event("xb-currency-change"));
                      }
               }
        };
 
-       const listOut = list.length ? list : Object.keys(DEFAULT_RATES).map(code => ({ code }));
+       const listOut = list.length ? list : DEFAULT_CURRENCIES;
 
        return { loading, list: listOut, selected, choose };
 }

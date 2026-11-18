@@ -41,6 +41,11 @@ export default function Header() {
        const [isUserSettingsOpenMobile, setUserSettingsOpenMobile] = useState(false);
        const [isSearchOpen, setSearchOpen] = useState(false);
        const [isMenuOpen, setIsMenuOpen] = useState(false);
+       const [isHydrated, setIsHydrated] = useState(false);
+
+       useEffect(() => {
+              setIsHydrated(true);
+       }, []);
        const profileMenuItemStyle = {
               width: '100%',
               color: '#24282B',
@@ -174,7 +179,7 @@ export default function Header() {
                                                         </svg>
                                                  </button>
                                                  <CartPopup />
-                                                 {user && (
+                                                 {user && isHydrated && (
                                                         <Suspense fallback={null}>
                                                                <NotificationDropdown />
                                                         </Suspense>
@@ -256,7 +261,7 @@ export default function Header() {
                                                                <div className="header-action-cart">
                                                                       <CartPopup />
                                                                </div>
-                                                               {user && (
+                                                               {user && isHydrated && (
                                                                       <Suspense fallback={null}>
                                                                              <div className="header-action-chat">
                                                                                     <ChatHeaderIcon />
