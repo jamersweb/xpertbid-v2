@@ -1,12 +1,12 @@
 import React, { useState, useEffect, memo } from 'react';
 
-// Single shared ticker for all CountdownTimers on the page
-let sharedNow = Date.now();
+// Single shared ticker for all CountdownTimers on the page (client-only)
+let sharedNow = 0;
 let intervalId = null;
 const timerListeners = new Set();
 
 function startSharedTicker() {
-       if (intervalId !== null) return;
+       if (typeof window === 'undefined' || intervalId !== null) return;
        intervalId = setInterval(() => {
               if (timerListeners.size === 0) {
                      clearInterval(intervalId);
@@ -26,18 +26,13 @@ function stopSharedTickerIfEmpty() {
 }
 
 const CountdownTimer = memo(({ endDate, variant = 'default', className = '' }) => {
-       const [timeLeft, setTimeLeft] = useState(() => {
-              const diff = new Date(endDate).getTime() - Date.now();
-              if (isNaN(diff) || diff <= 0) {
-                     return { days: 0, hours: 0, minutes: 0, seconds: 0, isActive: false };
-              }
-              return {
-                     days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-                     hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-                     minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-                     seconds: Math.floor((diff % (1000 * 60)) / 1000),
-                     isActive: true,
-              };
+       // Keep initial SSR + first client hydration pass deterministic (avoids Date.now() mismatch)
+       const [timeLeft, setTimeLeft] = useState({
+              days: 0,
+              hours: 0,
+              minutes: 0,
+              seconds: 0,
+              isActive: false,
        });
 
        useEffect(() => {
@@ -72,6 +67,7 @@ const CountdownTimer = memo(({ endDate, variant = 'default', className = '' }) =
                      });
               };
 
+              onTick(Date.now());
               timerListeners.add(onTick);
               startSharedTicker();
 

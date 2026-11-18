@@ -2,10 +2,11 @@ import React from "react";
 import useCurrencyList from "@/Utils/useCurrencyList";
 
 function setCookie(name, value, days = 30) {
+       if (typeof document === "undefined" || typeof window === "undefined") return;
        const expires = new Date(Date.now() + days * 864e5).toUTCString();
        document.cookie = `${name}=${encodeURIComponent(
               value
-       )}; expires=${expires}; path=/; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""
+       )}; expires=${expires}; path=/; SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""
               }`;
 }
 

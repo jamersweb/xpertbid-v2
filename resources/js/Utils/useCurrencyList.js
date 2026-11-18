@@ -29,14 +29,18 @@ function sanitizeRates(input = {}) {
 
 function saveRatesSafe(ratesObj = {}) {
        const finalMap = sanitizeRates(ratesObj);
-       localStorage.setItem("xb_rates", JSON.stringify(finalMap));
-       document.dispatchEvent(new Event("xb-currency-change"));
-       if (typeof window !== "undefined") {
-              window.dispatchEvent(new Event("xb-currency-change"));
+       if (typeof window === "undefined") return;
+       try {
+              localStorage.setItem("xb_rates", JSON.stringify(finalMap));
+       } catch {}
+       if (typeof document !== "undefined") {
+              document.dispatchEvent(new Event("xb-currency-change"));
        }
+       window.dispatchEvent(new Event("xb-currency-change"));
 }
 
 function readRatesSafe() {
+       if (typeof window === "undefined") return {};
        try { return JSON.parse(localStorage.getItem("xb_rates") || "{}"); }
        catch { return {}; }
 }

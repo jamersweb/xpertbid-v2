@@ -64,7 +64,7 @@ export default function HeroSection({ fluid = false, className = "my-5" } = {}) 
                                                                                            width={1440}
                                                                                            height={465}
                                                                                            loading={isFirst ? "eager" : "lazy"}
-                                                                                           fetchPriority={isFirst ? "high" : "low"}
+                                                                                           fetchpriority={isFirst ? "high" : "low"}
                                                                                            decoding={isFirst ? "sync" : "async"}
                                                                                            className="hero-banner-image"
                                                                                     />
