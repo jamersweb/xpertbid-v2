@@ -83,7 +83,7 @@ const SeoContentSection = () => {
                             </div>
                      </div>
 
-                     <style>{`
+                     <style dangerouslySetInnerHTML={{ __html: `
         .seo-content-section {
           position: relative;
           overflow: hidden;
@@ -357,7 +357,7 @@ const SeoContentSection = () => {
             min-height: 58px;
           }
         }
-      `}</style>
+      ` }} />
               </section>
        );
 };

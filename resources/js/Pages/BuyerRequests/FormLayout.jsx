@@ -283,7 +283,7 @@ export default function FormLayout({
                         </div>
                         <div className="flex-1 overflow-y-auto px-4 py-4">{helpPanels}</div>
                     </div>
-                    <style>{`
+                    <style dangerouslySetInnerHTML={{ __html: `
                         @keyframes brHelpSlide {
                             from { transform: translateX(100%); opacity: 0.96; }
                             to { transform: translateX(0); opacity: 1; }
@@ -292,7 +292,7 @@ export default function FormLayout({
                             from { opacity: 0; }
                             to { opacity: 1; }
                         }
-                    `}</style>
+                    ` }} />
                 </div>
             )}
         </div>
@@ -341,7 +341,7 @@ export const inputClass = (hasError = false) =>
 /** Quill polish for the wizard cards */
 export function QuillStyles() {
     return (
-        <style>{`
+        <style dangerouslySetInnerHTML={{ __html: `
             .br-quill .ql-toolbar.ql-snow {
                 border: none;
                 border-bottom: 1px solid #e5e7eb;
@@ -375,6 +375,6 @@ export function QuillStyles() {
                 color: #94a3b8 !important;
                 opacity: 1;
             }
-        `}</style>
+        ` }} />
     );
 }

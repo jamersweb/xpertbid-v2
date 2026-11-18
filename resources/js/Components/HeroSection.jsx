@@ -78,7 +78,7 @@ export default function HeroSection({ fluid = false, className = "my-5" } = {}) 
                             </div>
                      </section>
 
-                     <style>{`
+                     <style dangerouslySetInnerHTML={{ __html: `
         .hero-banner-shell {
           box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
           border-radius: 32px;
@@ -218,7 +218,7 @@ export default function HeroSection({ fluid = false, className = "my-5" } = {}) 
             min-height: 210px;
           }
         }
-      `}</style>
+      ` }} />
               </>
        );
 }

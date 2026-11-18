@@ -195,7 +195,7 @@ export default function PropertiesBrand({ brand, listings }) {
         ))}
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .properties-section-title {
           font-size: clamp(1.45rem, 2.6vw, 2rem);
           line-height: 1.2;
@@ -293,7 +293,7 @@ export default function PropertiesBrand({ brand, listings }) {
             height: 360px;
           }
         }
-      `}</style>
+      ` }} />
     </AppLayout>
   );
 }

@@ -60,7 +60,7 @@ export default function SliderBrowseBrands({ brands = [] }) {
         </div>
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .brand-grid {
           display: grid;
           grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -151,7 +151,7 @@ export default function SliderBrowseBrands({ brands = [] }) {
             padding: 34px 15px;
           }
         }
-      `}</style>
+      ` }} />
     </section>
   );
 }

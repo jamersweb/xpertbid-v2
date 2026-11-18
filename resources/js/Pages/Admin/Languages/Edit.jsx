@@ -35,7 +35,7 @@ export default function Edit({ language, rows = [] }) {
               <AdminLayout title={`Translations - ${language.name}`}>
                      <Head title={`Translations - ${language.name}`} />
 
-                     <style>{`
+                     <style dangerouslySetInnerHTML={{ __html: `
                             .language-editor-card{background:#fff;border:1px solid #e9eef5;border-radius:24px;box-shadow:0 12px 32px rgba(15,23,42,.06);overflow:hidden}
                             .language-editor-toolbar{padding:28px 30px;border-bottom:1px solid #eef2f7;background:linear-gradient(180deg,#ffffff 0%,#fbfdff 100%)}
                             .language-editor-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -59,7 +59,7 @@ export default function Edit({ language, rows = [] }) {
                                    .language-editor-table thead th,.language-editor-table tbody td{padding:16px}
                                    .language-key,.language-fallback,.language-value{font-size:.9rem}
                             }
-                     `}</style>
+                     ` }} />
 
                      <form onSubmit={submit} className="language-editor-card">
                             <div className="language-editor-toolbar">

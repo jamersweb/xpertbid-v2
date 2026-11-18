@@ -103,7 +103,7 @@ export default function AboutUs() {
         <AppLayout>
             <Head title={metaTitle} />
 
-            <style>{`
+            <style dangerouslySetInnerHTML={{ __html: `
                 .xb-about-page {
                     color: #23262F;
                 }
@@ -252,7 +252,7 @@ export default function AboutUs() {
                         border-radius: 22px;
                     }
                 }
-            `}</style>
+            ` }} />
 
             <div className="xb-about-page">
             {/* 1. Hero — About XpertBid */}

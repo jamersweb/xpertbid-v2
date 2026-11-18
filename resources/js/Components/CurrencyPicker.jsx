@@ -54,7 +54,7 @@ export default function CurrencyPicker() {
                             ))}
                      </select>
 
-                     <style>{`
+                     <style dangerouslySetInnerHTML={{ __html: `
                             .currency-picker {
                                    display: inline-flex;
                                    align-items: center;
@@ -78,7 +78,7 @@ export default function CurrencyPicker() {
                                    border-color: #c6d3e6;
                                    box-shadow: 0 0 0 3px rgba(67, 172, 233, 0.08);
                             }
-                     `}</style>
+                     ` }} />
               </div>
        );
 }

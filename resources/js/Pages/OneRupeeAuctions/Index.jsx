@@ -85,7 +85,7 @@ export default function Index({ auctions, auth }) {
                             </section>
                      </main>
 
-                     <style>{`
+                     <style dangerouslySetInnerHTML={{ __html: `
                 .mainContainer {
                     min-height: 100vh;
                     padding-bottom: 2.5rem;
@@ -425,7 +425,7 @@ export default function Index({ auctions, auth }) {
                     white-space: nowrap;
                     display: block;
                 }
-            `}</style>
+            ` }} />
               </AppLayout>
        );
 }

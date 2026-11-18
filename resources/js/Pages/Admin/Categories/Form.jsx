@@ -408,7 +408,7 @@ export default function Form({ category, categories = [], mode = 'create' }) {
                             </form>
                      </div>
 
-                     <style>{`
+                     <style dangerouslySetInnerHTML={{ __html: `
                             .admin-category-quill .ql-toolbar.ql-snow {
                                    border: none;
                                    border-bottom: 1px solid rgb(243 244 246);
@@ -447,7 +447,7 @@ export default function Form({ category, categories = [], mode = 'create' }) {
                                    overflow: hidden;
                                    transition: all 0.3s ease;
                             }
-                     `}</style>
+                     ` }} />
               </AdminLayout>
        );
 }

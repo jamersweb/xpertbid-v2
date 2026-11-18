@@ -277,7 +277,7 @@ export default function Edit({ blog }) {
                              </div>
                       </div>
 
-                      <style>{`
+                      <style dangerouslySetInnerHTML={{ __html: `
                              .admin-blog-quill .ql-toolbar.ql-snow {
                                     border: none;
                                     border-bottom: 1px solid rgb(243 244 246);
@@ -322,7 +322,7 @@ export default function Edit({ blog }) {
                                     background: #fff;
                                     box-shadow: 0 0 0 4px rgba(0,0,0,0.03);
                              }
-                      `}</style>
+                      ` }} />
                </AdminLayout>
         );
 }

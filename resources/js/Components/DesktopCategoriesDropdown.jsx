@@ -220,7 +220,7 @@ export default function DesktopCategoriesDropdown() {
 				</div>
 			</div>
 
-			<style>{`
+			<style dangerouslySetInnerHTML={{ __html: `
 				@media (min-width: 992px) {
 					#mainNavbar {
 						position: relative !important;
@@ -422,7 +422,7 @@ export default function DesktopCategoriesDropdown() {
 						background: #94a3b8;
 					}
 				}
-			`}</style>
+			` }} />
 		</div>
 	);
 }

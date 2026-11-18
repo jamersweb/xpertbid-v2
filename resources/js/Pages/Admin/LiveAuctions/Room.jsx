@@ -323,7 +323,7 @@ export default function Room({ session = null, liveAuctions = [], selectedIds = 
                                    </div>
                             </div>
                      </div>
-                     <style>{`
+                     <style dangerouslySetInnerHTML={{ __html: `
                             .live-room-chat .xb-listing-live-chat {
                                    height: 100% !important;
                                    min-height: 0 !important;
@@ -364,7 +364,7 @@ export default function Room({ session = null, liveAuctions = [], selectedIds = 
                                           overflow: hidden;
                                    }
                             }
-                     `}</style>
+                     ` }} />
               </div>
        );
 }

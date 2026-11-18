@@ -401,7 +401,7 @@ export default function Browse({
                         </div>
                     </section>
 
-                    <style>{`
+                    <style dangerouslySetInnerHTML={{ __html: `
                         @keyframes brHeroFloat {
                             0%, 100% { transform: translateY(0); }
                             50% { transform: translateY(-5px); }
@@ -419,7 +419,7 @@ export default function Browse({
                         @media (prefers-reduced-motion: reduce) {
                             .br-hero-float { animation: none !important; }
                         }
-                    `}</style>
+                    ` }} />
 
                     {!isLoggedIn ? (
                         <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-4 text-sm text-sky-950 shadow-sm sm:flex-row sm:items-center sm:justify-between">

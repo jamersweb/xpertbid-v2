@@ -85,7 +85,7 @@ export default function SliderBrowseCategories({ categories }) {
                             </Swiper>
                      </div>
 
-                     <style>{`
+                     <style dangerouslySetInnerHTML={{ __html: `
         .section-title {
           font-weight: 700;
           color: #002f34;
@@ -212,7 +212,7 @@ export default function SliderBrowseCategories({ categories }) {
             font-size: 14px;
           }
         }
-      `}</style>
+      ` }} />
               </section>
        );
 }

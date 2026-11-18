@@ -232,7 +232,7 @@ export default function ProductImages({ albumImages, videos = null, status, main
                                    ))}
                             </Swiper>
 
-                            <style>{`
+                            <style dangerouslySetInnerHTML={{ __html: `
                                    @keyframes pulseGlow {
                                           0% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(67, 172, 233, 0.7); }
                                           50% { transform: translateX(-50%) scale(1.05); box-shadow: 0 0 0 10px rgba(67, 172, 233, 0); }
@@ -309,7 +309,7 @@ export default function ProductImages({ albumImages, videos = null, status, main
                                                  font-size: 8px;
                                           }
                                    }
-                            `}</style>
+                            ` }} />
                      </div>
 
                      <div className="product-images-album" style={{ height: "auto", marginTop: '15px', paddingBottom: '5px' }}>
@@ -377,7 +377,7 @@ export default function ProductImages({ albumImages, videos = null, status, main
                                    ))}
                             </Swiper>
                      </div>
-                     <style>{`
+                     <style dangerouslySetInnerHTML={{ __html: `
                             .product-thumb-swiper {
                                    width: 100%;
                                    padding: 2px 0 8px;
@@ -424,7 +424,7 @@ export default function ProductImages({ albumImages, videos = null, status, main
                                           max-height: 76px;
                                    }
                             }
-                     `}</style>
+                     ` }} />
               </div>
        );
 }

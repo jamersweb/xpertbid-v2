@@ -55,7 +55,7 @@ export default function Index({ brands = [] }) {
         </div>
       </section>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .brands-grid {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -130,7 +130,7 @@ export default function Index({ brands = [] }) {
             grid-template-columns: repeat(4, minmax(0, 1fr));
           }
         }
-      `}</style>
+      ` }} />
     </AppLayout>
   );
 }

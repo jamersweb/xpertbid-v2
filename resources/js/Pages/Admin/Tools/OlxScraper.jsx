@@ -992,7 +992,7 @@ export default function OlxScraper({
                                    </div>
                            </div>
 
-                           <style>{`
+                           <style dangerouslySetInnerHTML={{ __html: `
                                   .admin-olx-quill .ql-toolbar.ql-snow {
                                          border: 0;
                                          border-bottom: 1px solid rgb(229 231 235);
@@ -1012,7 +1012,7 @@ export default function OlxScraper({
                                          color: rgb(156 163 175);
                                          font-style: normal;
                                   }
-                           `}</style>
+                           ` }} />
                      </div>
               </AdminLayout>
        );

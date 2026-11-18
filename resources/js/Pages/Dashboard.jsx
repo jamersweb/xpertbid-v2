@@ -44,7 +44,7 @@ export default function Dashboard({ listingsCount = 0, biddingsCount = 0, listin
             <Head title={t('User Dashboard')} />
 
             <div className="min-h-screen bg-[#eef6fc] pb-24 lg:pb-10">
-                <style>{`
+                <style dangerouslySetInnerHTML={{ __html: `
                     a.dash-see-all:hover,
                     a.dash-see-all:focus {
                         background-color: #43ACE9 !important;
@@ -55,7 +55,7 @@ export default function Dashboard({ listingsCount = 0, biddingsCount = 0, listin
                     a.dash-see-all:focus * {
                         color: #ffffff !important;
                     }
-                `}</style>
+                ` }} />
                 <div className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8">
                     {/* Blue hero — brand #43ACE9 / ink #23262F */}
                     <section className="relative mb-5 overflow-hidden rounded-2xl bg-[#43ACE9] sm:mb-8 sm:rounded-[1.75rem]">

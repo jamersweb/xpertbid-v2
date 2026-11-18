@@ -810,7 +810,7 @@ export default function Form({
                             </div>
                      </form>
 
-                     <style>{`
+                     <style dangerouslySetInnerHTML={{ __html: `
                             .admin-listing-quill .ql-toolbar.ql-snow {
                                    border: 1px solid rgb(229 231 235);
                                    border-radius: 0.75rem 0.75rem 0 0;
@@ -835,7 +835,7 @@ export default function Form({
                                    color: rgb(156 163 175);
                                    font-style: normal;
                             }
-                     `}</style>
+                     ` }} />
               </AdminLayout>
        );
 }

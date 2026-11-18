@@ -189,7 +189,7 @@ function PendingCard({ type }) {
                     <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
                     <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                 </svg>
-                <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+                <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }` }} />
             </div>
             <h3 style={{ fontSize: 32, fontWeight: 700, marginBottom: 20, color: '#23262F', position: 'relative', zIndex: 1 }}>
                 {type} Verification Under Review

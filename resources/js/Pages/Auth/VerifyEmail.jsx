@@ -143,7 +143,7 @@ export default function VerifyEmail({ status }) {
                 </div>
             </Modal>
 
-            <style>{`
+            <style dangerouslySetInnerHTML={{ __html: `
                 .verify-email-shell {
                     min-height: 62vh;
                     background: #f6f8fb;
@@ -319,7 +319,7 @@ export default function VerifyEmail({ status }) {
                         min-height: 54px;
                     }
                 }
-            `}</style>
+            ` }} />
         </AppLayout>
     );
 }

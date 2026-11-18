@@ -67,13 +67,13 @@ export default function ProductHeader({ views, productId, slug, link, backHref =
                                    </div>
                             </div>
                      </div>
-                     <style>{`
+                     <style dangerouslySetInnerHTML={{ __html: `
                             @media (max-width: 767px) {
                                    .product-detail-header-section {
                                           padding-top: 36px !important;
                                    }
                             }
-                     `}</style>
+                     ` }} />
               </section>
        );
 }

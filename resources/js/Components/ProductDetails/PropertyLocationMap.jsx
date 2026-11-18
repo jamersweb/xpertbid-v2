@@ -121,7 +121,7 @@ export default function PropertyLocationMap({ categoryFeatures }) {
                      <div className="property-location-map property-location-map--state">
                             <div className="property-location-spinner" aria-label="Loading location" />
                             <span>Loading location...</span>
-                            <style>{propertyLocationMapStyles}</style>
+                            <style dangerouslySetInnerHTML={{ __html: propertyLocationMapStyles }} />
                      </div>
               );
        }
@@ -130,7 +130,7 @@ export default function PropertyLocationMap({ categoryFeatures }) {
               return (
                      <div className="property-location-map property-location-map--state">
                             <span>Location not available</span>
-                            <style>{propertyLocationMapStyles}</style>
+                            <style dangerouslySetInnerHTML={{ __html: propertyLocationMapStyles }} />
                      </div>
               );
        }
@@ -154,7 +154,7 @@ export default function PropertyLocationMap({ categoryFeatures }) {
                                    <Popup>Property location</Popup>
                             </Marker>
                      </MapContainer>
-                     <style>{propertyLocationMapStyles}</style>
+                     <style dangerouslySetInnerHTML={{ __html: propertyLocationMapStyles }} />
               </div>
        );
 }

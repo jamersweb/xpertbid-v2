@@ -49,7 +49,7 @@ export default function WhyChooseXpertBid() {
                             </Swiper>
                      </div>
 
-                     <style>{`
+                     <style dangerouslySetInnerHTML={{ __html: `
         .why-choose-section {
             background-color: #f8f9fa !important; /* bg-light */
         }
@@ -123,7 +123,7 @@ export default function WhyChooseXpertBid() {
             display: none !important;
           }
         }
-      `}</style>
+      ` }} />
               </section>
        );
 }

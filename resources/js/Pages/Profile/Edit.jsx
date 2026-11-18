@@ -75,7 +75,7 @@ export default function Edit({ auth, mustVerifyEmail, status, address, identity,
                 </div>
             </section>
 
-            <style>{`
+            <style dangerouslySetInnerHTML={{ __html: `
                 .active-item {
                     color: #43ACE9 !important;
                     background-color: #DCECFA !important;
@@ -170,7 +170,7 @@ export default function Edit({ auth, mustVerifyEmail, status, address, identity,
                     filter: brightness(1.1);
                 }
 
-            `}</style>
+            ` }} />
         </AppLayout>
     );
 }

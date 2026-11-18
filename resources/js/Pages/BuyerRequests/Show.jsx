@@ -1019,13 +1019,13 @@ export default function Show({ buyerRequest, isOwner = false, canOffer = false, 
                 </div>
             )}
 
-            <style>{`
+            <style dangerouslySetInnerHTML={{ __html: `
                 .buyer-request-description p { margin-bottom: 0.5rem; }
                 .buyer-request-description p:last-child { margin-bottom: 0; }
                 .buyer-request-description ul,
                 .buyer-request-description ol { padding-left: 1.25rem; margin-bottom: 0.5rem; }
                 .buyer-request-description img { max-width: 100%; height: auto; border-radius: 8px; }
-            `}</style>
+            ` }} />
         </AppLayout>
     );
 }

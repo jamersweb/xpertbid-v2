@@ -681,7 +681,7 @@ export default function PageBuilder({ brands = [], selectedBrand = null, brandLi
         </div>
       )}
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .brand-page-admin-slider {
           position: relative;
           padding-bottom: 2px;
@@ -798,7 +798,7 @@ export default function PageBuilder({ brands = [], selectedBrand = null, brandLi
             display: none !important;
           }
         }
-      `}</style>
+      ` }} />
     </AdminLayout>
   );
 }

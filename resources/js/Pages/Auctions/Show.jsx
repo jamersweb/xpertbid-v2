@@ -282,7 +282,7 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
                                    </div>
                             </main>
 
-                            <style>{`
+                            <style dangerouslySetInnerHTML={{ __html: `
                                    html,
                                    body {
                                           overflow: hidden;
@@ -947,7 +947,7 @@ export default function Show({ auction, bids, related, highestBid, winnerDetails
                                                  overflow-y: auto !important;
                                           }
                                    }
-                            `}</style>
+                            ` }} />
                             </AuthModalProvider>
                      </CartProvider>
               );

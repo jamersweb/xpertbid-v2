@@ -564,7 +564,7 @@ export default function EasyHome() {
                             </section>
                      </div>
 
-                     <style>{`
+                     <style dangerouslySetInnerHTML={{ __html: `
                             .easy-home-page {
                                    background: #f6f8fc;
                             }
@@ -1037,7 +1037,7 @@ export default function EasyHome() {
                                           height: 150px;
                                    }
                             }
-                     `}</style>
+                     ` }} />
               </AppLayout>
        );
 }

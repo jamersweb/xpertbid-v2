@@ -823,7 +823,7 @@ export default function Index({
                             </div>
                      </div>
 
-                     <style>{`
+                     <style dangerouslySetInnerHTML={{ __html: `
                             .marketplace-page-shell {
                                    background-color: #F7F8F9;
                                    padding-top: 1px;
@@ -1615,7 +1615,7 @@ export default function Index({
                                           border-radius: 18px;
                                    }
                             }
-                     `}</style>
+                     ` }} />
               </AppLayout>
        );
 }

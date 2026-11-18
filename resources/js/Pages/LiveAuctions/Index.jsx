@@ -159,7 +159,7 @@ export default function LiveAuctionsIndex({ session, activeAuction = null }) {
 
                      </main>
 
-                     <style>{`
+                     <style dangerouslySetInnerHTML={{ __html: `
                             .live-auctions-page {
                                    background:
                                           linear-gradient(180deg, rgba(67, 172, 233, 0.08) 0%, rgba(247, 248, 249, 0.96) 34%, #f7f8f9 100%);
@@ -342,7 +342,7 @@ export default function LiveAuctionsIndex({ session, activeAuction = null }) {
                                           min-height: 230px;
                                    }
                             }
-                     `}</style>
+                     ` }} />
               </AppLayout>
        );
 }

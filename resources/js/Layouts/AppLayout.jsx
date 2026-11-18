@@ -192,7 +192,7 @@ export default function AppLayout({ children, title }) {
                                    <MobileBottomNav />
                             </div>
 
-                            <style>{`
+                            <style dangerouslySetInnerHTML={{ __html: `
                                    /* Premium Toast Notification */
                                    .toast-container {
                                           position: fixed;
@@ -362,7 +362,7 @@ export default function AppLayout({ children, title }) {
                                                  font-size: 13px;
                                           }
                                    }
-                            `}</style>
+                            ` }} />
                      </AuthModalProvider>
               </CartProvider>
        );

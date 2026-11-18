@@ -543,7 +543,7 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                      )}
 
                      {/* Reference Styles embedded directly */}
-                     <style>{`
+                     <style dangerouslySetInnerHTML={{ __html: `
                             .winner-section-ref {
                                    width: 100%;
                                    text-align: center;
@@ -643,7 +643,7 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                                           font-size: 28px;
                                    }
                             }
-                     `}</style>
+                     ` }} />
 
 
                      {/* Bid Confirmation Modal */}
@@ -722,10 +722,10 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                                                         </button>
                                                  </div>
                                           </div>
-                                          <style>{`
+                                          <style dangerouslySetInnerHTML={{ __html: `
                                           @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
                                           @keyframes popupIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-                                   `}</style>
+                                   ` }} />
                                    </div>
                             )
                      }
@@ -764,12 +764,12 @@ export default function BidSection({ product, highestBidProp, onBidPlaced, winne
                                                  {toast.message}
                                           </div>
 
-                                          <style>{`
+                                          <style dangerouslySetInnerHTML={{ __html: `
                                           @keyframes slideIn {
                                                  from { transform: translateX(100%); opacity: 0; }
                                                   to { transform: translateX(0); opacity: 1; }
                                           }
-                                   `}</style>
+                                   ` }} />
                                    </div>
                             )
                      }
