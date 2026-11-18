@@ -56,9 +56,9 @@
             }
             .registration-btns button.signup {
                 padding: 8px 16px;
-                border: 1px solid #43ACE9;
+                border: 1px solid #1557B0;
                 border-radius: 6px;
-                color: #43ACE9;
+                color: #1557B0;
                 background-color: transparent;
                 font-weight: 600;
             }

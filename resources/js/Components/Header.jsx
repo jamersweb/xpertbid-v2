@@ -732,7 +732,7 @@ export default function Header() {
                                 color: #fff;
                             }
                             .mobile-auth-signup {
-                                background: #43ACE9;
+                                background: #1967D2;
                                 color: #fff;
                             }
                             .mobile-user-dropdown {

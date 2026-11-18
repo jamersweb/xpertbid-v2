@@ -280,7 +280,7 @@ export default function MobileBottomNav() {
                 .mobile-bottom-nav__item {
                     flex: 1;
                     text-align: center;
-                    color: #606060;
+                    color: #4B5563;
                     font-family: "Inter", sans-serif;
                     font-size: 11px;
                     font-weight: 500;
@@ -296,7 +296,7 @@ export default function MobileBottomNav() {
                 }
 
                 .mobile-bottom-nav__item--active {
-                    color: #0d6efd !important;
+                    color: #1557B0 !important;
                 }
 
                 .mobile-bottom-nav__icon {
@@ -323,7 +323,7 @@ export default function MobileBottomNav() {
                     height: 16px;
                     padding: 0 4px;
                     border-radius: 999px;
-                    background: #43ACE9 !important;
+                    background: #1967D2 !important;
                     color: #ffffff !important;
                     font-size: 9px;
                     font-weight: 700;
@@ -391,9 +391,9 @@ export default function MobileBottomNav() {
                 }
 
                 @keyframes glow-pulse {
-                    0% { transform: scale(1); color: #0d6efd; }
-                    50% { transform: scale(1.1); color: #fd7e14; }
-                    100% { transform: scale(1); color: #0d6efd; }
+                    0% { transform: scale(1); color: #1557B0; }
+                    50% { transform: scale(1.1); color: #B45309; }
+                    100% { transform: scale(1); color: #1557B0; }
                 }
             ` }} />
               </>

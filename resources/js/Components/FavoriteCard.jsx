@@ -134,7 +134,7 @@ const FavoriteCard = ({ favorite }) => {
                                           </div>
                                           <div className="mkt-bid-btn">
                                                  {isSoldOut ? (
-                                                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "12px 18px", background: "#9ca3af", color: "#fff", fontWeight: 600, cursor: "not-allowed" }}>
+                                                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "12px 18px", background: "#4B5563", color: "#fff", fontWeight: 600, cursor: "not-allowed" }}>
                                                                Sold Out
                                                         </span>
                                                  ) : (

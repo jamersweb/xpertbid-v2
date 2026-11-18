@@ -41,7 +41,7 @@ export default function WhyChooseXpertBid() {
                                           <SwiperSlide key={index} className="h-auto">
                                                  <div className="card list-card text-center px-4 py-4 h-100 d-flex flex-column justify-content-center align-items-center">
                                                         <div className="icon-box mb-3">{item.icon}</div>
-                                                        <h5>{item.title}</h5>
+                                                        <h3 className="list-card-title">{item.title}</h3>
                                                         <p>{item.description}</p>
                                                  </div>
                                           </SwiperSlide>
@@ -92,10 +92,12 @@ export default function WhyChooseXpertBid() {
           transform: rotate(360deg);
         }
 
-        .list-card h5 {
+        .list-card h3.list-card-title {
+          font-size: 1.25rem;
           font-weight: 700;
           color: #333;
           margin-bottom: 10px;
+          line-height: 1.2;
         }
 
         .list-card p {

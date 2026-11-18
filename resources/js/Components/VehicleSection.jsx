@@ -125,7 +125,7 @@ export default function VehicleSection({ products }) {
                                                                       <div className="pro-buy-btn">
                                                                             <div className="pro-bid-btn">
                                                                                    {isSoldOut ? (
-                                                                                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "14px 22px", background: "#9ca3af", color: "#fff", fontWeight: 600, cursor: "not-allowed" }}>
+                                                                                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "14px 22px", background: "#4B5563", color: "#fff", fontWeight: 600, cursor: "not-allowed" }}>
                                                                                                  {t('Sold Out')}
                                                                                           </span>
                                                                                    ) : (

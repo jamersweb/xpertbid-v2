@@ -221,7 +221,7 @@ const AuctionCard = ({
                                                         disabled
                                                         style={{
                                                                border: "none",
-                                                               background: "#9ca3af",
+                                                               background: "#4B5563",
                                                                color: "#fff",
                                                                borderRadius: "12px",
                                                                padding: "14px 22px",
@@ -253,7 +253,7 @@ const AuctionCard = ({
                                    ) : (
                                           <div className="pro-bid-btn">
                                                  {isSoldOut ? (
-                                                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "14px 22px", background: "#9ca3af", color: "#fff", fontWeight: 600, cursor: "not-allowed" }}>Sold Out</span>
+                                                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", padding: "14px 22px", background: "#4B5563", color: "#fff", fontWeight: 600, cursor: "not-allowed" }}>Sold Out</span>
                                                  ) : (
                                                         <Link href={buildProductHref(auction.slug)}>
                                                                {directBuyListing ? "Buy Now" : (isLiveAuction ? "Join Live" : "Place Bid")}
