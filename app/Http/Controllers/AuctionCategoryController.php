@@ -187,7 +187,9 @@ class AuctionCategoryController extends Controller
             ->unique()
             ->values();
 
-        return AuctionCategory::with([
+        return AuctionCategory::query()
+            ->select(['id', 'name', 'slug', 'icon', 'image', 'parent_id', 'sub_category_id'])
+            ->with([
                 'subCategories:id,name,slug,image,icon,parent_id,sub_category_id',
                 'subCategories.childCategories:id,name,slug,image,icon,parent_id,sub_category_id',
             ])

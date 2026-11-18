@@ -289,7 +289,11 @@
             })();
         </script>
         
-        @routes
+        @if(request()->is('admin', 'admin/*'))
+            @routes('admin')
+        @else
+            @routes('public')
+        @endif
         @viteReactRefresh
         @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"])
         @inertiaHead

@@ -76,7 +76,12 @@ class HandleInertiaRequests extends Middleware
         }
         $currentLocale = app()->getLocale();
         $supportedLocales = TranslationManager::getSupportedLanguages();
-        $translations = TranslationManager::getTranslations($currentLocale);
+        $translations = $this->scopeTranslations(
+            TranslationManager::getTranslations($currentLocale),
+            $request,
+            $currentLocale,
+            $authUser
+        );
 
         return [
             ...parent::share($request),
@@ -110,9 +115,11 @@ class HandleInertiaRequests extends Middleware
                 $ziggy = new Ziggy;
 
                 $excluded = [
+                    'debugbar.*',
                     'horizon.*',
                     'telescope.*',
                     'sanctum.*',
+                    'ignition.*',
                 ];
 
                 $role = strtolower((string) ($authUser?->role ?? ''));
@@ -180,5 +187,71 @@ class HandleInertiaRequests extends Middleware
                     ->count()
                 : 0,
         ];
+    }
+
+    /**
+     * Scope shared translations to the active route and strip identity entries
+     * (where value === key, since useTranslate() falls back to the key itself).
+     *
+     * @param  array<string, mixed>  $translations
+     * @return array<string, mixed>
+     */
+    protected function scopeTranslations(
+        array $translations,
+        Request $request,
+        string $locale,
+        $authUser = null
+    ): array {
+        $isHome = $request->routeIs('home') || $request->is('/');
+        $isFaq = $request->routeIs('faq') || $request->is('faq');
+        $isAbout = $request->routeIs('about', 'about.partners') || $request->is('about', 'about-us', 'about-our-partner');
+        $isContact = $request->routeIs('contact') || $request->is('contact', 'contact-us');
+        $isAdmin = $request->is('admin', 'admin/*');
+        $isAuthPage = $request->routeIs('login', 'register', 'password.*') || $request->is('login', 'register', 'forgot-password', 'reset-password*');
+
+        $excludedPrefixes = [];
+
+        if (! $isFaq) {
+            $excludedPrefixes[] = 'faq.';
+        }
+        if (! $isAbout) {
+            $excludedPrefixes[] = 'about_page.';
+        }
+        if (! $isContact) {
+            $excludedPrefixes[] = 'contact.';
+        }
+        if (! $isHome) {
+            $excludedPrefixes[] = 'seo.';
+        }
+        if (! $isAdmin) {
+            $excludedPrefixes[] = 'admin.';
+        }
+        // Authenticated users never open Login/Register modals on storefront pages
+        if ($authUser && ! $isAuthPage) {
+            $excludedPrefixes[] = 'auth.';
+        }
+
+        $scoped = [];
+        foreach ($translations as $key => $value) {
+            $skip = false;
+            foreach ($excludedPrefixes as $prefix) {
+                if (str_starts_with((string) $key, $prefix)) {
+                    $skip = true;
+                    break;
+                }
+            }
+            if ($skip) {
+                continue;
+            }
+
+            // useTranslate() falls back to `translations[key] ?? key`, so skip identical pairs
+            if (is_string($value) && $value === (string) $key) {
+                continue;
+            }
+
+            $scoped[$key] = $value;
+        }
+
+        return $scoped;
     }
 }

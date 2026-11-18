@@ -216,9 +216,90 @@ class AuctionController extends Controller
     protected function listingUserRelations(): array
     {
         return [
-            'user',
+            'user:id,name,username,profile_pic',
             'user.individualVerification:id,user_id,status',
             'user.corporateVerification:id,user_id,status',
+        ];
+    }
+
+    /**
+     * Slim category payload for Homepage category strip (excludes SEO/schema/meta blobs).
+     *
+     * @return array<string, mixed>
+     */
+    protected function serializeHomeCategory(AuctionCategory $category): array
+    {
+        return [
+            'id' => (int) $category->id,
+            'name' => (string) $category->name,
+            'slug' => (string) ($category->slug ?? ''),
+            'icon' => $category->icon,
+            'image' => $category->image,
+            'image_url' => $category->image_url,
+            'parent_id' => $category->parent_id,
+            'sub_category_id' => $category->sub_category_id,
+        ];
+    }
+
+    /**
+     * Slim, PII-free listing card payload for Homepage Featured & Category sections.
+     * Excludes heavy HTML description, full album arrays, scraped metadata, and seller PII.
+     *
+     * @return array<string, mixed>
+     */
+    protected function serializeHomeListingCard(\App\Models\Listing $listing): array
+    {
+        $user = $listing->user;
+        $variations = null;
+
+        // Only include minimal variation prices when base listing has no direct price
+        $hasDirectPrice = (float) ($listing->price ?? 0) > 0
+            || (float) ($listing->buy_now_price ?? 0) > 0
+            || (float) ($listing->minimum_bid ?? 0) > 0
+            || (float) ($listing->reserve_price ?? 0) > 0;
+
+        if (! $hasDirectPrice && is_array($listing->variations) && count($listing->variations) > 0) {
+            $variations = array_values(array_filter(array_map(
+                fn ($v) => isset($v['price']) && is_numeric($v['price']) ? ['price' => (float) $v['price']] : null,
+                $listing->variations
+            )));
+        }
+
+        return [
+            'id' => (int) $listing->id,
+            'slug' => (string) $listing->slug,
+            'title' => (string) $listing->title,
+            'status' => (string) $listing->status,
+            'listing_type' => $listing->listing_type,
+            'list_type' => $listing->list_type,
+            'featured_name' => $listing->featured_name,
+            'image_url' => $listing->image_url,
+            'price' => $listing->price,
+            'buy_now_price' => $listing->buy_now_price,
+            'minimum_bid' => $listing->minimum_bid,
+            'reserve_price' => $listing->reserve_price,
+            'bids_max_bid_amount' => $listing->bids_max_bid_amount,
+            'discount_type' => $listing->discount_type,
+            'discount_value' => $listing->discount_value,
+            'start_date' => $listing->start_date,
+            'end_date' => $listing->end_date,
+            ...($variations ? ['variations' => $variations] : []),
+            'user' => $user ? [
+                'id' => (int) $user->id,
+                'name' => (string) $user->name,
+                'username' => $user->username,
+                'profile_pic' => $user->profile_pic,
+                'individual_verification' => $user->individualVerification ? [
+                    'id' => (int) $user->individualVerification->id,
+                    'user_id' => (int) $user->individualVerification->user_id,
+                    'status' => $user->individualVerification->status,
+                ] : null,
+                'corporate_verification' => $user->corporateVerification ? [
+                    'id' => (int) $user->corporateVerification->id,
+                    'user_id' => (int) $user->corporateVerification->user_id,
+                    'status' => $user->corporateVerification->status,
+                ] : null,
+            ] : null,
         ];
     }
 
@@ -233,8 +314,6 @@ class AuctionController extends Controller
             ? Favorite::where('user_id', auth()->id())->pluck('listing_id')->all()
             : [];
 
-        // Data for Home Page
-        $sliders = \App\Models\Slider::where('status', 'active')->get(); 
         $activeCategoryIds = \App\Models\Listing::query()
             ->whereIn('status', $this->browseStatuses())
             ->where('listing_type', '!=', 'live_auction')
@@ -250,9 +329,11 @@ class AuctionController extends Controller
             ->values();
         $priorityCategoryIds = [222, 311];
 
-        $categories = AuctionCategory::with([
-                'subCategories:id,name,slug,image,icon,parent_id,sub_category_id',
-                'subCategories.childCategories:id,name,slug,image,icon,parent_id,sub_category_id',
+        $categories = AuctionCategory::query()
+            ->select(['id', 'name', 'slug', 'icon', 'image', 'parent_id', 'sub_category_id'])
+            ->with([
+                'subCategories:id,parent_id,sub_category_id',
+                'subCategories.childCategories:id,parent_id,sub_category_id',
             ])
             ->whereNull('parent_id')
             ->whereNull('sub_category_id')
@@ -277,29 +358,25 @@ class AuctionController extends Controller
                     $category->name,
                 ];
             })
+            ->map(fn (AuctionCategory $category) => $this->serializeHomeCategory($category))
             ->values();
-        
+
         $featured = \App\Models\Listing::where('featured_name', 'home_featured')
             ->excludeProperties()
             ->whereIn("status", $this->browseStatuses())
-            ->with(array_merge($this->listingUserRelations(), ['bids'])) // Eager load relationships
+            ->with($this->listingUserRelations())
             ->withMax('bids', 'bid_amount')
             ->latest()
-            ->take(8)
-            ->get();
+            ->take(3)
+            ->get()
+            ->map(fn (\App\Models\Listing $listing) => $this->serializeHomeListingCard($listing))
+            ->values();
 
         $categorySections = $this->buildRandomHomeCategorySections(6);
 
-        $brands = Brand::query()
-            ->select(['id', 'name', 'slug', 'image'])
-            ->latest()
-            ->take(12)
-            ->get();
-
         return Inertia::render('Home', [
-            'sliders' => $sliders,
+            'sliders' => [],
             'categories' => $categories,
-            'brands' => $brands,
             'featuredAuctions' => $featured,
             'categorySections' => $categorySections,
             'favoriteListingIds' => $favoriteListingIds,
@@ -396,8 +473,10 @@ class AuctionController extends Controller
                 ->with($this->listingUserRelations())
                 ->withMax('bids', 'bid_amount')
                 ->latest()
-                ->take(12)
-                ->get();
+                ->take(3)
+                ->get()
+                ->map(fn (\App\Models\Listing $listing) => $this->serializeHomeListingCard($listing))
+                ->values();
 
             if ($products->count() < 3) {
                 continue;
