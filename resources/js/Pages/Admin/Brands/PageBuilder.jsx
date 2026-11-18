@@ -58,7 +58,7 @@ const getImageSrc = (listing) => {
   }
 
   const rawPath = Array.isArray(albumData) ? albumData[0] : albumData;
-  if (!rawPath) return '/assets/images/placeholder.png';
+  if (!rawPath) return '/assets/images/placeholder.webp';
   if (typeof rawPath === 'string' && /^https?:\/\//i.test(rawPath)) return rawPath;
   return `/${String(rawPath).replace(/^\/+/, '')}`;
 };
@@ -393,9 +393,9 @@ export default function PageBuilder({ brands = [], selectedBrand = null, brandLi
                 <div className="relative overflow-hidden rounded-[30px] border border-gray-200 bg-gray-50">
                   <div className="brand-builder-banner">
                     <picture>
-                      <source media="(max-width: 767px)" srcSet={uploadPreview('banner_img_mob') || uploadPreview('banner_img') || '/assets/images/placeholder.png'} />
+                      <source media="(max-width: 767px)" srcSet={uploadPreview('banner_img_mob') || uploadPreview('banner_img') || '/assets/images/placeholder.webp'} />
                       <img
-                        src={uploadPreview('banner_img') || uploadPreview('banner_img_mob') || '/assets/images/placeholder.png'}
+                        src={uploadPreview('banner_img') || uploadPreview('banner_img_mob') || '/assets/images/placeholder.webp'}
                         alt={`${selectedBrand.name} banner preview`}
                         className="h-full w-full object-cover"
                       />

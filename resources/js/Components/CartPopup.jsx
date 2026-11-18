@@ -120,13 +120,16 @@ export default function CartPopup() {
                                                                       <div key={item.id} className="cart-popup-item d-flex gap-3 mb-3 last-child-mb-0">
                                                                              <div className="flex-shrink-0 cart-popup-item-image">
                                                                                     <img
-                                                                                           src={item.image ? (item.image.startsWith('http') ? item.image : `/${item.image.replace(/^\/+/, '')}`) : '/assets/images/placeholder.png'}
+                                                                                           src={item.image ? (item.image.startsWith('http') ? item.image : `/${item.image.replace(/^\/+/, '')}`) : '/assets/images/placeholder.webp'}
                                                                                            alt={item.title}
                                                                                            width={74}
                                                                                            height={74}
                                                                                            loading="lazy"
                                                                                            className="w-100 h-100 object-fit-cover"
-                                                                                           onError={(e) => e.target.src = '/assets/images/WebsiteBanner2.png'}
+                                                                                           onError={(e) => {
+                                                                                                  e.currentTarget.onerror = null;
+                                                                                                  e.currentTarget.src = '/assets/images/placeholder.webp';
+                                                                                           }}
                                                                                     />
                                                                              </div>
                                                                              <div className="cart-popup-item-details flex-grow-1 min-width-0">

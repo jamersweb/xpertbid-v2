@@ -9,7 +9,7 @@ export default function SliderBrowseCategories({ categories }) {
        const { propertyFrontendUrl, propertyRootCategoryId } = usePage().props;
        const displayCategories = (categories || []).slice(0, 12);
        const assetSrc = (path) => {
-              if (!path) return "/images/placeholder.png";
+              if (!path) return "/assets/images/placeholder.webp";
               if (path.startsWith("http")) return path;
               return `${path.startsWith("/") ? "" : "/"}${path}`;
        };
@@ -54,6 +54,10 @@ export default function SliderBrowseCategories({ categories }) {
                                                                                     height={84}
                                                                                     loading="lazy"
                                                                                     className="category-icon"
+                                                                                    onError={(e) => {
+                                                                                           e.currentTarget.onerror = null;
+                                                                                           e.currentTarget.src = "/assets/images/placeholder.webp";
+                                                                                    }}
                                                                              />
                                                                       </div>
                                                                       <div className="category-title-wrapper">

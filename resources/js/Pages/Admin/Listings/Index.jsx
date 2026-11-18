@@ -203,7 +203,7 @@ export default function Index({
                                                                               {listing.listing_type === 'live_auction' ? (
                                                                                      <LiveAuctionPreview videoId={listing.youtube_video_id} title={listing.title} />
                                                                               ) : (
-                                                                                     <img src={listing.image_url || '/assets/images/placeholder.png'} className="w-10 h-10 rounded-lg object-cover shrink-0" alt="" />
+                                                                                     <img src={listing.image_url || '/assets/images/placeholder.webp'} className="w-10 h-10 rounded-lg object-cover shrink-0" alt="" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/assets/images/placeholder.webp'; }} />
                                                                               )}
                                                                               <div>
                                                                                      <div className="flex items-center gap-1.5 flex-wrap">

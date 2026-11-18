@@ -268,7 +268,7 @@ export default function Show({ listing }) {
                                           <div className="bg-white text-gray-900 p-6 rounded-2xl shadow-sm border border-gray-100">
                                                  <div className="flex items-start gap-4">
                                                         <img
-                                                               src={listing.image_url || '/images/placeholder.png'}
+                                                               src={listing.image_url || '/assets/images/placeholder.webp'}
                                                                className="w-24 h-24 rounded-2xl object-cover border border-gray-100"
                                                                alt={listing.title}
                                                         />

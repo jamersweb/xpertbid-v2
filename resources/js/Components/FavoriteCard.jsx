@@ -17,7 +17,7 @@ const FavoriteCard = ({ favorite }) => {
               }
        };
 
-       const imgPath = favorite.image || "/assets/images/placeholder.jpg";
+       const imgPath = favorite.image || "/assets/images/placeholder.webp";
 
        const title = favorite.title || favorite.name || 'Product';
        const directBuyListing = isDirectBuyListing(favorite);
@@ -36,6 +36,10 @@ const FavoriteCard = ({ favorite }) => {
                                                  width={400}
                                                  height={300}
                                                  loading="lazy"
+                                                 onError={(e) => {
+                                                        e.currentTarget.onerror = null;
+                                                        e.currentTarget.src = "/assets/images/placeholder.webp";
+                                                 }}
                                           />
                                    </Link>
 

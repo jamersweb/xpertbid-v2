@@ -142,10 +142,13 @@ export default function Index({ cart: propCart }) {
                                                                                                   }}
                                                                                            >
                                                                                                   <img
-                                                                                                         src={item.image ? (item.image.startsWith('http') ? item.image : `/${item.image.replace(/^\/+/, '')}`) : '/assets/images/placeholder.png'}
+                                                                                                         src={item.image ? (item.image.startsWith('http') ? item.image : `/${item.image.replace(/^\/+/, '')}`) : '/assets/images/placeholder.webp'}
                                                                                                          alt={item.title}
                                                                                                          style={{ objectFit: "cover", width: "100%", height: "100%", borderRadius: "6px" }}
-                                                                                                         onError={(e) => e.target.src = '/assets/images/WebsiteBanner2.png'}
+                                                                                                         onError={(e) => {
+                                                                                                                e.currentTarget.onerror = null;
+                                                                                                                e.currentTarget.src = '/assets/images/placeholder.webp';
+                                                                                                         }}
                                                                                                   />
                                                                                            </div>
                                                                                     </Link>

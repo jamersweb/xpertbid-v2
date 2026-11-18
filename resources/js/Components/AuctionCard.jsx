@@ -97,6 +97,10 @@ const AuctionCard = ({
                                                  style={{ width: "100%", height: "auto", aspectRatio: "4/3", objectFit: "cover", borderRadius: "18px" }}
                                                  className="img-fluid object-cover"
                                                  loading="lazy"
+                                                 onError={(e) => {
+                                                        e.currentTarget.onerror = null;
+                                                        e.currentTarget.src = "/assets/images/placeholder.webp";
+                                                 }}
                                           />
                                    </div>
                             </Link>

@@ -22,7 +22,7 @@ const getProductImageSrc = (product) => {
        }
 
        const rawPath = Array.isArray(albumData) ? albumData[0] : albumData;
-       if (!rawPath) return "/assets/images/placeholder.png";
+       if (!rawPath) return "/assets/images/placeholder.webp";
        if (typeof rawPath === "string" && /^https?:\/\//i.test(rawPath)) return rawPath;
        return `/${String(rawPath).replace(/^\/+/, "")}`;
 };
@@ -65,6 +65,10 @@ function FeaturedProducts({ products }) {
                                                                                                   style={{ width: "100%", height: "auto", aspectRatio: "4/3", objectFit: "cover" }}
                                                                                                   className="object-cover img-fluid"
                                                                                                   loading={index === 0 ? "eager" : "lazy"}
+                                                                                                  onError={(e) => {
+                                                                                                         e.currentTarget.onerror = null;
+                                                                                                         e.currentTarget.src = "/assets/images/placeholder.webp";
+                                                                                                  }}
                                                                                            />
                                                                                     </div>
                                                                              </Link>

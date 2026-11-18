@@ -47,7 +47,7 @@ export default function Index({ sliders }) {
                                                  {sliders.map((slider) => (
                                                         <tr key={slider.id} className="hover:bg-gray-50/50 transition-colors">
                                                                <td className="px-6 py-4">
-                                                                      <img src={slider.image || '/images/placeholder.png'} className="w-20 h-10 rounded-lg object-cover" alt="" />
+                                                                      <img src={slider.image || '/assets/images/placeholder.webp'} className="w-20 h-10 rounded-lg object-cover" alt="" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/assets/images/placeholder.webp'; }} />
                                                                </td>
                                                                <td className="px-6 py-4">
                                                                       <p className="text-sm font-bold text-gray-800">{slider.title}</p>

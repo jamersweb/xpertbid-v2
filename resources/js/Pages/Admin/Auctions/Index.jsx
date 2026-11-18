@@ -87,7 +87,7 @@ export default function Index({ auctions, filters }) {
                                                         <tr key={auction.id} className="hover:bg-gray-50/50 transition-colors">
                                                                <td className="px-6 py-4">
                                                                       <div className="flex items-center gap-3">
-                                                                             <img src={auction.image_url || '/assets/images/placeholder.png'} className="w-10 h-10 rounded-lg object-cover" alt="" />
+                                                                             <img src={auction.image_url || '/assets/images/placeholder.webp'} className="w-10 h-10 rounded-lg object-cover" alt="" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/assets/images/placeholder.webp'; }} />
                                                                              <div>
                                                                                     <p className="text-sm font-bold text-gray-800 line-clamp-1">{auction.title}</p>
                                                                                     <p className="text-[10px] text-gray-400">ID: {auction.id} | Ends: {new Date(auction.end_date).toLocaleDateString()}</p>

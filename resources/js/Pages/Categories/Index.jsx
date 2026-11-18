@@ -3,7 +3,7 @@ import AppLayout from "@/Layouts/AppLayout";
 import useTranslate from "@/hooks/useTranslate";
 import { getCategoryBrowseUrl } from "@/Utils/categoryBrowseUrl";
 
-const imagePath = (cat) => `${cat?.image?.startsWith("/") ? "" : "/"}${cat?.image ?? "images/placeholder.png"}`;
+const imagePath = (cat) => `${cat?.image?.startsWith("/") ? "" : "/"}${cat?.image ?? "assets/images/placeholder.webp"}`;
 
 export default function Index({ categories = [] }) {
        const { t } = useTranslate();

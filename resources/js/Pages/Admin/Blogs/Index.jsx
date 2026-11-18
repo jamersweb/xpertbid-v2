@@ -48,7 +48,7 @@ export default function Index({ blogs }) {
                                                  {blogs.data.map((blog) => (
                                                         <tr key={blog.id} className="hover:bg-gray-50/50 transition-colors">
                                                                <td className="px-6 py-4">
-                                                                      <img src={blog.image ? `/${blog.image}` : '/images/placeholder.png'} className="w-12 h-12 rounded-lg object-cover" alt="" />
+                                                                      <img src={blog.image ? `/${blog.image}` : '/assets/images/placeholder.webp'} className="w-12 h-12 rounded-lg object-cover" alt="" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/assets/images/placeholder.webp'; }} />
                                                                </td>
                                                                <td className="px-6 py-4">
                                                                       <p className="text-sm font-bold text-gray-800">{blog.title}</p>

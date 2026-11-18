@@ -45,6 +45,7 @@ const OwnerInfoRow = ({
                             height={32}
                             loading="lazy"
                             onError={(e) => {
+                                   e.currentTarget.onerror = null;
                                    e.currentTarget.src = "/assets/images/user.jpg";
                             }}
                      />

@@ -74,7 +74,7 @@ export default function Edit({ slider, categories }) {
                                                  <label className="block text-sm font-bold text-gray-700 mb-2">Slider Image</label>
                                                  <div className="mb-4">
                                                         <p className="text-[10px] text-gray-400 font-bold mb-2 uppercase tracking-wider">Current Image</p>
-                                                        <img src={slider.image || '/images/placeholder.png'} className="w-48 h-24 rounded-xl object-cover border border-gray-100 shadow-sm" alt="" />
+                                                        <img src={slider.image || '/assets/images/placeholder.webp'} className="w-48 h-24 rounded-xl object-cover border border-gray-100 shadow-sm" alt="" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/assets/images/placeholder.webp'; }} />
                                                  </div>
                                                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-200 border-dashed rounded-xl hover:border-black transition-colors">
                                                         <div className="space-y-1 text-center">
