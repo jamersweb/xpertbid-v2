@@ -28,7 +28,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Vite::prefetch(concurrency: 3);
+        // Only modulepreload critical entry chunks (app, react-vendor, inertia-vendor) and CSS
+        // so secondary JS chunks do not compete with the Hero LCP image on Mobile Slow-4G.
+        Vite::usePreloadTagAttributes(function (?string $src, string $url, ?array $chunk, ?array $manifest) {
+            if (str_ends_with($url, '.css')) {
+                return [];
+            }
+
+            $name = (string) ($chunk['name'] ?? '');
+            if (in_array($name, ['app', 'react-vendor', 'inertia-vendor'], true)) {
+                return [];
+            }
+
+            return false;
+        });
 
         Event::listen(MessageSent::class, LogSentEmail::class);
 

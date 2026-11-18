@@ -1,10 +1,7 @@
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Link } from "@inertiajs/react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, EffectFade } from "swiper/modules";
 
-import "swiper/css";
-import "swiper/css/effect-fade";
-import "swiper/css/autoplay";
+const HeroSwiper = lazy(() => import("./HeroSwiper"));
 
 const heroSlides = [
        {
@@ -25,55 +22,90 @@ const heroSlides = [
 ];
 
 export default function HeroSection({ fluid = false, className = "my-5" } = {}) {
+       const [sliderReady, setSliderReady] = useState(false);
+       const firstSlide = heroSlides[0];
+
+       useEffect(() => {
+              let cancelled = false;
+              let idleId = null;
+
+              const activate = () => {
+                     if (!cancelled) {
+                            setSliderReady(true);
+                     }
+              };
+
+              const timerId = window.setTimeout(() => {
+                     if ("requestIdleCallback" in window) {
+                            idleId = window.requestIdleCallback(activate, { timeout: 1000 });
+                     } else {
+                            activate();
+                     }
+              }, 2500);
+
+              return () => {
+                     cancelled = true;
+                     window.clearTimeout(timerId);
+                     if (idleId !== null && "cancelIdleCallback" in window) {
+                            window.cancelIdleCallback(idleId);
+                     }
+              };
+       }, []);
+
+       const handleInteraction = () => {
+              if (!sliderReady) {
+                     setSliderReady(true);
+              }
+       };
+
        const containerClass = fluid
               ? "container-fluid px-3 px-lg-5 hero-container-target"
               : "container hero-container-target";
+
+       const staticFirstSlide = (
+              <div className="hero-slider">
+                     <Link href={firstSlide.href} className="hero-banner-link">
+                            <picture>
+                                   <source
+                                          media="(max-width: 767px)"
+                                          srcSet={firstSlide.mobileImage || firstSlide.image}
+                                          type="image/webp"
+                                          width="768"
+                                          height="480"
+                                   />
+                                   <img
+                                          src={firstSlide.image}
+                                          alt="Hero Banner 1"
+                                          width={1440}
+                                          height={465}
+                                          loading="eager"
+                                          fetchpriority="high"
+                                          decoding="sync"
+                                          className="hero-banner-image"
+                                   />
+                            </picture>
+                     </Link>
+              </div>
+       );
 
        return (
               <>
                      <section className={`final-banner-section ${className}`}>
                             <div className={containerClass}>
-                                   <div className="hero-banner-shell">
-                                          <Swiper
-                                                 modules={[Autoplay, EffectFade]}
-                                                 effect="fade"
-                                                 autoplay={{
-                                                        delay: 3000,
-                                                        disableOnInteraction: false,
-                                                 }}
-                                                 loop={true}
-                                                 speed={1000}
-                                                 className="hero-slider"
-                                          >
-                                                 {heroSlides.map((slide, index) => {
-                                                        const isFirst = index === 0;
-                                                        return (
-                                                               <SwiperSlide key={slide.image}>
-                                                                      <Link href={slide.href} className="hero-banner-link">
-                                                                             <picture>
-                                                                                    <source
-                                                                                           media="(max-width: 767px)"
-                                                                                           srcSet={slide.mobileImage || slide.image}
-                                                                                           type="image/webp"
-                                                                                           width="768"
-                                                                                           height="480"
-                                                                                    />
-                                                                                    <img
-                                                                                           src={slide.image}
-                                                                                           alt={`Hero Banner ${index + 1}`}
-                                                                                           width={1440}
-                                                                                           height={465}
-                                                                                           loading={isFirst ? "eager" : "lazy"}
-                                                                                           fetchpriority={isFirst ? "high" : "low"}
-                                                                                           decoding={isFirst ? "sync" : "async"}
-                                                                                           className="hero-banner-image"
-                                                                                    />
-                                                                             </picture>
-                                                                      </Link>
-                                                               </SwiperSlide>
-                                                        );
-                                                 })}
-                                          </Swiper>
+                                   <div
+                                          className="hero-banner-shell"
+                                          onPointerEnter={handleInteraction}
+                                          onTouchStart={handleInteraction}
+                                          onMouseDown={handleInteraction}
+                                          onFocus={handleInteraction}
+                                   >
+                                          {sliderReady ? (
+                                                 <Suspense fallback={staticFirstSlide}>
+                                                        <HeroSwiper slides={heroSlides} />
+                                                 </Suspense>
+                                          ) : (
+                                                 staticFirstSlide
+                                          )}
                                    </div>
                             </div>
                      </section>

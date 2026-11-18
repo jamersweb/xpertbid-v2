@@ -14,6 +14,15 @@ export default defineConfig(({ isSsrBuild }) => ({
     build: isSsrBuild
         ? {}
         : {
+              modulePreload: {
+                  resolveDependencies(_filename, deps) {
+                      return deps.filter(
+                          (dep) =>
+                              dep.endsWith('.css') ||
+                              /(?:^|\/)(app|react-vendor|inertia-vendor)-/.test(dep),
+                      );
+                  },
+              },
               rollupOptions: {
                   output: {
                       manualChunks(id) {
