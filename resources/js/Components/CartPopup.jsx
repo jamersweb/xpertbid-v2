@@ -120,6 +120,9 @@ export default function CartPopup() {
                                                                                     <img
                                                                                            src={item.image ? (item.image.startsWith('http') ? item.image : `/${item.image.replace(/^\/+/, '')}`) : '/assets/images/placeholder.png'}
                                                                                            alt={item.title}
+                                                                                           width={74}
+                                                                                           height={74}
+                                                                                           loading="lazy"
                                                                                            className="w-100 h-100 object-fit-cover"
                                                                                            onError={(e) => e.target.src = '/assets/images/WebsiteBanner2.png'}
                                                                                     />

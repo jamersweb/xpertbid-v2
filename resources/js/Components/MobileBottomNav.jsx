@@ -12,7 +12,7 @@ const UserProfile = () => {
        return (
               <div className="d-flex flex-column align-items-center">
                      {user.profile_pic ? (
-                            <img src={user.profile_pic} alt="Profile" className="rounded-circle" style={{ width: 24, height: 24, objectFit: 'cover' }} />
+                            <img src={user.profile_pic} alt="Profile" className="rounded-circle" width={24} height={24} style={{ width: 24, height: 24, objectFit: 'cover' }} />
                      ) : (
                             <img src="/assets/images/user-icon.png" alt="Profile" className="rounded-circle" width={24} height={24} />
                      )}

@@ -108,11 +108,10 @@
             }
         </style>
 
-        <!-- Secondary Custom Styles (Non-blocking async load) -->
-        <link rel="preload" href="/assets/css/style.css" as="style">
-        <link rel="stylesheet" href="/assets/css/style.css" media="print" onload="this.media='all'">
+        <!-- Secondary Custom Styles (Non-blocking async load minified) -->
+        <link rel="stylesheet" href="/assets/css/style.min.css" media="print" onload="this.media='all'">
         <noscript>
-            <link rel="stylesheet" href="/assets/css/style.css">
+            <link rel="stylesheet" href="/assets/css/style.min.css">
         </noscript>
 
         <!-- FontAwesome (Asynchronous / Non-blocking) -->

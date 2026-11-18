@@ -123,6 +123,9 @@ const ListingCard = ({ listing, onDeleted }) => {
                                                                              <img
                                                                                     src={imageSrc}
                                                                                     alt={listingTitle}
+                                                                                    width={400}
+                                                                                    height={300}
+                                                                                    loading="lazy"
                                                                                     style={{
                                                                                            width: "100%",
                                                                                            height: "100%",

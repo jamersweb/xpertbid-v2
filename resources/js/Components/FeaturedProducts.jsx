@@ -60,6 +60,8 @@ function FeaturedProducts({ products }) {
                                                                                            <img
                                                                                                   src={imageSrc}
                                                                                                   alt={product.title || product.name || "Product"}
+                                                                                                  width={400}
+                                                                                                  height={300}
                                                                                                   style={{ width: "100%", height: "auto", aspectRatio: "4/3", objectFit: "cover" }}
                                                                                                   className="object-cover img-fluid"
                                                                                                   loading={index === 0 ? "eager" : "lazy"}

@@ -50,6 +50,9 @@ export default function SliderBrowseCategories({ categories }) {
                                                                              <img
                                                                                     src={assetSrc(media)}
                                                                                     alt={cat.name}
+                                                                                    width={84}
+                                                                                    height={84}
+                                                                                    loading="lazy"
                                                                                     className="category-icon"
                                                                              />
                                                                       </div>

@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, lazy, Suspense } from 'react';
 import { usePage } from '@inertiajs/react';
-import LoginModal from '@/Components/LoginModal';
-import RegisterModal from '@/Components/RegisterModal';
+
+const LoginModal = lazy(() => import('@/Components/LoginModal'));
+const RegisterModal = lazy(() => import('@/Components/RegisterModal'));
 
 const AuthModalContext = createContext();
 
@@ -53,16 +54,22 @@ export const AuthModalProvider = ({ children }) => {
        return (
               <AuthModalContext.Provider value={{ openLogin, openRegister, closeModals, activeModal }}>
                      {children}
-                     <LoginModal
-                            isOpen={activeModal === 'login'}
-                            onClose={closeModals}
-                            onSwitchToRegister={openRegister}
-                     />
-                     <RegisterModal
-                            isOpen={activeModal === 'register'}
-                            onClose={closeModals}
-                            onSwitchToLogin={openLogin}
-                     />
+                     <Suspense fallback={null}>
+                            {activeModal === 'login' && (
+                                   <LoginModal
+                                          isOpen={true}
+                                          onClose={closeModals}
+                                          onSwitchToRegister={openRegister}
+                                   />
+                            )}
+                            {activeModal === 'register' && (
+                                   <RegisterModal
+                                          isOpen={true}
+                                          onClose={closeModals}
+                                          onSwitchToLogin={openLogin}
+                                   />
+                            )}
+                     </Suspense>
               </AuthModalContext.Provider>
        );
 };

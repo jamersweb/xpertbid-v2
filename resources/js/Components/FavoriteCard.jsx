@@ -33,6 +33,8 @@ const FavoriteCard = ({ favorite }) => {
                                           <img
                                                  src={imgPath}
                                                  alt={title}
+                                                 width={400}
+                                                 height={300}
                                                  loading="lazy"
                                           />
                                    </Link>

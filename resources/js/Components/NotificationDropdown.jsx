@@ -98,7 +98,7 @@ const NotificationDropdown = () => {
                             onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
                             onClick={() => setIsOpen(!isOpen)}
                      >
-                            <img src="/assets/images/notificationIcon.svg" alt="Notifications" />
+                            <img src="/assets/images/notificationIcon.svg" alt="Notifications" width={22} height={22} />
                             {unreadCount > 0 && (
                                    <span
                                           style={{
@@ -130,7 +130,7 @@ const NotificationDropdown = () => {
                                           </h3>
                                           {notifications.length > 0 && (
                                                  <button className="markAsRead btn btn-link p-0 text-decoration-none" style={{ fontSize: '0.8rem', color: '#43ACE9', fontWeight: 600 }} onClick={markAllAsRead}>
-                                                        <img src="/assets/images/double-tick.svg" alt="Mark All" className="me-1" /> Mark all read
+                                                        <img src="/assets/images/double-tick.svg" alt="Mark All" className="me-1" width={16} height={16} /> Mark all read
                                                  </button>
                                           )}
                                    </div>

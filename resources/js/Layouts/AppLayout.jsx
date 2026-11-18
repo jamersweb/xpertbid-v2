@@ -139,7 +139,7 @@ export default function AppLayout({ children, title }) {
                                                         href={propertyFrontendUrl}
                                                         aria-label="View XpertBid Property"
                                                  >
-                                                        <img className="xp-brand-logo xp-brand-logo-prop" src={propertyLogoSrc} alt="XpertBid Property" />
+                                                        <img className="xp-brand-logo xp-brand-logo-prop" src={propertyLogoSrc} alt="XpertBid Property" width={180} height={54} />
                                                  </a>
                                                   {/* Vehicle logo hidden for now
                                                  <Link className="xp-brand-link" href="/marketplace/vehicles?type=auction" aria-label="View vehicle marketplace">
@@ -151,7 +151,7 @@ export default function AppLayout({ children, title }) {
                                                         href={renovationFrontendUrl}
                                                         aria-label="View Xpert Build"
                                                  >
-                                                        <img className="xp-brand-logo xp-brand-logo-home" src={homeLogoSrc} alt="Xpert Build" />
+                                                        <img className="xp-brand-logo xp-brand-logo-home" src={homeLogoSrc} alt="Xpert Build" width={180} height={46} />
                                                  </a>
                                           </div>
                                           <div className="xp-brand-controls d-none d-lg-flex">

@@ -92,6 +92,8 @@ const AuctionCard = ({
                                           <img
                                                  src={imgPath}
                                                  alt={auction.title || auction.name || "Auction item"}
+                                                 width={400}
+                                                 height={300}
                                                  style={{ width: "100%", height: "auto", aspectRatio: "4/3", objectFit: "cover", borderRadius: "18px" }}
                                                  className="img-fluid object-cover"
                                                  loading="lazy"

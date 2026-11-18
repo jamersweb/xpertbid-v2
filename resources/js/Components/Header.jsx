@@ -344,7 +344,7 @@ export default function Header() {
                                                                                                          </li>
                                                                                                          <li style={{ padding: '0px 0', fontSize: '16px', fontWeight: '400', lineHeight: '20px', display: 'flex', alignItems: 'center', gap: '15px', marginTop: '14px' }}>
                                                                                                                 <button className="transparent-button d-flex align-items-center gap-2 border-0 bg-transparent p-0" style={profileMenuButtonStyle} onClick={handleLogout}>
-                                                                                                                       {renderProfileMenuContent(t('Log Out'), <img src="/assets/images/logout.svg" alt="Logout" />)}
+                                                                                                                       {renderProfileMenuContent(t('Log Out'), <img src="/assets/images/logout.svg" alt="Logout" width={20} height={20} />)}
                                                                                                                 </button>
                                                                                                          </li>
                                                                                                   </ul>

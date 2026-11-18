@@ -41,6 +41,9 @@ const OwnerInfoRow = ({
                      <img
                             src={avatarSrc}
                             alt={displayName}
+                            width={32}
+                            height={32}
+                            loading="lazy"
                             onError={(e) => {
                                    e.currentTarget.src = "/assets/images/user.jpg";
                             }}

@@ -43,6 +43,9 @@ export default function SliderBrowseBrands({ brands = [] }) {
                   <img
                     src={assetSrc(brand.image)}
                     alt={brand.name || t('Brand')}
+                    width={400}
+                    height={300}
+                    loading="lazy"
                     onError={(e) => {
                       if (e.currentTarget.src !== DEFAULT_BRAND_IMAGE) {
                         e.currentTarget.src = DEFAULT_BRAND_IMAGE;
