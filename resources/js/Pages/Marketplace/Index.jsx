@@ -1380,6 +1380,65 @@ export default function Index({
                                    height: auto !important;
                                    margin-bottom: 0 !important;
                             }
+                            @media (min-width: 768px) {
+                                   .marketplace-main-content .product-card-wrapper .pro-image .counter {
+                                          width: min(300px, calc(100% - 24px));
+                                          min-width: 0;
+                                          bottom: 14px;
+                                          padding: 10px 12px;
+                                          border-radius: 12px;
+                                          background-color: rgba(28, 29, 32, 0.55);
+                                   }
+                                   .marketplace-main-content .product-card-wrapper .pro-image .counter-grid {
+                                          gap: 8px;
+                                   }
+                                   .marketplace-main-content .product-card-wrapper .pro-image .counter-value {
+                                          font-size: 20px;
+                                          line-height: 1.15;
+                                          margin-bottom: 3px;
+                                   }
+                                   .marketplace-main-content .product-card-wrapper .pro-image .counter-label {
+                                          font-size: 9px;
+                                          letter-spacing: 0.4px;
+                                   }
+                            }
+                            @media (min-width: 1200px) and (max-width: 1399px) {
+                                   .marketplace-main-content .product-card-wrapper .pro-image .counter {
+                                          width: min(300px, calc(100% - 20px));
+                                          bottom: 12px;
+                                          padding: 8px 10px;
+                                   }
+                                   .marketplace-main-content .product-card-wrapper .pro-image .counter-grid {
+                                          gap: 4px;
+                                   }
+                                   .marketplace-main-content .product-card-wrapper .pro-image .counter-value {
+                                          font-size: 18px;
+                                          margin-bottom: 2px;
+                                   }
+                                   .marketplace-main-content .product-card-wrapper .pro-image .counter-label {
+                                          font-size: 8px;
+                                          letter-spacing: 0.25px;
+                                   }
+                            }
+                            @media (min-width: 1500px) {
+                                   .marketplace-main-content .product-card-wrapper .pro-image .counter {
+                                          width: min(300px, calc(100% - 24px));
+                                          bottom: 20px;
+                                          padding: 12px 16px;
+                                   }
+                                   .marketplace-main-content .product-card-wrapper .pro-image .counter-grid {
+                                          gap: 12px;
+                                   }
+                                   .marketplace-main-content .product-card-wrapper .pro-image .counter-value {
+                                          font-size: 24px;
+                                          line-height: 1.2;
+                                          margin-bottom: 4px;
+                                   }
+                                   .marketplace-main-content .product-card-wrapper .pro-image .counter-label {
+                                          font-size: 10px;
+                                          letter-spacing: 0.5px;
+                                   }
+                            }
                             .marketplace-main-content .product-card-wrapper .owner-info-row {
                                    margin: 12px 0 8px !important;
                             }
